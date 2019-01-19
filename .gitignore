@@ -1,0 +1,20 @@
+# Files and directories created by pub
+.dart_tool/
+.packages
+
+# Android Studio
+.idea/
+
+# Flutter
+/android
+/ios
+#!**/resources/android/**
+
+# Remove the following pattern if you wish to check in your lock file
+pubspec.lock
+
+# Conventional directory for build outputs
+build/
+
+# Directory created by dartdoc
+doc/api/
