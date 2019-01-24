@@ -5,17 +5,20 @@ import 'package:screenshots/image_magick.dart' as im;
 import 'package:screenshots/resources.dart' as resources;
 import 'package:screenshots/screenshots.dart';
 import 'package:screenshots/utils.dart' as utils;
-import 'package:yaml/yaml.dart';
+//import 'package:yaml/yaml.dart';
 
 ///
-/// Process screenshots
+/// Process screenshots.
+///
 /// If android, screenshot is overlaid with a status bar and appended with
 /// a navbar.
-/// If 'config.frame' is true screenshots are placed within image of device.
-/// After processing, screenshots are handed off for upload via fastlane
 ///
-void process(YamlNode devices, Map config, DeviceType deviceType,
-    String deviceName, String locale) async {
+/// If 'frame' in config file is true screenshots are placed within image of device.
+///
+/// After processing, screenshots are handed off for upload via fastlane.
+///
+void process(Map devices, Map config, DeviceType deviceType, String deviceName,
+    String locale) async {
   final Map screen = Devices().screen(devices, deviceName);
   final staging = config['staging'];
   final Map screenResources = screen['resources'];
@@ -90,10 +93,17 @@ void process(YamlNode devices, Map config, DeviceType deviceType,
 }
 
 ///
-/// Overlay status bar over screenshot
+/// Overlay status bar over screenshot.
 ///
 Future overlay(Map config, Map screenResources, String screenshotPath) async {
   final statusbarPath = '${config['staging']}/${screenResources['statusbar']}';
+
+  // if no status bar skip
+  // todo: get missing status bars
+  if (statusbarPath == "") {
+    print('no status bar found for screen');
+    return Future.value(null);
+  }
 //  final screenshotStatusbarPath =
 //      '${config['staging']}/test/' + FileUtils.basename(screenshotPath);
   final options = {
@@ -105,7 +115,7 @@ Future overlay(Map config, Map screenResources, String screenshotPath) async {
 }
 
 ///
-/// Append android status bar to screenshot
+/// Append android status bar to screenshot.
 ///
 Future append(Map config, Map screenResources, String screenshotPath) async {
   final screenshotNavbarPath =
@@ -118,8 +128,9 @@ Future append(Map config, Map screenResources, String screenshotPath) async {
 }
 
 ///
-/// Frame a screenshot with image of device
-/// Resulting image is scaled to fit dimensions required by stores
+/// Frame a screenshot with image of device.
+///
+/// Resulting image is scaled to fit dimensions required by stores.
 ///
 void frame(Map config, Map screen, String screenshotPath) async {
   final Map resources = screen['resources'];

@@ -4,7 +4,8 @@ import 'package:screenshots/screenshots.dart';
 //# android/fastlane/metadata/android/en-US/images/phoneScreenshots
 //# android/fastlane/metadata/android/en-US/images/tenInchScreenshots
 //# android/fastlane/metadata/android/en-US/images/sevenInchScreenshots
-/// Generate fastlane paths for ios and android
+
+/// Generate fastlane paths for ios and android.
 String path(DeviceType deviceType, String locale,
     [String deviceName, String screenName]) {
   const androidPrefix = 'android/fastlane/metadata/android';

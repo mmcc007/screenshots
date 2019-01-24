@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:file_utils/file_utils.dart';
 
 ///
-/// utils
+/// Remove all content from directory [dir].
 ///
 void clearDirectory(String dir) {
   print('clearing $dir');
@@ -11,10 +11,10 @@ void clearDirectory(String dir) {
 //      FileUtils.mkdir([dir], recursive: true))) {
 //    throw 'clear directory failed: dir=$dir';
 //  }
-  if (Directory(dir).existsSync())
-  Directory(dir).deleteSync(recursive: true);
+  if (Directory(dir).existsSync()) Directory(dir).deleteSync(recursive: true);
 }
 
+/// Move directory [srcDir] to [dstDir].
 void moveDirectory(String srcDir, String dstDir) {
   if (!(FileUtils.mkdir([dstDir], recursive: true) &&
       FileUtils.move(['$srcDir/*.*'], dstDir))) {
@@ -22,6 +22,7 @@ void moveDirectory(String srcDir, String dstDir) {
   }
 }
 
+/// Returns list of files in directory [dir].
 Future<List<File>> filesInDirectory(Directory dir) async {
   List<File> files = <File>[];
   await for (FileSystemEntity entity
@@ -47,6 +48,7 @@ Future<List<File>> filesInDirectory(Directory dir) async {
 //  return fullPath != expectedPath;
 //}
 
+/// Copy directory [path1] to [path2].
 void copyDir(String path1, String path2) {
   Directory dir1 = new Directory(path1);
   if (!dir1.existsSync()) {
@@ -75,6 +77,7 @@ void copyDir(String path1, String path2) {
   });
 }
 
+/// Execute command [cmd] with arguments [arguments] in a separate process and return stdout.
 String cmd(String cmd, List<String> arguments,
     [String workingDir = '.', bool silent = false]) {
   print('cmd=\'$cmd ${arguments.join(" ")}\'');
@@ -90,7 +93,7 @@ String cmd(String cmd, List<String> arguments,
 }
 
 ///
-/// Create list of simulators with their ID and status
+/// Create list of simulators with their ID and status.
 ///
 Map<String, Map<String, String>> simulators() {
   String devices = cmd('xcrun', ['simctl', 'list'], '.', true);

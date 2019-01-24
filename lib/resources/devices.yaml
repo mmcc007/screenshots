@@ -11,6 +11,16 @@
           - iPhone 7 Plus
           - Apple ????
 #        destName: iPhone
+    screen2:
+        size: 2048x2732
+        resize: 75%
+        resources:
+#          statusbar: resources/ios/1242/statusbar_black.png
+          frame: resources/ios/phones/iPad_Pro_Silver.png
+        offset: -0-0
+        phones:
+          - iPad Pro (12.9-inch) (2nd generation)
+#        destName: iPhone
   android:
     screen1:
         size: 1080x1920

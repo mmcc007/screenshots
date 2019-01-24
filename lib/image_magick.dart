@@ -1,7 +1,7 @@
 import 'package:screenshots/utils.dart';
 
 ///
-/// ImageMagick calls
+/// ImageMagick calls.
 ///
 Future imagemagick(String command, Map options) async {
   List<String> cmdOptions;

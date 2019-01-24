@@ -3,7 +3,7 @@ tests:
   - test_driver/todo_app.dart
 #  - main2.dart
 
-# Interim location of screenshots from tests before processing (defaults to ./screenshots)
+# Interim location of screenshots from tests before processing
 staging: /tmp/screenshots
 
 # A list of locales supported in app
@@ -16,6 +16,7 @@ devices:
   ios:
 #    - iPhone X
     - iPhone 7 Plus
+    - iPad Pro (12.9-inch) (2nd generation)
 #   "iPhone 6",
 #   "iPhone 6 Plus",
 #   "iPhone 5",

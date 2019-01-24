@@ -3,7 +3,7 @@ import 'package:yaml/yaml.dart';
 import 'package:resource/resource.dart';
 
 ///
-/// Parse devices file
+/// Parse devices file.
 ///
 class Devices {
   static const devicePath = 'resources/devices.yaml';
@@ -16,17 +16,23 @@ class Devices {
 //    });
 //  }
 
-  Future<YamlNode> init() async {
+  ///
+  /// Get devices yaml file from resources and parse.
+  ///
+  Future<Map> init() async {
     var resource = Resource("package:screenshots/$devicePath");
     String devices = await resource.readAsString(encoding: utf8);
-    return loadYaml(devices);
+    return loadYaml(devices) as Map;
   }
 
-  Map screen(YamlNode devices, String deviceName) {
+  ///
+  /// Get map of screen parameters from devices yaml file
+  ///
+  Map screen(Map devices, String deviceName) {
     Map screenProps;
 
 //    print(docYaml.value);
-    devices.value.forEach((os, v) {
+    (devices as YamlNode).value.forEach((os, v) {
 //      print('os=$os, v=$v');
       v.value.forEach((screenNum, _screenProps) {
 //        print('screenNum=$screenNum, screenProps=$_screenProps');

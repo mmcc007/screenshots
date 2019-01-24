@@ -4,7 +4,7 @@ import 'package:resource/resource.dart';
 import 'package:screenshots/utils.dart';
 
 ///
-/// Copy resource images for a screen from package to files
+/// Copy resource images for a screen from package to files.
 ///
 Future unpackImages(Map screenResources, String stagingPath) async {
   print('unpacking resources=$screenResources');
@@ -20,11 +20,12 @@ Future unpackImages(Map screenResources, String stagingPath) async {
   }
 }
 
+/// Read script from resources and install in staging area.
 Future unpackScript(String stagingPath) async {
-  final path='resources/script/android-wait-for-emulator-to-stop';
+  final path = 'resources/script/android-wait-for-emulator-to-stop';
   var resource = Resource('package:screenshots/$path');
-final String script=await resource.readAsString();
-print('script=$script');
+  final String script = await resource.readAsString();
+  print('script=$script');
   final file = await File('$stagingPath/$path').create(recursive: true);
   await file.writeAsString(script, flush: true);
   // make executable
@@ -41,11 +42,13 @@ print('script=$script');
 //  return readImage('resources/sample.png');
 //}
 
+/// Read an image from resources.
 Future<List<int>> readImage(String uri) async {
   var resource = Resource('package:screenshots/$uri');
   return resource.readAsBytes();
 }
 
+/// Write an image to staging area.
 Future<void> writeImage(List<int> image, String path) async {
   final file = await File(path).create(recursive: true);
   await file.writeAsBytes(image, flush: true);

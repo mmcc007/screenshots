@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:yaml/yaml.dart';
 
 ///
-/// Config info used to process screenshots for android and ios
+/// Config info used to process screenshots for android and ios.
 ///
 class Config {
   YamlNode docYaml;

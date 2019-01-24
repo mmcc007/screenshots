@@ -5,20 +5,26 @@ import 'package:screenshots/devices.dart';
 import 'package:screenshots/process_images.dart' as processImages;
 import 'package:screenshots/resources.dart' as resources;
 import 'package:screenshots/utils.dart' as utils;
-import 'package:yaml/yaml.dart';
+//import 'package:yaml/yaml.dart';
 
+/// Distinguish device OS.
 enum DeviceType { android, ios }
 
+/// Capture screenshots, process, and load into fastlane according to config file.
 ///
-/// Run screenshot integration tests for each emulator/simulator and locale
-/// Process the screenshots and move to fastlane destination for upload to stores
+/// For each emulator/simulator, locale and integration test:
+///
+/// 1. Start the emulator/simulator for current locale.
+/// 2. Run the integration test and capture the screenshots.
+/// 3. Process the screenshots including adding a frame if required.
+/// 4. Move processed screenshots to fastlane destination for upload to stores.
 ///
 void run(String configPath) async {
   final config = Config(configPath).config;
-  final YamlNode devices = await Devices().init();
+  final Map devices = await Devices().init();
 
   // init
-  final stagingDir=config['staging'];
+  final stagingDir = config['staging'];
   await Directory(stagingDir + '/test').create(recursive: true);
   await resources.unpackScript(stagingDir);
 //  print('config=$config');
@@ -53,7 +59,7 @@ void run(String configPath) async {
 //      simulator(_simulator, true);
       for (final testPath in config['tests']) {
         print('testPath=$testPath');
-                screenshots(testPath, stagingDir, 'ios');
+        screenshots(testPath, stagingDir, 'ios');
         await processImages.process(
             devices, config, DeviceType.ios, simulatorName, locale);
       }
@@ -63,10 +69,12 @@ void run(String configPath) async {
 }
 
 ///
-/// Run the screenshot integration test on an emulator or simulator
-/// Test is expected to generate a sequential number of screenshots
-/// Assumes the test captures the screen shots into a known directory
-/// Integration test should capture screenshots with provided [screenshot]
+/// Run the screenshot integration test on current emulator or simulator.
+///
+/// Test is expected to generate a sequential number of screenshots.
+///
+/// Assumes the integration test captures the screen shots into a known directory using
+/// provided [capture_screen.screenshot()].
 ///
 void screenshots(String testPath, String stagingDir, String os,
     [String locale = "en-US"]) {
@@ -82,9 +90,10 @@ void screenshots(String testPath, String stagingDir, String os,
 }
 
 ///
-/// Start/stop emulator
+/// Start/stop emulator.
 ///
-void emulator(String name, bool start, [String staging, String locale = "en-US"]) {
+void emulator(String name, bool start,
+    [String staging, String locale = "en-US"]) {
   // todo: set locale of emulator
   name = name.replaceAll(' ', '_');
   if (start) {
@@ -92,12 +101,13 @@ void emulator(String name, bool start, [String staging, String locale = "en-US"]
 //    cmd('script/android-wait-for-emulator', []);
   } else {
     utils.cmd('adb', ['emu', 'kill']);
-    utils.cmd('$staging/resources/script/android-wait-for-emulator-to-stop', []);
+    utils
+        .cmd('$staging/resources/script/android-wait-for-emulator-to-stop', []);
   }
 }
 
 ///
-/// Start/stop simulator
+/// Start/stop simulator.
 ///
 void simulator(String name, bool start, [String locale = 'en-US']) {
   // todo: set name and locale of simulator
