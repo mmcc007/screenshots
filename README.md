@@ -1,6 +1,10 @@
 
 [![pub package](https://img.shields.io/pub/v/screenshots.svg)](https://pub.dartlang.org/packages/screenshots)
 
+![alt text][fade]
+[fade]: https://github.com/mmcc007/screenshots/raw/master/fade.gif "Screenshot with overlayed status bar and appended navigation bar placed in frame"
+
+
 # Screenshots
 
 `screenshots` is a standalone command line utility and package for capturing screenshots for Flutter. 
