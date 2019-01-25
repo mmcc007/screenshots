@@ -197,4 +197,8 @@ void main() {
     await unpackScript('/tmp');
   }
   );
+
+  test('add prefix to files in directory', ()async {
+    await prefixFilesInDir('/tmp/screenshots/test', 'my_prefix');
+  });
 }

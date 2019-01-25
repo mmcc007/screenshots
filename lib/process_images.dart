@@ -13,7 +13,9 @@ import 'package:screenshots/utils.dart' as utils;
 /// If android, screenshot is overlaid with a status bar and appended with
 /// a navbar.
 ///
-/// If 'frame' in config file is true screenshots are placed within image of device.
+/// If ios, screenshot is overlaid with a status bar.
+///
+/// If 'frame' in config file is true, screenshots are placed within image of device.
 ///
 /// After processing, screenshots are handed off for upload via fastlane.
 ///
@@ -70,12 +72,16 @@ void process(Map devices, Map config, DeviceType deviceType, String deviceName,
     }
   }
 
-  // move to final destination for upload to stores
+  // move to final destination for upload to stores via fastlane
   final srcDir = '${config['staging']}/test';
   final dstDir = fastlane.path(deviceType, locale, '', screen['destName']);
+  // prefix screenshots with name of device before moving
+  // (useful for uploading to apple via fastlane)
+await utils.prefixFilesInDir(srcDir, '$deviceName-');
+
   print('moving screenshots to $dstDir');
 //  print('srcDir=$srcDir, dstDir=$dstDir');
-  utils.clearDirectory(dstDir);
+//  utils.clearDirectory(dstDir);
   utils.moveDirectory(srcDir, dstDir);
 //  switch (deviceType) {
 //    case DeviceType.android:
@@ -100,8 +106,8 @@ Future overlay(Map config, Map screenResources, String screenshotPath) async {
 
   // if no status bar skip
   // todo: get missing status bars
-  if (statusbarPath == "") {
-    print('no status bar found for screen');
+  if (screenResources['statusbar'] == null) {
+    print('error: missing status bar for screen at: ...');
     return Future.value(null);
   }
 //  final screenshotStatusbarPath =

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:file_utils/file_utils.dart';
@@ -23,18 +24,21 @@ void moveDirectory(String srcDir, String dstDir) {
 }
 
 /// Returns list of files in directory [dir].
-Future<List<File>> filesInDirectory(Directory dir) async {
-  List<File> files = <File>[];
-  await for (FileSystemEntity entity
-      in dir.list(recursive: false, followLinks: false)) {
-    FileSystemEntityType type = await FileSystemEntity.type(entity.path);
-    if (type == FileSystemEntityType.file) {
-      files.add(entity);
-      print(entity.path);
-    }
-  }
-  return files;
-}
+//Future<List<File>> filesInDirectory(Directory dir) async {
+//  print('dir=$dir');
+//  List<File> files = <File>[];
+//  await for (FileSystemEntity entity
+//      in dir.list(recursive: false, followLinks: false)) {
+//    print('entity=$entity');
+//    FileSystemEntityType type = await FileSystemEntity.type(entity.path);
+//    print('type=$type');
+//    if (type == FileSystemEntityType.file) {
+//      files.add(entity);
+//      print(entity.path);
+//    }
+//  }
+//  return files;
+//}
 
 //bool isSymlink(String pathString) {
 //  var path = new Path(pathString);
@@ -123,3 +127,11 @@ Map<String, Map<String, String>> simulators() {
 //List<dynamic> mapKeysToList(Map<dynamic, dynamic> map) {
 //  return map.values;
 //}
+
+/// Adds prefix to all files in a directory
+Future prefixFilesInDir(String dirPath, String prefix) async {
+  await for (final file in Directory(dirPath).list(recursive: false, followLinks: false)){
+    print('file=$file');
+    await file.rename(FileUtils.dirname(file.path) + '/'  + prefix + FileUtils.basename(file.path));
+  }
+}

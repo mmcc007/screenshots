@@ -1,8 +1,8 @@
 name: screenshots
 description: Manage generation of screenshots for Apple and Play Stores.
 version: 0.0.1
-# homepage: https://www.example.com
-# author: Maurice McCabe <email@example.com>
+homepage: https://github.com/mmcc007/screenshots
+author: Maurice McCabe <mmcc007@gmail.com>
 
 environment:
   sdk: '>=2.0.0 <3.0.0'

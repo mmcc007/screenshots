@@ -31,6 +31,7 @@ void run(String configPath) async {
 
   // run integration test in each android emulator for each locale and
   // process screenshots
+  if(config['devices']['android'] !=null)
   for (final _emulator in config['devices']['android']) {
 //    print('emulator=$_emulator');
     emulator(_emulator, true);
@@ -51,6 +52,7 @@ void run(String configPath) async {
 
   // run integration test in each ios simulator for each locale and
   // process screenshots
+  if (config['devices']['ios']!=null)
   for (final simulatorName in config['devices']['ios']) {
     print('simulator=$simulatorName');
     simulator(simulatorName, true);
