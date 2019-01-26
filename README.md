@@ -4,9 +4,7 @@
 ![alt text][fade]
 
 [fade]: https://github.com/mmcc007/screenshots/raw/master/fade.gif "Screenshot with overlayed status bar and appended navigation bar placed in frame"  
-<sup>Screenshot with overlayed status bar and appended navigation bar placed in frame
-</sup>
-
+Screenshot with overlayed status bar and appended navigation bar placed in frame  
 
 # Screenshots
 
@@ -20,7 +18,7 @@ It is inspired by three products from Fastlane:
 1. [FrameIt](https://docs.fastlane.tools/actions/frameit/)  
    This is used to place captured iOS screenshots in a device frame.
 
-`screenshots` combines key features of all three products.  
+`screenshots` combines key features of all three Fastlane products.  
 1. Captures screenshots from any iOS or android device.
 2. Frames screenshots in a device frame.
 3. The same Flutter integration test can be used across all devices.  
@@ -28,8 +26,10 @@ It is inspired by three products from Fastlane:
 4. Integrates with Fastlane's [deliver](https://docs.fastlane.tools/actions/deliver/) 
 and [supply](https://docs.fastlane.tools/actions/supply/) for upload to respective stores.
 
+See [article](https://medium.com/@nocnoc/automated-screenshots-for-flutter-f78be70cd5fd) for more information.
+
 # Writing tests for `screenshots`
-Tests have to capture screenshots to a configured location. A special function is provided in
+A special function is provided in
 the `screenshots` package that is called by the test to take the screenshot. `screenshots` will
 then process the images appropriately.
 
@@ -38,7 +38,7 @@ Taking screenshots using this package is straightforward.
 To take screenshots in your tests:
 1. Include the `screenshots` package in your pubspec.yaml's dev_dependencies section  
    ````yaml
-     screenshots: ^0.0.2
+     screenshots: ^0.1.0
    ````
    ... or whatever the current version is.
 2. In your tests
@@ -49,16 +49,16 @@ To take screenshots in your tests:
        ````
     2. Create the config map at start of test  
        ````dart
-            final Map config = Config('config.yaml').config;
+            final Map config = Config('screenshots.yaml').config;
        ````  
     3. Throughout the test make calls to capture screenshots  
        ````dart
            await screenshot(driver, config, 'myscreenshot1');
        ````
-       Make sure your screenshot names are unique across all your tests.
+       Note: make sure your screenshot names are unique across all your tests.
 
 # Configuration
-`screenshots` depends on a single configuration file that is inspired
+`screenshots` depends on a configuration file that is inspired
 by Fastlane's Snapshot.
 ````yaml
 # Screen capture tests
@@ -92,9 +92,10 @@ devices:
 # Frame screenshots
 frame: true
 ````
+This config file should be present in your repo. The default name is 'screenshots.yaml'.
 
 # Emulators and Simulators
-`screenshots` expects that the emulators and simulators (or actual devices) corresponding 
+`screenshots` expects that the emulators and simulators corresponding 
 to the devices in the configuration file are installed in the test machine.
 
 # Installation
@@ -102,12 +103,18 @@ To install `screenshots` on the command line:
 ````bash
 pub global activate screenshots
 ````
+To upgrade, simply re-issue the command
+````bash
+pub global activate screenshots
+````
+Note: if upgrading the command line version of 'screenshots', it is important to also upgrade the version of 'screenshots' in you pubspec.yaml.  
+Also, if upgrading 'screenshots' in your pubspec.yaml, you should also upgrade the command line version.  
 
-##Dependencies
+## Dependencies
 `screenshots` depends on ImageMagick.  
 
-Since screenshots are required for both iOS and Android, testing must be done on a MacOS. So
-ImageMagick only needs to be installed on a MacOS.
+Since screenshots are generally required for both iOS and Android, testing must be done on a Mac
+(unless you are only testing for android).
 
 ````bash
 brew update && brew install imagemagick
@@ -115,11 +122,10 @@ brew update && brew install imagemagick
 
 # Usage
 
-The default config file is `config.yaml`
 ````
 screenshots
 ````
-If using a different config file
+If using a config file other than the default 'screenshots.yaml':
 ````
 screenshots -c <path to config file>
 ````
@@ -133,10 +139,17 @@ ios/fastlane/screenshots/en-US
 in a format suitable for upload via [deliver](https://docs.fastlane.tools/actions/deliver/) 
 and [supply](https://docs.fastlane.tools/actions/supply/)
 
+Fastlane must be installed in both `ios` and `android` prior to running `screenshots`.  
+
 # Resources
 A minimum number of screen sizes are supported to meet the requirements of both stores.
 The supported screen sizes currently supported, with the corresponding devices, can be
- found in 'devices.yaml'
+ found in [devices.yaml](https://github.com/mmcc007/screenshots/blob/master/lib/resources/devices.yaml). 
+ 
+ Only supported devices can be used in your config file.  
+ 
+ Note: This file is part of the package and is shown for illustration purposes
+ only. It does not need to be modified. You can find the latest version in [devices.yaml](https://github.com/mmcc007/screenshots/blob/master/lib/resources/devices.yaml)
 ````yaml
   ios:
     screen1:
@@ -172,7 +185,7 @@ The supported screen sizes currently supported, with the corresponding devices, 
 # Current limitations
 * More screens can be added as necessary
 * Ipad screens have no status bar
-* locales not supported (the default is en-US)
+* Locales not supported (the default is whatever locale currently set in the emulator/simulator)
 
 # Issues and Pull Requests
-This is an initial release and more features can be added. So issues and pull requests are welcome.
+This is an initial release and more features can be added. Issues and pull requests are welcome.

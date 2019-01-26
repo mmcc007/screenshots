@@ -11,5 +11,6 @@ Future screenshot(var driver, Map config, String name) async {
   final File file =
       await File(stagingDir + '/' + name + '.png').create(recursive: true);
   await file.writeAsBytes(pixels);
-  print('wrote $file');
+//  print('wrote $file');
+  print('Screenshot created');
 }

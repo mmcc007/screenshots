@@ -193,12 +193,11 @@ void main() {
     unpackImages(resources, dest);
   });
 
-  test('unpack script', ()async{
+  test('unpack script', () async {
     await unpackScript('/tmp');
-  }
-  );
+  });
 
-  test('add prefix to files in directory', ()async {
+  test('add prefix to files in directory', () async {
     await prefixFilesInDir('/tmp/screenshots/test', 'my_prefix');
   });
 }

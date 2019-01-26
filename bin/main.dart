@@ -15,9 +15,9 @@ void main(List<String> arguments) async {
   final ArgParser argParser = new ArgParser(allowTrailingOptions: false)
     ..addOption(configArg,
         abbr: 'c',
-        defaultsTo: 'config.yaml',
+        defaultsTo: 'screenshots.yaml',
         help: 'Location of config file.',
-        valueHelp: 'config.yaml')
+        valueHelp: 'screenshots.yaml')
     ..addFlag(helpArg,
         help: 'Display this help information.', negatable: false);
   try {
@@ -39,50 +39,25 @@ void main(List<String> arguments) async {
       exit(1);
       break;
     case 'macos':
-//      stderr.write(
-//          '#############################################################');
-//      stderr.write("# You have to install ImageMagick to use screenshots");
-//      stderr.write(
-//          "# Install it using 'brew update && brew install imagemagick'");
-//      stderr.write("# If you don't have homebrew: goto http://brew.sh");
-//      stderr.write(
-//          '#############################################################');
-//      exit(1);
       break;
     default:
       throw 'unknown os: ${Platform.operatingSystem}';
   }
-//utils.cmd('ls', []);
-//  which -s xxx  && echo 0 || echo 1
-  // confirm imagemagick is installed
+
   if (!utils
-//      .cmd('sh', ['-c', 'which', 'convert', '||', 'echo', '1'], '.', true)
-      .cmd('sh', ['-c', 'which convert && echo convert || echo not installed'], '.', true)
+      .cmd('sh', ['-c', 'which convert && echo convert || echo not installed'],
+          '.', true)
       .toString()
       .contains('convert')) {
-//    switch (Platform.operatingSystem) {
-//      case 'windows':
-//        print( 'screenshots is not supported on windows. Try running on MacOS in cloud.');
-//        exit(1);
-//        break;
-//      case 'linux':
-//        print('screenshots is not supported on linux. Try running on MacOS in cloud.');
-//        exit(1);
-//        break;
-//      case 'macos':
-    stderr
-        .write('#############################################################\n');
+    stderr.write(
+        '#############################################################\n');
     stderr.write("# You have to install ImageMagick to use screenshots\n");
-    stderr
-        .write("# Install it using 'brew update && brew install imagemagick'\n");
+    stderr.write(
+        "# Install it using 'brew update && brew install imagemagick'\n");
     stderr.write("# If you don't have homebrew: goto http://brew.sh\n");
-    stderr
-        .write('#############################################################\n');
+    stderr.write(
+        '#############################################################\n');
     exit(1);
-//        break;
-//      default:
-//        throw 'unknown os: ${Platform.operatingSystem}';
-//    }
   }
   // validate args
   final file = File(argResults[configArg]);
