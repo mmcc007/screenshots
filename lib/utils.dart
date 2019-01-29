@@ -70,3 +70,15 @@ Future prefixFilesInDir(String dirPath, String prefix) async {
     await file.rename(dirname(file.path) + '/' + prefix + basename(file.path));
   }
 }
+
+//List<File> filesInDirectory(Directory dir) async {
+//  List<File> files = <File>[];
+//  await for (FileSystemEntity entity in dir.list(recursive: false, followLinks: false)) {
+//    FileSystemEntityType type = await FileSystemEntity.type(entity.path);
+//    if (type == FileSystemEntityType.FILE) {
+//      files.add(entity);
+//      print(entity.path);
+//    }
+//  }
+//  return files;
+//}

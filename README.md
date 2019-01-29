@@ -6,6 +6,9 @@
 [fade]: https://github.com/mmcc007/screenshots/raw/master/fade.gif "Screenshot with overlayed status bar and appended navigation bar placed in frame"  
 Screenshot with overlayed status bar and appended navigation bar placed in frame  
 
+For an example of of screenshots generated with `screenshots` on a life app see:
+<a href="https://play.google.com/store/apps/details?id=com.orbsoft.todo"><img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" width="40%" title="GitErDone" alt="GitErDone"></a>
+
 # Screenshots
 
 `screenshots` is a standalone command line utility and package for capturing screenshots for Flutter. 
@@ -107,8 +110,9 @@ To upgrade, simply re-issue the command
 ````bash
 pub global activate screenshots
 ````
-Note: if upgrading the command line version of 'screenshots', it is important to also upgrade the version of 'screenshots' in you pubspec.yaml.  
-Also, if upgrading 'screenshots' in your pubspec.yaml, you should also upgrade the command line version.  
+Note: the `screenshots` version should be the same for both the command line and package.  
+1. If upgrading the command line version of `screenshots`, it is helpful to also upgrade the version of `screenshots` in your pubspec.yaml.    
+2. If upgrading `screenshots` in your pubspec.yaml, you should also upgrade the command line version.    
 
 ## Dependencies
 `screenshots` depends on ImageMagick.  
