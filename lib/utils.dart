@@ -48,7 +48,7 @@ String cmd(String cmd, List<String> arguments,
 ///
 Map<String, Map<String, String>> simulators() {
   String devices = cmd('xcrun', ['simctl', 'list'], '.', true);
-  RegExp regExp = new RegExp(r'^    (.*) \((.*-.*-.*-.*)\) \((.*)\)$',
+  RegExp regExp = new RegExp(r'^    (.*) \((.*-.*-.*-.*)\) \((.*)\).*$',
       caseSensitive: false, multiLine: true);
   Iterable<Match> matches = regExp.allMatches(devices);
 

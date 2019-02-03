@@ -6,7 +6,7 @@
 [fade]: https://github.com/mmcc007/screenshots/raw/master/fade.gif "Screenshot with overlayed status bar and appended navigation bar placed in frame"  
 Screenshot with overlayed status bar and appended navigation bar placed in frame  
 
-For an example of of screenshots generated with `screenshots` on a life app see:
+For an example of screenshots generated with `screenshots` on a live app see:
 <a href="https://play.google.com/store/apps/details?id=com.orbsoft.todo"><img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" width="40%" title="GitErDone" alt="GitErDone"></a>
 
 # Screenshots
