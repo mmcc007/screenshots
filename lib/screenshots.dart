@@ -22,7 +22,7 @@ enum DeviceType { android, ios }
 /// 4. Move processed screenshots to fastlane destination for upload to stores.
 /// 5. Stop emulator/simulator.
 ///
-Future<void> run(String configPath) async {
+Future<void> run([String configPath = kConfigFileName]) async {
   final _config = Config(configPath);
   // validate config file
   await _config.validate();

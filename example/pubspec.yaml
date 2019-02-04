@@ -1,0 +1,12 @@
+name: example
+description: Example
+version: 0.0.1
+
+environment:
+  sdk: '>=2.0.0 <3.0.0'
+
+dependencies:
+  screenshots: ^0.1.2
+
+executables:
+  example: main

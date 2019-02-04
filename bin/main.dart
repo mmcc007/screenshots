@@ -34,9 +34,9 @@ void main(List<String> arguments) async {
       exit(1);
       break;
     case 'linux':
-      print(
-          'screenshots is not supported on linux. Try running on MacOS in cloud.');
-      exit(1);
+//      print(
+//          'screenshots is not supported on linux. Try running on MacOS in cloud.');
+//      exit(1);
       break;
     case 'macos':
       break;

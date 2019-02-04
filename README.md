@@ -140,13 +140,13 @@ brew update && brew install imagemagick
 ````
 
 # Integration with Fastlane
-Since `screenshots` is intended to be used with Fastlane, after `screenshots` completes 
-the images can be found in
+Since `screenshots` is intended to be used with Fastlane, after `screenshots` completes, 
+the images can be found in:
 ````
 android/fastlane/metadata/android/en-US/images
 ios/fastlane/screenshots/en-US
 ````
-in a format suitable for upload via [deliver](https://docs.fastlane.tools/actions/deliver/) 
+Images are in a format suitable for upload via [deliver](https://docs.fastlane.tools/actions/deliver/) 
 and [supply](https://docs.fastlane.tools/actions/supply/)
 
 If you intend to use fastlane it is better to install fastlane files in both `ios` and `android` prior to running `screenshots`.  See [fledge](https://github.com/mmcc007/fledge) for more info.
@@ -198,4 +198,4 @@ The supported screen sizes currently supported, with the corresponding devices, 
 * Locales not supported (the default is whatever locale currently set in the emulator/simulator).
 
 # Issues and Pull Requests
-This is an initial release and more features can be added. Issues and pull requests are welcome.
+This is an initial release and more features can be added. [Issues](https://github.com/mmcc007/screenshots/issues) and [pull requests](https://github.com/mmcc007/screenshots/pulls) are welcome.

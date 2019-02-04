@@ -6,8 +6,6 @@ import 'package:screenshots/utils.dart';
 Future imagemagick(String command, Map options) async {
   List<String> cmdOptions;
   switch (command) {
-    case 'resize':
-      break;
     case 'overlay':
       cmdOptions = [
         options['screenshotPath'],
