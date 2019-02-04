@@ -9,7 +9,7 @@
         offset: -0-0
         phones:
           - iPhone 7 Plus
-          - Apple ????
+#          - Apple ????
 #        destName: iPhone
     screen2:
         size: 2048x2732
@@ -32,7 +32,7 @@
         offset: -4-9
         phones:
           - Nexus 5X
-          - Nexus ????
+#          - Nexus ????
         destName: phone
 #        destName: sevenInch
 #        destName: tenInch
@@ -43,5 +43,5 @@
         offset: -4-9
         phones:
           - Nexus 6P
-          - Nexus ??
+#          - Nexus ??
         destName: phone

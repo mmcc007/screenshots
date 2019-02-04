@@ -5,7 +5,7 @@ import 'package:args/args.dart';
 import 'package:screenshots/utils.dart' as utils;
 
 const usage = 'usage: screenshots [--help] [--config <config file>]';
-const sampleUsage = 'sample usage: screenshots --config myconfig.yaml';
+const sampleUsage = 'sample usage: screenshots';
 
 void main(List<String> arguments) async {
   ArgResults argResults;
@@ -64,7 +64,7 @@ void main(List<String> arguments) async {
   if (!await file.exists())
     _handleError(argParser, "File not found: ${argResults[configArg]}");
 
-  screenshots.run(argResults[configArg]);
+  await screenshots.run(argResults[configArg]);
 }
 
 void _handleError(ArgParser argParser, String msg) {

@@ -139,31 +139,10 @@ void main() {
   });
 
   test('parse xcrun simctl list', () {
-//     String devices=cmd('xcrun', ['simctl', 'list'], '.', true);
-////     print ('devices=$devices');
-//     RegExp regExp = new RegExp(r'^    (.*) \((.*-.*-.*-.*)\) \((.*)\)$',
-//         caseSensitive: false,
-//         multiLine: true);
-//    Iterable<Match> matches = regExp.allMatches(devices);
-////    matches.forEach((match){
-////      print('match=$match');
-////    });
-//    Map<String, Map<String, String>> simulators={};
-//        for (Match m in matches) {
-//           String match = m.group(0);
-//           print(match);
-//           print(m.group(1));
-//           print(m.group(2));
-//           print(m.group(3));
-//           // load into map
-//          Map<String, String> simulatorInfo={};
-//          simulatorInfo['ID']= m.group(2);
-//          simulatorInfo['status']=m.group(3);
-//          simulators[m.group(1)]=simulatorInfo;
-//         }
     Map _simulators = simulators();
+    print('simulators=$_simulators');
 
-    print('iPhone 7 Plus info: ' + _simulators['iPhone 7 Plus'].toString());
+    print('iPhone X info: ' + _simulators['iPhone X'].toString());
 
 //     print('first match:' + regExp.firstMatch(devices).toString());
   });
@@ -199,5 +178,10 @@ void main() {
 
   test('add prefix to files in directory', () async {
     await prefixFilesInDir('/tmp/screenshots/test', 'my_prefix');
+  });
+
+  test('validate config file', () async {
+    final Config config = Config('test/test_config.yaml');
+    expect(await config.validate(), true);
   });
 }

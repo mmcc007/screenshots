@@ -6,6 +6,9 @@ import 'package:screenshots/process_images.dart' as processImages;
 import 'package:screenshots/resources.dart' as resources;
 import 'package:screenshots/utils.dart' as utils;
 
+/// default config file name
+const String kConfigFileName = 'screenshots.yaml';
+
 /// Distinguish device OS.
 enum DeviceType { android, ios }
 
@@ -19,8 +22,12 @@ enum DeviceType { android, ios }
 /// 4. Move processed screenshots to fastlane destination for upload to stores.
 /// 5. Stop emulator/simulator.
 ///
-void run(String configPath) async {
-  final config = Config(configPath).config;
+Future<void> run(String configPath) async {
+  final _config = Config(configPath);
+  // validate config file
+  await _config.validate();
+
+  final Map config = _config.config;
   final Map devices = await Devices().init();
 
   // init
@@ -108,7 +115,7 @@ void emulator(String name, bool start,
 void simulator(String name, bool start, [String locale = 'en-US']) {
   // todo: set locale of simulator
   Map simulatorInfo = utils.simulators()[name];
-  print('simulatorInfo=$simulatorInfo');
+//  print('simulatorInfo=$simulatorInfo');
 
   if (start) {
     print('Starting simulator: $name ...');

@@ -63,6 +63,11 @@ Map<String, Map<String, String>> simulators() {
   return simulators;
 }
 
+/// Create list of emulators
+List<String> emulators() {
+  return cmd('emulator', ['-list-avds'], '.', true).split('\n');
+}
+
 /// Adds prefix to all files in a directory
 Future prefixFilesInDir(String dirPath, String prefix) async {
   await for (final file

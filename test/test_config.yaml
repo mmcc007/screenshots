@@ -28,8 +28,3 @@ devices:
 
 # Frame screenshots
 frame: true
-
-## final destination of processed screenshots
-#dest:
-#  ios: /tmp/ios
-#  android: /tmp/android
