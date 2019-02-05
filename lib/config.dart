@@ -26,47 +26,49 @@ class Config {
 
     // check emulators
     final List emulators = utils.emulators();
-    for (String device in config['devices']['android']) {
-      // check screen available for this device
-      screenAvailable(screens, device);
+    if (config['devices']['android'] != null)
+      for (String device in config['devices']['android']) {
+        // check screen available for this device
+        screenAvailable(screens, device);
 
-      // check emulator installed
-      bool emulatorInstalled = false;
-      for (String emulator in emulators) {
-        if (emulator.contains(device.replaceAll(' ', '_')))
-          emulatorInstalled = true;
+        // check emulator installed
+        bool emulatorInstalled = false;
+        for (String emulator in emulators) {
+          if (emulator.contains(device.replaceAll(' ', '_')))
+            emulatorInstalled = true;
+        }
+        if (!emulatorInstalled) {
+          stderr.write(
+              'configuration error: emulator not installed for device \'$device\' in $configPath.\n');
+          stdout.write(
+              'missing emulator: install the missing emulator or use a device '
+              'with an existing emulator in $configPath.\n');
+          exit(1);
+        }
       }
-      if (!emulatorInstalled) {
-        stderr.write(
-            'configuration error: emulator not installed for device \'$device\' in $configPath.\n');
-        stdout.write(
-            'missing emulator: install the missing emulator or use a device '
-            'with an existing emulator in $configPath.\n');
-        exit(1);
-      }
-    }
 
     // check simulators
     final Map simulators = utils.simulators();
-    for (String device in config['devices']['ios']) {
-      // check screen available for this device
-      screenAvailable(screens, device);
+    if (config['devices']['ios'] != null)
+      for (String device in config['devices']['ios']) {
+        // check screen available for this device
+        screenAvailable(screens, device);
 
-      // check simulator installed
-      bool simulatorInstalled = false;
-      simulators.forEach((simulator, _) {
+        // check simulator installed
+        bool simulatorInstalled = false;
+        simulators.forEach((simulator, _) {
 //        print('simulator=$simulator, device=$device');
-        if (simulator == device) simulatorInstalled = true;
-      });
-      if (!simulatorInstalled) {
-        stderr.write(
-            'configuration error: simulator not installed for device \'$device\' in $configPath.\n');
-        stdout.write(
-            'missing simulator: install the missing simulator or use an existing '
-            'simulator for device in $configPath.\n');
-        exit(1);
+          if (simulator == device) simulatorInstalled = true;
+        });
+        if (!simulatorInstalled) {
+          stderr.write(
+              'configuration error: simulator not installed for device \'$device\' in $configPath.\n');
+          stdout.write(
+              'missing simulator: install the missing simulator or use an existing '
+              'simulator for device in $configPath.\n');
+          exit(1);
+        }
       }
-    }
 
     for (String test in config['tests']) {
       if (!await File(test).exists()) {

@@ -43,7 +43,7 @@ String cmd(String cmd, List<String> arguments,
 
 /// Create list of simulators with their ID and status.
 Map<String, Map<String, String>> simulators() {
-  String simulatorInfo = cmd('xcrun', ['simctl', 'list'], '.', true);
+  String simulatorInfo = cmd('xcrun', ['simctl', 'list', 'devices'], '.', true);
   RegExp regExp = new RegExp(r'^    (.*) \((.*-.*-.*-.*)\) \((.*)\).*$',
       caseSensitive: false, multiLine: true);
   Iterable<Match> matches = regExp.allMatches(simulatorInfo);
