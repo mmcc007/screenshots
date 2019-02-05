@@ -109,9 +109,8 @@ frame: true
 ````
 
 # Emulators and Simulators
-`screenshots` automatically starts the emulators and simulators corresponding to devices
-in the `screenshots.yaml`, on which
-you want to run your tests.  
+`screenshots` automatically starts the emulators and simulators corresponding to the devices
+in the `screenshots.yaml`.  
 
 `screenshots` expects that the emulators and simulators corresponding 
 to the devices in the configuration file are installed in the test machine.
