@@ -170,7 +170,7 @@ The supported screen sizes currently supported, with the corresponding devices, 
           statusbar: resources/ios/1242/statusbar_black.png
           frame: resources/ios/phones/iPhone_7_Plus_Silver.png
         offset: -0-0
-        phones:
+        devices:
           - iPhone 7 Plus
     screen2:
         size: 2048x2732
@@ -178,7 +178,7 @@ The supported screen sizes currently supported, with the corresponding devices, 
         resources:
           frame: resources/ios/phones/iPad_Pro_Silver.png
         offset: -0-0
-        phones:
+        devices:
           - iPad Pro (12.9-inch) (2nd generation)
   android:
     screen1:
@@ -189,7 +189,7 @@ The supported screen sizes currently supported, with the corresponding devices, 
           navbar: resources/android/1080/navbar.png
           frame: resources/android/phones/Nexus_5X.png
         offset: -4-9
-        phones:
+        devices:
           - Nexus 5X
         destName: phone
 ````

@@ -84,15 +84,15 @@ class Config {
       stderr.write(
           'configuration error: screen not found for device \'$deviceName\' in $configPath.\n');
       stdout.write(
-          'missing screen: use a supported device in $configPath. If device '
+          'unsupported device: use a supported device in $configPath. If device '
           'is required, request screen support by creating an issue in '
           'https://github.com/mmcc007/screenshots/issues.\n');
       stdout.write('currently supported devices:\n');
       (screens as YamlNode).value.forEach((os, v) {
-        stdout.write('\t$os:\n');
+        stdout.write('    $os:\n');
         v.value.forEach((screenNum, screenProps) {
-          for (String device in screenProps['phones']) {
-            stdout.write('\t\t\'$device\'\n');
+          for (String device in screenProps['devices']) {
+            stdout.write('        $device\n');
           }
         });
       });

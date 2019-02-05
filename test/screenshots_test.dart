@@ -10,7 +10,7 @@ void main() {
     final expected = {
       'destName': 'phone',
       'frame': 'resource/android/phones/Nexus 5X.png',
-      'phones': ['Nexus 5X', 'Nexus ????'],
+      'devices': ['Nexus 5X', 'Nexus ????'],
       'size': '1080x1920',
       'resize': '80%',
       'statusbar': 'resources/android/1080/statusbar.png',
