@@ -1,5 +1,5 @@
 import 'package:screenshots/config.dart';
-import 'package:screenshots/devices.dart';
+import 'package:screenshots/screens.dart';
 import 'package:screenshots/image_magick.dart';
 import 'package:screenshots/resources.dart';
 import 'package:screenshots/utils.dart';
@@ -17,9 +17,9 @@ void main() {
       'navbar': 'resources/android/1080/navbar.png',
       'offset': '-4-9'
     };
-    final Devices devices = Devices();
-    final devicesInfo = await Devices().init();
-    Map screen = devices.screen(devicesInfo, 'Nexus 5X');
+    final Screens screens = Screens();
+    final screensInfo = await Screens().init();
+    Map screen = screens.screenProps(screensInfo, 'Nexus 5X');
     expect(screen, expected);
   });
 
@@ -41,9 +41,9 @@ void main() {
   });
 
   test('overlay status bar', () async {
-    final Devices devices = Devices();
-    final devicesInfo = await devices.init();
-    Map screen = devices.screen(devicesInfo, 'Nexus 5X');
+    final Screens screens = Screens();
+    final screensInfo = await screens.init();
+    Map screen = screens.screenProps(screensInfo, 'Nexus 5X');
     final Config config = Config('test/test_config.yaml');
     Map appConfig = config.config;
 
@@ -71,10 +71,10 @@ void main() {
   });
 
   test('unpack screen resource images', () async {
-    final Devices devices = Devices();
-    final devicesInfo = await devices.init();
-//    Map screen = devices.screen(devicesInfo, 'Nexus 5X');
-    Map screen = devices.screen(devicesInfo, 'iPhone 7 Plus');
+    final Screens screens = Screens();
+    final screensInfo = await screens.init();
+//    Map screen = screens.screen(screensInfo, 'Nexus 5X');
+    Map screen = screens.screenProps(screensInfo, 'iPhone 7 Plus');
     final Config config = Config('test/test_config.yaml');
     Map appConfig = config.config;
 
@@ -92,9 +92,9 @@ void main() {
   });
 
   test('append nav bar', () async {
-    final Devices devices = Devices();
-    final devicesInfo = await devices.init();
-    Map screen = devices.screen(devicesInfo, 'Nexus 5X');
+    final Screens screens = Screens();
+    final screensInfo = await screens.init();
+    Map screen = screens.screenProps(screensInfo, 'Nexus 5X');
     final Config config = Config('test/test_config.yaml');
     Map appConfig = config.config;
 
@@ -113,9 +113,9 @@ void main() {
   });
 
   test('frame screenshot', () async {
-    final Devices devices = Devices();
-    final devicesInfo = await devices.init();
-    Map screen = devices.screen(devicesInfo, 'Nexus 5X');
+    final Screens screens = Screens();
+    final screensInfo = await screens.init();
+    Map screen = screens.screenProps(screensInfo, 'Nexus 5X');
     final Config config = Config('test/test_config.yaml');
     Map appConfig = config.config;
 
@@ -144,7 +144,7 @@ void main() {
 
     print('iPhone X info: ' + _simulators['iPhone X'].toString());
 
-//     print('first match:' + regExp.firstMatch(devices).toString());
+//     print('first match:' + regExp.firstMatch(screens).toString());
   });
 
   test('read resource and write to path', () async {

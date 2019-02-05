@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:screenshots/devices.dart';
+import 'package:screenshots/screens.dart';
 import 'package:screenshots/screenshots.dart';
 import 'package:yaml/yaml.dart';
 import 'package:screenshots/utils.dart' as utils;
@@ -22,13 +22,13 @@ class Config {
   /// Check emulators and simulators are installed,
   /// matching screen is available and tests exist.
   Future<bool> validate() async {
-    final Map devices = await Devices().init();
+    final Map screens = await Screens().init();
 
     // check emulators
     final List emulators = utils.emulators();
     for (String device in config['devices']['android']) {
       // check screen available for this device
-      screenAvailable(devices, device);
+      screenAvailable(screens, device);
 
       // check emulator installed
       bool emulatorInstalled = false;
@@ -50,7 +50,7 @@ class Config {
     final Map simulators = utils.simulators();
     for (String device in config['devices']['ios']) {
       // check screen available for this device
-      screenAvailable(devices, device);
+      screenAvailable(screens, device);
 
       // check simulator installed
       bool simulatorInstalled = false;
@@ -79,8 +79,8 @@ class Config {
   }
 
   // check screen is available for device
-  void screenAvailable(Map devices, String deviceName) {
-    if (Devices().screen(devices, deviceName) == null) {
+  void screenAvailable(Map screens, String deviceName) {
+    if (Screens().screenProps(screens, deviceName) == null) {
       stderr.write(
           'configuration error: screen not found for device \'$deviceName\' in $configPath.\n');
       stdout.write(
@@ -88,7 +88,7 @@ class Config {
           'is required, request screen support by creating an issue in '
           'https://github.com/mmcc007/screenshots/issues.\n');
       stdout.write('currently supported devices:\n');
-      (devices as YamlNode).value.forEach((os, v) {
+      (screens as YamlNode).value.forEach((os, v) {
         stdout.write('\t$os:\n');
         v.value.forEach((screenNum, screenProps) {
           for (String device in screenProps['phones']) {

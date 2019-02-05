@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:screenshots/config.dart';
-import 'package:screenshots/devices.dart';
+import 'package:screenshots/screens.dart';
 import 'package:screenshots/process_images.dart' as processImages;
 import 'package:screenshots/resources.dart' as resources;
 import 'package:screenshots/utils.dart' as utils;
@@ -28,7 +28,7 @@ Future<void> run([String configPath = kConfigFileName]) async {
   await _config.validate();
 
   final Map config = _config.config;
-  final Map devices = await Devices().init();
+  final Map screens = await Screens().init();
 
   // init
   final stagingDir = config['staging'];
@@ -38,20 +38,20 @@ Future<void> run([String configPath = kConfigFileName]) async {
   // run integration tests in each android emulator for each locale and
   // process screenshots
   if (config['devices']['android'] != null)
-    for (final _emulator in config['devices']['android']) {
-      emulator(_emulator, true);
+    for (final emulatorName in config['devices']['android']) {
+      emulator(emulatorName, true);
       for (final locale in config['locales']) {
         for (final testPath in config['tests']) {
           print(
-              'Capturing screenshots with test $testPath on emulator $_emulator in locale $locale ...');
+              'Capturing screenshots with test $testPath on emulator $emulatorName in locale $locale ...');
           screenshots(testPath, stagingDir);
           // process screenshots
 //          print('Capturing screenshots from  test $testPath ...');
           await processImages.process(
-              devices, config, DeviceType.android, _emulator, locale);
+              screens, config, DeviceType.android, emulatorName, locale);
         }
       }
-      emulator(_emulator, false, stagingDir);
+      emulator(emulatorName, false, stagingDir);
     }
 
   // run integration tests in each ios simulator for each locale and
@@ -65,7 +65,7 @@ Future<void> run([String configPath = kConfigFileName]) async {
               'Capturing screenshots with test $testPath on simulator $simulatorName in locale $locale ...');
           screenshots(testPath, stagingDir);
           await processImages.process(
-              devices, config, DeviceType.ios, simulatorName, locale);
+              screens, config, DeviceType.ios, simulatorName, locale);
         }
       }
       simulator(simulatorName, false);

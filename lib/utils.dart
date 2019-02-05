@@ -4,9 +4,7 @@ import 'dart:io';
 import 'package:file_utils/file_utils.dart';
 import 'package:path/path.dart';
 
-///
 /// Clear directory [dir].
-///
 void clearDirectory(String dir) {
 //  if (!(FileUtils.rm([dir], directory: true, force: true, recursive: true) &&
 //      FileUtils.mkdir([dir], recursive: true))) {
@@ -43,22 +41,20 @@ String cmd(String cmd, List<String> arguments,
   return result.stdout;
 }
 
-///
 /// Create list of simulators with their ID and status.
-///
 Map<String, Map<String, String>> simulators() {
-  String devices = cmd('xcrun', ['simctl', 'list'], '.', true);
+  String simulatorInfo = cmd('xcrun', ['simctl', 'list'], '.', true);
   RegExp regExp = new RegExp(r'^    (.*) \((.*-.*-.*-.*)\) \((.*)\).*$',
       caseSensitive: false, multiLine: true);
-  Iterable<Match> matches = regExp.allMatches(devices);
+  Iterable<Match> matches = regExp.allMatches(simulatorInfo);
 
   Map<String, Map<String, String>> simulators = {};
   for (Match m in matches) {
     // load into map
-    Map<String, String> simulatorInfo = {};
-    simulatorInfo['id'] = m.group(2);
-    simulatorInfo['status'] = m.group(3);
-    simulators[m.group(1)] = simulatorInfo;
+    Map<String, String> simulatorProps = {};
+    simulatorProps['id'] = m.group(2);
+    simulatorProps['status'] = m.group(3);
+    simulators[m.group(1)] = simulatorProps;
   }
   return simulators;
 }

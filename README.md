@@ -155,12 +155,12 @@ directories, prior to running `screenshots`.  See [fledge](https://github.com/mm
 # Resources
 A minimum number of screen sizes are supported to meet the requirements of both stores.
 The supported screen sizes currently supported, with the corresponding devices, can be
- found in [devices.yaml](https://github.com/mmcc007/screenshots/blob/master/lib/resources/devices.yaml). 
+ found in [screens.yaml](https://github.com/mmcc007/screenshots/blob/master/lib/resources/screens.yaml). 
  
- Only supported devices can be used in your config file.  
+ Only supported screens can be used in your config file.  
  
  Note: This file is part of the package and is shown for information purposes
- only. It does not need to be modified. You can find the latest version in [devices.yaml](https://github.com/mmcc007/screenshots/blob/master/lib/resources/devices.yaml)
+ only. It does not need to be modified. You can find the latest version in [screens.yaml](https://github.com/mmcc007/screenshots/blob/master/lib/resources/screens.yaml)
 ````yaml
   ios:
     screen1:

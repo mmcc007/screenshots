@@ -1,5 +1,5 @@
 import 'package:file_utils/file_utils.dart';
-import 'package:screenshots/devices.dart';
+import 'package:screenshots/screens.dart';
 import 'package:screenshots/fastlane.dart' as fastlane;
 import 'package:screenshots/image_magick.dart' as im;
 import 'package:screenshots/resources.dart' as resources;
@@ -18,11 +18,11 @@ import 'package:screenshots/utils.dart' as utils;
 ///
 /// After processing, screenshots are handed off for upload via fastlane.
 ///
-void process(Map devices, Map config, DeviceType deviceType, String deviceName,
+void process(Map screens, Map config, DeviceType deviceType, String deviceName,
     String locale) async {
-  final Map screen = Devices().screen(devices, deviceName);
+  final Map screenProps = Screens().screenProps(screens, deviceName);
   final staging = config['staging'];
-  final Map screenResources = screen['resources'];
+  final Map screenResources = screenProps['resources'];
 //  print('resources=$screenResources');
   print('Processing screenshots from test...');
 
@@ -45,13 +45,13 @@ void process(Map devices, Map config, DeviceType deviceType, String deviceName,
     // add frame if required
     if (config['frame']) {
 //      print('placing $screenshotPath in frame');
-      await frame(config, screen, screenshotPath);
+      await frame(config, screenProps, screenshotPath);
     }
   }
 
   // move to final destination for upload to stores via fastlane
   final srcDir = '${config['staging']}/test';
-  final dstDir = fastlane.path(deviceType, locale, '', screen['destName']);
+  final dstDir = fastlane.path(deviceType, locale, '', screenProps['destName']);
   // prefix screenshots with name of device before moving
   // (useful for uploading to apple via fastlane)
   await utils.prefixFilesInDir(srcDir, '$deviceName-');
