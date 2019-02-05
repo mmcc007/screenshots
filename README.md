@@ -14,7 +14,7 @@ For information on automating `screenshots` with a CI/CD tool see [fledge](https
 # Screenshots
 
 `screenshots` is a standalone command line utility and package for capturing screenshots for Flutter. It will start the required android emulators and iOS simulators, run your screen 
-capture tests, process the images, and drop them off for Fastlane for delivery to both stores.
+capture tests on each emulator/simulator, process the images, and drop them off for Fastlane for delivery to both stores.
 
 It is inspired by three products from Fastlane:  
 1. [Snapshots](https://docs.fastlane.tools/getting-started/ios/screenshots/)  
@@ -25,9 +25,9 @@ It is inspired by three products from Fastlane:
    This is used to place captured iOS screenshots in a device frame.
 
 `screenshots` combines key features of all three Fastlane products.  
-1. Captures screenshots from any iOS or android device.
+1. Captures screenshots from any iOS simulator or android emulator.
 2. Frames screenshots in an iOS or android device frame.
-3. The same Flutter integration test can be used across all devices.  
+3. The same Flutter integration test can be used across all simulators/emulators.  
    No need to use iOS UI Tests or Espresso.
 4. Integrates with Fastlane's [deliver](https://docs.fastlane.tools/actions/deliver/) 
 and [supply](https://docs.fastlane.tools/actions/supply/) for upload to respective stores.
@@ -119,11 +119,11 @@ to the devices in the configuration file are installed in the test machine.
 # Installation
 To install `screenshots` on the command line:
 ````bash
-pub global activate screenshots
+$ pub global activate screenshots
 ````
 To upgrade, simply re-issue the command
 ````bash
-pub global activate screenshots
+$ pub global activate screenshots
 ````
 Note: the `screenshots` version should be the same for both the command line and package.  
 1. If upgrading the command line version of `screenshots`, it is helpful to also upgrade the version of `screenshots` in your pubspec.yaml.    
@@ -149,7 +149,8 @@ ios/fastlane/screenshots/en-US
 Images are in a format suitable for upload via [deliver](https://docs.fastlane.tools/actions/deliver/) 
 and [supply](https://docs.fastlane.tools/actions/supply/)
 
-If you intend to use fastlane it is better to install fastlane files in both `ios` and `android` prior to running `screenshots`.  See [fledge](https://github.com/mmcc007/fledge) for more info.
+If you intend to use fastlane it is better to install fastlane files, in both `ios` and `android`
+directories, prior to running `screenshots`.  See [fledge](https://github.com/mmcc007/fledge) for more info.
 
 # Resources
 A minimum number of screen sizes are supported to meet the requirements of both stores.
