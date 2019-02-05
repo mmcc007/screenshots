@@ -38,7 +38,7 @@ class Config {
       }
       if (!emulatorInstalled) {
         stderr.write(
-            'error: emulator not installed for device \'$device\' in $configPath.\n');
+            'configuration error: emulator not installed for device \'$device\' in $configPath.\n');
         stdout.write(
             'missing emulator: install the missing emulator or use a device '
             'with an existing emulator in $configPath.\n');
@@ -60,7 +60,7 @@ class Config {
       });
       if (!simulatorInstalled) {
         stderr.write(
-            'error: simulator not installed for device \'$device\' in $configPath.\n');
+            'configuration error: simulator not installed for device \'$device\' in $configPath.\n');
         stdout.write(
             'missing simulator: install the missing simulator or use an existing '
             'simulator for device in $configPath.\n');
@@ -82,7 +82,7 @@ class Config {
   void screenAvailable(Map devices, String deviceName) {
     if (Devices().screen(devices, deviceName) == null) {
       stderr.write(
-          'error: screen not found for device \'$deviceName\' in $configPath.\n');
+          'configuration error: screen not found for device \'$deviceName\' in $configPath.\n');
       stdout.write(
           'missing screen: use a supported device in $configPath. If device '
           'is required, request screen support by creating an issue in '
