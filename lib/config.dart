@@ -84,17 +84,17 @@ class Config {
   void screenAvailable(Map screens, String deviceName) {
     if (Screens().screenProps(screens, deviceName) == null) {
       stderr.write(
-          'configuration error: screen not found for device \'$deviceName\' in $configPath.\n');
-      stdout.write(
-          'unsupported device: use a supported device in $configPath. If device '
-          'is required, request screen support by creating an issue in '
-          'https://github.com/mmcc007/screenshots/issues.\n');
-      stdout.write('currently supported devices:\n');
-      (screens as YamlNode).value.forEach((os, v) {
+          'configuration error: screen not available for device \'$deviceName\' in $configPath.\n');
+      stdout.write('\n  Use a supported device in $configPath.\n\n'
+          '  If device is required, request screen support for device by\n'
+          '  creating an issue in:\n'
+          '  https://github.com/mmcc007/screenshots/issues.\n\n');
+      stdout.write('  Currently supported devices:\n');
+      screens.forEach((os, v) {
         stdout.write('    $os:\n');
         v.value.forEach((screenNum, screenProps) {
           for (String device in screenProps['devices']) {
-            stdout.write('        $device\n');
+            stdout.write('      $device\n');
           }
         });
       });
