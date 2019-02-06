@@ -25,7 +25,7 @@ It is inspired by three products from Fastlane:
    This is used to place captured iOS screenshots in a device frame.
 
 `screenshots` combines key features of all three Fastlane products.  
-1. Captures screenshots from any iOS simulator or android emulator.
+1. Captures screenshots from any iOS simulator or android emulator and processes images.
 2. Frames screenshots in an iOS or android device frame.
 3. The same Flutter integration test can be used across all simulators/emulators.  
    No need to use iOS UI Tests or Espresso.
@@ -72,6 +72,11 @@ To take screenshots in your tests:
            await screenshot(driver, config, 'myscreenshot1');
        ````
        Note: make sure your screenshot names are unique across all your tests.
+
+Note: to turn off the debug banner on your screens, in you MaterialApp() widget pass:
+````dart
+      debugShowCheckedModeBanner: false,  
+````
 
 # Configuration
 `screenshots` depends on a configuration file, `screenshots.yaml`:
