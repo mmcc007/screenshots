@@ -34,7 +34,7 @@ void process(Map screens, Map config, DeviceType deviceType, String deviceName,
 
   // add status and nav bar and frame for each screenshot
 //  final screenshots = FileUtils.glob('$staging/test/*.*');
-  final screenshots=Directory('$staging/test').listSync();
+  final screenshots = Directory('$staging/test').listSync();
   for (final screenshotPath in screenshots) {
     // add status bar for each screenshot
 //    print('overlaying status bar over screenshot at $screenshotPath');
