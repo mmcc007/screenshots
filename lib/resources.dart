@@ -6,33 +6,48 @@ import 'package:screenshots/utils.dart';
 ///
 /// Copy resource images for a screen from package to files.
 ///
-Future unpackImages(Map screenResources, String stagingPath) async {
+Future unpackImages(Map screenResources, String dstDir) async {
 //  print('unpacking resources=$screenResources');
 
-  for (String screenResource in screenResources.values) {
+  for (String resourcePath in screenResources.values) {
 //    print('uri=package:screenshots/$screenResource');
-    List<int> resourceImage = await readImage(screenResource);
+    List<int> resourceImage = await readResourceImage(resourcePath);
 
     // create resource file
-    final resourcePath = '$stagingPath/$screenResource';
+    final dstPath = '$dstDir/$resourcePath';
 //    print('resourcePath=$resourcePath');
-    await writeImage(resourceImage, resourcePath);
+    await writeImage(resourceImage, dstPath);
   }
 }
 
+/// Read scripts from resources and install in staging area.
+Future<void> unpackScripts(String dstDir) async {
+  await unpackScript(
+    'resources/script/android-wait-for-emulator',
+    dstDir,
+  );
+  await unpackScript(
+    'resources/script/android-wait-for-emulator-to-stop',
+    dstDir,
+  );
+  await unpackScript(
+    'resources/script/simulator-controller',
+    dstDir,
+  );
+}
+
 /// Read script from resources and install in staging area.
-Future unpackScript(String stagingPath) async {
-  final path = 'resources/script/android-wait-for-emulator-to-stop';
-  var resource = Resource('package:screenshots/$path');
+Future unpackScript(String srcPath, String dstDir) async {
+  var resource = Resource('package:screenshots/$srcPath');
   final String script = await resource.readAsString();
-  final file = await File('$stagingPath/$path').create(recursive: true);
+  final file = await File('$dstDir/$srcPath').create(recursive: true);
   await file.writeAsString(script, flush: true);
   // make executable
-  cmd('chmod', ['u+x', '$stagingPath/$path']);
+  cmd('chmod', ['u+x', '$dstDir/$srcPath']);
 }
 
 /// Read an image from resources.
-Future<List<int>> readImage(String uri) async {
+Future<List<int>> readResourceImage(String uri) async {
   var resource = Resource('package:screenshots/$uri');
   return resource.readAsBytes();
 }
