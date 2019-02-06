@@ -96,7 +96,7 @@ void emulator(String emulatorName, bool start,
   if (start) {
     print('Starting emulator: \'$emulatorName\' in locale $locale ...');
 
-//    var emulatorName =
+//    final emulatorName =
 //        utils.emulators().firstWhere((emulator) => emulator.contains(name));
 //    utils.cmd(
 //        'bash',

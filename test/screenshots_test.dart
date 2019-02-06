@@ -187,15 +187,15 @@ void main() {
   });
 
   test('rooted emulator', () {
-    var result = cmd('adb', ['root']);
+    final result = cmd('adb', ['root']);
     print(result);
     expect(result, 'adbd cannot run as root in production builds\n');
   });
 
   test('map device name to emulator', () {
-    var _emulators = emulators();
+    final _emulators = emulators();
     print(_emulators);
-    var emulator =
+    final emulator =
         _emulators.firstWhere((emulator) => emulator.contains('Nexus_5X'));
     expect(emulator, 'Nexus_5X_API_27');
   });

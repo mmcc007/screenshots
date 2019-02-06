@@ -3,7 +3,7 @@ import 'dart:io';
 ///
 /// Called by integration test to capture images.
 ///
-Future screenshot(var driver, Map config, String name) async {
+Future screenshot(final driver, Map config, String name) async {
   // todo: auto-naming scheme
   final stagingDir = config['staging'] + '/test';
   await driver.waitUntilNoTransientCallbacks();

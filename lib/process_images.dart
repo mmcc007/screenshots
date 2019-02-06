@@ -1,4 +1,6 @@
-import 'package:file_utils/file_utils.dart';
+import 'dart:io';
+
+//import 'package:file_utils/file_utils.dart';
 import 'package:screenshots/screens.dart';
 import 'package:screenshots/fastlane.dart' as fastlane;
 import 'package:screenshots/image_magick.dart' as im;
@@ -31,22 +33,23 @@ void process(Map screens, Map config, DeviceType deviceType, String deviceName,
   await resources.unpackImages(screenResources, staging);
 
   // add status and nav bar and frame for each screenshot
-  final screenshots = FileUtils.glob('$staging/test/*.*');
+//  final screenshots = FileUtils.glob('$staging/test/*.*');
+  final screenshots=Directory('$staging/test').listSync();
   for (final screenshotPath in screenshots) {
     // add status bar for each screenshot
 //    print('overlaying status bar over screenshot at $screenshotPath');
-    await overlay(config, screenResources, screenshotPath);
+    await overlay(config, screenResources, screenshotPath.path);
 
     if (deviceType == DeviceType.android) {
       // add nav bar for each screenshot
 //      print('appending navigation bar to screenshot at $screenshotPath');
-      await append(config, screenResources, screenshotPath);
+      await append(config, screenResources, screenshotPath.path);
     }
 
     // add frame if required
     if (config['frame']) {
 //      print('placing $screenshotPath in frame');
-      await frame(config, screenProps, screenshotPath);
+      await frame(config, screenProps, screenshotPath.path);
     }
   }
 

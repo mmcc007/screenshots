@@ -1,15 +1,10 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:file_utils/file_utils.dart';
 import 'package:path/path.dart';
 
 /// Clear directory [dir].
 void clearDirectory(String dir) {
-//  if (!(FileUtils.rm([dir], directory: true, force: true, recursive: true) &&
-//      FileUtils.mkdir([dir], recursive: true))) {
-//    throw 'clear directory failed: dir=$dir';
-//  }
   if (Directory(dir).existsSync()) {
     Directory(dir).deleteSync(recursive: true);
   }
@@ -18,10 +13,11 @@ void clearDirectory(String dir) {
 
 /// Move directory [srcDir] to [dstDir].
 void moveDirectory(String srcDir, String dstDir) {
-  if (!(FileUtils.mkdir([dstDir], recursive: true) &&
-      FileUtils.move(['$srcDir/*.*'], dstDir))) {
-    throw 'move directory failed: srcDir=$srcDir, destDir=$dstDir';
-  }
+//  if (!(FileUtils.mkdir([dstDir], recursive: true) &&
+//      FileUtils.move(['$srcDir/*.*'], dstDir))) {
+//    throw 'move directory failed: srcDir=$srcDir, destDir=$dstDir';
+//  }
+  Directory(srcDir).renameSync(dstDir);
 }
 
 /// Execute command [cmd] with arguments [arguments] in a separate process and return stdout.

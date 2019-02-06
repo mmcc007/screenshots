@@ -12,7 +12,7 @@ class Screens {
   /// Get screens yaml file from resources and parse.
   ///
   Future<Map> init() async {
-    var resource = Resource("package:screenshots/$devicePath");
+    final resource = Resource("package:screenshots/$devicePath");
     String screens = await resource.readAsString(encoding: utf8);
     return loadYaml(screens) as Map;
   }
