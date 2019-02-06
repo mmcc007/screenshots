@@ -17,6 +17,15 @@ ios:
     offset: -0-0
     devices:
       - iPad Pro (12.9-inch) (2nd generation)
+  screen3:
+    size: 2436×1125
+    resize: 75%
+    resources:
+#     statusbar: resources/ios/1242/statusbar_black.png
+    frame: resources/ios/phones/Apple iPhone X Silver.png
+    offset: -0-0
+    devices:
+      - iPhone X
 android:
   screen1:
     size: 1080x1920
@@ -31,3 +40,14 @@ android:
     destName: phone
 #     destName: sevenInch
 #     destName: tenInch
+  screen2: # 5.7 inches
+    size: 1440x2560
+    resize: 80%
+    resources:
+#      statusbar: resources/android/1080/statusbar.png
+      navbar: resources/android/1080/navbar.png
+      frame: resources/android/phones/Nexus 6P.png
+    offset: -4-9
+    devices:
+      - Nexus 6P
+    destName: phone
