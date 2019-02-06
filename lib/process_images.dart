@@ -72,8 +72,7 @@ Future overlay(Map config, Map screenResources, String screenshotPath) async {
   // if no status bar skip
   // todo: get missing status bars
   if (screenResources['statusbar'] == null) {
-    print(
-        'error: image ${p.basename(screenshotPath)} is missing status bar.');
+    print('error: image ${p.basename(screenshotPath)} is missing status bar.');
     return Future.value(null);
   }
   final options = {
