@@ -164,39 +164,43 @@ The supported screen sizes currently supported, with the corresponding devices, 
  Only supported screens can be used in your config file.  
  
  Note: This file is part of the package and is shown for information purposes
- only. It does not need to be modified. You can find the latest version in [screens.yaml](https://github.com/mmcc007/screenshots/blob/master/lib/resources/screens.yaml)
+ only. It does not need to be modified. You can find the latest version in [screens.yaml](https://github.com/mmcc007/screenshots/blob/master/lib/resources/screens.yaml).
 ````yaml
-  ios:
-    screen1:
-        size: 1242x2208
-        resize: 75%
-        resources:
-          statusbar: resources/ios/1242/statusbar_black.png
-          frame: resources/ios/phones/iPhone_7_Plus_Silver.png
-        offset: -0-0
-        devices:
-          - iPhone 7 Plus
-    screen2:
-        size: 2048x2732
-        resize: 75%
-        resources:
-          frame: resources/ios/phones/iPad_Pro_Silver.png
-        offset: -0-0
-        devices:
-          - iPad Pro (12.9-inch) (2nd generation)
-  android:
-    screen1:
-        size: 1080x1920
-        resize: 80%
-        resources:
-          statusbar: resources/android/1080/statusbar.png
-          navbar: resources/android/1080/navbar.png
-          frame: resources/android/phones/Nexus_5X.png
-        offset: -4-9
-        devices:
-          - Nexus 5X
-        destName: phone
+ios:
+  screen1:
+      size: 1242x2208
+      resize: 75%
+      resources:
+        statusbar: resources/ios/1242/statusbar_black.png
+        frame: resources/ios/phones/iPhone_7_Plus_Silver.png
+      offset: -0-0
+      devices:
+        - iPhone 7 Plus
+   screen2:
+      size: 2048x2732
+      resize: 75%
+      resources:
+        frame: resources/ios/phones/iPad_Pro_Silver.png
+      offset: -0-0
+      devices:
+        - iPad Pro (12.9-inch) (2nd generation)
+android:
+  screen1:
+      size: 1080x1920
+      resize: 80%
+      resources:
+        statusbar: resources/android/1080/statusbar.png
+        navbar: resources/android/1080/navbar.png
+        frame: resources/android/phones/Nexus_5X.png
+      offset: -4-9
+      devices:
+        - Nexus 5X
+      destName: phone
 ````
+More screens are expected to be added. If you have a screen you would like to add to screens.yaml
+for a device, please create an [issue](https://github.com/mmcc007/screenshots/issues). Include
+the name of the device and dimensions of screen in pixels (for example, Nexus 5X:1080x1920).
+
 # Current limitations
 * More screens can be added as necessary (the minimum required by Apple and Google stores are already provided).
 * Ipad screens currently have no status bar (waiting for artwork).
