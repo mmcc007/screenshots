@@ -2,6 +2,7 @@ import 'package:screenshots/config.dart';
 import 'package:screenshots/screens.dart';
 import 'package:screenshots/image_magick.dart';
 import 'package:screenshots/resources.dart';
+import 'package:screenshots/screenshots.dart';
 import 'package:screenshots/utils.dart';
 import 'package:test/test.dart';
 
@@ -159,21 +160,21 @@ void main() {
     ];
     final dest = '/tmp';
     for (String resource in resources)
-      writeImage(await readImage(resource), '$dest/$resource');
+      writeImage(await readResourceImage(resource), '$dest/$resource');
   });
 
-  test('simple unpack', () {
+  test('unpack images', () async {
     final resources = {
       'A': 'resources/android/1080/statusbar.png',
       'B': 'resources/android/1080/navbar.png',
       'C': 'resources/android/phones/Nexus_5X.png'
     };
     final dest = '/tmp';
-    unpackImages(resources, dest);
+    await unpackImages(resources, dest);
   });
 
   test('unpack script', () async {
-    await unpackScript('/tmp');
+    await unpackScript('/tmp', 'resources/script/android-wait-for-emulator');
   });
 
   test('add prefix to files in directory', () async {
@@ -183,5 +184,24 @@ void main() {
   test('validate config file', () async {
     final Config config = Config('test/test_config.yaml');
     expect(await config.validate(), true);
+  });
+
+  test('rooted emulator', () {
+    var result = cmd('adb', ['root']);
+    print(result);
+    expect(result, 'adbd cannot run as root in production builds\n');
+  });
+
+  test('map device name to emulator', () {
+    var _emulators = emulators();
+    print(_emulators);
+    var emulator =
+        _emulators.firstWhere((emulator) => emulator.contains('Nexus_5X'));
+    expect(emulator, 'Nexus_5X_API_27');
+  });
+
+  test('change android locale', () {
+//    emulator('Nexus 6P', true, '/tmp/screenshots', 'fr-CA');
+    emulator('Nexus 6P', true, '/tmp/screenshots', 'en-US');
   });
 }
