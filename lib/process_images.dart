@@ -33,10 +33,12 @@ void process(Map devices, Map config, DeviceType deviceType, String deviceName,
   final screenshots = FileUtils.glob('$staging/test/*.*');
   for (final screenshotPath in screenshots) {
     // add status bar for each screenshot
+    if (config['replace_statusbar']) {
 //    print('overlaying status bar over screenshot at $screenshotPath');
-    await overlay(config, screenResources, screenshotPath);
+      await overlay(config, screenResources, screenshotPath);
+    }
 
-    if (deviceType == DeviceType.android) {
+    if (deviceType == DeviceType.android && config['replace_navbar']) {
       // add nav bar for each screenshot
 //      print('appending navigation bar to screenshot at $screenshotPath');
       await append(config, screenResources, screenshotPath);
