@@ -117,8 +117,20 @@ void emulator(String emulatorName, bool start,
           '    https://stackoverflow.com/questions/43923996/adb-root-is-not-working-on-emulator/45668555#45668555 for details.\n');
     } else {
 //      adb shell "setprop persist.sys.locale fr-CA; setprop ctl.restart zygote"
-      utils.cmd('adb', ['shell', '\"setprop persist.sys.locale $locale\"']);
-      utils.cmd('adb', ['shell', '\"setprop ctl.restart zygote\"']);
+      utils.cmd('adb', [
+        'shell',
+        'setprop',
+        'persist.sys.locale',
+        locale,
+        ';',
+        'setprop',
+        'ctl.restart',
+        'zygote'
+      ]);
+      // note: there should be enough time to allow the emulator to restart
+      // while app is being compiled.
+//      utils.cmd('$stagingDir/resources/script/android-wait-for-emulator', [],
+//          '.', true);
     }
   } else {
     print('Stopping emulator: $emulatorName ...');
