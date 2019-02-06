@@ -5,6 +5,7 @@ import 'package:screenshots/image_magick.dart' as im;
 import 'package:screenshots/resources.dart' as resources;
 import 'package:screenshots/screenshots.dart';
 import 'package:screenshots/utils.dart' as utils;
+import 'package:path/path.dart' as p;
 
 ///
 /// Process screenshots.
@@ -71,7 +72,8 @@ Future overlay(Map config, Map screenResources, String screenshotPath) async {
   // if no status bar skip
   // todo: get missing status bars
   if (screenResources['statusbar'] == null) {
-    print('error: missing status bar for screen at: ...');
+    print(
+        'error: image ${p.basename(screenshotPath)} is missing status bar.');
     return Future.value(null);
   }
   final options = {
