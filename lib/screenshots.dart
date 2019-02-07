@@ -43,7 +43,7 @@ Future<void> run([String configPath = kConfigFileName]) async {
         for (final testPath in config['tests']) {
           print(
               'Capturing screenshots with test $testPath on emulator $emulatorName in locale $locale ...');
-          screenshots(testPath, stagingDir);
+          await screenshots(testPath, stagingDir);
           // process screenshots
 //          print('Capturing screenshots from  test $testPath ...');
           await processImages.process(
@@ -62,13 +62,21 @@ Future<void> run([String configPath = kConfigFileName]) async {
         for (final testPath in config['tests']) {
           print(
               'Capturing screenshots with test $testPath on simulator $simulatorName in locale $locale ...');
-          screenshots(testPath, stagingDir);
+          await screenshots(testPath, stagingDir);
           await processImages.process(
               screens, config, DeviceType.ios, simulatorName, locale);
         }
         simulator(simulatorName, false);
       }
     }
+
+  print('Screen images are available in:');
+  print('  ios/fastlane/screenshots');
+  print('  android/fastlane/metadata/android');
+  print('for upload to both Apple and Google consoles.');
+  print('\nFor uploading and other automation options see:');
+  print('  https://github.com/mmcc007/fledge');
+  print('\nscreenshots completed successfully.');
 }
 
 ///
@@ -79,11 +87,11 @@ Future<void> run([String configPath = kConfigFileName]) async {
 /// Assumes the integration test captures the screen shots into a known directory using
 /// provided [capture_screen.screenshot()].
 ///
-void screenshots(String testPath, String stagingDir) {
+void screenshots(String testPath, String stagingDir) async {
   // clear existing screenshots from staging area
   utils.clearDirectory('$stagingDir/test');
   // run the test
-  utils.cmd('flutter', ['drive', testPath]);
+  await utils.streamCmd('flutter', ['drive', testPath]);
 }
 
 ///
@@ -101,9 +109,10 @@ void emulator(String emulatorName, bool start,
 //        'bash',
 //        ['-c', '\'\$ANDROID_HOME/tools/emulator -avd $emulatorName &\''],
 //        '\$ANDROID_HOME/tools');
+
     // Note: the 'flutter build' of the test should allow enough time for emulator to start
     // otherwise, wait for emulator to start
-    utils.cmd('flutter', ['emulator', '--launch', emulatorName]);
+    utils.streamCmd('flutter', ['emulator', '--launch', emulatorName]);
     utils.cmd('$stagingDir/resources/script/android-wait-for-emulator', [], '.',
         true);
     if (utils.cmd('adb', ['root'], '.', true) ==
@@ -133,7 +142,7 @@ void emulator(String emulatorName, bool start,
     print('Stopping emulator: $emulatorName ...');
     utils.cmd('adb', ['emu', 'kill']);
     // wait for emulator to stop
-    utils.cmd(
+    utils.streamCmd(
         '$stagingDir/resources/script/android-wait-for-emulator-to-stop', []);
   }
 }
@@ -148,8 +157,13 @@ void simulator(String name, bool start,
 //  print('simulatorInfo=$simulatorInfo');
 
   if (start) {
-    print('Starting simulator \'$name\' in locale $locale ...');
-    utils.cmd('$stagingDir/resources/script/simulator-controller',
+    if (simulatorInfo['status'] == 'Booted') {
+      print('Restarting simulator \'$name\' in locale $locale ...');
+      utils.cmd('xcrun', ['simctl', 'shutdown', simulatorInfo['id']]);
+    } else {
+      print('Starting simulator \'$name\' in locale $locale ...');
+    }
+    utils.streamCmd('$stagingDir/resources/script/simulator-controller',
         [name, 'locale', locale]);
     // xcrun simctl boot A23897F7-11DF-4F22-82E6-8BEB741F1990
 //    if (simulatorInfo['status'] == 'Shutdown')
