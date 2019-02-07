@@ -44,7 +44,7 @@ Or, if using a config file other than the default 'screenshots.yaml':
 $ screenshots -c <path to config file>
 ````
 
-# Writing tests for `screenshots`
+# Modifying tests for `screenshots`
 Capturing screenshots using this package is straightforward.
 
 A special function is provided in
@@ -116,7 +116,7 @@ frame: true
 Note: emulators and simulators corresponding to the devices in your config file must be installed
 on your test machine.
 
-# Changing configuration
+## Changing configuration
 If you want to change the list of devices to run, to get different screenshots, make sure the devices
 you select have supported screens and corresponding emulators/simulators.
 
@@ -124,12 +124,13 @@ Within each class of ios and android device, multiple devices share the same scr
 Devices are therefore organized by supported screens in a file called `screens.yaml`.
 
 To modify the config file with the devices you want to emulate/simulate:
-1. Locate each device in [screens.yaml](https://github.com/mmcc007/screenshots/blob/master/lib/resources/screens.yaml).  
+1. Locate each device in latest [screens.yaml](https://github.com/mmcc007/screenshots/blob/master/lib/resources/screens.yaml).  
 Use the latest `screens.yaml`, not the sample below.
-2. Modify the list of devices in `screenshots.yaml`.  
-Confirm that the device name matches the name used in `screens.yaml` 
-3. Install an emulator/simulator for each device.  
-Confirm that the emulator/simulator name matches the device name used in `screenshots.yaml`.
+2. Modify the list of devices in `screenshots.yaml` with your selected devices.  
+Confirm that each selected device name matches a name used in `screens.yaml` 
+3. Install an emulator/simulator for each selected device.  
+Confirm that each selected device used in `screenshots.yaml` has an emulator/simulator
+with a matching name.
  
 `screenshots` will validate the config file before running.
 
@@ -168,7 +169,8 @@ android:
 ````
 If you want to use a device that is not included in screens.yaml
 , please create an [issue](https://github.com/mmcc007/screenshots/issues). Include
-the name of the device and size of screen in pixels (for example, Nexus 5X:1080x1920).
+the name of the device and preferably the size of the screen in pixels 
+(for example, Nexus 5X:1080x1920).
 
 # Installation
 To install `screenshots` on the command line:
@@ -179,7 +181,7 @@ To upgrade, simply re-issue the command
 ````bash
 $ pub global activate screenshots
 ````
-Note: the `screenshots` version should be the same for both the command line and package.  
+Note: the `screenshots` version should be the same for both the command line and package:
 1. If upgrading the command line version of `screenshots`, it is helpful to also upgrade
  the version of `screenshots` in your pubspec.yaml.    
 2. If upgrading `screenshots` in your pubspec.yaml, you should also upgrade the command line version.    
@@ -202,7 +204,7 @@ android/fastlane/metadata/android
 ios/fastlane/screenshots
 ````
 Images are in a format suitable for upload via [deliver](https://docs.fastlane.tools/actions/deliver/) 
-and [supply](https://docs.fastlane.tools/actions/supply/)
+and [supply](https://docs.fastlane.tools/actions/supply/).
 
 If you intend to use fastlane it is better to install fastlane files, in both `ios` and `android`
 directories, prior to running `screenshots`.  See [fledge](https://github.com/mmcc007/fledge) for more info.
