@@ -4,7 +4,7 @@
 ![alt text][fade]
 
 [fade]: https://github.com/mmcc007/screenshots/raw/master/fade.gif "Screenshot with overlayed status bar and appended navigation bar placed in frame"  
-Screenshot with overlayed status bar and appended navigation bar placed in frame  
+Screenshot with overlaid status bar and appended navigation bar placed in a device frame.  
 
 For an example of screenshots generated with `screenshots` on a live app see:
 <a href="https://play.google.com/store/apps/details?id=com.orbsoft.todo"><img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" width="40%" title="GitErDone" alt="GitErDone"></a>  
@@ -48,7 +48,7 @@ $ screenshots -c <path to config file>
 Taking screenshots using this package is straightforward.
 
 A special function is provided in
-the `screenshots` package that is called by the test each time you want to take a screenshot. `screenshots` will
+the `screenshots` package that is called by the test each time you want to capture a screenshot. `screenshots` will
 then process the images appropriately during a `screenshots` run.
 
 To take screenshots in your tests:
@@ -91,14 +91,14 @@ staging: /tmp/screenshots
 
 # A list of locales supported in the app
 locales:
+  - de-DE
   - en-US
-#  - de-DE
 
 # A list of devices to emulate
 devices:
   ios:
-#    - iPhone X
-    - iPhone 7 Plus
+    - iPhone X
+#    - iPhone 7 Plus
     - iPad Pro (12.9-inch) (2nd generation)
 #   "iPhone 6",
 #   "iPhone 6 Plus",
@@ -107,7 +107,8 @@ devices:
 #   "iPad Retina",
 #   "iPad Pro"
   android:
-    - Nexus 5X
+    - Nexus 6P
+#    - Nexus 5X
 
 # Frame screenshots
 frame: true
@@ -147,8 +148,8 @@ brew update && brew install imagemagick
 Since `screenshots` is intended to be used with Fastlane, after `screenshots` completes, 
 the images can be found in:
 ````
-android/fastlane/metadata/android/en-US/images
-ios/fastlane/screenshots/en-US
+android/fastlane/metadata/android
+ios/fastlane/screenshots
 ````
 Images are in a format suitable for upload via [deliver](https://docs.fastlane.tools/actions/deliver/) 
 and [supply](https://docs.fastlane.tools/actions/supply/)
@@ -206,4 +207,5 @@ the name of the device and dimensions of screen in pixels (for example, Nexus 5X
 * Ipad screens currently have no status bar (waiting for artwork).
 
 # Issues and Pull Requests
-This is an initial release and more features can be added. [Issues](https://github.com/mmcc007/screenshots/issues) and [pull requests](https://github.com/mmcc007/screenshots/pulls) are welcome.
+[Issues](https://github.com/mmcc007/screenshots/issues) and 
+[pull requests](https://github.com/mmcc007/screenshots/pulls) are welcome.
