@@ -217,4 +217,8 @@ void main() {
     moveFiles(srcDir, dstDir);
     expect(await File(dstDir + '/' + fileName).exists(), true);
   });
+
+  test('start simulator', () {
+    simulator('my_simulator', true, '/tmp/screenshots');
+  });
 }

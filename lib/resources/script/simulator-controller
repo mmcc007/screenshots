@@ -31,6 +31,7 @@ print_params () {
     delete - delete simulator
     boot - boot simulator
     open - open simulator
+    wait - wait for simulator to start
     locale - set locale
     getuid - get simulator uid"
 }
@@ -134,6 +135,42 @@ shutdown () {
   done
 }
 
+# wait for simulator to start
+wait_simulator(){
+  SIMULATOR_ID=$( get_uid )
+  RETRY_DELAY=1
+  retry_cnt=60
+
+  if [ -z $SIMULATOR_ID ]
+  then
+    return
+  fi
+
+  for (( ; ; ))
+  do
+    SIMULATOR_STATUS=$(get_status)
+
+    if [ $SIMULATOR_STATUS = "Booted" ]
+    then
+      break
+#    elif [ $SIMULATOR_STATUS = "Booted" ]
+#    then
+#      xcrun simctl shutdown $SIMULATOR_ID
+    else
+      echo "Retrying in $RETRY_DELAY seconds, status is [$SIMULATOR_STATUS]"
+    fi
+
+    if [ $retry_cnt = 0 ]
+    then
+      echo "Cannot shutdown simulator $SIMULATOR_ID"
+      exit -1
+    fi
+    retry_cnt=$((retry_cnt - 1))
+    sleep $RETRY_DELAY
+  done
+  echo "Simulator is ready."
+}
+
 set_locale () {
   LOCALE=$1
 
@@ -164,6 +201,7 @@ case $COMMAND in
   ("delete") delete ;;
   ("boot") boot ;;
   ("open") open_simulator ;;
+  ("wait") open_simulator ;;
 
   ("shutdown") shutdown ;;
 
