@@ -13,16 +13,16 @@ ios:
     resize: 75%
     resources:
 #     statusbar: resources/ios/1242/statusbar_black.png
-    frame: resources/ios/phones/iPad_Pro_Silver.png
+      frame: resources/ios/phones/iPad_Pro_Silver.png
     offset: -0-0
     devices:
       - iPad Pro (12.9-inch) (2nd generation)
   screen3:
-    size: 2436×1125
+    size: 1125x2436
     resize: 75%
     resources:
 #     statusbar: resources/ios/1242/statusbar_black.png
-    frame: resources/ios/phones/Apple iPhone X Silver.png
+      frame: resources/ios/phones/Apple iPhone X Silver.png
     offset: -0-0
     devices:
       - iPhone X
