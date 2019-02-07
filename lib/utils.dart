@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:path/path.dart' as p;
@@ -39,6 +40,29 @@ String cmd(String cmd, List<String> arguments,
   return result.stdout;
 }
 
+/// Execute command [cmd] with arguments [arguments] in a separate process and stream stdout/stderr.
+Future<void> streamCmd(String cmd, List<String> arguments) async {
+//  print('cmd=\'$cmd ${arguments.join(" ")}\'');
+
+  final process = await Process.start(cmd, arguments);
+
+  var stdOutLineStream =
+      process.stdout.transform(Utf8Decoder()).transform(LineSplitter());
+  await for (var line in stdOutLineStream) {
+    stdout.write(line + '\n');
+  }
+
+  var stdErrLineStream =
+      process.stderr.transform(Utf8Decoder()).transform(LineSplitter());
+  await for (var line in stdErrLineStream) {
+    stderr.write(line + '\n');
+  }
+
+  var exitCode = await process.exitCode;
+  if (exitCode != 0)
+    throw 'command failed: cmd=\'$cmd ${arguments.join(" ")}\'';
+}
+
 /// Create list of simulators with their ID and status.
 Map<String, Map<String, String>> simulators() {
   String simulatorInfo = cmd('xcrun', ['simctl', 'list', 'devices'], '.', true);
@@ -70,15 +94,3 @@ Future prefixFilesInDir(String dirPath, String prefix) async {
         .rename(p.dirname(file.path) + '/' + prefix + p.basename(file.path));
   }
 }
-
-//List<File> filesInDirectory(Directory dir) async {
-//  List<File> files = <File>[];
-//  await for (FileSystemEntity entity in dir.list(recursive: false, followLinks: false)) {
-//    FileSystemEntityType type = await FileSystemEntity.type(entity.path);
-//    if (type == FileSystemEntityType.FILE) {
-//      files.add(entity);
-//      print(entity.path);
-//    }
-//  }
-//  return files;
-//}
