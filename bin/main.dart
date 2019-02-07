@@ -16,7 +16,7 @@ void main(List<String> arguments) async {
     ..addOption(configArg,
         abbr: 'c',
         defaultsTo: 'screenshots.yaml',
-        help: 'Location of config file.',
+        help: 'Path to config file.',
         valueHelp: 'screenshots.yaml')
     ..addFlag(helpArg,
         help: 'Display this help information.', negatable: false);

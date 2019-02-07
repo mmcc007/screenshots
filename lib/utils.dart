@@ -32,9 +32,7 @@ String cmd(String cmd, List<String> arguments,
   final result = Process.runSync(cmd, arguments, workingDirectory: workingDir);
   if (!silent) stdout.write(result.stdout);
   if (result.exitCode != 0) {
-//    stdout.write(result.stdout);
     stderr.write(result.stderr);
-//    exit(result.exitCode);
     throw 'command failed: cmd=\'$cmd ${arguments.join(" ")}\'';
   }
   return result.stdout;

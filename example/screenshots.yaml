@@ -7,6 +7,7 @@ staging: /tmp/screenshots
 
 # A list of locales supported in app
 locales:
+  - de-DE
   - en-US
 
 # A list of devices to emulate
