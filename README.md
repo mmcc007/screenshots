@@ -45,13 +45,13 @@ $ screenshots -c <path to config file>
 ````
 
 # Writing tests for `screenshots`
-Taking screenshots using this package is straightforward.
+Capturing screenshots using this package is straightforward.
 
 A special function is provided in
 the `screenshots` package that is called by the test each time you want to capture a screenshot. `screenshots` will
 then process the images appropriately during a `screenshots` run.
 
-To take screenshots in your tests:
+To capture screenshots in your tests:
 1. Include the `screenshots` package in your pubspec.yaml's dev_dependencies section  
    ````yaml
      screenshots: ^0.1.2
@@ -79,7 +79,7 @@ Note: to turn off the debug banner on your screens, in you MaterialApp() widget 
 ````
 
 # Configuration
-`screenshots` depends on a configuration file, `screenshots.yaml`:
+To run `screenshots` you need to setup a configuration file, `screenshots.yaml`:
 ````yaml
 # Screen capture tests
 tests:
@@ -89,7 +89,7 @@ tests:
 # Interim location of screenshots from tests
 staging: /tmp/screenshots
 
-# A list of locales supported in the app
+# A list of locales supported by the app
 locales:
   - de-DE
   - en-US
@@ -113,59 +113,27 @@ devices:
 # Frame screenshots
 frame: true
 ````
+Note: emulators and simulators corresponding to the devices in your config file must be installed
+on your test machine.
 
-# Emulators and Simulators
-`screenshots` automatically starts the emulators and simulators corresponding to the devices
-in the `screenshots.yaml`.  
+# Changing configuration
+If you want to change the list of devices to run, to get different screenshots, make sure the devices
+you select have supported screens and corresponding emulators/simulators.
 
-`screenshots` expects that the emulators and simulators corresponding 
-to the devices in the configuration file are installed in the test machine.
+Within each class of ios and android device, multiple devices share the same screen size.
+Devices are therefore organized by supported screens in a file called `screens.yaml`.
 
-# Installation
-To install `screenshots` on the command line:
-````bash
-$ pub global activate screenshots
-````
-To upgrade, simply re-issue the command
-````bash
-$ pub global activate screenshots
-````
-Note: the `screenshots` version should be the same for both the command line and package.  
-1. If upgrading the command line version of `screenshots`, it is helpful to also upgrade the version of `screenshots` in your pubspec.yaml.    
-2. If upgrading `screenshots` in your pubspec.yaml, you should also upgrade the command line version.    
-
-## Dependencies
-`screenshots` depends on ImageMagick.  
-
-Since screenshots are generally required for both iOS and Android, testing should be done on a Mac
-(unless you are only testing for android).
-
-````bash
-brew update && brew install imagemagick
-````
-
-# Integration with Fastlane
-Since `screenshots` is intended to be used with Fastlane, after `screenshots` completes, 
-the images can be found in:
-````
-android/fastlane/metadata/android
-ios/fastlane/screenshots
-````
-Images are in a format suitable for upload via [deliver](https://docs.fastlane.tools/actions/deliver/) 
-and [supply](https://docs.fastlane.tools/actions/supply/)
-
-If you intend to use fastlane it is better to install fastlane files, in both `ios` and `android`
-directories, prior to running `screenshots`.  See [fledge](https://github.com/mmcc007/fledge) for more info.
-
-# Resources
-A minimum number of screen sizes are supported to meet the requirements of both stores.
-The supported screen sizes currently supported, with the corresponding devices, can be
- found in [screens.yaml](https://github.com/mmcc007/screenshots/blob/master/lib/resources/screens.yaml). 
+To modify the config file with the devices you want to emulate/simulate:
+1. Locate each device in [screens.yaml](https://github.com/mmcc007/screenshots/blob/master/lib/resources/screens.yaml).  
+Use the latest `screens.yaml`, not the sample below.
+2. Modify the list of devices in `screenshots.yaml`.  
+Confirm that the device name matches the name used in `screens.yaml` 
+3. Install an emulator/simulator for each device.  
+Confirm that the emulator/simulator name matches the device name used in `screenshots.yaml`.
  
- Only supported screens can be used in your config file.  
- 
- Note: This file is part of the package and is shown for information purposes
- only. It does not need to be modified. You can find the latest version in [screens.yaml](https://github.com/mmcc007/screenshots/blob/master/lib/resources/screens.yaml).
+`screenshots` will validate the config file before running.
+
+Sample screens.yaml:
 ````yaml
 ios:
   screen1:
@@ -198,9 +166,46 @@ android:
         - Nexus 5X
       destName: phone
 ````
-More screens are expected to be added. If you have a screen you would like to add to screens.yaml
-for a device, please create an [issue](https://github.com/mmcc007/screenshots/issues). Include
-the name of the device and dimensions of screen in pixels (for example, Nexus 5X:1080x1920).
+If you want to use a device that is not included in screens.yaml
+, please create an [issue](https://github.com/mmcc007/screenshots/issues). Include
+the name of the device and size of screen in pixels (for example, Nexus 5X:1080x1920).
+
+# Installation
+To install `screenshots` on the command line:
+````bash
+$ pub global activate screenshots
+````
+To upgrade, simply re-issue the command
+````bash
+$ pub global activate screenshots
+````
+Note: the `screenshots` version should be the same for both the command line and package.  
+1. If upgrading the command line version of `screenshots`, it is helpful to also upgrade
+ the version of `screenshots` in your pubspec.yaml.    
+2. If upgrading `screenshots` in your pubspec.yaml, you should also upgrade the command line version.    
+
+## Dependencies
+`screenshots` depends on ImageMagick.  
+
+Since screenshots are required by both Apple and Google stores, testing should be done on a Mac
+(unless you are only testing for android).
+
+````bash
+brew update && brew install imagemagick
+````
+
+# Integration with Fastlane
+Since `screenshots` is intended to be used with Fastlane, after `screenshots` completes, 
+the images can be found in:
+````
+android/fastlane/metadata/android
+ios/fastlane/screenshots
+````
+Images are in a format suitable for upload via [deliver](https://docs.fastlane.tools/actions/deliver/) 
+and [supply](https://docs.fastlane.tools/actions/supply/)
+
+If you intend to use fastlane it is better to install fastlane files, in both `ios` and `android`
+directories, prior to running `screenshots`.  See [fledge](https://github.com/mmcc007/fledge) for more info.
 
 # Current limitations
 * More screens can be added as necessary (the minimum required by Apple and Google stores are already provided).
