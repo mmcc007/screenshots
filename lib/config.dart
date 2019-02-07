@@ -41,8 +41,10 @@ class Config {
           stderr.write(
               'configuration error: emulator not installed for device \'$device\' in $configPath.\n');
           stdout.write(
-              'missing emulator: install the missing emulator or use a device '
-              'with an existing emulator in $configPath.\n');
+              'missing emulator: install the missing emulator or use a supported device '
+              'with an installed emulator in $configPath.\n');
+          installedEmulators(emulators);
+          supportedDevices(screens);
           exit(1);
         }
       }
@@ -64,8 +66,10 @@ class Config {
           stderr.write(
               'configuration error: simulator not installed for device \'$device\' in $configPath.\n');
           stdout.write(
-              'missing simulator: install the missing simulator or use an existing '
-              'simulator for device in $configPath.\n');
+              'missing simulator: install the missing simulator or use an installed '
+              'simulator for a supported device in $configPath.\n');
+          installedSimulators(simulators);
+          supportedDevices(screens);
           exit(1);
         }
       }
@@ -89,18 +93,34 @@ class Config {
           '  If device is required, request screen support for device by\n'
           '  creating an issue in:\n'
           '  https://github.com/mmcc007/screenshots/issues.\n\n');
-      stdout.write('  Currently supported devices:\n');
-      screens.forEach((os, v) {
-        stdout.write('    $os:\n');
-        v.value.forEach((screenNum, screenProps) {
-          for (String device in screenProps['devices']) {
-            stdout.write('      $device\n');
-          }
-        });
-      });
+      supportedDevices(screens);
 
 //      stderr.flush();
       exit(1);
     }
+  }
+
+  void supportedDevices(Map screens) {
+    stdout.write('  Currently supported devices:\n');
+    screens.forEach((os, v) {
+      stdout.write('    $os:\n');
+      v.value.forEach((screenNum, screenProps) {
+        for (String device in screenProps['devices']) {
+          stdout.write('      $device\n');
+        }
+      });
+    });
+  }
+
+  void installedEmulators(List emulators) {
+    stdout.write('  Installed emulators:\n');
+    for (final emulator in emulators) {
+      stdout.write('    $emulator\n');
+    }
+  }
+
+  void installedSimulators(Map simulators) {
+    stdout.write('  Installed simulators:\n');
+    simulators.forEach((simulator, _) => stdout.write('    $simulator\n'));
   }
 }
