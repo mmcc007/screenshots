@@ -7,23 +7,39 @@ import 'package:screenshots/resources.dart';
 import 'package:screenshots/screenshots.dart';
 import 'package:screenshots/utils.dart';
 import 'package:test/test.dart';
-import 'package:path/path.dart' as p;
+//import 'package:path/path.dart' as p;
 
 void main() {
-  test('screen info for device', () async {
+  test('screen info for device: Nexus 5X', () async {
     final expected = {
+      'resources': {
+        'statusbar': 'resources/android/1080/statusbar.png',
+        'navbar': 'resources/android/1080/navbar.png',
+        'frame': 'resources/android/phones/Nexus_5X.png'
+      },
       'destName': 'phone',
-      'frame': 'resource/android/phones/Nexus 5X.png',
-      'devices': ['Nexus 5X', 'Nexus ????'],
-      'size': '1080x1920',
       'resize': '80%',
-      'statusbar': 'resources/android/1080/statusbar.png',
-      'navbar': 'resources/android/1080/navbar.png',
-      'offset': '-4-9'
+      'devices': ['Nexus 5X'],
+      'offset': '-4-9',
+      'size': '1080x1920'
     };
     final Screens screens = Screens();
     final screensInfo = await Screens().init();
     Map screen = screens.screenProps(screensInfo, 'Nexus 5X');
+    expect(screen, expected);
+  });
+
+  test('screen info for device: iPhone X', () async {
+    final expected = {
+      'resources': {'frame': 'resources/ios/phones/Apple iPhone X Silver.png'},
+      'resize': '75%',
+      'devices': ['iPhone X'],
+      'offset': '-0-0',
+      'size': '2436×1125'
+    };
+    final Screens screens = Screens();
+    final screensInfo = await Screens().init();
+    Map screen = screens.screenProps(screensInfo, 'iPhone X');
     expect(screen, expected);
   });
 
@@ -119,7 +135,7 @@ void main() {
   test('frame screenshot', () async {
     final Screens screens = Screens();
     final screensInfo = await screens.init();
-    Map screen = screens.screenProps(screensInfo, 'Nexus 5X');
+    Map screen = screens.screenProps(screensInfo, 'iPhone X');
     final Config config = Config('test/test_config.yaml');
     Map appConfig = config.config;
 
@@ -219,6 +235,16 @@ void main() {
   });
 
   test('start simulator', () {
-    simulator('my_simulator', true, '/tmp/screenshots');
+    simulator('iPhone X', true, '/tmp/screenshots');
+  });
+
+  test('stream output from command', () async {
+    await streamCmd('ls', ['-la']);
+    stdout.write('finished\n\n');
+//    print('finished\n');
+//    await stdout.flush();
+//    await stdout.close();
+//    await stdout.done;
+    await streamCmd('ls', ['-33']);
   });
 }
