@@ -91,7 +91,6 @@ void screenshots(String testPath, String stagingDir) {
 ///
 void emulator(String emulatorName, bool start,
     [String stagingDir, String locale = "en-US"]) {
-  // todo: set locale of emulator
   emulatorName = emulatorName.replaceAll(' ', '_');
   if (start) {
     print('Starting emulator: \'$emulatorName\' in locale $locale ...');
@@ -104,9 +103,9 @@ void emulator(String emulatorName, bool start,
 //        '\$ANDROID_HOME/tools');
     // Note: the 'flutter build' of the test should allow enough time for emulator to start
     // otherwise, wait for emulator to start
-//    utils.cmd('flutter', ['emulator', '--launch', emulatorName]);
-//    utils.cmd('$stagingDir/resources/script/android-wait-for-emulator', [], '.',
-//        true);
+    utils.cmd('flutter', ['emulator', '--launch', emulatorName]);
+    utils.cmd('$stagingDir/resources/script/android-wait-for-emulator', [], '.',
+        true);
     if (utils.cmd('adb', ['root'], '.', true) ==
         'adbd cannot run as root in production builds\n') {
       stdout.write(
@@ -129,8 +128,6 @@ void emulator(String emulatorName, bool start,
       ]);
       // note: there should be enough time to allow the emulator to restart
       // while app is being compiled.
-//      utils.cmd('$stagingDir/resources/script/android-wait-for-emulator', [],
-//          '.', true);
     }
   } else {
     print('Stopping emulator: $emulatorName ...');

@@ -1,6 +1,5 @@
 import 'dart:io';
 
-//import 'package:file_utils/file_utils.dart';
 import 'package:screenshots/screens.dart';
 import 'package:screenshots/fastlane.dart' as fastlane;
 import 'package:screenshots/image_magick.dart' as im;
@@ -33,7 +32,6 @@ void process(Map screens, Map config, DeviceType deviceType, String deviceName,
   await resources.unpackImages(screenResources, staging);
 
   // add status and nav bar and frame for each screenshot
-//  final screenshots = FileUtils.glob('$staging/test/*.*');
   final screenshots = Directory('$staging/test').listSync();
   for (final screenshotPath in screenshots) {
     // add status bar for each screenshot
@@ -60,7 +58,7 @@ void process(Map screens, Map config, DeviceType deviceType, String deviceName,
   // (useful for uploading to apple via fastlane)
   await utils.prefixFilesInDir(srcDir, '$deviceName-');
 
-  print('moving screenshots to $dstDir');
+  print('Moving screenshots to $dstDir');
 //  print('srcDir=$srcDir, dstDir=$dstDir');
 //  utils.clearDirectory(dstDir);
   utils.moveFiles(srcDir, dstDir);
