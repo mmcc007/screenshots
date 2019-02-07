@@ -204,7 +204,6 @@ the name of the device and dimensions of screen in pixels (for example, Nexus 5X
 # Current limitations
 * More screens can be added as necessary (the minimum required by Apple and Google stores are already provided).
 * Ipad screens currently have no status bar (waiting for artwork).
-* Locales not supported (the default is whatever locale currently set in the emulator/simulator).
 
 # Issues and Pull Requests
 This is an initial release and more features can be added. [Issues](https://github.com/mmcc007/screenshots/issues) and [pull requests](https://github.com/mmcc007/screenshots/pulls) are welcome.
