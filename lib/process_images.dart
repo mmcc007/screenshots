@@ -25,7 +25,7 @@ void process(Map screens, Map config, DeviceType deviceType, String deviceName,
   final Map screenProps = Screens().screenProps(screens, deviceName);
   final staging = config['staging'];
   final Map screenResources = screenProps['resources'];
-//  print('resources=$screenResources');
+//  print('screenResources=$screenResources');
   print('Processing screenshots from test...');
 
   // unpack images for screen from package to local staging area
