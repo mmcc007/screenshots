@@ -40,7 +40,7 @@ String cmd(String cmd, List<String> arguments,
 
 /// Execute command [cmd] with arguments [arguments] in a separate process and stream stdout/stderr.
 Future<void> streamCmd(String cmd, List<String> arguments) async {
-//  print('cmd=\'$cmd ${arguments.join(" ")}\'');
+//  print('streamCmd=\'$cmd ${arguments.join(" ")}\'');
 
   final process = await Process.start(cmd, arguments);
 

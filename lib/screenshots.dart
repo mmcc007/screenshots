@@ -5,6 +5,7 @@ import 'package:screenshots/screens.dart';
 import 'package:screenshots/process_images.dart' as processImages;
 import 'package:screenshots/resources.dart' as resources;
 import 'package:screenshots/utils.dart' as utils;
+import 'package:screenshots/fastlane.dart' as fastlane;
 
 /// default config file name
 const String kConfigFileName = 'screenshots.yaml';
@@ -39,17 +40,26 @@ Future<void> run([String configPath = kConfigFileName]) async {
   if (config['devices']['android'] != null)
     for (final emulatorName in config['devices']['android']) {
       for (final locale in config['locales']) {
-        emulator(emulatorName, true, stagingDir, locale);
+        await emulator(emulatorName, true, stagingDir, locale);
+        await clearFastlaneDir(
+            screens, emulatorName, locale, DeviceType.android);
+
         for (final testPath in config['tests']) {
           print(
               'Capturing screenshots with test $testPath on emulator $emulatorName in locale $locale ...');
           await screenshots(testPath, stagingDir);
           // process screenshots
 //          print('Capturing screenshots from  test $testPath ...');
+          // process images in background
           await processImages.process(
-              screens, config, DeviceType.android, emulatorName, locale);
+//          processImages.process(
+              screens,
+              config,
+              DeviceType.android,
+              emulatorName,
+              locale);
         }
-        emulator(emulatorName, false, stagingDir);
+        await emulator(emulatorName, false, stagingDir);
       }
     }
 
@@ -59,6 +69,7 @@ Future<void> run([String configPath = kConfigFileName]) async {
     for (final simulatorName in config['devices']['ios']) {
       for (final locale in config['locales']) {
         simulator(simulatorName, true, stagingDir, locale);
+        await clearFastlaneDir(screens, simulatorName, locale, DeviceType.ios);
         for (final testPath in config['tests']) {
           print(
               'Capturing screenshots with test $testPath on simulator $simulatorName in locale $locale ...');
@@ -70,13 +81,24 @@ Future<void> run([String configPath = kConfigFileName]) async {
       }
     }
 
-  print('Screen images are available in:');
+  print('\n\nScreen images are available in:');
   print('  ios/fastlane/screenshots');
   print('  android/fastlane/metadata/android');
   print('for upload to both Apple and Google consoles.');
   print('\nFor uploading and other automation options see:');
   print('  https://github.com/mmcc007/fledge');
   print('\nscreenshots completed successfully.');
+}
+
+/// Clear image destination
+Future clearFastlaneDir(
+    Map screens, deviceName, locale, DeviceType deviceType) async {
+  final Map screenProps = Screens().screenProps(screens, deviceName);
+
+  final dstDir = fastlane.path(deviceType, locale, '', screenProps['destName']);
+
+  print('clearing $dstDir');
+  await utils.clearDirectory(dstDir);
 }
 
 ///
@@ -97,8 +119,8 @@ void screenshots(String testPath, String stagingDir) async {
 ///
 /// Start/stop emulator.
 ///
-void emulator(String emulatorName, bool start,
-    [String stagingDir, String locale = "en-US"]) {
+Future<void> emulator(String emulatorName, bool start,
+    [String stagingDir, String locale = "en-US"]) async {
   emulatorName = emulatorName.replaceAll(' ', '_');
   if (start) {
     print('Starting emulator: \'$emulatorName\' in locale $locale ...');
@@ -112,9 +134,9 @@ void emulator(String emulatorName, bool start,
 
     // Note: the 'flutter build' of the test should allow enough time for emulator to start
     // otherwise, wait for emulator to start
-    utils.streamCmd('flutter', ['emulator', '--launch', emulatorName]);
-    utils.cmd('$stagingDir/resources/script/android-wait-for-emulator', [], '.',
-        true);
+    await utils.streamCmd('flutter', ['emulator', '--launch', emulatorName]);
+    await utils.streamCmd(
+        '$stagingDir/resources/script/android-wait-for-emulator', []);
     if (utils.cmd('adb', ['root'], '.', true) ==
         'adbd cannot run as root in production builds\n') {
       stdout.write(
@@ -142,8 +164,8 @@ void emulator(String emulatorName, bool start,
     print('Stopping emulator: $emulatorName ...');
     utils.cmd('adb', ['emu', 'kill']);
     // wait for emulator to stop
-    utils.streamCmd(
-        '$stagingDir/resources/script/android-wait-for-emulator-to-stop', []);
+//    utils.streamCmd(
+//        '$stagingDir/resources/script/android-wait-for-emulator-to-stop', []);
   }
 }
 
@@ -152,7 +174,6 @@ void emulator(String emulatorName, bool start,
 ///
 void simulator(String name, bool start,
     [String stagingDir, String locale = 'en-US']) {
-  // todo: set locale of simulator
   Map simulatorInfo = utils.simulators()[name];
 //  print('simulatorInfo=$simulatorInfo');
 
