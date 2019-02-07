@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:screenshots/config.dart';
 import 'package:screenshots/screens.dart';
 import 'package:screenshots/image_magick.dart';
@@ -5,6 +7,7 @@ import 'package:screenshots/resources.dart';
 import 'package:screenshots/screenshots.dart';
 import 'package:screenshots/utils.dart';
 import 'package:test/test.dart';
+import 'package:path/path.dart' as p;
 
 void main() {
   test('screen info for device', () async {
@@ -203,5 +206,15 @@ void main() {
   test('change android locale', () {
 //    emulator('Nexus 6P', true, '/tmp/screenshots', 'fr-CA');
     emulator('Nexus 6P', true, '/tmp/screenshots', 'en-US');
+  });
+
+  test('move files', () async {
+    final fileName = 'filename';
+    final srcDir = '/tmp/tmp1/multiple/levels/deep';
+    final dstDir = '/tmp/tmp2/more/levels/deep';
+
+    await File('$srcDir/$fileName').create(recursive: true);
+    moveFiles(srcDir, dstDir);
+    expect(await File(dstDir + '/' + fileName).exists(), true);
   });
 }

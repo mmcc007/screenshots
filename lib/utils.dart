@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:path/path.dart';
+import 'package:path/path.dart' as p;
 
 /// Clear directory [dir].
 void clearDirectory(String dir) {
@@ -11,13 +11,15 @@ void clearDirectory(String dir) {
   Directory(dir).createSync(recursive: true);
 }
 
-/// Move directory [srcDir] to [dstDir].
-void moveDirectory(String srcDir, String dstDir) {
-//  if (!(FileUtils.mkdir([dstDir], recursive: true) &&
-//      FileUtils.move(['$srcDir/*.*'], dstDir))) {
-//    throw 'move directory failed: srcDir=$srcDir, destDir=$dstDir';
-//  }
-  Directory(srcDir).renameSync(dstDir);
+/// Move files from [srcDir] to [dstDir].
+///
+/// If dstDir does not exist, it is created.
+void moveFiles(String srcDir, String dstDir) {
+  if (!Directory(dstDir).existsSync())
+    Directory(dstDir).createSync(recursive: true);
+  Directory(srcDir).listSync().forEach((file) {
+    file.renameSync('$dstDir/${p.basename(file.path)}');
+  });
 }
 
 /// Execute command [cmd] with arguments [arguments] in a separate process and return stdout.
@@ -64,7 +66,8 @@ List<String> emulators() {
 Future prefixFilesInDir(String dirPath, String prefix) async {
   await for (final file
       in Directory(dirPath).list(recursive: false, followLinks: false)) {
-    await file.rename(dirname(file.path) + '/' + prefix + basename(file.path));
+    await file
+        .rename(p.dirname(file.path) + '/' + prefix + p.basename(file.path));
   }
 }
 

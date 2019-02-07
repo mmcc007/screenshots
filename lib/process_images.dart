@@ -63,7 +63,7 @@ void process(Map screens, Map config, DeviceType deviceType, String deviceName,
   print('moving screenshots to $dstDir');
 //  print('srcDir=$srcDir, dstDir=$dstDir');
 //  utils.clearDirectory(dstDir);
-  utils.moveDirectory(srcDir, dstDir);
+  utils.moveFiles(srcDir, dstDir);
 }
 
 ///
