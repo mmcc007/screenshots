@@ -7,7 +7,6 @@ import 'package:screenshots/resources.dart';
 import 'package:screenshots/screenshots.dart';
 import 'package:screenshots/utils.dart';
 import 'package:test/test.dart';
-//import 'package:path/path.dart' as p;
 
 void main() {
   test('screen info for device: Nexus 5X', () async {
@@ -140,6 +139,7 @@ void main() {
     Map appConfig = config.config;
 
     final Map resources = screen['resources'];
+    await unpackImages(resources, '/tmp/screenshots');
 
     final framePath = appConfig['staging'] + '/' + resources['frame'];
     final size = screen['size'];
