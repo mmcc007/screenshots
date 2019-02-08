@@ -24,7 +24,7 @@ ios:
     size: 1125x2436
     resize: 87%
     resources:
-#     statusbar: resources/ios/1242/statusbar_black.png
+      statusbar: resources/ios/1125/statusbar_white.png
       frame: resources/ios/phones/Apple iPhone X Silver.png
     offset: -0-0
     devices:

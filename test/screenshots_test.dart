@@ -62,7 +62,7 @@ void main() {
   test('overlay status bar', () async {
     final Screens screens = Screens();
     final screensInfo = await screens.init();
-    Map screen = screens.screenProps(screensInfo, 'Nexus 5X');
+    Map screen = screens.screenProps(screensInfo, 'iPhone X');
     final Config config = Config('test/test_config.yaml');
     Map appConfig = config.config;
 
@@ -74,16 +74,18 @@ void main() {
 //    final statusbarResourcePath = screen['statusbar'];
 
     final Map resources = screen['resources'];
+    await unpackImages(resources, '/tmp/screenshots');
 
     final statusbarPath = '${appConfig['staging']}/${resources['statusbar']}';
     final screenshotPath = '${appConfig['staging']}/test/0.png';
-    final screenshotStatusbarPath = '${appConfig['staging']}/test/0.png';
+//    final screenshotStatusbarPath =
+//        '${appConfig['staging']}/test/statusbar-0.png';
 
     final options = {
       'screenshotPath': screenshotPath,
 //      'statusbarResourcePath': statusbarResourcePath,
       'statusbarPath': statusbarPath,
-      'screenshotStatusbarPath': screenshotStatusbarPath,
+//      'screenshotStatusbarPath': screenshotStatusbarPath,
     };
     print('options=$options');
     await imagemagick('overlay', options);

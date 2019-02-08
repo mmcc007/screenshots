@@ -10,6 +10,8 @@ Future imagemagick(String command, Map options) async {
       cmdOptions = [
         options['screenshotPath'],
         options['statusbarPath'],
+        '-gravity',
+        'north',
         '-composite',
 //        options['screenshotStatusbarPath'],
         options['screenshotPath'],
