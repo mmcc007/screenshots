@@ -1,20 +1,27 @@
 
-[![pub package](https://img.shields.io/pub/v/screenshots.svg)](https://pub.dartlang.org/packages/screenshots)
+[![pub package](https://img.shields.io/pub/v/screenshots.svg)]
+(https://pub.dartlang.org/packages/screenshots)
 
 ![alt text][fade]
 
-[fade]: https://github.com/mmcc007/screenshots/raw/master/fade.gif "Screenshot with overlayed status bar and appended navigation bar placed in frame"  
+[fade]: https://github.com/mmcc007/screenshots/raw/master/fade.gif "Screenshot with overlayed 
+status bar and appended navigation bar placed in frame"  
 Screenshot with overlaid status bar and appended navigation bar placed in a device frame.  
 
-For an example of screenshots generated with `screenshots` on a live app see:
-<a href="https://play.google.com/store/apps/details?id=com.orbsoft.todo"><img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" width="40%" title="GitErDone" alt="GitErDone"></a>  
+For an example of images generated with `screenshots` on a live app see:
+<a href="https://play.google.com/store/apps/details?id=com.orbsoft.todo">
+<img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" 
+width="40%" title="GitErDone" alt="GitErDone"></a>  
 
-For information on automating `screenshots` with a CI/CD tool see [fledge](https://github.com/mmcc007/fledge).
+For information on automating `screenshots` with a CI/CD tool see 
+[fledge](https://github.com/mmcc007/fledge).
 
 # Screenshots
 
-`screenshots` is a standalone command line utility and package for capturing screenshots for Flutter. It will start the required android emulators and iOS simulators, run your screen 
-capture tests on each emulator/simulator, process the images, and drop them off for Fastlane for delivery to both stores.
+`screenshots` is a standalone command line utility and package for capturing screenshots for 
+Flutter. It will start the required android emulators and iOS simulators, run your screen 
+capture tests on each emulator/simulator, process the images, and drop them off for Fastlane 
+for delivery to both stores.
 
 It is inspired by three products from Fastlane:  
 1. [Snapshots](https://docs.fastlane.tools/getting-started/ios/screenshots/)  
@@ -32,7 +39,8 @@ It is inspired by three products from Fastlane:
 4. Integrates with Fastlane's [deliver](https://docs.fastlane.tools/actions/deliver/) 
 and [supply](https://docs.fastlane.tools/actions/supply/) for upload to respective stores.
 
-See related [article](https://medium.com/@nocnoc/automated-screenshots-for-flutter-f78be70cd5fd) for more information.
+See related [article](https://medium.com/@nocnoc/automated-screenshots-for-flutter-f78be70cd5fd) 
+for more information.
 
 # Usage
 
@@ -48,7 +56,8 @@ $ screenshots -c <path to config file>
 Capturing screenshots using this package is straightforward.
 
 A special function is provided in
-the `screenshots` package that is called by the test each time you want to capture a screenshot. `screenshots` will
+the `screenshots` package that is called by the test each time you want to capture a screenshot. 
+`screenshots` will
 then process the images appropriately during a `screenshots` run.
 
 To capture screenshots in your tests:
@@ -124,13 +133,15 @@ Within each class of ios and android device, multiple devices share the same scr
 Devices are therefore organized by supported screens in a file called `screens.yaml`.
 
 To modify the config file with the devices you want to emulate/simulate:
-1. Locate each device in latest [screens.yaml](https://github.com/mmcc007/screenshots/blob/master/lib/resources/screens.yaml).  
+1. Locate each device in latest 
+[screens.yaml](https://github.com/mmcc007/screenshots/blob/master/lib/resources/screens.yaml).  
 Use the latest `screens.yaml`, not the sample below.
 2. Modify the list of devices in `screenshots.yaml` with your selected devices.  
 Confirm that each selected device name matches a name used in `screens.yaml` 
 3. Install an emulator/simulator for each selected device.  
 Confirm that each selected device used in `screenshots.yaml` has an emulator/simulator
-with a matching name.
+with a matching name.  
+ 
  
 `screenshots` will validate the config file before running.
 
@@ -207,10 +218,12 @@ Images are in a format suitable for upload via [deliver](https://docs.fastlane.t
 and [supply](https://docs.fastlane.tools/actions/supply/).
 
 If you intend to use fastlane it is better to install fastlane files, in both `ios` and `android`
-directories, prior to running `screenshots`.  See [fledge](https://github.com/mmcc007/fledge) for more info.
+directories, prior to running `screenshots`. 
+(See [fledge](https://github.com/mmcc007/fledge) for more info.)
 
 # Current limitations
-* More screens can be added as necessary (the minimum required by Apple and Google stores are already provided).
+* More screens can be added as necessary (the minimum required by Apple and Google stores 
+are already provided).
 * Ipad screens currently have no status bar (waiting for artwork).
 
 # Issues and Pull Requests
