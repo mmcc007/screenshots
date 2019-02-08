@@ -123,7 +123,7 @@ Future<void> emulator(String emulatorName, bool start,
     [String stagingDir, String locale = "en-US"]) async {
   emulatorName = emulatorName.replaceAll(' ', '_');
   if (start) {
-    print('Starting emulator: \'$emulatorName\' in locale $locale ...');
+    print('Starting emulator \'$emulatorName\' in locale $locale ...');
 
 //    final emulatorName =
 //        utils.emulators().firstWhere((emulator) => emulator.contains(name));

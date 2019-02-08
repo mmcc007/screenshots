@@ -236,6 +236,7 @@ void main() {
 
   test('start simulator', () {
     simulator('iPhone X', true, '/tmp/screenshots');
+//    simulator('iPhone X', true, '/tmp/screenshots', 'fr-CA');
   });
 
   test('stream output from command', () async {
