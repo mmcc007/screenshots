@@ -1,6 +1,5 @@
 
-[![pub package](https://img.shields.io/pub/v/screenshots.svg)]
-(https://pub.dartlang.org/packages/screenshots)
+[![pub package](https://img.shields.io/pub/v/screenshots.svg)](https://pub.dartlang.org/packages/screenshots)
 
 ![alt text][fade]
 
@@ -9,9 +8,7 @@ status bar and appended navigation bar placed in frame"
 Screenshot with overlaid status bar and appended navigation bar placed in a device frame.  
 
 For an example of images generated with `screenshots` on a live app see:
-<a href="https://play.google.com/store/apps/details?id=com.orbsoft.todo">
-<img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" 
-width="40%" title="GitErDone" alt="GitErDone"></a>  
+<a href="https://play.google.com/store/apps/details?id=com.orbsoft.todo"><img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" width="40%" title="GitErDone" alt="GitErDone"></a>  
 
 For information on automating `screenshots` with a CI/CD tool see 
 [fledge](https://github.com/mmcc007/fledge).
@@ -132,11 +129,11 @@ you select have supported screens and corresponding emulators/simulators.
 Within each class of ios and android device, multiple devices share the same screen size.
 Devices are therefore organized by supported screens in a file called `screens.yaml`.
 
-To modify the config file with the devices you want to emulate/simulate:
-1. Locate each device in latest 
+To modify the config file with the devices you select to emulate/simulate:
+1. Locate each selected device in latest 
 [screens.yaml](https://github.com/mmcc007/screenshots/blob/master/lib/resources/screens.yaml).  
 Use the latest `screens.yaml`, not the sample below.
-2. Modify the list of devices in `screenshots.yaml` with your selected devices.  
+2. Modify the list of devices in `screenshots.yaml` to your selected devices.  
 Confirm that each selected device name matches a name used in `screens.yaml` 
 3. Install an emulator/simulator for each selected device.  
 Confirm that each selected device used in `screenshots.yaml` has an emulator/simulator
@@ -148,35 +145,35 @@ with a matching name.
 Sample screens.yaml:
 ````yaml
 ios:
-  screen1:
-      size: 1242x2208
-      resize: 75%
-      resources:
-        statusbar: resources/ios/1242/statusbar_black.png
-        frame: resources/ios/phones/iPhone_7_Plus_Silver.png
-      offset: -0-0
-      devices:
-        - iPhone 7 Plus
-   screen2:
-      size: 2048x2732
-      resize: 75%
-      resources:
-        frame: resources/ios/phones/iPad_Pro_Silver.png
-      offset: -0-0
-      devices:
-        - iPad Pro (12.9-inch) (2nd generation)
+  5.5inch:
+    size: 1242x2208
+    resize: 75%
+    resources:
+      statusbar: resources/ios/1242/statusbar_black.png
+      frame: resources/ios/phones/iPhone_7_Plus_Silver.png
+    offset: -0-0
+    devices:
+      - iPhone 7 Plus
+  12.9inch:
+    size: 2048x2732
+    resize: 75%
+    resources:
+      frame: resources/ios/phones/iPad_Pro_Silver.png
+    offset: -0-0
+    devices:
+      - iPad Pro (12.9-inch) (2nd generation)
 android:
-  screen1:
-      size: 1080x1920
-      resize: 80%
-      resources:
-        statusbar: resources/android/1080/statusbar.png
-        navbar: resources/android/1080/navbar.png
-        frame: resources/android/phones/Nexus_5X.png
-      offset: -4-9
-      devices:
-        - Nexus 5X
-      destName: phone
+  5.2inch:
+    size: 1080x1920
+    resize: 80%
+    resources:
+      statusbar: resources/android/1080/statusbar.png
+      navbar: resources/android/1080/navbar.png
+      frame: resources/android/phones/Nexus_5X.png
+     offset: -4-9
+    devices:
+      - Nexus 5X
+    destName: phone
 ````
 If you want to use a device that is not included in screens.yaml
 , please create an [issue](https://github.com/mmcc007/screenshots/issues). Include
