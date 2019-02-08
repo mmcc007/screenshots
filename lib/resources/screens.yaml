@@ -1,5 +1,5 @@
 ios:
-  screen1:
+  5.5inch:
     size: 1242x2208
     resize: 75%
     resources:
@@ -7,8 +7,11 @@ ios:
       frame: resources/ios/phones/iPhone_7_Plus_Silver.png
     offset: -0-0
     devices:
+#      - iPhone 6 Plus
+#      - iPhone 6s Plus
       - iPhone 7 Plus
-  screen2:
+#      - iPhone 8 Plus
+  12.9inch:
     size: 2048x2732
     resize: 75%
     resources:
@@ -17,17 +20,18 @@ ios:
     offset: -0-0
     devices:
       - iPad Pro (12.9-inch) (2nd generation)
-  screen3:
+  5.8inch:
     size: 1125x2436
-    resize: 75%
+    resize: 87%
     resources:
 #     statusbar: resources/ios/1242/statusbar_black.png
       frame: resources/ios/phones/Apple iPhone X Silver.png
     offset: -0-0
     devices:
       - iPhone X
+#      - iPhone Xs
 android:
-  screen1:
+  5.2inch:
     size: 1080x1920
     resize: 80%
     resources:
@@ -40,7 +44,7 @@ android:
     destName: phone
 #     destName: sevenInch
 #     destName: tenInch
-  screen2: # 5.7 inches
+  5.7inch:
     size: 1440x2560
     resize: 80%
     resources:
