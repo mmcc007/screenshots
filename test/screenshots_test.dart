@@ -113,14 +113,15 @@ void main() {
     await unpackImages(screenResources, staging);
   });
 
-  test('append nav bar', () async {
+  test('append navbar', () async {
     final Screens screens = Screens();
     final screensInfo = await screens.init();
-    Map screen = screens.screenProps(screensInfo, 'Nexus 5X');
+    Map screen = screens.screenProps(screensInfo, 'Nexus 6P');
     final Config config = Config('test/test_config.yaml');
     Map appConfig = config.config;
 
     final Map resources = screen['resources'];
+    await unpackImages(resources, '/tmp/screenshots');
 
     final screenshotNavbarPath =
         '${appConfig['staging']}/${resources['navbar']}';

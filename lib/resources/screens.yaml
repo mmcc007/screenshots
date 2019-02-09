@@ -49,7 +49,7 @@ android:
     resize: 80%
     resources:
 #      statusbar: resources/android/1080/statusbar.png
-      navbar: resources/android/1080/navbar.png
+      navbar: resources/android/1440/navbar_black.png
       frame: resources/android/phones/Nexus 6P.png
     offset: -4-9
     destName: phone

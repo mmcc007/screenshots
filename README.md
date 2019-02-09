@@ -7,8 +7,10 @@
 status bar and appended navigation bar placed in frame"  
 Screenshot with overlaid status bar and appended navigation bar placed in a device frame.  
 
-For an example of images generated with `screenshots` on a live app see:
-<a href="https://play.google.com/store/apps/details?id=com.orbsoft.todo"><img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" width="40%" title="GitErDone" alt="GitErDone"></a>  
+For an example of images generated with `screenshots` on a live app see:  
+<a href="https://play.google.com/store/apps/details?id=com.orbsoft.todo"><img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" width="40%" title="GitErDone" alt="GitErDone"></a>
+
+For introduction to `screenshots` see [article](https://medium.com/@nocnoc/automated-screenshots-for-flutter-f78be70cd5fd).
 
 For information on automating `screenshots` with a CI/CD tool see 
 [fledge](https://github.com/mmcc007/fledge).
@@ -35,9 +37,6 @@ It is inspired by three products from Fastlane:
    No need to use iOS UI Tests or Espresso.
 4. Integrates with Fastlane's [deliver](https://docs.fastlane.tools/actions/deliver/) 
 and [supply](https://docs.fastlane.tools/actions/supply/) for upload to respective stores.
-
-See related [article](https://medium.com/@nocnoc/automated-screenshots-for-flutter-f78be70cd5fd) 
-for more information.
 
 # Usage
 
