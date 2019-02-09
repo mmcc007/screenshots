@@ -48,10 +48,10 @@ android:
     size: 1440x2560
     resize: 80%
     resources:
-#      statusbar: resources/android/1080/statusbar.png
+      statusbar: resources/android/1440/statusbar.png
       navbar: resources/android/1440/navbar_black.png
       frame: resources/android/phones/Nexus 6P.png
-    offset: -4-9
+    offset: -3+8
     destName: phone
     devices:
       - Nexus 6P

@@ -59,11 +59,10 @@ void main() {
     expect(appConfig, expected);
   });
 
-  test('overlay status bar', () async {
+  test('overlay statusbar', () async {
     final Screens screens = Screens();
     final screensInfo = await screens.init();
-    Map screen = screens.screenProps(
-        screensInfo, 'iPad Pro (12.9-inch) (2nd generation)');
+    Map screen = screens.screenProps(screensInfo, 'Nexus 6P');
     final Config config = Config('test/test_config.yaml');
     Map appConfig = config.config;
 
@@ -138,8 +137,7 @@ void main() {
   test('frame screenshot', () async {
     final Screens screens = Screens();
     final screensInfo = await screens.init();
-    Map screen = screens.screenProps(
-        screensInfo, 'iPad Pro (12.9-inch) (2nd generation)');
+    Map screen = screens.screenProps(screensInfo, 'Nexus 6P');
     final Config config = Config('test/test_config.yaml');
     Map appConfig = config.config;
 
