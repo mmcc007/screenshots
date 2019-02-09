@@ -62,7 +62,8 @@ void main() {
   test('overlay status bar', () async {
     final Screens screens = Screens();
     final screensInfo = await screens.init();
-    Map screen = screens.screenProps(screensInfo, 'iPhone X');
+    Map screen = screens.screenProps(
+        screensInfo, 'iPad Pro (12.9-inch) (2nd generation)');
     final Config config = Config('test/test_config.yaml');
     Map appConfig = config.config;
 
@@ -136,7 +137,8 @@ void main() {
   test('frame screenshot', () async {
     final Screens screens = Screens();
     final screensInfo = await screens.init();
-    Map screen = screens.screenProps(screensInfo, 'iPhone X');
+    Map screen = screens.screenProps(
+        screensInfo, 'iPad Pro (12.9-inch) (2nd generation)');
     final Config config = Config('test/test_config.yaml');
     Map appConfig = config.config;
 
