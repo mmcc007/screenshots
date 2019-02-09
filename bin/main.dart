@@ -30,14 +30,10 @@ void main(List<String> arguments) async {
   switch (Platform.operatingSystem) {
     case 'windows':
       print(
-          'screenshots is not supported on windows. Try running on MacOS in cloud.');
+          'screenshots is not supported on windows. Try running on MacOS or Linux in cloud.');
       exit(1);
       break;
     case 'linux':
-//      print(
-//          'screenshots is not supported on linux. Try running on MacOS in cloud.');
-//      exit(1);
-      break;
     case 'macos':
       break;
     default:
