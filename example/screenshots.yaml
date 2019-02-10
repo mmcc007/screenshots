@@ -1,22 +1,22 @@
 # Screen capture tests
 tests:
-  - test_driver/test.dart
+  - test_driver/main.dart
 
 # Interim location of screenshots from tests before processing
 staging: /tmp/screenshots
 
 # A list of locales supported in app
 locales:
-  - de-DE
+  - fr-CA
   - en-US
 
 # A list of devices to emulate
 devices:
   ios:
-    - iPhone 7 Plus
-    - iPad Pro (12.9-inch) (2nd generation)
+#    - iPhone X
+#    - iPad Pro (12.9-inch) (2nd generation)
   android:
-    - Nexus 5X
+    - Nexus 6P
 
 # Frame screenshots
 frame: true

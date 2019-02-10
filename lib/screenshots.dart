@@ -97,7 +97,7 @@ Future clearFastlaneDir(
 
   final dstDir = fastlane.path(deviceType, locale, '', screenProps['destName']);
 
-  print('clearing $dstDir');
+  print('Clearing $dstDir');
   await utils.clearDirectory(dstDir);
 }
 

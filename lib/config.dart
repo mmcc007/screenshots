@@ -40,11 +40,10 @@ class Config {
         if (!emulatorInstalled) {
           stderr.write(
               'configuration error: emulator not installed for device \'$device\' in $configPath.\n');
-          stdout.write(
-              'missing emulator: install the missing emulator or use a supported device '
-              'with an installed emulator in $configPath.\n');
-          installedEmulators(emulators);
-          supportedDevices(screens);
+          stdout
+              .write('\nInstall the missing emulator or use a supported device '
+                  'with an installed emulator in $configPath.\n');
+          configGuide(screens);
           exit(1);
         }
       }
@@ -65,11 +64,9 @@ class Config {
         if (!simulatorInstalled) {
           stderr.write(
               'configuration error: simulator not installed for device \'$device\' in $configPath.\n');
-          stdout.write(
-              'missing simulator: install the missing simulator or use an installed '
+          stdout.write('\nInstall the missing simulator or use an installed '
               'simulator for a supported device in $configPath.\n');
-          installedSimulators(simulators);
-          supportedDevices(screens);
+          configGuide(screens);
           exit(1);
         }
       }
@@ -82,6 +79,15 @@ class Config {
     }
 
     return true;
+  }
+
+  void configGuide(Map screens) {
+    installedEmulators(utils.emulators());
+    installedSimulators(utils.simulators());
+    supportedDevices(screens);
+    stdout.write(
+        '\nEach device listed in screenshots.yaml must have a corresponding '
+        'screen and emulator/simulator.\n');
   }
 
   // check screen is available for device
@@ -101,7 +107,7 @@ class Config {
   }
 
   void supportedDevices(Map screens) {
-    stdout.write('  Currently supported devices:\n');
+    stdout.write('\n  Currently supported devices:\n');
     screens.forEach((os, v) {
       stdout.write('    $os:\n');
       v.value.forEach((screenNum, screenProps) {
@@ -113,7 +119,7 @@ class Config {
   }
 
   void installedEmulators(List emulators) {
-    stdout.write('  Installed emulators:\n');
+    stdout.write('\n  Installed emulators:\n');
     for (final emulator in emulators) {
       stdout.write('    $emulator\n');
     }

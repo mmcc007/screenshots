@@ -19,7 +19,7 @@ For information on automating `screenshots` with a CI/CD tool see
 
 `screenshots` is a standalone command line utility and package for capturing screenshots for 
 Flutter. It will start the required android emulators and iOS simulators, run your screen 
-capture tests on each emulator/simulator, process the images, and drop them off for Fastlane 
+capture tests on each emulator/simulator for each locale your app supports, process the images, and drop them off for Fastlane 
 for delivery to both stores.
 
 It is inspired by three products from Fastlane:  
@@ -216,11 +216,6 @@ and [supply](https://docs.fastlane.tools/actions/supply/).
 If you intend to use fastlane it is better to install fastlane files, in both `ios` and `android`
 directories, prior to running `screenshots`. 
 (See [fledge](https://github.com/mmcc007/fledge) for more info.)
-
-# Current limitations
-* More screens can be added as necessary (the minimum required by Apple and Google stores 
-are already provided).
-* Ipad screens currently have no status bar (waiting for artwork).
 
 # Issues and Pull Requests
 [Issues](https://github.com/mmcc007/screenshots/issues) and 
