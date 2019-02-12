@@ -40,7 +40,7 @@ print_params () {
 
 exit_if_no_simulator() {
   SIMULATOR_ID=$( get_uid )
-  if [ -z $SIMULATOR_ID ]
+  if [ -z "${SIMULATOR_NAME}" ]
   then
     echo "No simulator with name [$SIMULATOR_NAME]"
     exit -1
@@ -48,7 +48,8 @@ exit_if_no_simulator() {
 }
 
 get_uid() {
-  echo $( xcrun simctl list | grep -w "${SIMULATOR_NAME}" | awk 'match($0, /\(([-0-9A-F]+)\)/) { print substr( $0, RSTART + 1, RLENGTH - 2 )}' )
+  # get uid of last matching simulator
+  echo $( xcrun simctl list | grep -w "${SIMULATOR_NAME}" | awk 'match($0, /\(([-0-9A-F]+)\)/) { print substr( $0, RSTART + 1, RLENGTH - 2 )}') | awk '{print $NF}'
 }
 
 create () {
@@ -65,12 +66,14 @@ create () {
   exit 1
   fi
 
-  if [ $( get_uid ) ]
-  then
-  delete
-  fi
+#  if [ $( get_uid ) ]
+#  then
+##  delete
+#  echo "simulator '${SIMULATOR_NAME}' already exists."
+#  exit 1
+#  fi
 
-  SIMULATOR_ID=$( xcrun simctl create $SIMULATOR_NAME com.apple.CoreSimulator.SimDeviceType.$TYPE com.apple.CoreSimulator.SimRuntime.$RUNTIME )
+  SIMULATOR_ID=$( xcrun simctl create "${SIMULATOR_NAME}" com.apple.CoreSimulator.SimDeviceType.$TYPE com.apple.CoreSimulator.SimRuntime.$RUNTIME )
   echo $SIMULATOR_ID
 }
 
@@ -100,7 +103,8 @@ open_simulator () {
 }
 
 get_status () {
-  echo $(xcrun simctl list | grep -w "${SIMULATOR_NAME}" | awk 'match($0, /\(([a-zA-Z]+)\)/) { print substr( $0, RSTART + 1, RLENGTH - 2 )}')
+  # get status of last matching simulator
+  echo $(xcrun simctl list devices | grep -w "${SIMULATOR_NAME}" | awk 'match($0, /\(([a-zA-Z]+)\)/) { print substr( $0, RSTART + 1, RLENGTH - 2 )}') | awk '{print $NF}'
 }
 
 shutdown () {
@@ -191,7 +195,7 @@ set_locale () {
   plutil -replace AppleKeyboards -json '[ "uk_UA@sw=Ukrainian;hw=Automatic" ]' $PLIST_FILE
 }
 
-if [ -z $SIMULATOR_NAME ] || [ -z $COMMAND ]
+if [ -z "${SIMULATOR_NAME}" ] || [ -z $COMMAND ]
 then
   print_params "Simulator name and COMMAND has to be specified"
   exit 1
