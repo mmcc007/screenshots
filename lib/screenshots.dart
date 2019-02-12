@@ -49,10 +49,7 @@ Future<void> run([String configPath = kConfigFileName]) async {
               'Capturing screenshots with test $testPath on emulator $emulatorName in locale $locale ...');
           await screenshots(testPath, stagingDir);
           // process screenshots
-//          print('Capturing screenshots from  test $testPath ...');
-          // process images in background
           await processImages.process(
-//          processImages.process(
               screens,
               config,
               DeviceType.android,
@@ -74,6 +71,7 @@ Future<void> run([String configPath = kConfigFileName]) async {
           print(
               'Capturing screenshots with test $testPath on simulator $simulatorName in locale $locale ...');
           await screenshots(testPath, stagingDir);
+          // process screenshots
           await processImages.process(
               screens, config, DeviceType.ios, simulatorName, locale);
         }
@@ -175,7 +173,6 @@ Future<void> emulator(String emulatorName, bool start,
 void simulator(String name, bool start,
     [String stagingDir, String locale = 'en-US']) {
   Map simulatorInfo = utils.simulators()[name];
-//  print('simulatorInfo=$simulatorInfo');
 
   if (start) {
     if (simulatorInfo['status'] == 'Booted') {

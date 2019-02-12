@@ -10,12 +10,10 @@ Future unpackImages(Map screenResources, String dstDir) async {
 //  print('unpacking resources=$screenResources');
 
   for (String resourcePath in screenResources.values) {
-//    print('uri=package:screenshots/$screenResource');
     List<int> resourceImage = await readResourceImage(resourcePath);
 
     // create resource file
     final dstPath = '$dstDir/$resourcePath';
-//    print('resourcePath=$resourcePath');
     await writeImage(resourceImage, dstPath);
   }
 }

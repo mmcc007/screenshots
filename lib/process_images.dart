@@ -59,8 +59,6 @@ void process(Map screens, Map config, DeviceType deviceType, String deviceName,
   await utils.prefixFilesInDir(srcDir, '$deviceName-');
 
   print('Moving screenshots to $dstDir');
-//  print('srcDir=$srcDir, dstDir=$dstDir');
-//  utils.clearDirectory(dstDir);
   utils.moveFiles(srcDir, dstDir);
 }
 

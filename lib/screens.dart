@@ -25,7 +25,6 @@ class Screens {
 
     (screens as YamlNode).value.forEach((os, v) {
       v.value.forEach((screenNum, _screenProps) {
-//        print('devices=${_screenProps['devices'][0]}');
         if (_screenProps['devices'].contains(deviceName)) {
           screenProps = _screenProps;
         }

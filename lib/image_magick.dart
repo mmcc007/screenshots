@@ -13,10 +13,8 @@ Future imagemagick(String command, Map options) async {
         '-gravity',
         'north',
         '-composite',
-//        options['screenshotStatusbarPath'],
         options['screenshotPath'],
       ];
-//      print('cmdOptions=${cmdOptions.join(" ")}');
       break;
     case 'append':
       // convert -append screenshot_statusbar.png navbar.png final_screenshot.png
@@ -28,10 +26,10 @@ Future imagemagick(String command, Map options) async {
       ];
       break;
     case 'frame':
-//      #convert -size $size xc:skyblue \
-//  #          \( "$frameFile" -resize $resize \) -gravity center -composite \
-//  #          \( final_screenshot.png -resize $resize \) -gravity center -geometry -4-9 -composite \
-//  #          framed.png
+//  convert -size $size xc:skyblue \
+//   \( "$frameFile" -resize $resize \) -gravity center -composite \
+//   \( final_screenshot.png -resize $resize \) -gravity center -geometry -4-9 -composite \
+//   framed.png
 
       cmdOptions = [
         '-size',
@@ -39,9 +37,6 @@ Future imagemagick(String command, Map options) async {
 //        'xc:skyblue',
         'xc:none',
         '(',
-//        options['framePath'],
-//        '-resize',
-//        options['resize'],
         options['screenshotPath'],
         '-resize',
         options['resize'],
@@ -52,17 +47,12 @@ Future imagemagick(String command, Map options) async {
         options['offset'],
         '-composite',
         '(',
-//        options['screenshotPath'],
-//        '-resize',
-//        options['resize'],
         options['framePath'],
         '-resize',
         options['resize'],
         ')',
         '-gravity',
         'center',
-//        '-geometry',
-//        options['offset'],
         '-composite',
         options['screenshotPath']
       ];
