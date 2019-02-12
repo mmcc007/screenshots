@@ -17,7 +17,7 @@ locales:
 devices:
   ios:
     - iPhone X
-#    - iPad Pro (12.9-inch) (2nd generation)
+    - iPad Pro (12.9-inch) (2nd generation)
   android:
 #    - Nexus 6P
 

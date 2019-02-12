@@ -79,9 +79,9 @@ To capture screenshots in your tests:
        ````
        Note: make sure your screenshot names are unique across all your tests.
 
-Note: to turn off the debug banner on your screens, in you MaterialApp() widget pass:
+Note: to turn off the debug banner on your screens, in your integration test's main(), call:
 ````dart
-      debugShowCheckedModeBanner: false,  
+  WidgetsApp.debugAllowBannerOverride = false; // remove debug banner for screenshots
 ````
 
 # Configuration

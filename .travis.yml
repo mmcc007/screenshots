@@ -39,10 +39,6 @@ jobs:
         directories:
           - $HOME/screenshots
 
-      before_deploy:
-#      - tar cvzf screenshots.tar.gz ios/fastlane/screenshots android/fastlane/metadata/android/*/images/
-#      - tar cvzf $HOME/screenshots/screenshots.tar.gz ios/fastlane/screenshots
-#      - zip -r $HOME/screenshots/screenshots.zip ios/fastlane/screenshots
       # deploy draft of first artifact
       deploy:
         provider: releases
@@ -56,10 +52,11 @@ jobs:
 
     - stage: Publish screenshots
 #      env: Publish screenshots to GitHub
+      # get artifacts from previous screenshots run
       cache:
         directories:
           - $HOME/screenshots
-      # deploy other artifact (and mark both artifacts as published)
+      # deploy second artifact (and mark both artifacts as published)
       deploy:
         provider: releases
         draft: false
