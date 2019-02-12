@@ -4,7 +4,7 @@ os: osx
 jobs:
   include:
     - stage: Run screenshots
-      env: Create screenshots
+#      env: Create screenshots
       before_install:
       # create repository for artifacts and clear if cached
       - rm -rf $HOME/screenshots
@@ -31,16 +31,19 @@ jobs:
       - pub global activate --source path .
       script:
       - cd example; screenshots
-      # save artifacts for later deploy
+      # copy artifacts to cache for later deploy
+      - tar cvzf $HOME/screenshots/screenshots.tar.gz ios/fastlane/screenshots
+      - zip -r $HOME/screenshots/screenshots.zip ios/fastlane/screenshots
+      # save artifacts for later deploy of second artifact
       cache:
         directories:
           - $HOME/screenshots
 
       before_deploy:
 #      - tar cvzf screenshots.tar.gz ios/fastlane/screenshots android/fastlane/metadata/android/*/images/
-      - tar cvzf $HOME/screenshots/screenshots.tar.gz ios/fastlane/screenshots
-      - zip -r $HOME/screenshots/screenshots.zip ios/fastlane/screenshots
-      # deploy draft of one artifact
+#      - tar cvzf $HOME/screenshots/screenshots.tar.gz ios/fastlane/screenshots
+#      - zip -r $HOME/screenshots/screenshots.zip ios/fastlane/screenshots
+      # deploy draft of first artifact
       deploy:
         provider: releases
         draft: true
@@ -52,7 +55,7 @@ jobs:
           tags: true
 
     - stage: Publish screenshots
-      env: Publish screenshots to GitHub
+#      env: Publish screenshots to GitHub
       cache:
         directories:
           - $HOME/screenshots
