@@ -112,7 +112,6 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-//      home: MyHomePage(title: ExampleLocalizations.of(context).title),
       home: MyHomePage(),
       localizationsDelegates: [
         // ... app-specific localization delegate[s] here
