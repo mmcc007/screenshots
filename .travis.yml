@@ -47,9 +47,13 @@ jobs:
       - wget --quiet --output-document=flutter.zip https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/macos/flutter_macos_v${FLUTTER_VERSION}.zip && unzip -qq flutter.zip > /dev/null && rm flutter.zip
       - export PATH="$PATH":"$HOME/.pub-cache/bin"
       - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
-      - flutter precache
+#      - flutter precache
       - flutter doctor -v
-      - flutter devices
+#      - flutter devices
+
+      # install ImageMagick
+      - brew install imagemagick
+
       # install screenshots
 #      - pub global activate screenshots
       - pub global activate --source path .
