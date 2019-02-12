@@ -1,35 +1,37 @@
 language: generic
-jobs:
-  include:
-  - stage: Screenshots Test
-    env: iOS
-    os: osx
-    before_install:
-    - export HOMEBREW_NO_AUTO_UPDATE=1
-    - brew install libimobiledevice
-    - brew install ideviceinstaller
-    - brew install ios-deploy
-    - brew install cocoapods || echo 'ignore exit(1)'
-    - brew link --overwrite cocoapods
-    - FLUTTER_CHANNEL=stable
-    - FLUTTER_VERSION=1.0.0-${FLUTTER_CHANNEL}
-    - wget --quiet --output-document=flutter.zip https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/macos/flutter_macos_v${FLUTTER_VERSION}.zip
-      && unzip -qq flutter.zip > /dev/null && rm flutter.zip
-    - export PATH="$PATH":"$HOME/.pub-cache/bin"
-    - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
-    - flutter doctor -v
-    - brew install imagemagick
-    - pub global activate --source path .
-    script:
-    - cd example; screenshots
-    - ls -la ios/fastlane/screenshots/en-US
+
+env: iOS
+os: osx
+before_install:
+  - export HOMEBREW_NO_AUTO_UPDATE=1
+  - brew install libimobiledevice
+  - brew install ideviceinstaller
+  - brew install ios-deploy
+  - brew install cocoapods || echo 'ignore exit(1)'
+  - brew link --overwrite cocoapods
+  - FLUTTER_CHANNEL=stable
+  - FLUTTER_VERSION=1.0.0-${FLUTTER_CHANNEL}
+  - wget --quiet --output-document=flutter.zip https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/macos/flutter_macos_v${FLUTTER_VERSION}.zip
+    && unzip -qq flutter.zip > /dev/null && rm flutter.zip
+  - export PATH="$PATH":"$HOME/.pub-cache/bin"
+  - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
+  - flutter doctor -v
+  - brew install imagemagick
+  - pub global activate --source path .
+script:
+  - cd example; screenshots
+
+before_deploy:
+  - ls -la ios/fastlane/screenshots/en-US
+#  - tar cvzf screenshots.tar.gz ios/fastlane/screenshots android/fastlane/metadata/android/*/images/
+ - tar cvzf screenshots.tar.gz ios/fastlane/screenshots
 deploy:
   skip_cleanup: true
   provider: releases
   api_key:
     secure: wyPNNbjTFChWOGc/JiTpGhN490dRzz/qhU2T3CddZALjy4VN3LywennK3xnTOAq+FEYE9H/quP/SxkUX154al/lxeL6QuN5D0Ev2bL3lS9jyaoe0NOKx5GnNTzfv84taZPi768UF4rgYqzzdF8WJTCe0dlvDH7qKgH+dHIZGoB1dM/hhWMEXUv0uAZuFDkepxWHOLHsIABunkz428MEsSRCTdEWOsgdFiEl+DOC5ErmorgHazUWPpSwenz13kCLhU+wT2Fsek5tGBO6GT1Mvw8qrht3LUZBaBQJfx4yhdXQKtq0Dr+gI9a3sbF/3TKV0nRvDVA+KGmMLHT+fkRrz1xkGvrLnCDfkylDZlmn/IoQUkv4JwI+lJIXfUp40pMmSlFH1WKToWSjMsPSxv02fVYzxNZoxlno+qyKk4lfdROOSSYS5LjmMd+Lrvhmx7vNMCHl57fdXdKwgyJllxT/khMZTJv5IPQih1yi3m/hDw0s59IHYd22QHFoodcdAPy2xxeVh8VhzhucpesWAvoFZfgdTmPZXAzpMR4kEaeBb5f3Z/Eg3AypDPXg67kXwFqTRL+ZqDzOFynZYJML8RbsZd/nqU5TYc0Ocmh0YMA3v0Z43wuZMshXOXujl8z3zmnwzV/QmFP0U/phOGa9SmvKtRyGQoTGtIXoPWdXrRpgm3F4=
-  file: ios/fastlane/screenshots/en-US/iPhone X-0.png
+  file: screenshots.tar.gz
   on:
-    repo: mmcc007/screenshots
-    branch: dev
+#    repo: mmcc007/screenshots
+#    branch: dev
     tags: true
