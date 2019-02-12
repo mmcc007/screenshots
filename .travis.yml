@@ -27,7 +27,7 @@ deploy:
   provider: releases
   api_key:
     secure: wyPNNbjTFChWOGc/JiTpGhN490dRzz/qhU2T3CddZALjy4VN3LywennK3xnTOAq+FEYE9H/quP/SxkUX154al/lxeL6QuN5D0Ev2bL3lS9jyaoe0NOKx5GnNTzfv84taZPi768UF4rgYqzzdF8WJTCe0dlvDH7qKgH+dHIZGoB1dM/hhWMEXUv0uAZuFDkepxWHOLHsIABunkz428MEsSRCTdEWOsgdFiEl+DOC5ErmorgHazUWPpSwenz13kCLhU+wT2Fsek5tGBO6GT1Mvw8qrht3LUZBaBQJfx4yhdXQKtq0Dr+gI9a3sbF/3TKV0nRvDVA+KGmMLHT+fkRrz1xkGvrLnCDfkylDZlmn/IoQUkv4JwI+lJIXfUp40pMmSlFH1WKToWSjMsPSxv02fVYzxNZoxlno+qyKk4lfdROOSSYS5LjmMd+Lrvhmx7vNMCHl57fdXdKwgyJllxT/khMZTJv5IPQih1yi3m/hDw0s59IHYd22QHFoodcdAPy2xxeVh8VhzhucpesWAvoFZfgdTmPZXAzpMR4kEaeBb5f3Z/Eg3AypDPXg67kXwFqTRL+ZqDzOFynZYJML8RbsZd/nqU5TYc0Ocmh0YMA3v0Z43wuZMshXOXujl8z3zmnwzV/QmFP0U/phOGa9SmvKtRyGQoTGtIXoPWdXrRpgm3F4=
-  file: lib/fastlane/screenshots/en-US/iPhone\ X-0.png
+  file: ios/fastlane/screenshots/en-US/iPhone X-0.png
   on:
     repo: mmcc007/screenshots
     branch: dev
