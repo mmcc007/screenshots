@@ -23,11 +23,19 @@ jobs:
     script:
     - cd example; screenshots
     - ls -la ios/fastlane/screenshots/en-US
-    deploy:
-      provider: releases
-      api_key:
-        secure: f9QJ6mINebsRyvDWftm0YMX4pm2ICqq8/piyB5oKo9usbG7Oq5k5SkSEhW1///XLUrif7nMG1vO3ZbRwB5zywlfT3efqzPgY/oVleon6ElEDm0t6wFepwS7qd4Dgfqx+VpAYWvn4e1N7NI76iMQH5OjmyoNNdE5jrldoJma3ULI4UpV+Jdk0D73Nzd11FDd7GKIkN1jHsfPWyVFrCCx1qksL+v5BwYx4tS7PUMeJgtnFHcC861ORRM0yParDXYYti8GsCVC3851XRL3o7ZlOTtniTokpkOItHA1QPggg9WY2nMnmvVSXrMOJeep1XvcHFvIVLDqsfw834OO9ke7ZFANByu7i+218uzIrGQKw9s+gSSG+A2KWrYXNWnXmSJXaF/JoJqMu8OVT7YOXjlos/9/wT4xp+hrrxiS6Kawg9oYlvtZ8jH2J519JBMj940s1xyCP2IijqbviaaATZGdFAoNPr6ZfQenobuhqm5AsQJN0cgbYVbUuNYVdn4+HHTelTmydE71rLtdwERwpHtAjiYxwR+bGC8FHBONsXZZ6aq0tyGWxy2NcK2jO6eps+wGXdmrIx2a3D/4hifHNEM7bM9/adH979BFm6wqbxsXbz4oR4i+t0pO914wP+t2uhuxn+hHAGN8vlQj/HLL4D4DUBNr706XdtAAKtl2+Owvzlew=
-      file: ios/fastlane/screenshots/en-US/iPhone X-0.png
-      on:
-        repo: mmcc007/screenshots
-        branch: dev
+#    deploy:
+#      provider: releases
+#      api_key:
+#        secure: f9QJ6mINebsRyvDWftm0YMX4pm2ICqq8/piyB5oKo9usbG7Oq5k5SkSEhW1///XLUrif7nMG1vO3ZbRwB5zywlfT3efqzPgY/oVleon6ElEDm0t6wFepwS7qd4Dgfqx+VpAYWvn4e1N7NI76iMQH5OjmyoNNdE5jrldoJma3ULI4UpV+Jdk0D73Nzd11FDd7GKIkN1jHsfPWyVFrCCx1qksL+v5BwYx4tS7PUMeJgtnFHcC861ORRM0yParDXYYti8GsCVC3851XRL3o7ZlOTtniTokpkOItHA1QPggg9WY2nMnmvVSXrMOJeep1XvcHFvIVLDqsfw834OO9ke7ZFANByu7i+218uzIrGQKw9s+gSSG+A2KWrYXNWnXmSJXaF/JoJqMu8OVT7YOXjlos/9/wT4xp+hrrxiS6Kawg9oYlvtZ8jH2J519JBMj940s1xyCP2IijqbviaaATZGdFAoNPr6ZfQenobuhqm5AsQJN0cgbYVbUuNYVdn4+HHTelTmydE71rLtdwERwpHtAjiYxwR+bGC8FHBONsXZZ6aq0tyGWxy2NcK2jO6eps+wGXdmrIx2a3D/4hifHNEM7bM9/adH979BFm6wqbxsXbz4oR4i+t0pO914wP+t2uhuxn+hHAGN8vlQj/HLL4D4DUBNr706XdtAAKtl2+Owvzlew=
+#      file: ios/fastlane/screenshots/en-US/iPhone X-0.png
+#      on:
+#        repo: mmcc007/screenshots
+#        branch: dev
+deploy:
+  provider: releases
+  api_key:
+    secure: OhCgYAYbJTY8eP7zliayrqA4Gsoi9AEKbNkAQ2hBXuiidovvDj1WPTjyyfN7NkzK5/XcZoDqESu3w56mKpsaXvV5GL6jjJT7V1bHtNnF2o8dCfULg+y5QgJjAatpq3DT/56VM7W+OtqY/rAehRVna/evNHGP/yYscMainIJa3QZJMdBDCWkMLpPxaWQaG1Skxip7spxfoeyk/8CjF40zQnRsSjOpFf81YOObG98CMBwATjvBenbElBzmztYGdNNWqvJejZewHZ24Fqqd99PqCimtrutUsomipC7emK7Q84XYIftC8WZ+Os/oWROab5YU+kChuf5job3DRB2aziZVTR99U0JVtRnwhpyWMIph8qxe/lXIyuC3fFxiFFqp9NJHPg3R1KeO+cF8b/308Zd3GNIJUFH/oh/FdUECz8TAEjoGcI/8MuES6LiKOSESj40ejaNk38v056yWWhlAwMMk6PeXTPuYwl9+d2UTvYvOKQdhOlH9dUfFbrmuNYVADFjqirEtjjwrYfywod+pOCpGUis3wp5CvCfOI6k03VNnL/OqdOectxVSapuq2thCrR0ghFjAQF9gKX+nroYJZEFFPKCkMIOHNbsMGNfsjlZ2P2DZXbY4ECIux4O04k5EOCMn49JxNnDmv3XcsIiA3TYXlMCEEtEBJP/1ZaWtTWZrLIE=
+  file: ios/fastlane/screenshots/en-US/iPhone\ X-0.png
+  on:
+    repo: mmcc007/screenshots
+    branch: dev
