@@ -24,7 +24,7 @@ script:
 before_deploy:
   - ls -la ios/fastlane/screenshots/en-US
 #  - tar cvzf screenshots.tar.gz ios/fastlane/screenshots android/fastlane/metadata/android/*/images/
- - tar cvzf screenshots.tar.gz ios/fastlane/screenshots
+  - tar cvzf screenshots.tar.gz ios/fastlane/screenshots
 deploy:
   skip_cleanup: true
   provider: releases
