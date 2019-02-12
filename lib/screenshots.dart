@@ -50,11 +50,7 @@ Future<void> run([String configPath = kConfigFileName]) async {
           await screenshots(testPath, stagingDir);
           // process screenshots
           await processImages.process(
-              screens,
-              config,
-              DeviceType.android,
-              emulatorName,
-              locale);
+              screens, config, DeviceType.android, emulatorName, locale);
         }
         await emulator(emulatorName, false, stagingDir);
       }
