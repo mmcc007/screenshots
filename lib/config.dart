@@ -24,9 +24,9 @@ class Config {
   Future<bool> validate() async {
     final Map screens = await Screens().init();
 
-    // check emulators
-    final List emulators = utils.emulators();
-    if (config['devices']['android'] != null)
+    if (config['devices']['android'] != null) {
+      // check emulators
+      final List emulators = utils.emulators();
       for (String device in config['devices']['android']) {
         // check screen available for this device
         screenAvailable(screens, device);
@@ -47,10 +47,11 @@ class Config {
           exit(1);
         }
       }
+    }
 
-    // check simulators
-    final Map simulators = utils.simulators();
-    if (config['devices']['ios'] != null)
+    if (config['devices']['ios'] != null) {
+      // check simulators
+      final Map simulators = utils.simulators();
       for (String device in config['devices']['ios']) {
         // check screen available for this device
         screenAvailable(screens, device);
@@ -70,6 +71,7 @@ class Config {
           exit(1);
         }
       }
+    }
 
     for (String test in config['tests']) {
       if (!await File(test).exists()) {
