@@ -20,7 +20,8 @@ jobs:
       - flutter doctor -v
       - brew install imagemagick
       - pub global activate --source path .
-      # create repository for artifacts
+      # create repository for artifacts and clear if cached
+      - rm -rf $HOME/screenshots
       - mkdir $HOME/screenshots
       script:
       - cd example; screenshots
