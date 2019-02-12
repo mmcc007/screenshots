@@ -5,7 +5,7 @@ jobs:
     stage: Screenshots Test
     env: iOS
     os: osx
-    osx_image: xcode9.0
+#    osx_image: xcode9.0 # xcode9.4 is default
     before_install:
 #    - open /Applications/Xcode.app/Contents/Developer/Applications/Simulator.app
 #      # install android sdk
