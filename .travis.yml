@@ -1,128 +1,33 @@
 language: generic
 jobs:
   include:
-  - &IOS_RUN
-    stage: Screenshots Test
+  - stage: Screenshots Test
     env: iOS
     os: osx
-#    osx_image: xcode9.0 # xcode9.4 is default
     before_install:
-#    - open /Applications/Xcode.app/Contents/Developer/Applications/Simulator.app
-#      # install android sdk
-#      - ANDROID_COMPILE_SDK=28
-#      - ANDROID_BUILD_TOOLS=28.0.1
-#      - ANDROID_SDK_TOOLS=4333796
-#
-#      # Install android tools
-#      - export ANDROID_HOME=$HOME/android-sdk-darwin
-#      - wget -q "https://dl.google.com/android/repository/sdk-tools-darwin-$ANDROID_TOOLS.zip" -O android-sdk-tools.zip
-#
-#      - unzip -q android-sdk-tools.zip -d ${ANDROID_HOME}
-#      - rm android-sdk-tools.zip
-#      - PATH=${PATH}:${ANDROID_HOME}/tools:${ANDROID_HOME}/tools/bin:${ANDROID_HOME}/platform-tools
-#      # Silence warning.
-#      - mkdir -p ~/.android
-#      - touch ~/.android/repositories.cfg
-#      # install correct version of java on osx (for sdkmanager to run)
-#      - brew cask uninstall java; brew tap caskroom/versions; brew cask install java8;
-#      # Accept licenses before installing components
-#      - yes | sdkmanager --licenses
-#      # Platform tools
-#      - yes | sdkmanager "platform-tools" "platforms;android-${ANDROID_COMPILE_SDK}" "build-tools;${ANDROID_BUILD_TOOLS}" > /dev/null
-#      - sdkmanager --list | head -15
-
-      # install Xcode tools
-      # skip homebrew update
-      - export HOMEBREW_NO_AUTO_UPDATE=1
-      #    -brew update
-      - brew install libimobiledevice
-      - brew install ideviceinstaller
-      - brew install ios-deploy
-      - brew install cocoapods || echo 'ignore exit(1)'
-      - brew link --overwrite cocoapods
-
-      # install pre-compiled flutter
-      - FLUTTER_CHANNEL=stable
-      - FLUTTER_VERSION=1.0.0-${FLUTTER_CHANNEL}
-      - wget --quiet --output-document=flutter.zip https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/macos/flutter_macos_v${FLUTTER_VERSION}.zip && unzip -qq flutter.zip > /dev/null && rm flutter.zip
-      - export PATH="$PATH":"$HOME/.pub-cache/bin"
-      - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
-#      - flutter precache
-      - flutter doctor -v
-#      - flutter devices
-
-      # install ImageMagick
-      - brew install imagemagick
-
-      # install screenshots
-#      - pub global activate screenshots
-      - pub global activate --source path .
-#    install:
-      # install and/or start simulators and emulators per screenshots.yaml
-#    before_script:
-#      # create and start simulator
-#      - script/ios_simulator_cli.sh iPhone-X create iPhone-X iOS-11-4
-#      - script/ios_simulator_cli.sh iPhone-X boot
+    - export HOMEBREW_NO_AUTO_UPDATE=1
+    - brew install libimobiledevice
+    - brew install ideviceinstaller
+    - brew install ios-deploy
+    - brew install cocoapods || echo 'ignore exit(1)'
+    - brew link --overwrite cocoapods
+    - FLUTTER_CHANNEL=stable
+    - FLUTTER_VERSION=1.0.0-${FLUTTER_CHANNEL}
+    - wget --quiet --output-document=flutter.zip https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/macos/flutter_macos_v${FLUTTER_VERSION}.zip
+      && unzip -qq flutter.zip > /dev/null && rm flutter.zip
+    - export PATH="$PATH":"$HOME/.pub-cache/bin"
+    - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
+    - flutter doctor -v
+    - brew install imagemagick
+    - pub global activate --source path .
     script:
-      - cd example; screenshots
-
-#  - <<: *IOS_RUN
-#    env: ios default app french internationalized
-#    before_script: &START_SIMULATOR_WITH_LOCALE_FRENCH
-#      # change language to french
-#      - script/ios_simulator_cli.sh iPhone-X create iPhone-X iOS-11-4
-#      - script/ios_simulator_cli.sh iPhone-X locale fr
-#      - script/ios_simulator_cli.sh iPhone-X boot
-#      - flutter devices
-#
-#  - <<: *IOS_RUN
-#    env: ios default app english (sanity check)
-#    script:
-#      - cd default_app; flutter driver lib/main.dart
-#
-#  - <<: *IOS_RUN
-#    env: ios default app french (sanity check)
-#    before_script: *START_SIMULATOR_WITH_LOCALE_FRENCH
-#    script:
-#      - cd default_app; flutter driver lib/main.dart
-
-#  - &ANDROID_RUN
-#    stage: Screenshots Test
-#    env: iOS
-#    language: generic
-#    before_install:
-#      - ANDROID_COMPILE_SDK=28
-#      - ANDROID_BUILD_TOOLS=28.0.1
-#      - ANDROID_SDK_TOOLS=4333796
-#
-#      # Install android tools
-#      - export ANDROID_HOME=$HOME/android-sdk-darwin
-#      - wget -q "https://dl.google.com/android/repository/sdk-tools-darwin-$ANDROID_TOOLS.zip" -O android-sdk-tools.zip
-#
-#      - unzip -q android-sdk-tools.zip -d ${ANDROID_HOME}
-#      - rm android-sdk-tools.zip
-#      - PATH=${PATH}:${ANDROID_HOME}/tools:${ANDROID_HOME}/tools/bin:${ANDROID_HOME}/platform-tools
-#      # Silence warning.
-#      - mkdir -p ~/.android
-#      - touch ~/.android/repositories.cfg
-#      # install correct version of java on osx (for sdkmanager to run)
-#      - brew cask uninstall java; brew tap caskroom/versions; brew cask install java8;
-#      # Accept licenses before installing components
-#      - yes | sdkmanager --licenses
-#      # Platform tools
-#      - yes | sdkmanager "platform-tools" "platforms;android-${ANDROID_COMPILE_SDK}" "build-tools;${ANDROID_BUILD_TOOLS}" > /dev/null
-#      - sdkmanager --list | head -15
-#
-#    install:
-#      - sudo apt-get install -y --no-install-recommends lib32stdc++6 libstdc++6 > /dev/null
-#
-#      # install version of fastlane from Gemfile.lock
-#      - bundle install > /dev/null
-#
-#      # install flutter
-#      - FLUTTER_CHANNEL=stable
-#      - FLUTTER_VERSION=1.0.0-${FLUTTER_CHANNEL}
-#      - wget --quiet --output-document=flutter.tar.xz https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/linux/flutter_linux_v${FLUTTER_VERSION}.tar.xz && tar xf flutter.tar.xz > /dev/null && rm flutter.tar.xz
-#      - export PATH="$PATH":"$PWD/.pub-cache/bin"
-#      - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
-#      - flutter doctor -v
+    - cd example; screenshots
+    - ls -la ios/fastlane/screenshots/en-US
+    deploy:
+      provider: releases
+      api_key:
+        secure: f9QJ6mINebsRyvDWftm0YMX4pm2ICqq8/piyB5oKo9usbG7Oq5k5SkSEhW1///XLUrif7nMG1vO3ZbRwB5zywlfT3efqzPgY/oVleon6ElEDm0t6wFepwS7qd4Dgfqx+VpAYWvn4e1N7NI76iMQH5OjmyoNNdE5jrldoJma3ULI4UpV+Jdk0D73Nzd11FDd7GKIkN1jHsfPWyVFrCCx1qksL+v5BwYx4tS7PUMeJgtnFHcC861ORRM0yParDXYYti8GsCVC3851XRL3o7ZlOTtniTokpkOItHA1QPggg9WY2nMnmvVSXrMOJeep1XvcHFvIVLDqsfw834OO9ke7ZFANByu7i+218uzIrGQKw9s+gSSG+A2KWrYXNWnXmSJXaF/JoJqMu8OVT7YOXjlos/9/wT4xp+hrrxiS6Kawg9oYlvtZ8jH2J519JBMj940s1xyCP2IijqbviaaATZGdFAoNPr6ZfQenobuhqm5AsQJN0cgbYVbUuNYVdn4+HHTelTmydE71rLtdwERwpHtAjiYxwR+bGC8FHBONsXZZ6aq0tyGWxy2NcK2jO6eps+wGXdmrIx2a3D/4hifHNEM7bM9/adH979BFm6wqbxsXbz4oR4i+t0pO914wP+t2uhuxn+hHAGN8vlQj/HLL4D4DUBNr706XdtAAKtl2+Owvzlew=
+      file: ios/fastlane/screenshots/en-US/iPhone X-0.png
+      on:
+        repo: mmcc007/screenshots
+        branch: dev
