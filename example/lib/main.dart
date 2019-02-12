@@ -113,7 +113,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
 //      home: MyHomePage(title: ExampleLocalizations.of(context).title),
-      home: MyHomePage(title: 'Screenshots Example'),
+      home: MyHomePage(),
       localizationsDelegates: [
         // ... app-specific localization delegate[s] here
         const ExampleLocalizationsDelegate(),
@@ -129,14 +129,14 @@ class MyApp extends StatelessWidget {
       ],
       // some android emulators on some machines may require the following:
       // see: https://github.com/flutter/flutter/issues/25325
-      locale: const Locale('en', ''),
-      localeResolutionCallback: (x, y) => const Locale('en', ''),
+//      locale: const Locale('en', ''),
+//      localeResolutionCallback: (x, y) => const Locale('en', ''),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+  MyHomePage({Key key}) : super(key: key);
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -147,7 +147,7 @@ class MyHomePage extends StatefulWidget {
   // used by the build method of the State. Fields in a Widget subclass are
   // always marked "final".
 
-  final String title;
+//  final String title;
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
