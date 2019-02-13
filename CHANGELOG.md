@@ -1,3 +1,7 @@
+## 0.1.3
+
+- Added support for multiple locales and additional screens for devices
+
 ## 0.1.2
 
 - Added configuration validation
