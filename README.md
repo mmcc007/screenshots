@@ -2,9 +2,9 @@
 [![pub package](https://img.shields.io/pub/v/screenshots.svg)](https://pub.dartlang.org/packages/screenshots) 
 [![Build Status](https://travis-ci.com/mmcc007/screenshots.svg?branch=master)](https://travis-ci.com/mmcc007/screenshots)
 
-![alt text][fade]
+![alt text][demo]
 
-[fade]: https://github.com/mmcc007/screenshots/raw/master/fade.gif "Screenshot with overlayed 
+[demo]: https://i.imgur.com/gkIEQ5y.gif "Screenshot with overlayed 
 status bar and appended navigation bar placed in frame"  
 Screenshot with overlaid status bar and appended navigation bar placed in a device frame.  
 
