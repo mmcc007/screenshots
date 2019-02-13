@@ -11,6 +11,9 @@ Screenshot with overlaid status bar and appended navigation bar placed in a devi
 For an example of images generated with `screenshots` on a live app see:  
 <a href="https://play.google.com/store/apps/details?id=com.orbsoft.todo"><img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" width="40%" title="GitErDone" alt="GitErDone"></a>
 
+Demo of `screenshots` in action:
+[![screenshots demo](https://i.imgur.com/V9VFSYb.png)](https://vimeo.com/317112577 "Screenshots demo - Click to Watch!")
+
 For introduction to `screenshots` see [article](https://medium.com/@nocnoc/automated-screenshots-for-flutter-f78be70cd5fd).
 
 For information on automating `screenshots` with a CI/CD tool see 
