@@ -1,25 +1,45 @@
+import 'dart:io';
+
 import 'package:screenshots/config.dart';
-import 'package:screenshots/devices.dart';
+import 'package:screenshots/screens.dart';
 import 'package:screenshots/image_magick.dart';
 import 'package:screenshots/resources.dart';
+import 'package:screenshots/screenshots.dart';
 import 'package:screenshots/utils.dart';
 import 'package:test/test.dart';
+import 'package:screenshots/fastlane.dart' as fastlane;
 
 void main() {
-  test('screen info for device', () async {
+  test('screen info for device: Nexus 5X', () async {
     final expected = {
+      'resources': {
+        'statusbar': 'resources/android/1080/statusbar.png',
+        'navbar': 'resources/android/1080/navbar.png',
+        'frame': 'resources/android/phones/Nexus_5X.png'
+      },
       'destName': 'phone',
-      'frame': 'resource/android/phones/Nexus 5X.png',
-      'phones': ['Nexus 5X', 'Nexus ????'],
-      'size': '1080x1920',
       'resize': '80%',
-      'statusbar': 'resources/android/1080/statusbar.png',
-      'navbar': 'resources/android/1080/navbar.png',
-      'offset': '-4-9'
+      'devices': ['Nexus 5X'],
+      'offset': '-4-9',
+      'size': '1080x1920'
     };
-    final Devices devices = Devices();
-    final devicesInfo = await Devices().init();
-    Map screen = devices.screen(devicesInfo, 'Nexus 5X');
+    final Screens screens = Screens();
+    await Screens().init();
+    Map screen = screens.screenProps('Nexus 5X');
+    expect(screen, expected);
+  });
+
+  test('screen info for device: iPhone X', () async {
+    final expected = {
+      'resources': {'frame': 'resources/ios/phones/Apple iPhone X Silver.png'},
+      'resize': '75%',
+      'devices': ['iPhone X'],
+      'offset': '-0-0',
+      'size': '2436×1125'
+    };
+    final Screens screens = Screens();
+    await Screens().init();
+    Map screen = screens.screenProps('iPhone X');
     expect(screen, expected);
   });
 
@@ -40,10 +60,10 @@ void main() {
     expect(appConfig, expected);
   });
 
-  test('overlay status bar', () async {
-    final Devices devices = Devices();
-    final devicesInfo = await devices.init();
-    Map screen = devices.screen(devicesInfo, 'Nexus 5X');
+  test('overlay statusbar', () async {
+    final Screens screens = Screens();
+    await screens.init();
+    Map screen = screens.screenProps('Nexus 6P');
     final Config config = Config('test/test_config.yaml');
     Map appConfig = config.config;
 
@@ -55,26 +75,28 @@ void main() {
 //    final statusbarResourcePath = screen['statusbar'];
 
     final Map resources = screen['resources'];
+    await unpackImages(resources, '/tmp/screenshots');
 
     final statusbarPath = '${appConfig['staging']}/${resources['statusbar']}';
     final screenshotPath = '${appConfig['staging']}/test/0.png';
-    final screenshotStatusbarPath = '${appConfig['staging']}/test/0.png';
+//    final screenshotStatusbarPath =
+//        '${appConfig['staging']}/test/statusbar-0.png';
 
     final options = {
       'screenshotPath': screenshotPath,
 //      'statusbarResourcePath': statusbarResourcePath,
       'statusbarPath': statusbarPath,
-      'screenshotStatusbarPath': screenshotStatusbarPath,
+//      'screenshotStatusbarPath': screenshotStatusbarPath,
     };
     print('options=$options');
     await imagemagick('overlay', options);
   });
 
   test('unpack screen resource images', () async {
-    final Devices devices = Devices();
-    final devicesInfo = await devices.init();
-//    Map screen = devices.screen(devicesInfo, 'Nexus 5X');
-    Map screen = devices.screen(devicesInfo, 'iPhone 7 Plus');
+    final Screens screens = Screens();
+    await screens.init();
+//    Map screen = screens.screen(screensInfo, 'Nexus 5X');
+    Map screen = screens.screenProps('iPhone 7 Plus');
     final Config config = Config('test/test_config.yaml');
     Map appConfig = config.config;
 
@@ -91,14 +113,15 @@ void main() {
     await unpackImages(screenResources, staging);
   });
 
-  test('append nav bar', () async {
-    final Devices devices = Devices();
-    final devicesInfo = await devices.init();
-    Map screen = devices.screen(devicesInfo, 'Nexus 5X');
+  test('append navbar', () async {
+    final Screens screens = Screens();
+    await screens.init();
+    Map screen = screens.screenProps('Nexus 6P');
     final Config config = Config('test/test_config.yaml');
     Map appConfig = config.config;
 
     final Map resources = screen['resources'];
+    await unpackImages(resources, '/tmp/screenshots');
 
     final screenshotNavbarPath =
         '${appConfig['staging']}/${resources['navbar']}';
@@ -113,13 +136,14 @@ void main() {
   });
 
   test('frame screenshot', () async {
-    final Devices devices = Devices();
-    final devicesInfo = await devices.init();
-    Map screen = devices.screen(devicesInfo, 'Nexus 5X');
+    final Screens screens = Screens();
+    await screens.init();
+    Map screen = screens.screenProps('Nexus 6P');
     final Config config = Config('test/test_config.yaml');
     Map appConfig = config.config;
 
     final Map resources = screen['resources'];
+    await unpackImages(resources, '/tmp/screenshots');
 
     final framePath = appConfig['staging'] + '/' + resources['frame'];
     final size = screen['size'];
@@ -144,7 +168,7 @@ void main() {
 
     print('iPhone X info: ' + _simulators['iPhone X'].toString());
 
-//     print('first match:' + regExp.firstMatch(devices).toString());
+//     print('first match:' + regExp.firstMatch(screens).toString());
   });
 
   test('read resource and write to path', () async {
@@ -159,21 +183,21 @@ void main() {
     ];
     final dest = '/tmp';
     for (String resource in resources)
-      writeImage(await readImage(resource), '$dest/$resource');
+      writeImage(await readResourceImage(resource), '$dest/$resource');
   });
 
-  test('simple unpack', () {
+  test('unpack images', () async {
     final resources = {
       'A': 'resources/android/1080/statusbar.png',
       'B': 'resources/android/1080/navbar.png',
       'C': 'resources/android/phones/Nexus_5X.png'
     };
     final dest = '/tmp';
-    unpackImages(resources, dest);
+    await unpackImages(resources, dest);
   });
 
   test('unpack script', () async {
-    await unpackScript('/tmp');
+    await unpackScript('/tmp', 'resources/script/android-wait-for-emulator');
   });
 
   test('add prefix to files in directory', () async {
@@ -181,7 +205,60 @@ void main() {
   });
 
   test('validate config file', () async {
+    final Screens screens = Screens();
+    await screens.init();
     final Config config = Config('test/test_config.yaml');
-    expect(await config.validate(), true);
+    expect(await config.validate(screens), true);
+  });
+
+  test('rooted emulator', () {
+    final result = cmd('adb', ['root']);
+    print(result);
+    expect(result, 'adbd cannot run as root in production builds\n');
+  });
+
+  test('map device name to emulator', () {
+    final _emulators = emulators();
+    print(_emulators);
+    final emulator =
+        _emulators.firstWhere((emulator) => emulator.contains('Nexus_5X'));
+    expect(emulator, 'Nexus_5X_API_27');
+  });
+
+  test('change android locale', () {
+//    emulator('Nexus 6P', true, '/tmp/screenshots', 'fr-CA');
+    emulator('Nexus 6P', true, '/tmp/screenshots', 'en-US');
+  });
+
+  test('move files', () async {
+    final fileName = 'filename';
+    final srcDir = '/tmp/tmp1/multiple/levels/deep';
+    final dstDir = '/tmp/tmp2/more/levels/deep';
+
+    await File('$srcDir/$fileName').create(recursive: true);
+    moveFiles(srcDir, dstDir);
+    expect(await File(dstDir + '/' + fileName).exists(), true);
+  });
+
+  test('start simulator', () {
+    simulator('iPhone X', true, '/tmp/screenshots');
+//    simulator('iPhone X', true, '/tmp/screenshots', 'fr-CA');
+  });
+
+  test('stream output from command', () async {
+    await streamCmd('ls', ['-la']);
+    stdout.write('finished\n\n');
+//    print('finished\n');
+//    await stdout.flush();
+//    await stdout.close();
+//    await stdout.done;
+    await streamCmd('ls', ['-33']);
+  });
+
+  test('clear all destination directories on init', () async {
+    final Screens screens = Screens();
+    await screens.init();
+    final Config config = Config('test/test_config.yaml');
+    await fastlane.clearFastlaneDirs(config.config, screens);
   });
 }

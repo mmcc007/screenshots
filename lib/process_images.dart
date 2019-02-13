@@ -1,10 +1,12 @@
-import 'package:file_utils/file_utils.dart';
-import 'package:screenshots/devices.dart';
+import 'dart:io';
+
+import 'package:screenshots/screens.dart';
 import 'package:screenshots/fastlane.dart' as fastlane;
 import 'package:screenshots/image_magick.dart' as im;
 import 'package:screenshots/resources.dart' as resources;
 import 'package:screenshots/screenshots.dart';
 import 'package:screenshots/utils.dart' as utils;
+import 'package:path/path.dart' as p;
 
 ///
 /// Process screenshots.
@@ -18,48 +20,46 @@ import 'package:screenshots/utils.dart' as utils;
 ///
 /// After processing, screenshots are handed off for upload via fastlane.
 ///
-void process(Map devices, Map config, DeviceType deviceType, String deviceName,
-    String locale) async {
-  final Map screen = Devices().screen(devices, deviceName);
+void process(Screens screens, Map config, DeviceType deviceType,
+    String deviceName, String locale) async {
+  final Map screenProps = screens.screenProps(deviceName);
   final staging = config['staging'];
-  final Map screenResources = screen['resources'];
-//  print('resources=$screenResources');
+  final Map screenResources = screenProps['resources'];
+//  print('screenResources=$screenResources');
   print('Processing screenshots from test...');
 
   // unpack images for screen from package to local staging area
   await resources.unpackImages(screenResources, staging);
 
   // add status and nav bar and frame for each screenshot
-  final screenshots = FileUtils.glob('$staging/test/*.*');
+  final screenshots = Directory('$staging/test').listSync();
   for (final screenshotPath in screenshots) {
     // add status bar for each screenshot
 //    print('overlaying status bar over screenshot at $screenshotPath');
-    await overlay(config, screenResources, screenshotPath);
+    await overlay(config, screenResources, screenshotPath.path);
 
     if (deviceType == DeviceType.android) {
       // add nav bar for each screenshot
 //      print('appending navigation bar to screenshot at $screenshotPath');
-      await append(config, screenResources, screenshotPath);
+      await append(config, screenResources, screenshotPath.path);
     }
 
     // add frame if required
     if (config['frame']) {
 //      print('placing $screenshotPath in frame');
-      await frame(config, screen, screenshotPath);
+      await frame(config, screenProps, screenshotPath.path);
     }
   }
 
   // move to final destination for upload to stores via fastlane
   final srcDir = '${config['staging']}/test';
-  final dstDir = fastlane.path(deviceType, locale, '', screen['destName']);
+  final dstDir = fastlane.path(deviceType, locale, '', screenProps['destName']);
   // prefix screenshots with name of device before moving
   // (useful for uploading to apple via fastlane)
   await utils.prefixFilesInDir(srcDir, '$deviceName-');
 
-  print('moving screenshots to $dstDir');
-//  print('srcDir=$srcDir, dstDir=$dstDir');
-//  utils.clearDirectory(dstDir);
-  utils.moveDirectory(srcDir, dstDir);
+  print('Moving screenshots to $dstDir');
+  utils.moveFiles(srcDir, dstDir);
 }
 
 ///
@@ -71,7 +71,7 @@ Future overlay(Map config, Map screenResources, String screenshotPath) async {
   // if no status bar skip
   // todo: get missing status bars
   if (screenResources['statusbar'] == null) {
-    print('error: missing status bar for screen at: ...');
+    print('error: image ${p.basename(screenshotPath)} is missing status bar.');
     return Future.value(null);
   }
   final options = {

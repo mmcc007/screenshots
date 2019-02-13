@@ -1,0 +1,21 @@
+{
+  "@@last_modified": "2019-02-09T17:57:54.852324",
+  "title": "Screenshots Example",
+  "@title": {
+    "description": "Title for the Example application",
+    "type": "text",
+    "placeholders": {}
+  },
+  "counterText": "You have pushed the button this many times:",
+  "@counterText": {
+    "description": "Explanation for incrementing counter",
+    "type": "text",
+    "placeholders": {}
+  },
+  "counterIncrementButtonTooltip": "Increment",
+  "@counterIncrementButtonTooltip": {
+    "description": "Tooltip for counter increment button",
+    "type": "text",
+    "placeholders": {}
+  }
+}

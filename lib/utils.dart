@@ -1,29 +1,26 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
-import 'package:file_utils/file_utils.dart';
-import 'package:path/path.dart';
+import 'package:path/path.dart' as p;
 
-///
 /// Clear directory [dir].
-///
 void clearDirectory(String dir) {
-//  if (!(FileUtils.rm([dir], directory: true, force: true, recursive: true) &&
-//      FileUtils.mkdir([dir], recursive: true))) {
-//    throw 'clear directory failed: dir=$dir';
-//  }
   if (Directory(dir).existsSync()) {
     Directory(dir).deleteSync(recursive: true);
   }
   Directory(dir).createSync(recursive: true);
 }
 
-/// Move directory [srcDir] to [dstDir].
-void moveDirectory(String srcDir, String dstDir) {
-  if (!(FileUtils.mkdir([dstDir], recursive: true) &&
-      FileUtils.move(['$srcDir/*.*'], dstDir))) {
-    throw 'move directory failed: srcDir=$srcDir, destDir=$dstDir';
-  }
+/// Move files from [srcDir] to [dstDir].
+///
+/// If dstDir does not exist, it is created.
+void moveFiles(String srcDir, String dstDir) {
+  if (!Directory(dstDir).existsSync())
+    Directory(dstDir).createSync(recursive: true);
+  Directory(srcDir).listSync().forEach((file) {
+    file.renameSync('$dstDir/${p.basename(file.path)}');
+  });
 }
 
 /// Execute command [cmd] with arguments [arguments] in a separate process and return stdout.
@@ -35,30 +32,49 @@ String cmd(String cmd, List<String> arguments,
   final result = Process.runSync(cmd, arguments, workingDirectory: workingDir);
   if (!silent) stdout.write(result.stdout);
   if (result.exitCode != 0) {
-//    stdout.write(result.stdout);
     stderr.write(result.stderr);
-//    exit(result.exitCode);
     throw 'command failed: cmd=\'$cmd ${arguments.join(" ")}\'';
   }
   return result.stdout;
 }
 
-///
+/// Execute command [cmd] with arguments [arguments] in a separate process and stream stdout/stderr.
+Future<void> streamCmd(String cmd, List<String> arguments) async {
+//  print('streamCmd=\'$cmd ${arguments.join(" ")}\'');
+
+  final process = await Process.start(cmd, arguments);
+
+  var stdOutLineStream =
+      process.stdout.transform(Utf8Decoder()).transform(LineSplitter());
+  await for (var line in stdOutLineStream) {
+    stdout.write(line + '\n');
+  }
+
+  var stdErrLineStream =
+      process.stderr.transform(Utf8Decoder()).transform(LineSplitter());
+  await for (var line in stdErrLineStream) {
+    stderr.write(line + '\n');
+  }
+
+  var exitCode = await process.exitCode;
+  if (exitCode != 0)
+    throw 'command failed: cmd=\'$cmd ${arguments.join(" ")}\'';
+}
+
 /// Create list of simulators with their ID and status.
-///
 Map<String, Map<String, String>> simulators() {
-  String devices = cmd('xcrun', ['simctl', 'list'], '.', true);
+  String simulatorInfo = cmd('xcrun', ['simctl', 'list', 'devices'], '.', true);
   RegExp regExp = new RegExp(r'^    (.*) \((.*-.*-.*-.*)\) \((.*)\).*$',
       caseSensitive: false, multiLine: true);
-  Iterable<Match> matches = regExp.allMatches(devices);
+  Iterable<Match> matches = regExp.allMatches(simulatorInfo);
 
   Map<String, Map<String, String>> simulators = {};
   for (Match m in matches) {
     // load into map
-    Map<String, String> simulatorInfo = {};
-    simulatorInfo['id'] = m.group(2);
-    simulatorInfo['status'] = m.group(3);
-    simulators[m.group(1)] = simulatorInfo;
+    Map<String, String> simulatorProps = {};
+    simulatorProps['id'] = m.group(2);
+    simulatorProps['status'] = m.group(3);
+    simulators[m.group(1)] = simulatorProps;
   }
   return simulators;
 }
@@ -72,18 +88,7 @@ List<String> emulators() {
 Future prefixFilesInDir(String dirPath, String prefix) async {
   await for (final file
       in Directory(dirPath).list(recursive: false, followLinks: false)) {
-    await file.rename(dirname(file.path) + '/' + prefix + basename(file.path));
+    await file
+        .rename(p.dirname(file.path) + '/' + prefix + p.basename(file.path));
   }
 }
-
-//List<File> filesInDirectory(Directory dir) async {
-//  List<File> files = <File>[];
-//  await for (FileSystemEntity entity in dir.list(recursive: false, followLinks: false)) {
-//    FileSystemEntityType type = await FileSystemEntity.type(entity.path);
-//    if (type == FileSystemEntityType.FILE) {
-//      files.add(entity);
-//      print(entity.path);
-//    }
-//  }
-//  return files;
-//}

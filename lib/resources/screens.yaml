@@ -1,0 +1,57 @@
+ios:
+  5.5inch:
+    size: 1242x2208
+    resize: 75%
+    resources:
+      statusbar: resources/ios/1242/statusbar_black.png
+      frame: resources/ios/phones/iPhone_7_Plus_Silver.png
+    offset: -0-0
+    devices:
+#      - iPhone 6 Plus
+#      - iPhone 6s Plus
+      - iPhone 7 Plus
+#      - iPhone 8 Plus
+  5.8inch:
+    size: 1125x2436
+    resize: 87%
+    resources:
+      statusbar: resources/ios/1125/statusbar_white.png
+      frame: resources/ios/phones/Apple iPhone X Silver.png
+    offset: -0-0
+    devices:
+      - iPhone X
+#      - iPhone Xs
+  12.9inch:
+    size: 2048x2732
+    resize: 86%
+    resources:
+      statusbar: resources/ios/2048/statusbar_white.png
+      frame: resources/ios/phones/iPad_Pro_Silver.png
+    offset: -0-0
+    devices:
+      - iPad Pro (12.9-inch) (2nd generation)
+android:
+  5.2inch:
+    size: 1080x1920
+    resize: 80%
+    resources:
+      statusbar: resources/android/1080/statusbar.png
+      navbar: resources/android/1080/navbar.png
+      frame: resources/android/phones/Nexus_5X.png
+    offset: -4-9
+    destName: phone
+    devices:
+      - Nexus 5X
+#     destName: sevenInch
+#     destName: tenInch
+  5.7inch:
+    size: 1440x2560
+    resize: 80%
+    resources:
+      statusbar: resources/android/1440/statusbar.png
+      navbar: resources/android/1440/navbar_black.png
+      frame: resources/android/phones/Nexus 6P.png
+    offset: -3+8
+    destName: phone
+    devices:
+      - Nexus 6P

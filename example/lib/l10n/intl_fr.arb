@@ -1,0 +1,22 @@
+{
+  "@@locale": "fr",
+  "@@last_modified": "2019-02-09T16:56:53.658556",
+  "title": "Exemple de captures d'écran",
+  "@title": {
+    "description": "Title for the Example application",
+    "type": "text",
+    "placeholders": {}
+  },
+  "counterText": "Vous avez appuyé sur le bouton autant de fois:",
+  "@counterText": {
+    "description": "Explanation for incrementing counter",
+    "type": "text",
+    "placeholders": {}
+  },
+  "counterIncrementButtonTooltip": "Incrément",
+  "@counterIncrementButtonTooltip": {
+    "description": "Tooltip for counter increment button",
+    "type": "text",
+    "placeholders": {}
+  }
+}

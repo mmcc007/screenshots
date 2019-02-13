@@ -1,0 +1,68 @@
+language: generic
+os: osx
+
+jobs:
+  include:
+    - stage: Run screenshots
+#      env: Create screenshots
+      before_install:
+      # create repository for artifacts and clear if cached
+      - rm -rf $HOME/screenshots
+      - mkdir $HOME/screenshots
+
+      # install environment for flutter and simulators
+      - export HOMEBREW_NO_AUTO_UPDATE=1
+      - brew install libimobiledevice
+      - brew install ideviceinstaller
+      - brew install ios-deploy
+      - brew install cocoapods || echo 'ignore exit(1)'
+      - brew link --overwrite cocoapods
+
+      # install pre-compiled flutter
+      - FLUTTER_CHANNEL=stable
+      - FLUTTER_VERSION=1.0.0-${FLUTTER_CHANNEL}
+      - wget --quiet --output-document=flutter.zip https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/macos/flutter_macos_v${FLUTTER_VERSION}.zip && unzip -qq flutter.zip > /dev/null && rm flutter.zip
+      - export PATH="$PATH":"$HOME/.pub-cache/bin"
+      - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
+      - flutter doctor -v
+
+      # install ImageMagick
+      - brew install imagemagick
+      - pub global activate --source path .
+      script:
+      - cd example; screenshots
+      # copy artifacts to cache for later deploy
+      - tar cvzf $HOME/screenshots/screenshots.tar.gz ios/fastlane/screenshots
+      - zip -r $HOME/screenshots/screenshots.zip ios/fastlane/screenshots
+      # save artifacts for later deploy of second artifact
+      cache:
+        directories:
+          - $HOME/screenshots
+
+      # deploy draft of first artifact
+      deploy:
+        provider: releases
+        draft: true
+        skip_cleanup: true
+        api_key:
+          secure: wyPNNbjTFChWOGc/JiTpGhN490dRzz/qhU2T3CddZALjy4VN3LywennK3xnTOAq+FEYE9H/quP/SxkUX154al/lxeL6QuN5D0Ev2bL3lS9jyaoe0NOKx5GnNTzfv84taZPi768UF4rgYqzzdF8WJTCe0dlvDH7qKgH+dHIZGoB1dM/hhWMEXUv0uAZuFDkepxWHOLHsIABunkz428MEsSRCTdEWOsgdFiEl+DOC5ErmorgHazUWPpSwenz13kCLhU+wT2Fsek5tGBO6GT1Mvw8qrht3LUZBaBQJfx4yhdXQKtq0Dr+gI9a3sbF/3TKV0nRvDVA+KGmMLHT+fkRrz1xkGvrLnCDfkylDZlmn/IoQUkv4JwI+lJIXfUp40pMmSlFH1WKToWSjMsPSxv02fVYzxNZoxlno+qyKk4lfdROOSSYS5LjmMd+Lrvhmx7vNMCHl57fdXdKwgyJllxT/khMZTJv5IPQih1yi3m/hDw0s59IHYd22QHFoodcdAPy2xxeVh8VhzhucpesWAvoFZfgdTmPZXAzpMR4kEaeBb5f3Z/Eg3AypDPXg67kXwFqTRL+ZqDzOFynZYJML8RbsZd/nqU5TYc0Ocmh0YMA3v0Z43wuZMshXOXujl8z3zmnwzV/QmFP0U/phOGa9SmvKtRyGQoTGtIXoPWdXrRpgm3F4=
+        file: $HOME/screenshots/screenshots.tar.gz
+        on:
+          tags: true
+
+    - stage: Publish screenshots
+#      env: Publish screenshots to GitHub
+      # get artifacts from previous screenshots run
+      cache:
+        directories:
+          - $HOME/screenshots
+      # deploy second artifact (and mark both artifacts as published)
+      deploy:
+        provider: releases
+        draft: false
+        skip_cleanup: true
+        api_key:
+          secure: wyPNNbjTFChWOGc/JiTpGhN490dRzz/qhU2T3CddZALjy4VN3LywennK3xnTOAq+FEYE9H/quP/SxkUX154al/lxeL6QuN5D0Ev2bL3lS9jyaoe0NOKx5GnNTzfv84taZPi768UF4rgYqzzdF8WJTCe0dlvDH7qKgH+dHIZGoB1dM/hhWMEXUv0uAZuFDkepxWHOLHsIABunkz428MEsSRCTdEWOsgdFiEl+DOC5ErmorgHazUWPpSwenz13kCLhU+wT2Fsek5tGBO6GT1Mvw8qrht3LUZBaBQJfx4yhdXQKtq0Dr+gI9a3sbF/3TKV0nRvDVA+KGmMLHT+fkRrz1xkGvrLnCDfkylDZlmn/IoQUkv4JwI+lJIXfUp40pMmSlFH1WKToWSjMsPSxv02fVYzxNZoxlno+qyKk4lfdROOSSYS5LjmMd+Lrvhmx7vNMCHl57fdXdKwgyJllxT/khMZTJv5IPQih1yi3m/hDw0s59IHYd22QHFoodcdAPy2xxeVh8VhzhucpesWAvoFZfgdTmPZXAzpMR4kEaeBb5f3Z/Eg3AypDPXg67kXwFqTRL+ZqDzOFynZYJML8RbsZd/nqU5TYc0Ocmh0YMA3v0Z43wuZMshXOXujl8z3zmnwzV/QmFP0U/phOGa9SmvKtRyGQoTGtIXoPWdXrRpgm3F4=
+        file: $HOME/screenshots/screenshots.zip
+        on:
+          tags: true

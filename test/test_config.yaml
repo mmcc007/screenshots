@@ -8,6 +8,7 @@ staging: /tmp/screenshots
 
 # A list of locales supported in app
 locales:
+  - fr-CA
   - en-US
 #  - de-DE
 
@@ -15,8 +16,8 @@ locales:
 devices:
   ios:
 #    - iPhone X
-    - iPhone 7 Plus
-    - iPad Pro (12.9-inch) (2nd generation)
+#    - iPhone 7 Plus
+#    - iPad Pro (12.9-inch) (2nd generation)
 #   "iPhone 6",
 #   "iPhone 6 Plus",
 #   "iPhone 5",
