@@ -77,7 +77,8 @@ To capture screenshots in your tests:
        ````dart
            await screenshot(driver, config, 'myscreenshot1');
        ````
-       Note: make sure your screenshot names are unique across all your tests.
+       
+Note: make sure your screenshot names are unique across all your tests.
 
 Note: to turn off the debug banner on your screens, in your integration test's main(), call:
 ````dart
