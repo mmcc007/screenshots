@@ -18,3 +18,7 @@ build/
 
 # Directory created by dartdoc
 doc/api/
+
+# screenshots
+example/ios/fastlane
+example/android/fastlane
