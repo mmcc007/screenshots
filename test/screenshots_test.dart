@@ -7,6 +7,7 @@ import 'package:screenshots/resources.dart';
 import 'package:screenshots/screenshots.dart';
 import 'package:screenshots/utils.dart';
 import 'package:test/test.dart';
+import 'package:screenshots/fastlane.dart' as fastlane;
 
 void main() {
   test('screen info for device: Nexus 5X', () async {
@@ -23,8 +24,8 @@ void main() {
       'size': '1080x1920'
     };
     final Screens screens = Screens();
-    final screensInfo = await Screens().init();
-    Map screen = screens.screenProps(screensInfo, 'Nexus 5X');
+    await Screens().init();
+    Map screen = screens.screenProps('Nexus 5X');
     expect(screen, expected);
   });
 
@@ -37,8 +38,8 @@ void main() {
       'size': '2436×1125'
     };
     final Screens screens = Screens();
-    final screensInfo = await Screens().init();
-    Map screen = screens.screenProps(screensInfo, 'iPhone X');
+    await Screens().init();
+    Map screen = screens.screenProps('iPhone X');
     expect(screen, expected);
   });
 
@@ -61,8 +62,8 @@ void main() {
 
   test('overlay statusbar', () async {
     final Screens screens = Screens();
-    final screensInfo = await screens.init();
-    Map screen = screens.screenProps(screensInfo, 'Nexus 6P');
+    await screens.init();
+    Map screen = screens.screenProps('Nexus 6P');
     final Config config = Config('test/test_config.yaml');
     Map appConfig = config.config;
 
@@ -93,9 +94,9 @@ void main() {
 
   test('unpack screen resource images', () async {
     final Screens screens = Screens();
-    final screensInfo = await screens.init();
+    await screens.init();
 //    Map screen = screens.screen(screensInfo, 'Nexus 5X');
-    Map screen = screens.screenProps(screensInfo, 'iPhone 7 Plus');
+    Map screen = screens.screenProps('iPhone 7 Plus');
     final Config config = Config('test/test_config.yaml');
     Map appConfig = config.config;
 
@@ -114,8 +115,8 @@ void main() {
 
   test('append navbar', () async {
     final Screens screens = Screens();
-    final screensInfo = await screens.init();
-    Map screen = screens.screenProps(screensInfo, 'Nexus 6P');
+    await screens.init();
+    Map screen = screens.screenProps('Nexus 6P');
     final Config config = Config('test/test_config.yaml');
     Map appConfig = config.config;
 
@@ -136,8 +137,8 @@ void main() {
 
   test('frame screenshot', () async {
     final Screens screens = Screens();
-    final screensInfo = await screens.init();
-    Map screen = screens.screenProps(screensInfo, 'Nexus 6P');
+    await screens.init();
+    Map screen = screens.screenProps('Nexus 6P');
     final Config config = Config('test/test_config.yaml');
     Map appConfig = config.config;
 
@@ -204,8 +205,10 @@ void main() {
   });
 
   test('validate config file', () async {
+    final Screens screens = Screens();
+    await screens.init();
     final Config config = Config('test/test_config.yaml');
-    expect(await config.validate(), true);
+    expect(await config.validate(screens), true);
   });
 
   test('rooted emulator', () {
@@ -250,5 +253,12 @@ void main() {
 //    await stdout.close();
 //    await stdout.done;
     await streamCmd('ls', ['-33']);
+  });
+
+  test('clear all destination directories on init', () async {
+    final Screens screens = Screens();
+    await screens.init();
+    final Config config = Config('test/test_config.yaml');
+    await fastlane.clearFastlaneDirs(config.config, screens);
   });
 }

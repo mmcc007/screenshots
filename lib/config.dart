@@ -21,8 +21,8 @@ class Config {
 
   /// Check emulators and simulators are installed,
   /// matching screen is available and tests exist.
-  Future<bool> validate() async {
-    final Map screens = await Screens().init();
+  Future<bool> validate(Screens screens) async {
+//    final Map screens = await Screens().init();
 
     if (config['devices']['android'] != null) {
       // check emulators
@@ -83,7 +83,7 @@ class Config {
     return true;
   }
 
-  void configGuide(Map screens) {
+  void configGuide(Screens screens) {
     installedEmulators(utils.emulators());
     installedSimulators(utils.simulators());
     supportedDevices(screens);
@@ -93,8 +93,8 @@ class Config {
   }
 
   // check screen is available for device
-  void screenAvailable(Map screens, String deviceName) {
-    if (Screens().screenProps(screens, deviceName) == null) {
+  void screenAvailable(Screens screens, String deviceName) {
+    if (screens.screenProps(deviceName) == null) {
       stderr.write(
           'configuration error: screen not available for device \'$deviceName\' in $configPath.\n');
       stdout.write('\n  Use a supported device in $configPath.\n\n'
@@ -108,9 +108,9 @@ class Config {
     }
   }
 
-  void supportedDevices(Map screens) {
+  void supportedDevices(Screens screens) {
     stdout.write('\n  Currently supported devices:\n');
-    screens.forEach((os, v) {
+    screens.screens.forEach((os, v) {
       stdout.write('    $os:\n');
       v.value.forEach((screenNum, screenProps) {
         for (String device in screenProps['devices']) {

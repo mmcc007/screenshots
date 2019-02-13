@@ -20,9 +20,9 @@ import 'package:path/path.dart' as p;
 ///
 /// After processing, screenshots are handed off for upload via fastlane.
 ///
-void process(Map screens, Map config, DeviceType deviceType, String deviceName,
-    String locale) async {
-  final Map screenProps = Screens().screenProps(screens, deviceName);
+void process(Screens screens, Map config, DeviceType deviceType,
+    String deviceName, String locale) async {
+  final Map screenProps = screens.screenProps(deviceName);
   final staging = config['staging'];
   final Map screenResources = screenProps['resources'];
 //  print('screenResources=$screenResources');
