@@ -67,9 +67,8 @@ then process the images appropriately during a `screenshots` run.
 To capture screenshots in your tests:
 1. Include the `screenshots` package in your pubspec.yaml's dev_dependencies section  
    ````yaml
-     screenshots: ^0.1.2
+     screenshots: ^<current version>
    ````
-   ... or whatever the current version is.
 2. In your tests
     1. Import the dependencies  
        ````dart
