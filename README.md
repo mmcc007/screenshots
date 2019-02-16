@@ -8,10 +8,12 @@
 status bar and appended navigation bar placed in frame"  
 Screenshot with overlaid status bar and appended navigation bar placed in a device frame.  
 
-For an example of images generated with `screenshots` on a live app see:  
-<a href="https://play.google.com/store/apps/details?id=com.orbsoft.todo"><img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" width="40%" title="GitErDone" alt="GitErDone"></a>
+For an example of images generated with `screenshots` on a live app in both stores see:  
+[![GitErDone](https://play.google.com/intl/en_us/badges/images/badge_new.png)](https://play.google.com/store/apps/details?id=com.orbsoft.todo)
+[![GitErDone](https://linkmaker.itunes.apple.com/en-us/badge-lrg.svg?releaseDate=2019-02-15&kind=iossoftware)](https://itunes.apple.com/us/app/giterdone/id1450240301)
 
-Demo of `screenshots` in action:
+
+See a demo of `screenshots` in action:
 [![screenshots demo](https://i.imgur.com/V9VFSYb.png)](https://vimeo.com/317112577 "Screenshots demo - Click to Watch!")
 
 For introduction to `screenshots` see [article](https://medium.com/@nocnoc/automated-screenshots-for-flutter-f78be70cd5fd).
@@ -26,7 +28,7 @@ Flutter. It will start the required android emulators and iOS simulators, run yo
 capture tests on each emulator/simulator for each locale your app supports, process the images, and drop them off for Fastlane 
 for delivery to both stores.
 
-It is inspired by three products from Fastlane:  
+It is inspired by three tools from Fastlane:  
 1. [Snapshots](https://docs.fastlane.tools/getting-started/ios/screenshots/)  
    This is used to capture screenshots on iOS using iOS UI Tests.
 1. [Screengrab](https://docs.fastlane.tools/actions/screengrab/)  
@@ -34,7 +36,9 @@ It is inspired by three products from Fastlane:
 1. [FrameIt](https://docs.fastlane.tools/actions/frameit/)  
    This is used to place captured iOS screenshots in a device frame.
 
-`screenshots` combines key features of all three Fastlane products.  
+Since all three of these Fastlane tools do not work with Flutter, `screenshots` combines key features of all three Fastlane tools into one tool. Plus, it is much easier to use! 
+
+`screenshots` features:
 1. Captures screenshots from any iOS simulator or android emulator and processes images.
 2. Frames screenshots in an iOS or android device frame.
 3. The same Flutter integration test can be used across all simulators/emulators.  
