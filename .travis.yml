@@ -36,14 +36,14 @@ jobs:
       - ABI="default;armeabi-v7a"
       - sdkmanager "system-images;android-$EMULATOR_API_LEVEL;$ABI" > /dev/null
       - sdkmanager --list | head -15
-      - echo no | avdmanager create avd -n test -k "system-images;android-$EMULATOR_API_LEVEL;$ABI"
+      - echo no | avdmanager create avd -n Nexus_6P -k "system-images;android-$EMULATOR_API_LEVEL;$ABI"
       # fix timezone warning on osx
       - sudo ln -sf /usr/share/zoneinfo/US/Pacific /etc/localtime
       # emulator debug options
 #      - EMU_DEBUG="-debug all -logcat *:e -verbose -show-kernel"
 #      - EMU_ADDITIONAL_OPTIONS="-camera-back none -camera-front none -memory 2048"
-      - $ANDROID_HOME/emulator/emulator -avd test -no-audio -no-window -gpu swiftshader $EMU_ADDITIONAL_OPTIONS ${EMU_DEBUG} &
-      - ./script/android-wait-for-emulator
+#      - $ANDROID_HOME/emulator/emulator -avd test -no-audio -no-window -gpu swiftshader $EMU_ADDITIONAL_OPTIONS ${EMU_DEBUG} &
+#      - ./script/android-wait-for-emulator
 
       # setup osx environment for flutter and simulators
       - export HOMEBREW_NO_AUTO_UPDATE=1
