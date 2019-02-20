@@ -36,7 +36,7 @@ jobs:
       - ABI="default;armeabi-v7a"
       - sdkmanager "system-images;android-EMULATOR_API_LEVEL;$ABI" > /dev/null
       - sdkmanager --list | head -15
-      - echo no | avdmanager create avd -n test -k "system-images;android-EMULATOR_API_LEVEL;$ABI"
+      - echo no | avdmanager create avd -n test -k "system-images;android-$EMULATOR_API_LEVEL;$ABI"
       # fix timezone warning on osx
       - sudo ln -sf /usr/share/zoneinfo/US/Pacific /etc/localtime
       # emulator debug options
