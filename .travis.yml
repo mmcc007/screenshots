@@ -17,7 +17,7 @@ jobs:
       - unzip -q android-sdk-tools.zip -d ${ANDROID_HOME}
       - rm android-sdk-tools.zip
 #      - PATH=${PATH}:${ANDROID_HOME}/tools:${ANDROID_HOME}/tools/bin:${ANDROID_HOME}/platform-tools
-      - PATH=${PATH}:${ANDROID_HOME}/tools/bin:${ANDROID_HOME}/platform-tools
+      - PATH=${PATH}:${ANDROID_HOME}/emulator:${ANDROID_HOME}/tools/bin:${ANDROID_HOME}/platform-tools
       # Silence warning.
       - mkdir -p ~/.android
       - touch ~/.android/repositories.cfg
