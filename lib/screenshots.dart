@@ -121,11 +121,11 @@ Future<void> emulator(String emulatorName, bool start,
     // Note: the 'flutter build' of the test should allow enough time for emulator to start
     // otherwise, wait for emulator to start
     Map<String, String> envVars = Platform.environment;
-    print(envVars['CI']);
-    if (envVars['CI'] == 'true')
+    if (envVars['CI'] == 'true') {
       // for integration testing
+      final androidHome = envVars['ANDROID_HOME'];
       // $ANDROID_HOME/emulator/emulator -avd test -no-audio -no-window -gpu swiftshader
-      await utils.streamCmd('emulator', [
+      await utils.streamCmd('$androidHome/emulator/emulator', [
         '-avd',
         emulatorName,
         '-no-audio',
@@ -134,7 +134,7 @@ Future<void> emulator(String emulatorName, bool start,
         '-gpu',
         'swiftshader'
       ]);
-    else
+    } else
       await utils.streamCmd('flutter', ['emulator', '--launch', emulatorName]);
 
     await utils.streamCmd(
