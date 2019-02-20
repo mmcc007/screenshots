@@ -19,7 +19,7 @@ devices:
     - iPhone X
     - iPad Pro (12.9-inch) (2nd generation)
   android:
-#    - Nexus 6P
+    - Nexus 6P
 
 # Frame screenshots
 frame: true

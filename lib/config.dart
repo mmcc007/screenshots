@@ -38,11 +38,10 @@ class Config {
             emulatorInstalled = true;
         }
         if (!emulatorInstalled) {
-          stderr.write(
-              'configuration error: emulator not installed for device \'$device\' in $configPath.\n');
-          stdout
-              .write('\nInstall the missing emulator or use a supported device '
-                  'with an installed emulator in $configPath.\n');
+          stderr.write('configuration error: emulator not installed for '
+              'device \'$device\' in $configPath.\n');
+          stdout.write('\nInstall the missing emulator or use a supported '
+              'device with an installed emulator in $configPath.\n');
           configGuide(screens);
           exit(1);
         }
@@ -63,10 +62,10 @@ class Config {
           if (simulator == device) simulatorInstalled = true;
         });
         if (!simulatorInstalled) {
-          stderr.write(
-              'configuration error: simulator not installed for device \'$device\' in $configPath.\n');
-          stdout.write('\nInstall the missing simulator or use an installed '
-              'simulator for a supported device in $configPath.\n');
+          stderr.write('configuration error: simulator not installed for '
+              'device \'$device\' in $configPath.\n');
+          stdout.write('\nInstall the missing simulator or use a supported '
+              'device with an installed simulator in $configPath.\n');
           configGuide(screens);
           exit(1);
         }
@@ -78,6 +77,18 @@ class Config {
         stderr.write('Missing test: $test from $configPath not found.\n');
         exit(1);
       }
+    }
+
+    //  Due to issue with locales, issue warning for multiple locales.
+    //  https://github.com/flutter/flutter/issues/27785
+    if (config['locales'].length > 1) {
+      stdout.write('Warning: Flutter integration tests do not work in '
+          'multiple locals.\n');
+      stdout.write(
+          '  See issue: https://github.com/flutter/flutter/issues/27785 for details.\n'
+          '  and provide a thumbs-up to prioritize a fix for this issue!\n\n'
+          '  While waiting for a fix configure only the default locale\n'
+          '  in screenshots.yaml');
     }
 
     return true;
