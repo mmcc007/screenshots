@@ -125,11 +125,12 @@ Future<void> emulator(String emulatorName, bool start,
     if (envVars['CI'] == 'true')
       // for integration testing
       // $ANDROID_HOME/emulator/emulator -avd test -no-audio -no-window -gpu swiftshader
-      await utils.streamCmd('~/android-sdk/emulator/emulator', [
+      await utils.streamCmd('emulator', [
         '-avd',
         emulatorName,
         '-no-audio',
         '-no-window',
+        '-no-snapshot',
         '-gpu',
         'swiftshader'
       ]);
