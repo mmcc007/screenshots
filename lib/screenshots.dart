@@ -133,7 +133,6 @@ Future<void> emulator(String emulatorName, bool start,
         '-no-snapshot',
         '-gpu',
         'swiftshader',
-        '&'
       ]);
     } else
       await utils.streamCmd('flutter', ['emulator', '--launch', emulatorName]);
