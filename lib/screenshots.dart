@@ -125,15 +125,18 @@ Future<void> emulator(String emulatorName, bool start,
       // for integration testing
       final androidHome = envVars['ANDROID_HOME'];
       // $ANDROID_HOME/emulator/emulator -avd test -no-audio -no-window -gpu swiftshader
-      await utils.streamCmd('$androidHome/emulator/emulator', [
-        '-avd',
-        emulatorName,
-        '-no-audio',
-        '-no-window',
-        '-no-snapshot',
-        '-gpu',
-        'swiftshader',
-      ], ProcessStartMode.detached);
+      await utils.streamCmd(
+          '$androidHome/emulator/emulator',
+          [
+            '-avd',
+            emulatorName,
+            '-no-audio',
+            '-no-window',
+            '-no-snapshot',
+            '-gpu',
+            'swiftshader',
+          ],
+          ProcessStartMode.detached);
     } else
       await utils.streamCmd('flutter', ['emulator', '--launch', emulatorName]);
 
