@@ -63,8 +63,8 @@ jobs:
       script:
       - cd example; screenshots
       # copy artifacts to cache for later deploy
-      - tar cvzf $HOME/screenshots/screenshots.tar.gz ios/fastlane/screenshots
-      - zip -r $HOME/screenshots/screenshots.zip ios/fastlane/screenshots
+      - tar cvzf $HOME/screenshots/screenshots.tar.gz ios/fastlane/screenshots android/fastlane/metadata/android/*/images
+      - zip -r $HOME/screenshots/screenshots.zip ios/fastlane/screenshots android/fastlane/metadata/android/*/images
       # save artifacts for later deploy of second artifact
       cache:
         directories:
