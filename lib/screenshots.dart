@@ -124,7 +124,7 @@ Future<void> emulator(String emulatorName, bool start,
     if (envVars['CI'] == 'true') {
       // for integration testing
       final androidHome = envVars['ANDROID_HOME'];
-      // $ANDROID_HOME/emulator/emulator -avd test -no-audio -no-window -gpu swiftshader
+      // $ANDROID_HOME/emulator/emulator -avd test -no-audio -no-window -gpu swiftshader &
       await utils.streamCmd(
           '$androidHome/emulator/emulator',
           [
