@@ -25,7 +25,6 @@ enum DeviceType { android, ios }
 Future<void> run([String configPath = kConfigFileName]) async {
   final screens = await Screens();
   await screens.init();
-//  final Map screens = _screens.screens;
 
   final config = Config(configPath);
   // validate config file
@@ -37,15 +36,15 @@ Future<void> run([String configPath = kConfigFileName]) async {
   await Directory(stagingDir + '/test').create(recursive: true);
   await resources.unpackScripts(stagingDir);
   await fastlane.clearFastlaneDirs(configInfo, screens);
+  final isMultipleLocales = configInfo['locales'].length > 1;
 
   // run integration tests in each android emulator for each locale and
   // process screenshots
   if (configInfo['devices']['android'] != null)
     for (final emulatorName in configInfo['devices']['android']) {
       for (final locale in configInfo['locales']) {
-        await emulator(emulatorName, true, stagingDir, locale);
-//        await clearFastlaneDir(
-//            screens, emulatorName, locale, DeviceType.android);
+        await emulator(
+            emulatorName, true, stagingDir, locale, isMultipleLocales);
 
         for (final testPath in configInfo['tests']) {
           print(
@@ -64,8 +63,7 @@ Future<void> run([String configPath = kConfigFileName]) async {
   if (configInfo['devices']['ios'] != null)
     for (final simulatorName in configInfo['devices']['ios']) {
       for (final locale in configInfo['locales']) {
-        simulator(simulatorName, true, stagingDir, locale);
-//        await clearFastlaneDir(screens, simulatorName, locale, DeviceType.ios);
+        simulator(simulatorName, true, stagingDir, locale, isMultipleLocales);
         for (final testPath in configInfo['tests']) {
           print(
               'Capturing screenshots with test $testPath on simulator $simulatorName in locale $locale ...');
@@ -106,7 +104,9 @@ void screenshots(String testPath, String stagingDir) async {
 /// Start/stop emulator.
 ///
 Future<void> emulator(String emulatorName, bool start,
-    [String stagingDir, String locale = "en-US"]) async {
+    [String stagingDir,
+    String locale = "en-US",
+    bool isMultipleLocales = false]) async {
   emulatorName = emulatorName.replaceAll(' ', '_');
   if (start) {
     print('Starting emulator \'$emulatorName\' in locale $locale ...');
@@ -120,31 +120,54 @@ Future<void> emulator(String emulatorName, bool start,
 
     // Note: the 'flutter build' of the test should allow enough time for emulator to start
     // otherwise, wait for emulator to start
-    await utils.streamCmd('flutter', ['emulator', '--launch', emulatorName]);
+    Map<String, String> envVars = Platform.environment;
+    if (envVars['CI'] == 'true') {
+      // for integration testing
+      final androidHome = envVars['ANDROID_HOME'];
+      // $ANDROID_HOME/emulator/emulator -avd test -no-audio -no-window -gpu swiftshader
+      await utils.streamCmd(
+          '$androidHome/emulator/emulator',
+          [
+            '-avd',
+            emulatorName,
+            '-no-audio',
+            '-no-window',
+            '-no-snapshot',
+            '-gpu',
+            'swiftshader',
+          ],
+          ProcessStartMode.detached);
+    } else
+      await utils.streamCmd('flutter', ['emulator', '--launch', emulatorName]);
+
     await utils.streamCmd(
         '$stagingDir/resources/script/android-wait-for-emulator', []);
-    if (utils.cmd('adb', ['root'], '.', true) ==
-        'adbd cannot run as root in production builds\n') {
-      stdout.write(
-          'warning: locale has not been changed. Running in default locale.\n');
-      stdout.write(
-          'To change locale you must use a non-production emulator (one that does not depend on Play Store). See:\n');
-      stdout.write(
-          '    https://stackoverflow.com/questions/43923996/adb-root-is-not-working-on-emulator/45668555#45668555 for details.\n');
-    } else {
+
+    // change locale
+    if (isMultipleLocales) {
+      if (utils.cmd('adb', ['root'], '.', true) ==
+          'adbd cannot run as root in production builds\n') {
+        stdout.write(
+            'warning: locale has not been changed. Running in default locale.\n');
+        stdout.write(
+            'To change locale you must use a non-production emulator (one that does not depend on Play Store). See:\n');
+        stdout.write(
+            '    https://stackoverflow.com/questions/43923996/adb-root-is-not-working-on-emulator/45668555#45668555 for details.\n');
+      } else {
 //      adb shell "setprop persist.sys.locale fr-CA; setprop ctl.restart zygote"
-      utils.cmd('adb', [
-        'shell',
-        'setprop',
-        'persist.sys.locale',
-        locale,
-        ';',
-        'setprop',
-        'ctl.restart',
-        'zygote'
-      ]);
-      // note: there should be enough time to allow the emulator to restart
-      // while app is being compiled.
+        utils.cmd('adb', [
+          'shell',
+          'setprop',
+          'persist.sys.locale',
+          locale,
+          ';',
+          'setprop',
+          'ctl.restart',
+          'zygote'
+        ]);
+        // note: there should be enough time to allow the emulator to restart
+        // while app is being compiled.
+      }
     }
   } else {
     print('Stopping emulator: $emulatorName ...');
@@ -159,7 +182,9 @@ Future<void> emulator(String emulatorName, bool start,
 /// Start/stop simulator.
 ///
 void simulator(String name, bool start,
-    [String stagingDir, String locale = 'en-US']) {
+    [String stagingDir,
+    String locale = 'en-US',
+    bool isMultipleLocales = false]) {
   Map simulatorInfo = utils.simulators()[name];
 
   if (start) {
@@ -169,8 +194,9 @@ void simulator(String name, bool start,
     } else {
       print('Starting simulator \'$name\' in locale $locale ...');
     }
-    utils.streamCmd('$stagingDir/resources/script/simulator-controller',
-        [name, 'locale', locale]);
+    if (isMultipleLocales)
+      utils.streamCmd('$stagingDir/resources/script/simulator-controller',
+          [name, 'locale', locale]);
     // xcrun simctl boot A23897F7-11DF-4F22-82E6-8BEB741F1990
 //    if (simulatorInfo['status'] == 'Shutdown')
     utils.cmd('xcrun', ['simctl', 'boot', simulatorInfo['id']]);

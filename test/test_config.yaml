@@ -8,7 +8,7 @@ staging: /tmp/screenshots
 
 # A list of locales supported in app
 locales:
-  - fr-CA
+#  - fr-CA
   - en-US
 #  - de-DE
 

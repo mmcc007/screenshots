@@ -39,26 +39,29 @@ String cmd(String cmd, List<String> arguments,
 }
 
 /// Execute command [cmd] with arguments [arguments] in a separate process and stream stdout/stderr.
-Future<void> streamCmd(String cmd, List<String> arguments) async {
+Future<void> streamCmd(String cmd, List<String> arguments,
+    [ProcessStartMode mode = ProcessStartMode.normal]) async {
 //  print('streamCmd=\'$cmd ${arguments.join(" ")}\'');
 
-  final process = await Process.start(cmd, arguments);
+  final process = await Process.start(cmd, arguments, mode: mode);
 
-  var stdOutLineStream =
-      process.stdout.transform(Utf8Decoder()).transform(LineSplitter());
-  await for (var line in stdOutLineStream) {
-    stdout.write(line + '\n');
+  if (mode == ProcessStartMode.normal) {
+    var stdOutLineStream =
+        process.stdout.transform(Utf8Decoder()).transform(LineSplitter());
+    await for (var line in stdOutLineStream) {
+      stdout.write(line + '\n');
+    }
+
+    var stdErrLineStream =
+        process.stderr.transform(Utf8Decoder()).transform(LineSplitter());
+    await for (var line in stdErrLineStream) {
+      stderr.write(line + '\n');
+    }
+
+    var exitCode = await process.exitCode;
+    if (exitCode != 0)
+      throw 'command failed: cmd=\'$cmd ${arguments.join(" ")}\'';
   }
-
-  var stdErrLineStream =
-      process.stderr.transform(Utf8Decoder()).transform(LineSplitter());
-  await for (var line in stdErrLineStream) {
-    stderr.write(line + '\n');
-  }
-
-  var exitCode = await process.exitCode;
-  if (exitCode != 0)
-    throw 'command failed: cmd=\'$cmd ${arguments.join(" ")}\'';
 }
 
 /// Create list of simulators with their ID and status.

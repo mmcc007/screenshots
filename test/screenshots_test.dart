@@ -261,4 +261,21 @@ void main() {
     final Config config = Config('test/test_config.yaml');
     await fastlane.clearFastlaneDirs(config.config, screens);
   });
+
+  test('start emulator on travis', () async {
+    final androidHome = Platform.environment['ANDROID_HOME'];
+    final emulatorName = 'Nexus_6P_API_27';
+    await streamCmd(
+        '$androidHome/emulator/emulator',
+        [
+          '-avd',
+          emulatorName,
+          '-no-audio',
+          '-no-window',
+          '-no-snapshot',
+          '-gpu',
+          'swiftshader',
+        ],
+        ProcessStartMode.detached);
+  });
 }
