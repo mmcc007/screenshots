@@ -1,3 +1,9 @@
+## 0.1.4
+
+- Bypasses changing locales if running in only one locale
+- Issues warning about running flutter driver in multiple locales  
+  See issue: https://github.com/flutter/flutter/issues/27785 for details.
+
 ## 0.1.3
 
 - Added support for multiple locales and additional screens for devices
