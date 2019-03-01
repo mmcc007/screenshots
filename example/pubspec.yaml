@@ -28,7 +28,7 @@ dev_dependencies:
     sdk: flutter
   flutter_driver:
     sdk: flutter
-  test: 1.5.1
+  test: ^1.5.1
   screenshots:
     path: ..
   intl_translation: ^0.17.2
