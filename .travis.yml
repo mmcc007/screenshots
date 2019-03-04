@@ -59,7 +59,10 @@ jobs:
 
       # install ImageMagick
       - brew install imagemagick
+
+      # install most current (released or unreleased) Screenshots
       - pub global activate --source path .
+
       script:
       - cd example; screenshots
       # copy artifacts to cache for later deploy

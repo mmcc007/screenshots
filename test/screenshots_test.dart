@@ -223,6 +223,13 @@ void main() {
     expect(await config.validate(screens), true);
   });
 
+  test('config guide', () async {
+    final Screens screens = Screens();
+    await screens.init();
+    final Config config = Config('test/test_config.yaml');
+    config.configGuide(screens);
+  });
+
   test('rooted emulator', () {
     final result = cmd('adb', ['root']);
     print(result);
