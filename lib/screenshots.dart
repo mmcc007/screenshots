@@ -173,8 +173,8 @@ Future<void> emulator(String emulatorName, bool start,
     print('Stopping emulator: $emulatorName ...');
     utils.cmd('adb', ['emu', 'kill']);
     // wait for emulator to stop
-//    utils.streamCmd(
-//        '$stagingDir/resources/script/android-wait-for-emulator-to-stop', []);
+    await utils.streamCmd(
+        '$stagingDir/resources/script/android-wait-for-emulator-to-stop', []);
   }
 }
 
