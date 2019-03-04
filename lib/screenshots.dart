@@ -185,12 +185,14 @@ void simulator(String name, bool start,
     [String stagingDir,
     String locale = 'en-US',
     bool isMultipleLocales = false]) {
-  Map simulatorInfo = utils.simulators()[name];
-
+  final simulatorInfo = utils.getFirstIosDevice(utils.getIosDevices(), name);
+  final udid = simulatorInfo['udid'];
+  final state = simulatorInfo['state'];
+  print('simulatorInfo=$simulatorInfo');
   if (start) {
-    if (simulatorInfo['status'] == 'Booted') {
+    if (state == 'Booted') {
       print('Restarting simulator \'$name\' in locale $locale ...');
-      utils.cmd('xcrun', ['simctl', 'shutdown', simulatorInfo['id']]);
+      utils.cmd('xcrun', ['simctl', 'shutdown', udid]);
     } else {
       print('Starting simulator \'$name\' in locale $locale ...');
     }
@@ -199,10 +201,9 @@ void simulator(String name, bool start,
           [name, 'locale', locale]);
     // xcrun simctl boot A23897F7-11DF-4F22-82E6-8BEB741F1990
 //    if (simulatorInfo['status'] == 'Shutdown')
-    utils.cmd('xcrun', ['simctl', 'boot', simulatorInfo['id']]);
+    utils.cmd('xcrun', ['simctl', 'boot', udid]);
   } else {
     print('Stopping simulator: $name ...');
-    if (simulatorInfo['status'] == 'Booted')
-      utils.cmd('xcrun', ['simctl', 'shutdown', simulatorInfo['id']]);
+    if (state == 'Booted') utils.cmd('xcrun', ['simctl', 'shutdown', udid]);
   }
 }

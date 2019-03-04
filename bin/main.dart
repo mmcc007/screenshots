@@ -30,7 +30,7 @@ void main(List<String> arguments) async {
   switch (Platform.operatingSystem) {
     case 'windows':
       print(
-          'screenshots is not supported on windows. Try running on MacOS or Linux in cloud.');
+          'Screenshots is not supported on windows. Try running on MacOS or Linux in cloud.');
       exit(1);
       break;
     case 'linux':
@@ -47,7 +47,7 @@ void main(List<String> arguments) async {
       .contains('convert')) {
     stderr.write(
         '#############################################################\n');
-    stderr.write("# You have to install ImageMagick to use screenshots\n");
+    stderr.write("# You have to install ImageMagick to use Screenshots\n");
     stderr.write(
         "# Install it using 'brew update && brew install imagemagick'\n");
     stderr.write("# If you don't have homebrew: goto http://brew.sh\n");
@@ -59,6 +59,18 @@ void main(List<String> arguments) async {
   final file = File(argResults[configArg]);
   if (!await file.exists())
     _handleError(argParser, "File not found: ${argResults[configArg]}");
+
+  if (utils.isAnyDeviceRunning()) {
+    stderr.write(
+        '#######################################################################\n');
+    stderr
+        .write("# Screenshots expects no devices to be running at startup. \n");
+    stderr.write(
+        "# Please disconnect all devices and shutdown all simulators/emulators.\n");
+    stderr.write(
+        '#######################################################################\n');
+    exit(1);
+  }
 
   await screenshots.run(argResults[configArg]);
 }

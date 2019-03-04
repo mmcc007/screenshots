@@ -22,8 +22,6 @@ class Config {
   /// Check emulators and simulators are installed,
   /// matching screen is available and tests exist.
   Future<bool> validate(Screens screens) async {
-//    final Map screens = await Screens().init();
-
     if (config['devices']['android'] != null) {
       // check emulators
       final List emulators = utils.emulators();
@@ -50,16 +48,30 @@ class Config {
 
     if (config['devices']['ios'] != null) {
       // check simulators
-      final Map simulators = utils.simulators();
+      final Map simulators = utils.getIosDevices();
       for (String device in config['devices']['ios']) {
         // check screen available for this device
         screenAvailable(screens, device);
 
         // check simulator installed
         bool simulatorInstalled = false;
-        simulators.forEach((simulator, _) {
-//        print('simulator=$simulator, device=$device');
-          if (simulator == device) simulatorInstalled = true;
+        simulators.forEach((simulator, os) {
+//          print('device=$device, simulator=$simulator');
+          if (simulator == device) {
+            // check for duplicate installs
+//            print('os=$os');
+
+            final osName = os.keys.first;
+            final osDevice = os[osName][0]['udid'];
+            // check for device present with multiple os's
+            // or with duplicate name
+            if (os.length > 1 || os[osName].length > 1) {
+              print('Warning: multiple versions of \'$device\' detected.');
+              print('  Using \'$device\' with iOS: $osName, ID: $osDevice.');
+            }
+
+            simulatorInstalled = true;
+          }
         });
         if (!simulatorInstalled) {
           stderr.write('configuration error: simulator not installed for '
@@ -96,7 +108,7 @@ class Config {
 
   void configGuide(Screens screens) {
     installedEmulators(utils.emulators());
-    installedSimulators(utils.simulators());
+    installedSimulators(utils.getIosDevices());
     supportedDevices(screens);
     stdout.write(
         '\nEach device listed in screenshots.yaml must have a corresponding '

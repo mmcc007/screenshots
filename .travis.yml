@@ -32,7 +32,7 @@ jobs:
       # install older build tools (for emulator)
       - sdkmanager "build-tools;25.0.2" "platforms;android-25" > /dev/null
 
-      # Create and start emulator.
+      # Create emulator.
       - EMULATOR_API_LEVEL=22
       - ABI="default;armeabi-v7a"
       - sdkmanager "system-images;android-$EMULATOR_API_LEVEL;$ABI" > /dev/null
