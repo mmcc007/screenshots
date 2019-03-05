@@ -235,3 +235,5 @@ directories, prior to running `screenshots`.
 # Issues and Pull Requests
 [Issues](https://github.com/mmcc007/screenshots/issues) and 
 [pull requests](https://github.com/mmcc007/screenshots/pulls) are welcome.
+
+Your feedback is welcome and is used to guide where development effort is focused. So feel free to create as many issues and pull requests as you see fit. You should expect a timely and considered response.
