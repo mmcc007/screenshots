@@ -188,7 +188,7 @@ void simulator(String name, bool start,
   final simulatorInfo = utils.getFirstIosDevice(utils.getIosDevices(), name);
   final udid = simulatorInfo['udid'];
   final state = simulatorInfo['state'];
-  print('simulatorInfo=$simulatorInfo');
+//  print('simulatorInfo=$simulatorInfo');
   if (start) {
     if (state == 'Booted') {
       print('Restarting simulator \'$name\' in locale $locale ...');
