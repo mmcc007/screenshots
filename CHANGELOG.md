@@ -1,3 +1,9 @@
+## 0.1.5
+
+- Updated parser for iOS simulators to work with all Apple machines
+- Added check for no running emulators and simulators on startup
+- Added check to wait for emulator to stop
+
 ## 0.1.4
 
 - Bypasses changing locales if running in only one locale

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:screenshots/utils.dart';
 
 ///
