@@ -10,6 +10,8 @@ import 'package:screenshots/config.dart';
 import 'package:screenshots/capture_screen.dart';
 
 void main() {
+  // used for running tests in cloud
+  // (may not be necessary if running locally)
   final timeout = Duration(seconds: 20);
 
   group('end-to-end test', () {
@@ -18,7 +20,6 @@ void main() {
 
     setUpAll(() async {
       // Connect to a running Flutter application instance.
-//      driver = await FlutterDriver.connect(timeoutMultiplier: 4);
       driver = await FlutterDriver.connect();
     });
 
@@ -34,7 +35,7 @@ void main() {
       await driver.waitFor(fab, timeout: timeout);
 
       // take screenshot before number is incremented
-      await screenshot(driver, config, '0');
+      await screenshot(driver, config, '0', timeout);
 
       // Tap on the fab
       await driver.tap(fab, timeout: timeout);
@@ -43,7 +44,7 @@ void main() {
       await driver.waitFor(find.text('1'), timeout: timeout);
 
       // take screenshot after number is incremented
-      await screenshot(driver, config, '1');
+      await screenshot(driver, config, '1', timeout);
     });
   });
 }
