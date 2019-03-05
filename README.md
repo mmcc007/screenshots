@@ -136,25 +136,23 @@ frame: true
 Note: emulators and simulators corresponding to the devices in your config file must be installed
 on your test machine.
 
-## Changing configuration
-If you want to change the list of devices to run, to get different screenshots, make sure the devices
+## Changing devices
+
+If you want to know what your screens look like on different devices just change the list of devices in screenshots.yaml.
+
+Make sure the devices
 you select have supported screens and corresponding emulators/simulators.
 
-Within each class of ios and android device, multiple devices share the same screen size.
-Devices are therefore organized by supported screens in a file called `screens.yaml`.
+_Within each class of ios and android device, multiple devices share the same screen size.
+Devices are therefore organized by supported screens in a file called `screens.yaml`._
 
-To modify the config file with the devices you select to emulate/simulate:
-1. Locate each selected device in latest 
+For each selected device:
+1. Confirm device in present in 
 [screens.yaml](https://github.com/mmcc007/screenshots/blob/master/lib/resources/screens.yaml).  
-Use the latest `screens.yaml`, not the sample below.
-2. Modify the list of devices in `screenshots.yaml` to your selected devices.  
-Confirm that each selected device name matches a name used in `screens.yaml` 
-3. Install an emulator/simulator for each selected device.  
-Confirm that each selected device used in `screenshots.yaml` has an emulator/simulator
-with a matching name.  
+2. Add device to the list of devices in `screenshots.yaml`.  
+3. Install an emulator or simulator for device.   
  
- 
-`Screenshots` will validate the config file before running.
+If changing devices seems tricky at first. Don't worry. `Screenshots` will validate the config file before running.
 
 If you want to use a device that is not included in screens.yaml
 , please create an [issue](https://github.com/mmcc007/screenshots/issues). Include
