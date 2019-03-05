@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:screenshots/config.dart';
@@ -162,12 +163,23 @@ void main() {
     await imagemagick('frame', options);
   });
 
-  test('parse xcrun simctl list', () {
-    Map _simulators = simulators();
+  test('parse xcrun simctl list devices', () {
+    Map _simulators = simulatorsx();
     print('simulators=$_simulators');
 
     print('iPhone X info: ' + _simulators['iPhone X'].toString());
 
+//     print('first match:' + regExp.firstMatch(screens).toString());
+  });
+
+  test('parse json xcrun simctl list devices', () {
+    Map devicesInfo = getIosDevices();
+
+//    Map _simulators = simulators2();
+//    print('simulators=$_simulators');
+//
+    print('iPhone 7 Plus info: ' + devicesInfo['iPhone 7 Plus'].toString());
+    print('iPhone X info: ' + devicesInfo['iPhone X'].toString());
 //     print('first match:' + regExp.firstMatch(screens).toString());
   });
 
@@ -209,6 +221,13 @@ void main() {
     await screens.init();
     final Config config = Config('test/test_config.yaml');
     expect(await config.validate(screens), true);
+  });
+
+  test('config guide', () async {
+    final Screens screens = Screens();
+    await screens.init();
+    final Config config = Config('test/test_config.yaml');
+    config.configGuide(screens);
   });
 
   test('rooted emulator', () {
@@ -277,5 +296,12 @@ void main() {
           'swiftshader',
         ],
         ProcessStartMode.detached);
+  });
+
+  test('check for no running emulators, simulators or devices', () {
+    if (cmd('flutter', ['devices'], '.', true).contains('No devices detected.'))
+      print('nothing running');
+    else
+      print('something running');
   });
 }
