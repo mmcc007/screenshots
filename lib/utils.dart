@@ -26,7 +26,7 @@ void moveFiles(String srcDir, String dstDir) {
 
 /// Execute command [cmd] with arguments [arguments] in a separate process
 /// and return stdout as string.
-///
+  ///
 /// If [silent] is false, output to stdout.
 String cmd(String cmd, List<String> arguments,
     [String workingDir = '.', bool silent = false]) {
