@@ -4,7 +4,7 @@ ios:
     resize: 75%
     resources:
       statusbar: resources/ios/1242/statusbar_black.png
-      frame: resources/ios/phones/iPhone_7_Plus_Matte_Black.png
+      frame: resources/ios/phones/iPhone_7_Plus_Silver.png
     offset: -0-0
     devices:
 #      - iPhone 6 Plus
@@ -26,7 +26,7 @@ ios:
     resize: 86%
     resources:
       statusbar: resources/ios/2048/statusbar_white.png
-      frame: resources/ios/phones/iPad_Pro_Space_Gray.png
+      frame: resources/ios/phones/iPad_Pro_Silver.png
     offset: -0-0
     devices:
       - iPad Pro (12.9-inch) (2nd generation)
