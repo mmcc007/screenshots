@@ -44,6 +44,6 @@ void main() {
 
       // increase timeout from 30 seconds for testing
       // on slow running emulators in cloud
-    }, timeout: Timeout(Duration(seconds: 60)));
+    }, timeout: Timeout(Duration(seconds: 120)));
   });
 }
