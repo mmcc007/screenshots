@@ -38,6 +38,9 @@ jobs:
       - sdkmanager "system-images;android-$EMULATOR_API_LEVEL;$ABI" > /dev/null
       - sdkmanager --list | head -15
       - echo no | avdmanager create avd -n Nexus_6P -k "system-images;android-$EMULATOR_API_LEVEL;$ABI"
+#      - cat ~/.android/avd/Nexus_6P.avd/config.ini
+      - echo "hw.lcd.width=1440" >> ~/.android/avd/Nexus_6P.avd/config.ini
+      - echo "hw.lcd.height=2560" >> ~/.android/avd/Nexus_6P.avd/config.ini
       # fix timezone warning on osx
       - sudo ln -sf /usr/share/zoneinfo/US/Pacific /etc/localtime
 
