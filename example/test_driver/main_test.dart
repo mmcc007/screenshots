@@ -10,10 +10,6 @@ import 'package:screenshots/config.dart';
 import 'package:screenshots/capture_screen.dart';
 
 void main() {
-  // used for running tests in cloud
-  // (may not be necessary if running locally)
-  final timeout = Duration(seconds: 60);
-
   group('end-to-end test', () {
     FlutterDriver driver;
     final Map config = Config().config;
@@ -32,19 +28,22 @@ void main() {
       SerializableFinder fab = find.byTooltip('Increment');
 
       // Wait for the floating action button to appear
-      await driver.waitFor(fab, timeout: timeout);
+      await driver.waitFor(fab);
 
       // take screenshot before number is incremented
-      await screenshot(driver, config, '0', timeout);
+      await screenshot(driver, config, '0');
 
       // Tap on the fab
-      await driver.tap(fab, timeout: timeout);
+      await driver.tap(fab);
 
       // Wait for text to change to the desired value
-      await driver.waitFor(find.text('1'), timeout: timeout);
+      await driver.waitFor(find.text('1'));
 
       // take screenshot after number is incremented
-      await screenshot(driver, config, '1', timeout);
-    });
+      await screenshot(driver, config, '1');
+
+      // increase timeout from 30 seconds for testing
+      // on slow running emulators in cloud
+    }, timeout: Timeout(Duration(seconds: 60)));
   });
 }
