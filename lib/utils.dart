@@ -96,6 +96,8 @@ Map getIosDevices() {
   // transform json to a Map of device name by a map of OS's by a list of
   // devices with a map of properties
   // ie, Map<String, Map<String, List<Map<String, String>>>>
+  // In other words, just pop-out the device name for 'easier' access to
+  // the device properties.
   Map deviceInfoTransformed = {};
 
   deviceInfo.forEach((os, devices) {

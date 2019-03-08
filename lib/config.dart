@@ -97,11 +97,12 @@ class Config {
     if (config['locales'].length > 1) {
       stdout.write('Warning: Flutter integration tests do not work in '
           'multiple locals.\n');
-      stdout.write(
-          '  See issue: https://github.com/flutter/flutter/issues/27785 for details.\n'
-          '  and provide a thumbs-up to prioritize a fix for this issue!\n\n'
-          '  While waiting for a fix configure only the default locale\n'
-          '  in screenshots.yaml');
+      stdout.write('  See comment on issue:\n'
+          '  https://github.com/flutter/flutter/issues/27785#issue-408955077\n'
+          '  for details.\n'
+          '  and provide a thumbs-up on the comment to prioritize a fix for this issue!\n\n'
+          '  In the meantime, while waiting for a fix, only use the default locale\n'
+          '  in screenshots.yaml\n\n');
     }
 
     return true;
