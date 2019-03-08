@@ -102,9 +102,10 @@ https://github.com/mmcc007/screenshots/releases/
 To run `Screenshots` you need to setup a configuration file, `screenshots.yaml`:
 ````yaml
 # Screen capture tests
+# Note: flutter driver expects a pair of files eg, main1.dart and main1_test.dart
 tests:
-  - test_driver/test1.dart
-  - test_driver/test2.dart
+  - test_driver/main1.dart
+  - test_driver/main2.dart
 
 # Interim location of screenshots from tests
 staging: /tmp/screenshots
