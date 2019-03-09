@@ -90,6 +90,7 @@ Future<void> run([String configPath = kConfigFileName]) async {
 /// Run the screenshot integration test on current emulator or simulator.
 ///
 /// Test is expected to generate a sequential number of screenshots.
+/// (to match order of appearance is Apple and Google stores)
 ///
 /// Assumes the integration test captures the screen shots into a known directory using
 /// provided [capture_screen.screenshot()].
@@ -119,11 +120,9 @@ Future<void> emulator(String emulatorName, bool start,
 //        ['-c', '\'\$ANDROID_HOME/tools/emulator -avd $emulatorName &\''],
 //        '\$ANDROID_HOME/tools');
 
-    // Note: the 'flutter build' of the test should allow enough time for emulator to start
-    // otherwise, wait for emulator to start
     Map<String, String> envVars = Platform.environment;
     if (envVars['CI'] == 'true') {
-      // for integration testing
+      // testing on CI/CD requires starting emulator in a specific way
       final androidHome = envVars['ANDROID_HOME'];
       // $ANDROID_HOME/emulator/emulator -avd test -no-audio -no-window -gpu swiftshader &
       await utils.streamCmd(
@@ -139,8 +138,11 @@ Future<void> emulator(String emulatorName, bool start,
           ],
           ProcessStartMode.detached);
     } else
+      // testing locally, so start emulator in normal way
       await utils.streamCmd('flutter', ['emulator', '--launch', emulatorName]);
 
+    // Note: the 'flutter build' of the test should allow enough time for emulator to start
+    // otherwise, wait for emulator to start (runs slightly slower, required on CI/CD)
     await utils.streamCmd(
         '$stagingDir/resources/script/android-wait-for-emulator', []);
 
