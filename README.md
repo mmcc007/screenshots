@@ -47,6 +47,11 @@ Screenshots features:
 4. Integrates with Fastlane's [deliver](https://docs.fastlane.tools/actions/deliver/) 
 and [supply](https://docs.fastlane.tools/actions/supply/) for upload to respective stores.
 
+# Installation
+````bash
+$ pub global activate screenshots
+````
+
 # Usage
 
 ````
@@ -57,8 +62,8 @@ Or, if using a config file other than the default 'screenshots.yaml':
 $ screenshots -c <path to config file>
 ````
 
-# Modifying tests for Screenshots
-Capturing screenshots using this package is straightforward.
+# Modifying your tests for Screenshots
+Capturing screenshots using this package is straight forward.
 
 A special function is provided in
 the Screenshots package that is called by the test each time you want to capture a screenshot. 
@@ -131,20 +136,6 @@ frame: true
 Note: emulators and simulators corresponding to the devices in your config file must be installed
 on your test machine.
 
-# Installation
-To install Screenshots on the command line:
-````bash
-$ pub global activate screenshots
-````
-To upgrade, simply re-issue the command
-````bash
-$ pub global activate screenshots
-````
-Note: the Screenshots version should be the same for both the command line and package:
-1. If upgrading the command line version of Screenshots, it is helpful to also upgrade
- the version of Screenshots in your pubspec.yaml.    
-2. If upgrading Screenshots in your pubspec.yaml, you should also upgrade the command line version.    
-
 ## Dependencies
 Screenshots depends on ImageMagick.  
 
@@ -190,6 +181,16 @@ If you want to use a device that is not included in screens.yaml
 , please create an [issue](https://github.com/mmcc007/screenshots/issues). Include
 the name of the device and preferably the size of the screen in pixels 
 (for example, Nexus 5X:1080x1920).
+
+# Upgrading
+To upgrade, simply re-issue the install command
+````bash
+$ pub global activate screenshots
+````
+Note: the Screenshots version should be the same for both the command line and package:
+1. If upgrading the command line version of Screenshots, it is helpful to also upgrade
+ the version of Screenshots in your pubspec.yaml.    
+2. If upgrading Screenshots in your pubspec.yaml, you should also upgrade the command line version.    
 
 # Screenshots on Travis
 To view Screenshots running with the [example](example) app on travis see:  
