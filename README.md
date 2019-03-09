@@ -23,29 +23,38 @@ https://github.com/mmcc007/fledge.
 
 # Screenshots
 
-`Screenshots` is a standalone command line utility and package for capturing screenshot images for Flutter.   
+`Screenshots` is a standalone command line utility and package for capturing screenshots for Flutter.   
 
 Screenshots will start the required android emulators and iOS simulators, run your screen 
-capture tests on each emulator/simulator for each locale your app supports, process the images, and drop them off for Fastlane 
+capture tests on each emulator/simulator, process the images, and drop them off to Fastlane 
 for delivery to both stores.
 
 It is inspired by three tools from Fastlane:  
 1. [Snapshots](https://docs.fastlane.tools/getting-started/ios/screenshots/)  
-   This is used to capture screenshots on iOS using iOS UI Tests.
+This is used to capture screenshots on iOS using iOS UI Tests.
 1. [Screengrab](https://docs.fastlane.tools/actions/screengrab/)  
-   This captures screenshots on android using android espresso tests.
+This captures screenshots on android using android espresso tests.
 1. [FrameIt](https://docs.fastlane.tools/actions/frameit/)  
-   This is used to place captured iOS screenshots in a device frame.
+This is used to place captured iOS screenshots in a device frame.
 
 Since all three of these Fastlane tools do not work with Flutter, Screenshots combines key features of all three Fastlane tools into one tool. Plus, it is much easier to use! 
 
-Screenshots features:
-1. Captures screenshots from any iOS simulator or android emulator and processes images.
-2. Frames screenshots in an iOS or android device frame.
-3. The same Flutter integration test can be used across all simulators/emulators.  
-   No need to use iOS UI Tests or Espresso.
-4. Integrates with Fastlane's [deliver](https://docs.fastlane.tools/actions/deliver/) 
-and [supply](https://docs.fastlane.tools/actions/supply/) for upload to respective stores.
+Screenshots features:  
+1. One test for both platforms  
+Write one test for both iOS and Android.  
+(No need to write separate iOS UI Tests or Espresso tests.)
+1. One run for both platforms  
+Screenshots runs your tests on both iOS and Android in one run.  
+(as opposed to making separate Snapshots and Screengrab runs)
+1. One run for multiple tests  
+Screenshots will run all the tests listed in config file.
+1. One run for multiple locales  
+If your app supports multiple locales, Screenshots will optionally set the locales listed in the config file before running each test.
+1. One run for frames  
+Optionally places images in device frames in same run.  
+(as opposed to making separate FrameIt runs... which supports iOS only)
+1. Works with Fastlane  
+Screenshots drops-off images where Fastlane expects to find them. Fastlane's [deliver](https://docs.fastlane.tools/actions/deliver/) and [supply](https://docs.fastlane.tools/actions/supply/) can then be used to upload to respective stores.
 
 # Installation
 ````bash
@@ -63,10 +72,7 @@ $ screenshots -c <path to config file>
 ````
 
 # Modifying your tests for Screenshots
-Capturing screenshots using this package is straight forward.
-
-A special function is provided in
-the Screenshots package that is called by the test each time you want to capture a screenshot. 
+A special function is provided in the Screenshots package that is called by the test each time you want to capture a screenshot. 
 Screenshots will
 then process the images appropriately during a Screenshots run.
 
@@ -98,13 +104,18 @@ Note: to turn off the debug banner on your screens, in your integration test's m
 ````
 
 # Configuration
-To run Screenshots you need to setup a configuration file, `screenshots.yaml`:
+Screenshots uses a configuration file to configure a run.  
+ The default config filename is `screenshots.yaml`:
 ````yaml
-# Screen capture tests
-# Note: flutter driver expects a pair of files eg, main1.dart and main1_test.dart
+# A list of screen capture tests
 tests:
   - test_driver/main1.dart
   - test_driver/main2.dart
+
+# Note: flutter driver expects a pair of files for testing
+# For example:
+#   main1.dart is the test app (that calls your app)
+#   main1_test.dart is the test that flutter driver expects to find
 
 # Interim location of screenshots from tests
 staging: /tmp/screenshots
@@ -118,17 +129,9 @@ locales:
 devices:
   ios:
     - iPhone X
-#    - iPhone 7 Plus
     - iPad Pro (12.9-inch) (2nd generation)
-#   "iPhone 6",
-#   "iPhone 6 Plus",
-#   "iPhone 5",
-#   "iPhone 4s",
-#   "iPad Retina",
-#   "iPad Pro"
   android:
     - Nexus 6P
-#    - Nexus 5X
 
 # Frame screenshots
 frame: true
