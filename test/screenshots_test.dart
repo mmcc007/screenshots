@@ -172,14 +172,33 @@ void main() {
   });
 
   test('parse json xcrun simctl list devices', () {
-    Map devicesInfo = getIosDevices();
+    Map iosDevices = getIosDevices();
 
 //    Map _simulators = simulators2();
 //    print('simulators=$_simulators');
 //
-    print('iPhone 7 Plus info: ' + devicesInfo['iPhone 7 Plus'].toString());
-    print('iPhone X info: ' + devicesInfo['iPhone X'].toString());
+    print('iPhone 7 Plus info: ' + iosDevices['iPhone 7 Plus'].toString());
+//    print('iPhone X info: ' + iosDevices['iPhone X'].toString());
 //     print('first match:' + regExp.firstMatch(screens).toString());
+  });
+
+  test('get highest and available version of ios device', () {
+    Map iosDevices = getIosDevices();
+    final deviceName = 'iPhone 7 Plus';
+//    final Map iOSVersions = iosDevices['iPhone 7 Plus'];
+//    print('iOSVersions=$iOSVersions');
+//
+//    // sort keys in iOS version order (just in case)
+//    final keys = iOSVersions.keys.toList();
+//    print('keys=$keys');
+//    keys.sort((v1, v2) {
+//      return v1.compareTo(v2);
+//    });
+//    print('keys=$keys');
+//    final iOSVersionName = keys.last;
+//    final Map highestDevice = iosDevices[deviceName][iOSVersionName][0];
+    final highestDevice = getHighestIosDevice(iosDevices, deviceName);
+    print('highestDevice=$highestDevice');
   });
 
   test('read resource and write to path', () async {
