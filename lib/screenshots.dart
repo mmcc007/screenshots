@@ -188,7 +188,7 @@ void simulator(String name, bool start,
     [String stagingDir,
     String locale = 'en-US',
     bool isMultipleLocales = false]) {
-  final simulatorInfo = utils.getFirstIosDevice(utils.getIosDevices(), name);
+  final simulatorInfo = utils.getHighestIosDevice(utils.getIosDevices(), name);
   final udid = simulatorInfo['udid'];
   final state = simulatorInfo['state'];
 //  print('simulatorInfo=$simulatorInfo');
