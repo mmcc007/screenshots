@@ -85,44 +85,60 @@ Map<String, Map<String, String>> simulatorsx() {
   return simulators;
 }
 
-/// Creates a list of iOS devices.
+/// Creates a list of available iOS devices.
 /// (really just concerned with simulators for now).
 /// Provides access to their IDs and status'.
 Map getIosDevices() {
-  final deviceInfoRaw = jsonDecode(
-      cmd('xcrun', ['simctl', 'list', 'devices', '--json'], '.', true));
-  final deviceInfo = deviceInfoRaw['devices'];
+  final deviceInfoRaw =
+      cmd('xcrun', ['simctl', 'list', 'devices', '--json'], '.', true);
+  final deviceInfo = jsonDecode(deviceInfoRaw)['devices'];
 
-  // transform json to a Map of device name by a map of OS's by a list of
+  // transform json to a Map of device name by a map of iOS versions by a list of
   // devices with a map of properties
   // ie, Map<String, Map<String, List<Map<String, String>>>>
   // In other words, just pop-out the device name for 'easier' access to
   // the device properties.
   Map deviceInfoTransformed = {};
 
-  deviceInfo.forEach((os, devices) {
+  deviceInfo.forEach((iOSVersionName, devices) {
+//    print('iOSVersionName=$iOSVersionName');
     for (var device in devices) {
-      // init os map if not already present
+//      print('device=$device');
+      // init iOS versions map if not already present
       if (deviceInfoTransformed[device['name']] == null) {
         deviceInfoTransformed[device['name']] = {};
       }
 
-      // init os's device array if not already present
-      if (deviceInfoTransformed[device['name']][os] == null) {
-        deviceInfoTransformed[device['name']][os] = [];
+      // init iOS version device array if not already present
+      // note: there can be multiple versions of a device with the same name
+      //       for an iOS version, hence the use of an array.
+      if (deviceInfoTransformed[device['name']][iOSVersionName] == null) {
+        deviceInfoTransformed[device['name']][iOSVersionName] = [];
       }
 
-      // add device to os's device array
-      deviceInfoTransformed[device['name']][os].add(device);
+      // add device to iOS version device array
+      // ignoring devices that are not available
+      if (device['availability'] == '(available)')
+        deviceInfoTransformed[device['name']][iOSVersionName].add(device);
     }
   });
   return deviceInfoTransformed;
 }
 
-Map getFirstIosDevice(Map iosDevices, String deviceName) {
-  final oss = iosDevices[deviceName];
-  final osName = oss.keys.first;
-  return iosDevices[deviceName][osName][0];
+// finds the iOS device with the highest available iOS version
+Map getHighestIosDevice(Map iosDevices, String deviceName) {
+  final Map iOSVersions = iosDevices[deviceName];
+
+  // sort keys in iOS version order (just in case)
+  final iosVersionKeys = iOSVersions.keys.toList();
+//  print('keys=$iosVersionKeys');
+  iosVersionKeys.sort((v1, v2) {
+    return v1.compareTo(v2);
+  });
+
+  final iOSVersionName = iosVersionKeys.last;
+  // use the first device found for the iOS version
+  return iosDevices[deviceName][iOSVersionName][0];
 }
 
 /// Create list of emulators
