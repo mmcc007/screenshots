@@ -1,3 +1,6 @@
+## 0.1.6
+- Improved handling of iOS simulator info provided by Apple
+
 ## 0.1.5
 
 - Updated parser for iOS simulators to work with all Apple machines
