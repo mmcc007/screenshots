@@ -50,25 +50,26 @@ class Config {
     if (config['devices']['ios'] != null) {
       // check simulators
       final Map simulators = utils.getIosDevices();
-      for (String device in config['devices']['ios']) {
+      for (String deviceName in config['devices']['ios']) {
         // check screen available for this device
-        screenAvailable(screens, device);
+        screenAvailable(screens, deviceName);
 
         // check simulator installed
         bool simulatorInstalled = false;
         simulators.forEach((simulator, os) {
 //          print('device=$device, simulator=$simulator');
-          if (simulator == device) {
+          if (simulator == deviceName) {
             // check for duplicate installs
 //            print('os=$os');
 
-            final osName = os.keys.first;
-            final osDevice = os[osName][0]['udid'];
+            final iOSVersion = os.keys.first;
+            final udid = os[iOSVersion][0]['udid'];
             // check for device present with multiple os's
             // or with duplicate name
-            if (os.length > 1 || os[osName].length > 1) {
-              print('Warning: multiple versions of \'$device\' detected.');
-              print('  Using \'$device\' with iOS: $osName, ID: $osDevice.');
+            if (os.length > 1 || os[iOSVersion].length > 1) {
+              print('Warning: \'$deviceName\' has multiple iOS versions.');
+              print(
+                  '  Using \'$deviceName\' with iOS version $iOSVersion (ID: $udid).');
             }
 
             simulatorInstalled = true;
@@ -76,7 +77,7 @@ class Config {
         });
         if (!simulatorInstalled) {
           stderr.write('configuration error: simulator not installed for '
-              'device \'$device\' in $configPath.\n');
+              'device \'$deviceName\' in $configPath.\n');
           stdout.write('\nInstall the missing simulator or use a supported '
               'device with an installed simulator in $configPath.\n');
           configGuide(screens);
