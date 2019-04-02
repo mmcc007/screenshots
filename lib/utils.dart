@@ -153,15 +153,15 @@ Map getHighestIosDevice(Map iosDevices, String deviceName) {
 // returns name of highest iOS version names
 String getHighestIosVersion(Map iOSVersions) {
   // sort keys in iOS version order
-  final iosVersionKeys = iOSVersions.keys.toList();
+  final iosVersionNames = iOSVersions.keys.toList();
 //  print('keys=$iosVersionKeys');
-  iosVersionKeys.sort((v1, v2) {
+  iosVersionNames.sort((v1, v2) {
     return v1.compareTo(v2);
   });
 //  print('keys (sorted)=$iosVersionKeys');
 
   // get the highest iOS version
-  final iOSVersionName = iosVersionKeys.last;
+  final iOSVersionName = iosVersionNames.last;
   return iOSVersionName;
 }
 

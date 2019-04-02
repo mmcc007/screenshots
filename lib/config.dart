@@ -86,7 +86,7 @@ class Config {
     return true;
   }
 
-  /// Checks if an emulator is installed matching the device named in config file.
+  /// Checks if an emulator is installed, matching the device named in config file.
   bool isEmulatorInstalled(List emulatorNames, String deviceName) {
     // check emulator installed
     bool emulatorInstalled = false;
@@ -104,24 +104,24 @@ class Config {
     return emulatorInstalled;
   }
 
-  /// Checks if a simulator is installed matching the device named in config file.
+  /// Checks if a simulator is installed, matching the device named in config file.
   bool isSimulatorInstalled(Map simulators, String deviceName) {
     // check simulator installed
     bool simulatorInstalled = false;
-    simulators.forEach((simulator, os) {
+    simulators.forEach((simulatorName, iOSVersions) {
       //          print('device=$device, simulator=$simulator');
-      if (simulator == deviceName) {
+      if (simulatorName == deviceName) {
         // check for duplicate installs
         //            print('os=$os');
 
-        final iOSVersion = os.keys.first;
-        final udid = os[iOSVersion][0]['udid'];
+        final iOSVersionName = utils.getHighestIosVersion(iOSVersions);
+        final udid = iOSVersions[iOSVersionName][0]['udid'];
         // check for device present with multiple os's
         // or with duplicate name
-        if (os.length > 1 || os[iOSVersion].length > 1) {
+        if (iOSVersions.length > 1 || iOSVersions[iOSVersionName].length > 1) {
           print('Warning: \'$deviceName\' has multiple iOS versions.');
           print(
-              '       : Using \'$deviceName\' with iOS version $iOSVersion (ID: $udid).');
+              '       : Using \'$deviceName\' with iOS version $iOSVersionName (ID: $udid).');
         }
 
         simulatorInstalled = true;
