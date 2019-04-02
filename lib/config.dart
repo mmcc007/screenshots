@@ -56,20 +56,20 @@ class Config {
 
         // check simulator installed
         bool simulatorInstalled = false;
-        simulators.forEach((simulator, os) {
+        simulators.forEach((simulator, oss) {
 //          print('device=$device, simulator=$simulator');
           if (simulator == deviceName) {
             // check for duplicate installs
 //            print('os=$os');
 
-            final iOSVersion = os.keys.first;
-            final udid = os[iOSVersion][0]['udid'];
+            final iosVersionName = utils.getHighestIosVersion(oss);
+            final udid = oss[iosVersionName][0]['udid'];
             // check for device present with multiple os's
             // or with duplicate name
-            if (os.length > 1 || os[iOSVersion].length > 1) {
+            if (oss.length > 1 || oss[iosVersionName].length > 1) {
               print('Warning: \'$deviceName\' has multiple iOS versions.');
               print(
-                  '  Using \'$deviceName\' with iOS version $iOSVersion (ID: $udid).');
+                  '  Using \'$deviceName\' with iOS version \'$iosVersionName\' (ID: $udid).');
             }
 
             simulatorInstalled = true;
