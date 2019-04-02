@@ -92,7 +92,13 @@ Map getIosDevices() {
   final deviceInfoRaw =
       cmd('xcrun', ['simctl', 'list', 'devices', '--json'], '.', true);
   final deviceInfo = jsonDecode(deviceInfoRaw)['devices'];
+  return transformIosDevices(deviceInfo);
+}
 
+/// Transforms latest information about iOS devices into more convenient
+/// format to index into by device name.
+/// (also useful for testing)
+Map transformIosDevices(deviceInfo) {
   // transform json to a Map of device name by a map of iOS versions by a list of
   // devices with a map of properties
   // ie, Map<String, Map<String, List<Map<String, String>>>>
@@ -100,10 +106,13 @@ Map getIosDevices() {
   // the device properties.
   Map deviceInfoTransformed = {};
 
-  deviceInfo.forEach((iOSVersionName, devices) {
-//    print('iOSVersionName=$iOSVersionName');
+  deviceInfo.forEach((iOSName, devices) {
+    //    print('iOSVersionName=$iOSVersionName');
+    // note: 'isAvailable' does not appear consistently
+    //       so using 'availability' instead
+    isDeviceAvailable(device) => device['availability'] == '(available)';
     for (var device in devices) {
-//      print('device=$device');
+      //      print('device=$device');
       // init iOS versions map if not already present
       if (deviceInfoTransformed[device['name']] == null) {
         deviceInfoTransformed[device['name']] = {};
@@ -112,14 +121,16 @@ Map getIosDevices() {
       // init iOS version device array if not already present
       // note: there can be multiple versions of a device with the same name
       //       for an iOS version, hence the use of an array.
-      if (deviceInfoTransformed[device['name']][iOSVersionName] == null) {
-        deviceInfoTransformed[device['name']][iOSVersionName] = [];
+      // note: no need to add iOS version if device not available
+      if (deviceInfoTransformed[device['name']][iOSName] == null &&
+          isDeviceAvailable(device)) {
+        deviceInfoTransformed[device['name']][iOSName] = [];
       }
 
       // add device to iOS version device array
       // ignoring devices that are not available
-      if (device['availability'] == '(available)')
-        deviceInfoTransformed[device['name']][iOSVersionName].add(device);
+      if (isDeviceAvailable(device))
+        deviceInfoTransformed[device['name']][iOSName].add(device);
     }
   });
   return deviceInfoTransformed;
@@ -129,16 +140,29 @@ Map getIosDevices() {
 Map getHighestIosDevice(Map iosDevices, String deviceName) {
   final Map iOSVersions = iosDevices[deviceName];
 
-  // sort keys in iOS version order (just in case)
+  // get highest iOS version
+  var iOSVersionName = getHighestIosVersion(iOSVersions);
+
+  final iosVersionDevices = iosDevices[deviceName][iOSVersionName];
+  if (iosVersionDevices.length == 0)
+    throw "Error: no available devices found for \'$deviceName\'";
+  // use the first device found for the iOS version
+  return iosVersionDevices[0];
+}
+
+// returns name of highest iOS version names
+String getHighestIosVersion(Map iOSVersions) {
+  // sort keys in iOS version order
   final iosVersionKeys = iOSVersions.keys.toList();
 //  print('keys=$iosVersionKeys');
   iosVersionKeys.sort((v1, v2) {
     return v1.compareTo(v2);
   });
+//  print('keys (sorted)=$iosVersionKeys');
 
+  // get the highest iOS version
   final iOSVersionName = iosVersionKeys.last;
-  // use the first device found for the iOS version
-  return iosDevices[deviceName][iOSVersionName][0];
+  return iOSVersionName;
 }
 
 /// Create list of emulators
