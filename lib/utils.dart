@@ -146,6 +146,19 @@ List<String> emulators() {
   return cmd('emulator', ['-list-avds'], '.', true).split('\n');
 }
 
+/// Find the android device with the highest available android version
+String getHighestAndroidDevice(String deviceName) {
+  final deviceNameNormalized = deviceName.replaceAll(' ', '_');
+  final devices =
+      emulators().where((name) => name.contains(deviceNameNormalized)).toList();
+  // sort list in android API order
+  devices.sort((v1, v2) {
+    return v1.compareTo(v2);
+  });
+
+  return devices.last;
+}
+
 /// Adds prefix to all files in a directory
 Future prefixFilesInDir(String dirPath, String prefix) async {
   await for (final file

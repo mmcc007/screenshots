@@ -109,7 +109,7 @@ Future<void> emulator(String emulatorName, bool start,
     [String stagingDir,
     String locale = "en-US",
     bool isMultipleLocales = false]) async {
-  emulatorName = emulatorName.replaceAll(' ', '_');
+  final highestEmulator = utils.getHighestAndroidDevice(emulatorName);
   if (start) {
     print('Starting emulator \'$emulatorName\' in locale $locale ...');
 
@@ -129,7 +129,7 @@ Future<void> emulator(String emulatorName, bool start,
           '$androidHome/emulator/emulator',
           [
             '-avd',
-            emulatorName,
+            highestEmulator,
             '-no-audio',
             '-no-window',
             '-no-snapshot',
@@ -139,7 +139,8 @@ Future<void> emulator(String emulatorName, bool start,
           ProcessStartMode.detached);
     } else
       // testing locally, so start emulator in normal way
-      await utils.streamCmd('flutter', ['emulator', '--launch', emulatorName]);
+      await utils
+          .streamCmd('flutter', ['emulator', '--launch', highestEmulator]);
 
     // Note: the 'flutter build' of the test should allow enough time for emulator to start
     // otherwise, wait for emulator to start (runs slightly slower, required on CI/CD)
@@ -173,7 +174,7 @@ Future<void> emulator(String emulatorName, bool start,
       }
     }
   } else {
-    print('Stopping emulator: $emulatorName ...');
+    print('Stopping emulator: $highestEmulator ...');
     utils.cmd('adb', ['emu', 'kill']);
     // wait for emulator to stop
     await utils.streamCmd(
