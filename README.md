@@ -28,24 +28,25 @@ It is inspired by three tools from Fastlane:
 1. [Snapshots](https://docs.fastlane.tools/getting-started/ios/screenshots/)  
 This is used to capture screenshots on iOS using iOS UI Tests.
 1. [Screengrab](https://docs.fastlane.tools/actions/screengrab/)  
-This captures screenshots on android using android espresso tests.
+This captures screenshots on android using Android Espresso tests.
 1. [FrameIt](https://docs.fastlane.tools/actions/frameit/)  
 This is used to place captured iOS screenshots in a device frame.
 
-Since all three of these Fastlane tools do not work with Flutter, _Screenshots_ combines key features of all three Fastlane tools into one tool. Plus, it is much easier to use! 
+Since all three of these Fastlane tools do not work with Flutter, _Screenshots_ combines key features of these Fastlane tools into one tool. 
 
 # Features
-_Screenshots_ main features includes:  
-1. One test for both platforms  
-Write one test for both iOS and Android.  
-(No need to write separate iOS UI Tests or Espresso tests.)
+Since Flutter integration testing is designed to work transparently across iOS and Android, capturing images using _Screenshots_ is easy.
+
+Features include: 
+1. Works with your existing tests  
+Add a single line for each screenshot.
+1. Run your tests on any device  
+Select the devices you want to run on, using a convenient config file.
 1. One run for both platforms  
 _Screenshots_ runs your tests on both iOS and Android in one run.  
 (as opposed to making separate Snapshots and Screengrab runs)
-1. One run for multiple tests  
-_Screenshots_ will run all the tests listed in config file.
 1. One run for multiple locales  
-If your app supports multiple locales, _Screenshots_ will optionally set the locales listed in the config file before running each test.
+If your app supports multiple locales, _Screenshots_ will optionally set the locales listed in the config file before running each test (see Limitations below).
 1. One run for frames  
 Optionally places images in device frames in same run.  
 (as opposed to making separate FrameIt runs... which supports iOS only)
@@ -193,6 +194,10 @@ https://github.com/mmcc007/screenshots/releases/
 
 * Running _Screenshots_ in the cloud is  useful for automating the generation of your screenshots in a CI/CD environment.  
 * Running _Screenshots_ on macOS in the cloud can be used to generate your screenshots when developing on Linux and/or Windows (if not using locally attached iOS devices).
+
+# Limitations
+
+Due to [flutter/issues/27785](https://github.com/flutter/flutter/issues/27785), running _Screenshots_ in multiple locales has limitations. This limitation is being tracked in [screenshots/issues/20](https://github.com/mmcc007/screenshots/issues/20).
 
 # Issues and Pull Requests
 [Issues](https://github.com/mmcc007/screenshots/issues) and 
