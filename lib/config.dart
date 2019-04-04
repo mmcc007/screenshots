@@ -95,7 +95,7 @@ class Config {
       if (emulatorName.contains(deviceNameNormalized)) {
         final highestEmulatorName = utils.getHighestAndroidDevice(deviceName);
         if (highestEmulatorName != deviceNameNormalized && !emulatorInstalled) {
-          print('Warning: Exact match for \'$deviceName\' not found.');
+          print('Warning: \'$deviceName\' does not have a matching emulator.');
           print('       : Using \'$highestEmulatorName\'.');
         }
         emulatorInstalled = true;
