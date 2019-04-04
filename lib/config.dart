@@ -31,11 +31,7 @@ class Config {
         screenAvailable(screens, device);
 
         // check emulator installed
-        bool emulatorInstalled = false;
-        for (String emulator in emulators) {
-          if (emulator.contains(device.replaceAll(' ', '_')))
-            emulatorInstalled = true;
-        }
+        bool emulatorInstalled = isEmulatorInstalled(emulators, device);
         if (!emulatorInstalled) {
           stderr.write('configuration error: emulator not installed for '
               'device \'$device\' in $configPath.\n');
@@ -55,26 +51,7 @@ class Config {
         screenAvailable(screens, deviceName);
 
         // check simulator installed
-        bool simulatorInstalled = false;
-        simulators.forEach((simulator, oss) {
-//          print('device=$device, simulator=$simulator');
-          if (simulator == deviceName) {
-            // check for duplicate installs
-//            print('os=$os');
-
-            final iosVersionName = utils.getHighestIosVersion(oss);
-            final udid = oss[iosVersionName][0]['udid'];
-            // check for device present with multiple os's
-            // or with duplicate name
-            if (oss.length > 1 || oss[iosVersionName].length > 1) {
-              print('Warning: \'$deviceName\' has multiple iOS versions.');
-              print(
-                  '  Using \'$deviceName\' with iOS version \'$iosVersionName\' (ID: $udid).');
-            }
-
-            simulatorInstalled = true;
-          }
-        });
+        bool simulatorInstalled = isSimulatorInstalled(simulators, deviceName);
         if (!simulatorInstalled) {
           stderr.write('configuration error: simulator not installed for '
               'device \'$deviceName\' in $configPath.\n');
@@ -107,6 +84,50 @@ class Config {
     }
 
     return true;
+  }
+
+  /// Checks if an emulator is installed, matching the device named in config file.
+  bool isEmulatorInstalled(List emulatorNames, String deviceName) {
+    // check emulator installed
+    bool emulatorInstalled = false;
+    final deviceNameNormalized = deviceName.replaceAll(' ', '_');
+    for (String emulatorName in emulatorNames) {
+      if (emulatorName.contains(deviceNameNormalized)) {
+        final highestEmulatorName = utils.getHighestAndroidDevice(deviceName);
+        if (highestEmulatorName != deviceNameNormalized && !emulatorInstalled) {
+          print('Warning: \'$deviceName\' does not have a matching emulator.');
+          print('       : Using \'$highestEmulatorName\'.');
+        }
+        emulatorInstalled = true;
+      }
+    }
+    return emulatorInstalled;
+  }
+
+  /// Checks if a simulator is installed, matching the device named in config file.
+  bool isSimulatorInstalled(Map simulators, String deviceName) {
+    // check simulator installed
+    bool simulatorInstalled = false;
+    simulators.forEach((simulatorName, iOSVersions) {
+      //          print('device=$device, simulator=$simulator');
+      if (simulatorName == deviceName) {
+        // check for duplicate installs
+        //            print('os=$os');
+
+        final iOSVersionName = utils.getHighestIosVersion(iOSVersions);
+        final udid = iOSVersions[iOSVersionName][0]['udid'];
+        // check for device present with multiple os's
+        // or with duplicate name
+        if (iOSVersions.length > 1 || iOSVersions[iOSVersionName].length > 1) {
+          print('Warning: \'$deviceName\' has multiple iOS versions.');
+          print(
+              '       : Using \'$deviceName\' with iOS version $iOSVersionName (ID: $udid).');
+        }
+
+        simulatorInstalled = true;
+      }
+    });
+    return simulatorInstalled;
   }
 
   void configGuide(Screens screens) {

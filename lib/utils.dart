@@ -153,21 +153,34 @@ Map getHighestIosDevice(Map iosDevices, String deviceName) {
 // returns name of highest iOS version names
 String getHighestIosVersion(Map iOSVersions) {
   // sort keys in iOS version order
-  final iosVersionKeys = iOSVersions.keys.toList();
+  final iosVersionNames = iOSVersions.keys.toList();
 //  print('keys=$iosVersionKeys');
-  iosVersionKeys.sort((v1, v2) {
+  iosVersionNames.sort((v1, v2) {
     return v1.compareTo(v2);
   });
 //  print('keys (sorted)=$iosVersionKeys');
 
   // get the highest iOS version
-  final iOSVersionName = iosVersionKeys.last;
+  final iOSVersionName = iosVersionNames.last;
   return iOSVersionName;
 }
 
 /// Create list of emulators
 List<String> emulators() {
   return cmd('emulator', ['-list-avds'], '.', true).split('\n');
+}
+
+/// Find the android device with the highest available android version
+String getHighestAndroidDevice(String deviceName) {
+  final deviceNameNormalized = deviceName.replaceAll(' ', '_');
+  final devices =
+      emulators().where((name) => name.contains(deviceNameNormalized)).toList();
+  // sort list in android API order
+  devices.sort((v1, v2) {
+    return v1.compareTo(v2);
+  });
+
+  return devices.last;
 }
 
 /// Adds prefix to all files in a directory
