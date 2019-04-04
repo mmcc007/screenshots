@@ -40,6 +40,7 @@ void main(List<String> arguments) async {
       throw 'unknown os: ${Platform.operatingSystem}';
   }
 
+  // check imagemagick is installed
   if (!utils
       .cmd('sh', ['-c', 'which convert && echo convert || echo not installed'],
           '.', true)
@@ -55,6 +56,23 @@ void main(List<String> arguments) async {
         '#############################################################\n');
     exit(1);
   }
+
+  // check adb is in path
+  if (!utils
+      .cmd('sh', ['-c', 'which adb && echo adb || echo not installed'], '.',
+          true)
+      .toString()
+      .contains('adb')) {
+    stderr.write(
+        '#############################################################\n');
+    stderr.write("# 'adb' must be in the PATH to use Screenshots\n");
+    stderr.write("# You can usually add it to the PATH using\n"
+        "# export PATH='~/Library/Android/sdk/platform-tools:\$PATH'  \n");
+    stderr.write(
+        '#############################################################\n');
+    exit(1);
+  }
+
   // validate args
   final file = File(argResults[configArg]);
   if (!await file.exists())
