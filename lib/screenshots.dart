@@ -49,7 +49,7 @@ Future<void> run([String configPath = kConfigFileName]) async {
 
         for (final testPath in configInfo['tests']) {
           print(
-              'Capturing screenshots with test $testPath on emulator $emulatorName in locale $locale ...');
+              'Capturing screenshots with test app $testPath on emulator \'$emulatorName\' in locale $locale ...');
           await screenshots(testPath, stagingDir);
           // process screenshots
           await processImages.process(
@@ -67,7 +67,7 @@ Future<void> run([String configPath = kConfigFileName]) async {
         simulator(simulatorName, true, stagingDir, locale, isMultipleLocales);
         for (final testPath in configInfo['tests']) {
           print(
-              'Capturing screenshots with test $testPath on simulator $simulatorName in locale $locale ...');
+              'Capturing screenshots with test app $testPath on simulator \'$simulatorName\' in locale $locale ...');
           await screenshots(testPath, stagingDir);
           // process screenshots
           await processImages.process(
@@ -113,18 +113,10 @@ Future<void> emulator(String emulatorName, bool start,
   if (start) {
     print('Starting emulator \'$emulatorName\' in locale $locale ...');
 
-//    final emulatorName =
-//        utils.emulators().firstWhere((emulator) => emulator.contains(name));
-//    utils.cmd(
-//        'bash',
-//        ['-c', '\'\$ANDROID_HOME/tools/emulator -avd $emulatorName &\''],
-//        '\$ANDROID_HOME/tools');
-
-    Map<String, String> envVars = Platform.environment;
+    final envVars = Platform.environment;
     if (envVars['CI'] == 'true') {
       // testing on CI/CD requires starting emulator in a specific way
       final androidHome = envVars['ANDROID_HOME'];
-      // $ANDROID_HOME/emulator/emulator -avd test -no-audio -no-window -gpu swiftshader &
       await utils.streamCmd(
           '$androidHome/emulator/emulator',
           [
@@ -142,8 +134,7 @@ Future<void> emulator(String emulatorName, bool start,
       await utils
           .streamCmd('flutter', ['emulator', '--launch', highestEmulator]);
 
-    // Note: the 'flutter build' of the test should allow enough time for emulator to start
-    // otherwise, wait for emulator to start (runs slightly slower, required on CI/CD)
+    // wait for emulator to start
     await utils.streamCmd(
         '$stagingDir/resources/script/android-wait-for-emulator', []);
 
@@ -152,7 +143,7 @@ Future<void> emulator(String emulatorName, bool start,
       if (utils.cmd('adb', ['root'], '.', true) ==
           'adbd cannot run as root in production builds\n') {
         stdout.write(
-            'warning: locale has not been changed. Running in default locale.\n');
+            'Warning: locale has not been changed. Running in default locale.\n');
         stdout.write(
             'To change locale you must use a non-production emulator (one that does not depend on Play Store). See:\n');
         stdout.write(
@@ -174,7 +165,7 @@ Future<void> emulator(String emulatorName, bool start,
       }
     }
   } else {
-    print('Stopping emulator: $highestEmulator ...');
+    print('Stopping emulator: \'$emulatorName\' ...');
     utils.cmd('adb', ['emu', 'kill']);
     // wait for emulator to stop
     await utils.streamCmd(
@@ -203,11 +194,9 @@ void simulator(String name, bool start,
     if (isMultipleLocales)
       utils.streamCmd('$stagingDir/resources/script/simulator-controller',
           [name, 'locale', locale]);
-    // xcrun simctl boot A23897F7-11DF-4F22-82E6-8BEB741F1990
-//    if (simulatorInfo['status'] == 'Shutdown')
     utils.cmd('xcrun', ['simctl', 'boot', udid]);
   } else {
-    print('Stopping simulator: $name ...');
+    print('Stopping simulator: \'$name\' ...');
     if (state == 'Booted') utils.cmd('xcrun', ['simctl', 'shutdown', udid]);
   }
 }
