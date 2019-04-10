@@ -7,7 +7,6 @@ jobs:
     - stage: Run screenshots
 #      env: Create screenshots
       before_install:
-      - xcrun simctl list devices
       # create repository for artifacts and clear if cached
       - rm -rf $HOME/screenshots
       - mkdir $HOME/screenshots
