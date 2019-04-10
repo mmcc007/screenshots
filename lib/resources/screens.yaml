@@ -20,7 +20,8 @@ ios:
     offset: -0-0
     devices:
       - iPhone X
-#      - iPhone Xs
+      - iPhone XS
+      - iPhone XS Max
   12.9inch:
     size: 2048x2732
     resize: 86%
@@ -30,6 +31,7 @@ ios:
     offset: -0-0
     devices:
       - iPad Pro (12.9-inch) (2nd generation)
+      - iPad Pro (12.9-inch) (3rd generation)
 android:
   5.2inch:
     size: 1080x1920

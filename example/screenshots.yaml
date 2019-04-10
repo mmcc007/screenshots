@@ -17,8 +17,8 @@ locales:
 # A list of devices to emulate
 devices:
   ios:
-    - iPhone X
-    - iPad Pro (12.9-inch) (2nd generation)
+    - iPhone XS Max
+    - iPad Pro (12.9-inch) (3rd generation)
   android:
     - Nexus 6P
 
