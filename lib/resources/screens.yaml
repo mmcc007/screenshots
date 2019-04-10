@@ -21,7 +21,7 @@ ios:
     devices:
       - iPhone X
       - iPhone XS
-      - iPhone XS Max
+      - iPhone XS Max # actually 6.5 inches, but has same screen ratio
   12.9inch:
     size: 2048x2732
     resize: 86%
