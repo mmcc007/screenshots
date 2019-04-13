@@ -108,10 +108,13 @@ Map transformIosDevices(deviceInfo) {
 
   deviceInfo.forEach((iOSName, devices) {
     //    print('iOSVersionName=$iOSVersionName');
-    // note: 'isAvailable' does not appear consistently
+    // note: 'isAvailable' field does not appear consistently
     //       so using 'availability' instead
     isDeviceAvailable(device) => device['availability'] == '(available)';
     for (var device in devices) {
+      // skip unavailable devices
+      if (!isDeviceAvailable(device)) continue;
+
       //      print('device=$device');
       // init iOS versions map if not already present
       if (deviceInfoTransformed[device['name']] == null) {
@@ -121,16 +124,12 @@ Map transformIosDevices(deviceInfo) {
       // init iOS version device array if not already present
       // note: there can be multiple versions of a device with the same name
       //       for an iOS version, hence the use of an array.
-      // note: no need to add iOS version if device not available
-      if (deviceInfoTransformed[device['name']][iOSName] == null &&
-          isDeviceAvailable(device)) {
+      if (deviceInfoTransformed[device['name']][iOSName] == null) {
         deviceInfoTransformed[device['name']][iOSName] = [];
       }
 
       // add device to iOS version device array
-      // ignoring devices that are not available
-      if (isDeviceAvailable(device))
-        deviceInfoTransformed[device['name']][iOSName].add(device);
+      deviceInfoTransformed[device['name']][iOSName].add(device);
     }
   });
   return deviceInfoTransformed;
