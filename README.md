@@ -71,7 +71,7 @@ $ pub global activate screenshots
 Note:  
 If `pub` is not found, add to PATH using:  
 ```
-export PATH="$PATH:<path to flutter>/bin/cache/dart-sdk/bin"
+export PATH="$PATH:<path to flutter installation directory>/bin/cache/dart-sdk/bin"
 ```
 # Usage
 
