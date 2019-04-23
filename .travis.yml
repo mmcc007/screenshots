@@ -25,6 +25,8 @@ jobs:
       # install correct version of java on osx
 #      - export HOMEBREW_NO_AUTO_UPDATE=1
 #      - brew cask uninstall java; brew tap caskroom/versions; brew cask install java8;
+      - java -version
+      - export SDKMANAGER_OPTS="--add-modules java.se.ee"
       # Accept licenses before installing components, no need to echo y for each component
       - yes | sdkmanager --licenses
       # Platform tools
