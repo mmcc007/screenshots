@@ -9,6 +9,9 @@ import 'package:screenshots/screenshots.dart';
 import 'package:screenshots/utils.dart' as utils;
 import 'package:path/path.dart' as p;
 
+const kDefaultIosBackground = 'xc:white';
+const kDefaultAndroidBackground = 'xc:none'; // transparent
+
 ///
 /// Process screenshots.
 ///
@@ -48,7 +51,7 @@ void process(Screens screens, Map config, DeviceType deviceType,
     // add frame if required
     if (config['frame']) {
 //      print('placing $screenshotPath in frame');
-      await frame(config, screenProps, screenshotPath.path);
+      await frame(config, screenProps, screenshotPath.path, deviceType);
     }
   }
 
@@ -100,7 +103,8 @@ Future append(Map config, Map screenResources, String screenshotPath) async {
 ///
 /// Resulting image is scaled to fit dimensions required by stores.
 ///
-void frame(Map config, Map screen, String screenshotPath) async {
+void frame(Map config, Map screen, String screenshotPath,
+    DeviceType deviceType) async {
   final Map resources = screen['resources'];
 
   final framePath = config['staging'] + '/' + resources['frame'];
@@ -108,12 +112,19 @@ void frame(Map config, Map screen, String screenshotPath) async {
   final resize = screen['resize'];
   final offset = screen['offset'];
 
+  // set the default background color
+  String backgroundColor;
+  (deviceType == DeviceType.ios)
+      ? backgroundColor = kDefaultIosBackground
+      : backgroundColor = kDefaultAndroidBackground;
+
   final options = {
     'framePath': framePath,
     'size': size,
     'resize': resize,
     'offset': offset,
     'screenshotPath': screenshotPath,
+    'backgroundColor': backgroundColor,
   };
   await im.imagemagick('frame', options);
 }

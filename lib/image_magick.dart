@@ -36,8 +36,7 @@ Future imagemagick(String command, Map options) async {
       cmdOptions = [
         '-size',
         options['size'],
-//        'xc:skyblue',
-        'xc:none',
+        options['backgroundColor'],
         '(',
         options['screenshotPath'],
         '-resize',
