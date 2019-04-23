@@ -68,7 +68,11 @@ On macOS:
 $ brew update && brew install imagemagick
 $ pub global activate screenshots
 ````
-
+Note:  
+If `pub` is not found, add to PATH using:  
+```
+export PATH="$PATH:<path to flutter>/bin/cache/dart-sdk/bin"
+```
 # Usage
 
 ````
