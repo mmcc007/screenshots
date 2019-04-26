@@ -41,17 +41,13 @@ class Config {
       'device_name': emulatorName,
       'device_type': deviceType,
     };
-//  print('currentEnv=$currentEnv');
     await _envStore.writeAsString(json.encode(currentEnv));
   }
 
   /// Retrieves screenshots environment at start of each test
   /// (called by test)
   Future<void> retrieveEnv() async {
-    // assume to ignore if this is first time being called by screenshots
-    if (await _envStore.exists()) {
-      _screenshotsEnv = json.decode(await _envStore.readAsString());
-    }
+    _screenshotsEnv = json.decode(await _envStore.readAsString());
   }
 
   /// Check emulators and simulators are installed,
