@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:screenshots/screens.dart';
@@ -12,6 +13,7 @@ import 'package:screenshots/utils.dart' as utils;
 class Config {
   final String configPath;
   YamlNode docYaml;
+  Map _screenshotsEnv; // current screenshots env
 
   Config([this.configPath = kConfigFileName]) {
     docYaml = loadYaml(File(configPath).readAsStringSync());
@@ -19,6 +21,38 @@ class Config {
 
   /// Get configuration information for supported devices
   Map get config => docYaml.value;
+
+  /// Current screenshots runtime environment
+  /// (updated before start of each test)
+  Map get screenshotsEnv => _screenshotsEnv;
+
+  File get _envStore {
+    return File(config['staging'] + '/' + kEnvFileName);
+  }
+
+  /// Records screenshots environment before start of each test
+  /// (called by screenshots)
+  Future<void> storeEnv(
+      Config config, Screens screens, emulatorName, locale, deviceType) async {
+    // store env for later use by tests
+    final currentEnv = {
+      'screen_size': screens.screenProps(emulatorName)['size'],
+      'locale': locale,
+      'device_name': emulatorName,
+      'device_type': deviceType,
+    };
+//  print('currentEnv=$currentEnv');
+    await _envStore.writeAsString(json.encode(currentEnv));
+  }
+
+  /// Retrieves screenshots environment at start of each test
+  /// (called by test)
+  Future<void> retrieveEnv() async {
+    // assume to ignore if this is first time being called by screenshots
+    if (await _envStore.exists()) {
+      _screenshotsEnv = json.decode(await _envStore.readAsString());
+    }
+  }
 
   /// Check emulators and simulators are installed,
   /// matching screen is available and tests exist.
