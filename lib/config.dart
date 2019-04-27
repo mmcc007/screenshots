@@ -187,7 +187,7 @@ class Config {
   }
 
   void supportedDevices(Screens screens) {
-    stdout.write('\n  Devices with currently supported screens:\n');
+    stdout.write('\n  Devices with supported screens:\n');
     screens.screens.forEach((os, v) {
       stdout.write('    $os:\n');
       v.value.forEach((screenNum, screenProps) {
