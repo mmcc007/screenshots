@@ -2,6 +2,9 @@ import 'dart:async';
 
 import 'package:screenshots/utils.dart';
 
+//const kThreshold = 0.76;
+const kThreshold = 0.5;
+
 ///
 /// ImageMagick calls.
 ///
@@ -62,4 +65,27 @@ Future imagemagick(String command, Map options) async {
       throw 'unknown command: $command';
   }
   cmd('convert', cmdOptions);
+}
+
+/// Checks if brightness of section of image exceeds a threshold
+bool thresholdExceeded(String imagePath, String crop,
+    [double threshold = kThreshold]) {
+  //convert logo.png -crop $crop_size$offset +repage -colorspace gray -format "%[fx:(mean>$threshold)?1:0]" info:
+  final result = cmd(
+      'convert',
+      [
+        imagePath,
+        '-crop',
+        crop,
+        '+repage',
+        '-colorspace',
+        'gray',
+        '-format',
+        '\'%[fx:(mean>$threshold)?1:0]\'',
+        'info:'
+      ],
+      '.',
+      true);
+//  print('result=$result');
+  return result.contains('1'); // looks like there is some junk in string
 }

@@ -11,6 +11,8 @@ import 'package:path/path.dart' as p;
 
 const kDefaultIosBackground = 'xc:white';
 const kDefaultAndroidBackground = 'xc:none'; // transparent
+const kCrop =
+    '1000x40+0+0'; // default sample size and location to test for brightness
 
 ///
 /// Process screenshots.
@@ -70,14 +72,25 @@ void process(Screens screens, Map config, DeviceType deviceType,
 /// Overlay status bar over screenshot.
 ///
 Future overlay(Map config, Map screenResources, String screenshotPath) async {
-  final statusbarPath = '${config['staging']}/${screenResources['statusbar']}';
-
   // if no status bar skip
   // todo: get missing status bars
   if (screenResources['statusbar'] == null) {
     print('error: image ${p.basename(screenshotPath)} is missing status bar.');
     return Future.value(null);
   }
+
+  String statusbarPath;
+  // select black or white status bar based on brightness of area to be overlaid
+  // todo: add black and white status bars
+  if (im.thresholdExceeded(screenshotPath, kCrop))
+    // use black status bar
+    statusbarPath =
+        '${config['staging']}/${screenResources['statusbar black']}';
+  else
+    // use white status bar
+    statusbarPath =
+        '${config['staging']}/${screenResources['statusbar white']}';
+
   final options = {
     'screenshotPath': screenshotPath,
     'statusbarPath': statusbarPath,
@@ -86,16 +99,16 @@ Future overlay(Map config, Map screenResources, String screenshotPath) async {
 }
 
 ///
-/// Append android status bar to screenshot.
+/// Append android navigation bar to screenshot.
 ///
 Future append(Map config, Map screenResources, String screenshotPath) async {
   final screenshotNavbarPath =
       '${config['staging']}/${screenResources['navbar']}';
-  final options2 = {
+  final options = {
     'screenshotPath': screenshotPath,
     'screenshotNavbarPath': screenshotNavbarPath,
   };
-  await im.imagemagick('append', options2);
+  await im.imagemagick('append', options);
 }
 
 ///
