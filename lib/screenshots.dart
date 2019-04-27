@@ -92,7 +92,7 @@ Future<void> run([String configPath = kConfigFileName]) async {
   print('  android/fastlane/metadata/android');
   print('for upload to both Apple and Google consoles.');
   print('\nFor uploading and other automation options see:');
-  print('  https://github.com/mmcc007/fledge');
+  print('  https://pub.dartlang.org/packages/fledge');
   print('\nscreenshots completed successfully.');
 }
 
