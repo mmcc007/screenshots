@@ -4,9 +4,9 @@
 
 ![alt text][demo]
 
-[demo]: https://i.imgur.com/gkIEQ5y.gif "Screenshot with overlayed 
-status bar and appended navigation bar placed in frame"  
-A screenshot image with overlaid status bar and appended navigation bar placed in a device frame.  
+[demo]: https://i.imgur.com/gkIEQ5y.gif "Screenshot with overlaid 
+status bar placed in frame"  
+A screenshot image with overlaid status bar placed in a device frame.  
 
 For an example of images generated with _Screenshots_ on a live app in both stores see:  
 [![GitErDone](https://play.google.com/intl/en_us/badges/images/badge_new.png)](https://play.google.com/store/apps/details?id=com.orbsoft.todo)
@@ -201,7 +201,17 @@ https://github.com/mmcc007/screenshots/releases/
 
 # Limitations
 
-Due to [flutter/issues/27785](https://github.com/flutter/flutter/issues/27785), running _Screenshots_ in multiple locales has limitations. This limitation is being tracked in [screenshots/issues/20](https://github.com/mmcc007/screenshots/issues/20).
+Due to a Flutter issue ([flutter/issues/27785](https://github.com/flutter/flutter/issues/27785)), running _Screenshots_ in multiple locales has limitations. 
+
+To raise priority of this Flutter issue, so it will be fixed sooner rather than later, please give a thumbs-up on [flutter/issues/27785](https://github.com/flutter/flutter/issues/27785).
+
+Priority of this limitation in Flutter project:
+
+| Date | `flutter driver` | `internationalization` | `test` |
+| --- | --- | --- | ---  |
+| 4/26/2019 | [#1](https://github.com/flutter/flutter/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc+label%3A%22t%3A+flutter+driver%22+) | [#5](https://github.com/flutter/flutter/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc+label%3A%22a%3A+internationalization%22+) | [#7](https://github.com/flutter/flutter/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc+label%3A%22a%3A+tests%22+) |
+
+(This limitation is being tracked by _screenshots_ in [screenshots/issues/20](https://github.com/mmcc007/screenshots/issues/20)).
 
 # Issues and Pull Requests
 [Issues](https://github.com/mmcc007/screenshots/issues) and 

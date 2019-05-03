@@ -11,6 +11,9 @@ import 'package:screenshots/fastlane.dart' as fastlane;
 /// default config file name
 const String kConfigFileName = 'screenshots.yaml';
 
+/// screenshots environment file name
+const String kEnvFileName = 'env.json';
+
 /// Distinguish device OS.
 enum DeviceType { android, ios }
 
@@ -47,6 +50,9 @@ Future<void> run([String configPath = kConfigFileName]) async {
         await emulator(
             emulatorName, true, stagingDir, locale, isMultipleLocales);
 
+        // store env for later use by tests
+        config.storeEnv(config, screens, emulatorName, locale, 'android');
+
         for (final testPath in configInfo['tests']) {
           print(
               'Capturing screenshots with test app $testPath on emulator \'$emulatorName\' in locale $locale ...');
@@ -65,6 +71,10 @@ Future<void> run([String configPath = kConfigFileName]) async {
     for (final simulatorName in configInfo['devices']['ios']) {
       for (final locale in configInfo['locales']) {
         simulator(simulatorName, true, stagingDir, locale, isMultipleLocales);
+
+        // store env for later use by tests
+        config.storeEnv(config, screens, simulatorName, locale, 'ios');
+
         for (final testPath in configInfo['tests']) {
           print(
               'Capturing screenshots with test app $testPath on simulator \'$simulatorName\' in locale $locale ...');
@@ -82,7 +92,7 @@ Future<void> run([String configPath = kConfigFileName]) async {
   print('  android/fastlane/metadata/android');
   print('for upload to both Apple and Google consoles.');
   print('\nFor uploading and other automation options see:');
-  print('  https://github.com/mmcc007/fledge');
+  print('  https://pub.dartlang.org/packages/fledge');
   print('\nscreenshots completed successfully.');
 }
 

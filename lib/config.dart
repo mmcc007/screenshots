@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:screenshots/screens.dart';
@@ -12,6 +13,7 @@ import 'package:screenshots/utils.dart' as utils;
 class Config {
   final String configPath;
   YamlNode docYaml;
+  Map _screenshotsEnv; // current screenshots env
 
   Config([this.configPath = kConfigFileName]) {
     docYaml = loadYaml(File(configPath).readAsStringSync());
@@ -19,6 +21,34 @@ class Config {
 
   /// Get configuration information for supported devices
   Map get config => docYaml.value;
+
+  /// Current screenshots runtime environment
+  /// (updated before start of each test)
+  Map get screenshotsEnv => _screenshotsEnv;
+
+  File get _envStore {
+    return File(config['staging'] + '/' + kEnvFileName);
+  }
+
+  /// Records screenshots environment before start of each test
+  /// (called by screenshots)
+  Future<void> storeEnv(
+      Config config, Screens screens, emulatorName, locale, deviceType) async {
+    // store env for later use by tests
+    final currentEnv = {
+      'screen_size': screens.screenProps(emulatorName)['size'],
+      'locale': locale,
+      'device_name': emulatorName,
+      'device_type': deviceType,
+    };
+    await _envStore.writeAsString(json.encode(currentEnv));
+  }
+
+  /// Retrieves screenshots environment at start of each test
+  /// (called by test)
+  Future<void> retrieveEnv() async {
+    _screenshotsEnv = json.decode(await _envStore.readAsString());
+  }
 
   /// Check emulators and simulators are installed,
   /// matching screen is available and tests exist.
@@ -33,7 +63,7 @@ class Config {
         // check emulator installed
         bool emulatorInstalled = isEmulatorInstalled(emulators, device);
         if (!emulatorInstalled) {
-          stderr.write('configuration error: emulator not installed for '
+          stderr.write('Configuration error: emulator not installed for '
               'device \'$device\' in $configPath.\n');
           stdout.write('\nInstall the missing emulator or use a supported '
               'device with an installed emulator in $configPath.\n');
@@ -53,7 +83,7 @@ class Config {
         // check simulator installed
         bool simulatorInstalled = isSimulatorInstalled(simulators, deviceName);
         if (!simulatorInstalled) {
-          stderr.write('configuration error: simulator not installed for '
+          stderr.write('Configuration error: simulator not installed for '
               'device \'$deviceName\' in $configPath.\n');
           stdout.write('\nInstall the missing simulator or use a supported '
               'device with an installed simulator in $configPath.\n');
@@ -131,11 +161,12 @@ class Config {
   }
 
   void configGuide(Screens screens) {
+    stdout.write('\nGuide:');
     installedEmulators(utils.emulators());
     installedSimulators(utils.getIosDevices());
     supportedDevices(screens);
     stdout.write(
-        '\nEach device listed in screenshots.yaml must have a corresponding '
+        '\n  Each device listed in screenshots.yaml must have a supported '
         'screen and emulator/simulator.\n');
   }
 
@@ -143,7 +174,7 @@ class Config {
   void screenAvailable(Screens screens, String deviceName) {
     if (screens.screenProps(deviceName) == null) {
       stderr.write(
-          'configuration error: screen not available for device \'$deviceName\' in $configPath.\n');
+          'Configuration error: screen not available for device \'$deviceName\' in $configPath.\n');
       stdout.write('\n  Use a supported device in $configPath.\n\n'
           '  If device is required, request screen support for device by\n'
           '  creating an issue in:\n'
@@ -156,7 +187,7 @@ class Config {
   }
 
   void supportedDevices(Screens screens) {
-    stdout.write('\n  Currently supported devices:\n');
+    stdout.write('\n  Devices with supported screens:\n');
     screens.screens.forEach((os, v) {
       stdout.write('    $os:\n');
       v.value.forEach((screenNum, screenProps) {
