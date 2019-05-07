@@ -17,9 +17,9 @@ locales:
 # A list of devices to emulate
 devices:
   ios:
-    - iPhone XS Max
-#    - iPhone 7 Plus
-    - iPad Pro (12.9-inch) (3rd generation)
+#    - iPhone XS Max
+    - iPhone 7 Plus
+#    - iPad Pro (12.9-inch) (3rd generation)
   android:
     - Nexus 6P
 
