@@ -49,17 +49,18 @@ Future<void> streamCmd(String cmd, List<String> arguments,
   final process = await Process.start(cmd, arguments, mode: mode);
 
   if (mode == ProcessStartMode.normal) {
-    var stdOutLineStream =
-        process.stdout.transform(Utf8Decoder()).transform(LineSplitter());
-    await for (var line in stdOutLineStream) {
-      stdout.write(line + '\n');
-    }
+    final stdoutFuture = process.stdout
+        .transform(utf8.decoder)
+        .transform(LineSplitter())
+        .listen(stdout.writeln)
+        .asFuture();
+    final stderrFuture = process.stderr
+        .transform(utf8.decoder)
+        .transform(LineSplitter())
+        .listen(stderr.writeln)
+        .asFuture();
 
-    var stdErrLineStream =
-        process.stderr.transform(Utf8Decoder()).transform(LineSplitter());
-    await for (var line in stdErrLineStream) {
-      stderr.write(line + '\n');
-    }
+    await Future.wait([stdoutFuture, stderrFuture]);
 
     var exitCode = await process.exitCode;
     if (exitCode != 0)
