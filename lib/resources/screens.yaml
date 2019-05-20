@@ -67,3 +67,16 @@ android:
     destName: phone
     devices:
       - Nexus 6P
+  8.9inch:
+    size: 1536x2048
+    resize: 80%
+    resources:
+      statusbar: resources/android/1536/statusbar.png
+      statusbar black: resources/android/1536/statusbar.png
+      statusbar white: resources/android/1536/statusbar.png
+      navbar: resources/android/1536/navigationbar.png
+      frame: resources/android/tablets/Nexus 9.png
+    offset: +0+0
+    destName: tablet
+    devices:
+      - Nexus 9
