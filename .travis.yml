@@ -1,14 +1,13 @@
 language: generic
 os: osx
-osx_image: xcode10.2
+#osx_image: xcode10.2
 
 jobs:
   include:
     - stage: Run screenshots
 #      env: Create screenshots
       before_install:
-      # create repository for artifacts and clear if cached
-      - rm -rf $HOME/screenshots
+      # create repository for artifacts
       - mkdir $HOME/screenshots
 
       # Install android tools
@@ -25,11 +24,13 @@ jobs:
       # install correct version of java on osx
       - java -version
 #      - export HOMEBREW_NO_AUTO_UPDATE=1
-      - brew update
-#      - brew cask uninstall java; brew tap caskroom/versions; brew cask install java10;
-      - brew cask uninstall java; brew tap adoptopenjdk/openjdk; brew cask install adoptopenjdk8
-      - java -version
+#      - brew update
+##      - brew cask uninstall java; brew tap caskroom/versions; brew cask install java8;
+#      - brew cask uninstall java; brew tap adoptopenjdk/openjdk; brew cask install adoptopenjdk8
+#      - java -version
+      # Add missing module
 #      - export SDKMANAGER_OPTS="--add-modules java.se.ee"
+      - export JAVA_OPTS='-XX:+IgnoreUnrecognizedVMOptions --add-modules java.se.ee'
       # Accept licenses before installing components, no need to echo y for each component
       - yes | sdkmanager --licenses
       # Platform tools
@@ -38,7 +39,7 @@ jobs:
       # install older build tools (for emulator)
       - sdkmanager "build-tools;25.0.2" "platforms;android-25" > /dev/null
 
-      # Create emulator.
+      # Create emulator
       - EMULATOR_API_LEVEL=22
       - ABI="default;armeabi-v7a"
       - EMULATOR_NAME='Nexus_6P_API_28'
@@ -50,6 +51,15 @@ jobs:
       - echo "hw.lcd.height=2560" >> ~/.android/avd/$EMULATOR_NAME.avd/config.ini
       # fix timezone warning on osx
       - sudo ln -sf /usr/share/zoneinfo/US/Pacific /etc/localtime
+
+      # test start of emulator
+      - export ANDROID_SDK_ROOT=$ANDROID_HOME
+      - find ${ANDROID_HOME} -name kernel-ranchu
+      - find ${ANDROID_HOME} -name kernel-qemu
+#      - ${ANDROID_HOME}/emulator/emulator -kernel ${ANDROID_HOME}/system-images/android-22/default/armeabi-v7a/kernel-qemu -avd $EMULATOR_NAME -no-audio -no-window -no-snapshot -gpu swiftshader -verbose
+      - ${ANDROID_HOME}/emulator/emulator -avd $EMULATOR_NAME -no-audio -no-window -no-snapshot -gpu swiftshader -verbose
+      - bash -x lib/resources/script/android-wait-for-emulator
+      - adb emu kill
 
       # setup osx environment for flutter and simulators
       - export HOMEBREW_NO_AUTO_UPDATE=1
@@ -78,15 +88,9 @@ jobs:
       # copy artifacts to cache for later deploy
       - tar cvzf $HOME/screenshots/screenshots.tar.gz ios/fastlane/screenshots android/fastlane/metadata/android/*/images
       - zip -r $HOME/screenshots/screenshots.zip ios/fastlane/screenshots android/fastlane/metadata/android/*/images
-#      # save artifacts for later deploy of second artifact
-#      cache:
-#        directories:
-#          - $HOME/screenshots
-
-      # deploy draft of first artifact
+      # deploy artifacts
       deploy:
         provider: releases
-#        draft: true
         skip_cleanup: true
         api_key:
           secure: wyPNNbjTFChWOGc/JiTpGhN490dRzz/qhU2T3CddZALjy4VN3LywennK3xnTOAq+FEYE9H/quP/SxkUX154al/lxeL6QuN5D0Ev2bL3lS9jyaoe0NOKx5GnNTzfv84taZPi768UF4rgYqzzdF8WJTCe0dlvDH7qKgH+dHIZGoB1dM/hhWMEXUv0uAZuFDkepxWHOLHsIABunkz428MEsSRCTdEWOsgdFiEl+DOC5ErmorgHazUWPpSwenz13kCLhU+wT2Fsek5tGBO6GT1Mvw8qrht3LUZBaBQJfx4yhdXQKtq0Dr+gI9a3sbF/3TKV0nRvDVA+KGmMLHT+fkRrz1xkGvrLnCDfkylDZlmn/IoQUkv4JwI+lJIXfUp40pMmSlFH1WKToWSjMsPSxv02fVYzxNZoxlno+qyKk4lfdROOSSYS5LjmMd+Lrvhmx7vNMCHl57fdXdKwgyJllxT/khMZTJv5IPQih1yi3m/hDw0s59IHYd22QHFoodcdAPy2xxeVh8VhzhucpesWAvoFZfgdTmPZXAzpMR4kEaeBb5f3Z/Eg3AypDPXg67kXwFqTRL+ZqDzOFynZYJML8RbsZd/nqU5TYc0Ocmh0YMA3v0Z43wuZMshXOXujl8z3zmnwzV/QmFP0U/phOGa9SmvKtRyGQoTGtIXoPWdXrRpgm3F4=
@@ -95,20 +99,3 @@ jobs:
           - $HOME/screenshots/screenshots.tar.gz
         on:
           tags: true
-
-#    - stage: Publish screenshots
-##      env: Publish screenshots to GitHub
-#      # get artifacts from previous screenshots run
-#      cache:
-#        directories:
-#          - $HOME/screenshots
-#      # deploy second artifact (and mark both artifacts as published)
-#      deploy:
-#        provider: releases
-#        draft: false
-#        skip_cleanup: true
-#        api_key:
-#          secure: wyPNNbjTFChWOGc/JiTpGhN490dRzz/qhU2T3CddZALjy4VN3LywennK3xnTOAq+FEYE9H/quP/SxkUX154al/lxeL6QuN5D0Ev2bL3lS9jyaoe0NOKx5GnNTzfv84taZPi768UF4rgYqzzdF8WJTCe0dlvDH7qKgH+dHIZGoB1dM/hhWMEXUv0uAZuFDkepxWHOLHsIABunkz428MEsSRCTdEWOsgdFiEl+DOC5ErmorgHazUWPpSwenz13kCLhU+wT2Fsek5tGBO6GT1Mvw8qrht3LUZBaBQJfx4yhdXQKtq0Dr+gI9a3sbF/3TKV0nRvDVA+KGmMLHT+fkRrz1xkGvrLnCDfkylDZlmn/IoQUkv4JwI+lJIXfUp40pMmSlFH1WKToWSjMsPSxv02fVYzxNZoxlno+qyKk4lfdROOSSYS5LjmMd+Lrvhmx7vNMCHl57fdXdKwgyJllxT/khMZTJv5IPQih1yi3m/hDw0s59IHYd22QHFoodcdAPy2xxeVh8VhzhucpesWAvoFZfgdTmPZXAzpMR4kEaeBb5f3Z/Eg3AypDPXg67kXwFqTRL+ZqDzOFynZYJML8RbsZd/nqU5TYc0Ocmh0YMA3v0Z43wuZMshXOXujl8z3zmnwzV/QmFP0U/phOGa9SmvKtRyGQoTGtIXoPWdXrRpgm3F4=
-#        file: $HOME/screenshots/screenshots.zip
-#        on:
-#          tags: true
