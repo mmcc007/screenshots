@@ -1,5 +1,4 @@
 import 'package:screenshots/image_magick.dart';
-import 'package:screenshots/utils.dart';
 import 'package:test/test.dart';
 
 //const kThreshold = 0.75;

@@ -1,3 +1,11 @@
+## 0.1.8
+- Added support default screen for android tablet
+- Added feature to make screenshots environment available to tests
+- Improved messaging in validator
+- Added feature to auto-select black/white color of statusbar
+- Added feature to set default background color
+- Fixed problem with selecting simulators when no default available
+
 ## 0.1.7
 - Added check for highest available android emulator for a device
 - Added check for 'adb' in PATH
