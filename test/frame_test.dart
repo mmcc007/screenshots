@@ -10,7 +10,7 @@ main() {
     final Screens screens = Screens();
     await screens.init();
     Map screen = screens.screenProps('Nexus 9');
-    final Config config = Config('test/test_config.yaml');
+    final Config config = Config('test/screenshots_test.yaml');
     Map appConfig = config.config;
 
     final Map resources = screen['resources'];

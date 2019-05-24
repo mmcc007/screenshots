@@ -56,7 +56,7 @@ void main() {
       'staging': '/tmp/screenshots'
     };
 
-    final Config config = Config('test/test_config.yaml');
+    final Config config = Config('test/screenshots_test.yaml');
     Map appConfig = config.config;
     expect(appConfig, expected);
   });
@@ -65,7 +65,7 @@ void main() {
     final Screens screens = Screens();
     await screens.init();
     Map screen = screens.screenProps('Nexus 6P');
-    final Config config = Config('test/test_config.yaml');
+    final Config config = Config('test/screenshots_test.yaml');
     Map appConfig = config.config;
 
 //    final screenshotPath = '/tmp/screenshots/test/0.png';
@@ -98,7 +98,7 @@ void main() {
     await screens.init();
 //    Map screen = screens.screen(screensInfo, 'Nexus 5X');
     Map screen = screens.screenProps('iPhone 7 Plus');
-    final Config config = Config('test/test_config.yaml');
+    final Config config = Config('test/screenshots_test.yaml');
     Map appConfig = config.config;
 
     final staging = appConfig['staging'];
@@ -118,7 +118,7 @@ void main() {
     final Screens screens = Screens();
     await screens.init();
     Map screen = screens.screenProps('Nexus 6P');
-    final Config config = Config('test/test_config.yaml');
+    final Config config = Config('test/screenshots_test.yaml');
     Map appConfig = config.config;
 
     final Map resources = screen['resources'];
@@ -140,7 +140,7 @@ void main() {
     final Screens screens = Screens();
     await screens.init();
     Map screen = screens.screenProps('Nexus 6P');
-    final Config config = Config('test/test_config.yaml');
+    final Config config = Config('test/screenshots_test.yaml');
     Map appConfig = config.config;
 
     final Map resources = screen['resources'];
@@ -239,14 +239,14 @@ void main() {
   test('validate config file', () async {
     final Screens screens = Screens();
     await screens.init();
-    final Config config = Config('test/test_config.yaml');
+    final Config config = Config('test/screenshots_test.yaml');
     expect(await config.validate(screens), true);
   });
 
   test('config guide', () async {
     final Screens screens = Screens();
     await screens.init();
-    final Config config = Config('test/test_config.yaml');
+    final Config config = Config('test/screenshots_test.yaml');
     config.configGuide(screens);
   });
 
@@ -297,7 +297,7 @@ void main() {
   test('clear all destination directories on init', () async {
     final Screens screens = Screens();
     await screens.init();
-    final Config config = Config('test/test_config.yaml');
+    final Config config = Config('test/screenshots_test.yaml');
     await fastlane.clearFastlaneDirs(config.config, screens);
   });
 
