@@ -13,11 +13,12 @@ main() {
     final Config config = Config('test/screenshots_test.yaml');
     Map appConfig = config.config;
 
-    final Map resources = screen['resources'];
-    await unpackImages(resources, '/tmp/screenshots');
+    final Map ScreenResources = screen['resources'];
+    await unpackImages(ScreenResources, '/tmp/screenshots');
 
     final screenshotPath = './test/resources/nexus_9_0.png';
-    final statusbarPath = '${appConfig['staging']}/${resources['statusbar']}';
+    final statusbarPath =
+        '${appConfig['staging']}/${ScreenResources['statusbar']}';
 
     var options = {
       'screenshotPath': screenshotPath,
@@ -27,7 +28,7 @@ main() {
     await imagemagick('overlay', options);
 
     final screenshotNavbarPath =
-        '${appConfig['staging']}/${resources['navbar']}';
+        '${appConfig['staging']}/${ScreenResources['navbar']}';
     options = {
       'screenshotPath': screenshotPath,
       'screenshotNavbarPath': screenshotNavbarPath,
@@ -35,7 +36,7 @@ main() {
     print('options=$options');
     await imagemagick('append', options);
 
-    final framePath = appConfig['staging'] + '/' + resources['frame'];
+    final framePath = appConfig['staging'] + '/' + ScreenResources['frame'];
     final size = screen['size'];
     final resize = screen['resize'];
     final offset = screen['offset'];
