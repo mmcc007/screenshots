@@ -1,6 +1,7 @@
 language: generic
 os: osx
-osx_image: xcode10.2
+#osx_image: xcode10.2 # macOS 10.14, JDK 12+33
+osx_image: xcode10.1 # macOS 10.13,	JDK 11.0.1+13
 
 jobs:
   include:
@@ -24,6 +25,7 @@ jobs:
       - touch ~/.android/repositories.cfg
 
       # Add missing java module used by sdkmanager, etc...
+#      - export SDKMANAGER_OPTS="--add-modules java.se.ee"
       - export JAVA_OPTS='-XX:+IgnoreUnrecognizedVMOptions --add-modules java.se.ee'
       # Accept licenses before installing components, no need to echo y for each component
       - yes | sdkmanager --licenses
