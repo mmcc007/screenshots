@@ -39,6 +39,18 @@ jobs:
       # install older build tools (for emulator)
       - sdkmanager "build-tools;25.0.2" "platforms;android-25" > /dev/null
 
+      # Download a pinned version of the emulator since upgrades can cause issues
+      - ${ANDROID_HOME}/emulator/emulator -version
+      - emulator_version=5264690 # 29.0.9.0 (build_id 5537588) ==> 28.0.23.0 (build_id 5264690)
+      - sudo apt-get install -y libunwind8 libc++1
+      - curl -fo emulator.zip "https://dl.google.com/android/repository/emulator-linux-$emulator_version.zip"
+      - rm -rf "${ANDROID_HOME}/emulator"
+      - unzip -q emulator.zip -d "${ANDROID_HOME}"
+      - rm -f emulator.zip
+      - ${ANDROID_HOME}/emulator/emulator -version
+
+      # install older packages (for emulator)
+      - sdkmanager "build-tools;25.0.2" "platforms;android-25" > /dev/null
       # Create emulator
       - EMULATOR_API_LEVEL=22
       - ABI="default;armeabi-v7a"
@@ -49,17 +61,18 @@ jobs:
 #      - cat ~/.android/avd/$EMULATOR_NAME.avd/config.ini
       - echo "hw.lcd.width=1440" >> ~/.android/avd/$EMULATOR_NAME.avd/config.ini
       - echo "hw.lcd.height=2560" >> ~/.android/avd/$EMULATOR_NAME.avd/config.ini
+
       # fix timezone warning on osx
       - sudo ln -sf /usr/share/zoneinfo/US/Pacific /etc/localtime
 
       # test start of emulator
-      - export ANDROID_SDK_ROOT=$ANDROID_HOME
-      - find ${ANDROID_HOME} -name kernel-ranchu
-      - find ${ANDROID_HOME} -name kernel-qemu
-#      - ${ANDROID_HOME}/emulator/emulator -kernel ${ANDROID_HOME}/system-images/android-22/default/armeabi-v7a/kernel-qemu -avd $EMULATOR_NAME -no-audio -no-window -no-snapshot -gpu swiftshader -verbose
-      - ${ANDROID_HOME}/emulator/emulator -avd $EMULATOR_NAME -no-audio -no-window -no-snapshot -gpu swiftshader -verbose
-      - bash -x lib/resources/script/android-wait-for-emulator
-      - adb emu kill
+#      - export ANDROID_SDK_ROOT=$ANDROID_HOME
+#      - find ${ANDROID_HOME} -name kernel-ranchu
+#      - find ${ANDROID_HOME} -name kernel-qemu
+##      - ${ANDROID_HOME}/emulator/emulator -kernel ${ANDROID_HOME}/system-images/android-22/default/armeabi-v7a/kernel-qemu -avd $EMULATOR_NAME -no-audio -no-window -no-snapshot -gpu swiftshader -verbose
+#      - ${ANDROID_HOME}/emulator/emulator -avd $EMULATOR_NAME -no-audio -no-window -no-snapshot -gpu swiftshader -verbose
+#      - bash -x lib/resources/script/android-wait-for-emulator
+#      - adb emu kill
 
       # setup osx environment for flutter and simulators
       - export HOMEBREW_NO_AUTO_UPDATE=1
