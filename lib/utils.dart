@@ -196,3 +196,6 @@ bool isAnyDeviceRunning() {
   return !cmd('flutter', ['devices'], '.', true)
       .contains('No devices detected.');
 }
+
+/// Converts [enum] value to [String].
+String enumToStr(dynamic _enum) => _enum.toString().split('.').last;

@@ -45,7 +45,7 @@ Future<void> run([String configPath = kConfigFileName]) async {
   // run integration tests in each android emulator for each locale and
   // process screenshots
   if (configInfo['devices']['android'] != null)
-    for (final emulatorName in configInfo['devices']['android']) {
+    for (final emulatorName in configInfo['devices']['android'].keys) {
       for (final locale in configInfo['locales']) {
         await emulator(
             emulatorName, true, stagingDir, locale, isMultipleLocales);
@@ -68,7 +68,7 @@ Future<void> run([String configPath = kConfigFileName]) async {
   // run integration tests in each ios simulator for each locale and
   // process screenshots
   if (configInfo['devices']['ios'] != null)
-    for (final simulatorName in configInfo['devices']['ios']) {
+    for (final simulatorName in configInfo['devices']['ios'].keys) {
       for (final locale in configInfo['locales']) {
         simulator(simulatorName, true, stagingDir, locale, isMultipleLocales);
 

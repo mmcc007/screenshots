@@ -17,14 +17,17 @@ locales:
 # A list of devices to emulate
 devices:
   ios:
-#    - iPhone X
-#    - iPhone 7 Plus
-    - iPhone XS Max
-    - iPad Pro (12.9-inch) (2nd generation)
+#    iPhone X:
+    iPhone 7 Plus:
+      frame: true
+#    iPhone XS Max:
+#      frame: true
+    iPad Pro (12.9-inch) (2nd generation):
 #    - iPad Pro (12.9-inch) (3rd generation)
   android:
-    - Nexus 6P
+    Nexus 6P:
+      frame: true
 #    - Nexus 9
 
 # Frame screenshots
-frame: true
+frame: false

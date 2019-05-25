@@ -140,10 +140,11 @@ locales:
 # A list of devices to emulate
 devices:
   ios:
-    - iPhone X
-    - iPad Pro (12.9-inch) (2nd generation)
+    iPhone X:
+      frame: false
+    iPad Pro (12.9-inch) (2nd generation):
   android:
-    - Nexus 6P
+    Nexus 6P:
 
 # Frame screenshots
 frame: true

@@ -8,6 +8,7 @@ import 'package:screenshots/resources.dart' as resources;
 import 'package:screenshots/screenshots.dart';
 import 'package:screenshots/utils.dart' as utils;
 import 'package:path/path.dart' as p;
+import 'package:screenshots/utils.dart';
 
 const kDefaultIosBackground = 'xc:white';
 const kDefaultAndroidBackground = 'xc:none'; // transparent
@@ -51,7 +52,7 @@ void process(Screens screens, Map config, DeviceType deviceType,
     }
 
     // add frame if required
-    if (config['frame']) {
+    if (isFrameRequired(config, deviceType, deviceName)) {
 //      print('placing $screenshotPath in frame');
       await frame(config, screenProps, screenshotPath.path, deviceType);
     }
@@ -109,6 +110,24 @@ Future append(Map config, Map screenResources, String screenshotPath) async {
     'screenshotNavbarPath': screenshotNavbarPath,
   };
   await im.imagemagick('append', options);
+}
+
+/// Checks if frame is required for [deviceName].
+bool isFrameRequired(Map config, DeviceType deviceType, String deviceName) {
+  bool isFrameRequired = false;
+  final devices = config['devices'];
+  final deviceTypeName = enumToStr(deviceType);
+  final devicesConfig = devices[deviceTypeName];
+  final deviceConfig = devicesConfig[deviceName];
+//  print('deviceConfig=$deviceConfig');
+  final isFramesEnabled = config['frame'];
+  if (deviceConfig != null) {
+    final frame = deviceConfig['frame'];
+    isFrameRequired = frame;
+  } else {
+    isFrameRequired = isFramesEnabled;
+  }
+  return isFrameRequired;
 }
 
 ///

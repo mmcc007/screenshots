@@ -15,8 +15,9 @@ locales:
 # A list of devices to emulate
 devices:
   ios:
-#    - iPhone X
-    - iPhone 7 Plus
+    iPhone X:
+    iPhone 7 Plus:
+      frame: false
 #    - iPad Pro (12.9-inch) (2nd generation)
 #   "iPhone 6",
 #   "iPhone 6 Plus",
@@ -25,7 +26,7 @@ devices:
 #   "iPad Retina",
 #   "iPad Pro"
   android:
-    - Nexus 5X
+    Nexus 5X:
 
 # Frame screenshots
 frame: true
