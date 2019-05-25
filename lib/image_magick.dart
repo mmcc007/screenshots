@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:screenshots/utils.dart';
 
-//const kThreshold = 0.76;
-const kThreshold = 0.5;
+const kThreshold = 0.76;
+//const kThreshold = 0.5;
 
 ///
 /// ImageMagick calls.

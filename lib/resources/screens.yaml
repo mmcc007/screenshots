@@ -25,7 +25,17 @@ ios:
     devices:
       - iPhone X
       - iPhone XS
-      - iPhone XS Max # actually 6.5 inches, but has same screen ratio
+  6.5inch:
+    size: 1242x2688
+    resize: 87%
+    resources:
+      statusbar: resources/ios/6.5inch/statusbar_white.png
+      statusbar black: resources/ios/6.5inch/statusbar_black.png
+      statusbar white: resources/ios/6.5inch/statusbar_white.png
+      frame: resources/ios/phones/Apple iPhone XS Max Silver.png
+    offset: -0-2
+    devices:
+      - iPhone XS Max
   12.9inch:
     size: 2048x2732
     resize: 86%
