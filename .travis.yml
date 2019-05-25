@@ -2,6 +2,9 @@ language: generic
 os: osx
 #osx_image: xcode10.2 # macOS 10.14, JDK 12+33
 #osx_image: xcode10.1 # macOS 10.13, JDK 11.0.1+13
+# the following osx_image fixes the JDK module problem, has iPhone XS Max
+# but doesn't have iPad Pro (12.9-inch) (3rd generation). So for now we exclude the
+# iPad Pro (12.9-inch) (3rd generation) in screenshots.yaml
 osx_image: xcode10 # macOS 10.13, JDK 10.0.2+13
 
 jobs:
