@@ -48,8 +48,6 @@ jobs:
       - rm -f emulator.zip
       - ${ANDROID_HOME}/emulator/emulator -version
 
-      # install older packages (for emulator)
-      - sdkmanager "build-tools;25.0.2" "platforms;android-25" > /dev/null
       # Create emulator
       - EMULATOR_API_LEVEL=22
       - ABI="default;armeabi-v7a"
