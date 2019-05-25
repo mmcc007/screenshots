@@ -1,13 +1,13 @@
 language: generic
 os: osx
-#osx_image: xcode10.2
+osx_image: xcode10.2
 
 jobs:
   include:
     - stage: Run screenshots
 #      env: Create screenshots
       before_install:
-      - xcrun simctl list devices
+#      - xcrun simctl list devices
       # create repository for artifacts
       - mkdir $HOME/screenshots
 
