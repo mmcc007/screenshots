@@ -21,15 +21,8 @@ jobs:
       # Silence warning.
       - mkdir -p ~/.android
       - touch ~/.android/repositories.cfg
-      # install correct version of java on osx
-      - java -version
-#      - export HOMEBREW_NO_AUTO_UPDATE=1
-#      - brew update
-##      - brew cask uninstall java; brew tap caskroom/versions; brew cask install java8;
-#      - brew cask uninstall java; brew tap adoptopenjdk/openjdk; brew cask install adoptopenjdk8
-#      - java -version
-      # Add missing module
-#      - export SDKMANAGER_OPTS="--add-modules java.se.ee"
+
+      # Add missing java module used by sdkmanager, etc...
       - export JAVA_OPTS='-XX:+IgnoreUnrecognizedVMOptions --add-modules java.se.ee'
       # Accept licenses before installing components, no need to echo y for each component
       - yes | sdkmanager --licenses
@@ -42,7 +35,6 @@ jobs:
       # Download a pinned version of the emulator since upgrades can cause issues
       - ${ANDROID_HOME}/emulator/emulator -version
       - emulator_version=5264690 # 29.0.9.0 (build_id 5537588) ==> 28.0.23.0 (build_id 5264690)
-#      - sudo apt-get install -y libunwind8 libc++1
       - curl -fo emulator.zip "https://dl.google.com/android/repository/emulator-darwin-$emulator_version.zip"
       - rm -rf "${ANDROID_HOME}/emulator"
       - unzip -q emulator.zip -d "${ANDROID_HOME}"
@@ -65,24 +57,17 @@ jobs:
       # fix timezone warning on osx
       - sudo ln -sf /usr/share/zoneinfo/US/Pacific /etc/localtime
 
-      # test start of emulator
-#      - export ANDROID_SDK_ROOT=$ANDROID_HOME
-#      - find ${ANDROID_HOME} -name kernel-ranchu
-#      - find ${ANDROID_HOME} -name kernel-qemu
-##      - ${ANDROID_HOME}/emulator/emulator -kernel ${ANDROID_HOME}/system-images/android-22/default/armeabi-v7a/kernel-qemu -avd $EMULATOR_NAME -no-audio -no-window -no-snapshot -gpu swiftshader -verbose
-#      - ${ANDROID_HOME}/emulator/emulator -avd $EMULATOR_NAME -no-audio -no-window -no-snapshot -gpu swiftshader -verbose
-#      - bash -x lib/resources/script/android-wait-for-emulator
-#      - adb emu kill
-
       # setup osx environment for flutter and simulators
       - export HOMEBREW_NO_AUTO_UPDATE=1
       - brew install libimobiledevice
       - brew install ideviceinstaller
       - brew install ios-deploy
+      - brew upgrade ios-deploy
       - brew install cocoapods || echo 'ignore exit(1)'
       - brew link --overwrite cocoapods
 
       # install pre-compiled flutter
+      - sdkmanager "platforms;android-28" "build-tools;28.0.3" > /dev/null # required by flutter
       - FLUTTER_CHANNEL=stable
       - FLUTTER_VERSION=1.2.1-${FLUTTER_CHANNEL}
       - wget --quiet --output-document=flutter.zip https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/macos/flutter_macos_v${FLUTTER_VERSION}.zip && unzip -qq flutter.zip > /dev/null && rm flutter.zip
@@ -101,7 +86,8 @@ jobs:
       # copy artifacts to cache for later deploy
       - tar cvzf $HOME/screenshots/screenshots.tar.gz ios/fastlane/screenshots android/fastlane/metadata/android/*/images
       - zip -r $HOME/screenshots/screenshots.zip ios/fastlane/screenshots android/fastlane/metadata/android/*/images
-      # deploy artifacts
+
+      # deploy artifacts if tagged commit
       deploy:
         provider: releases
         skip_cleanup: true
