@@ -151,11 +151,12 @@ frame: true
 ````
 Note: emulators and simulators corresponding to the devices in your config file must be installed on your test machine.
 
-## Device Configuration
-Individual devices can be configured in `screenshots.yaml` by specifying per device config parameters. (The `:` at the end of the device name indicates that a map of parameters can optionally follow in YAML.)
+## Device Parameters
+Individual devices can be configured in `screenshots.yaml` by specifying per device parameters. (The `:` at the end of the device name indicates, in yaml, that a map of parameters can optionally follow.)
 
-### Frames
-The optional frame parameter of the device is used to control whether screenshots generated on a particular device should be placed in a frame. The frame value can be true or false (see example above).
+| Parameter | Values | Required | Description |
+| --- | --- | --- | --- |
+|frame|true/false|optional|Controls whether screenshots generated on the device should be placed in a frame. Overrides the global frame setting (see example above).|
 
 # Integration with Fastlane
 Since _Screenshots_ is intended to be used with Fastlane, after _Screenshots_ completes, the images can be found in your project at:
@@ -166,7 +167,7 @@ ios/fastlane/screenshots
 Images are in a format suitable for upload via [deliver](https://docs.fastlane.tools/actions/deliver/) 
 and [supply](https://docs.fastlane.tools/actions/supply/).
 
-Tip: The easiest way to use _Screenshots_ with Fastlane is to call _Screenshots_ before calling Fastlane. Calling Fastlane (for either iOS or Android) will then find the images in the appropriate place.  
+Tip: One way to use _Screenshots_ with Fastlane is to call _Screenshots_ before calling Fastlane (or optionally call from Fastlane). Fastlane (for either iOS or Android) will then find the images in the appropriate place.  
 
 (For a live demo of using Fastlane to upload screenshot images to both store consoles, see demo of Fledge at https://github.com/mmcc007/fledge#demo)
 
