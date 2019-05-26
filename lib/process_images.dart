@@ -114,18 +114,11 @@ Future append(Map config, Map screenResources, String screenshotPath) async {
 
 /// Checks if frame is required for [deviceName].
 bool isFrameRequired(Map config, DeviceType deviceType, String deviceName) {
-  bool isFrameRequired = false;
-  final devices = config['devices'];
-  final deviceTypeName = enumToStr(deviceType);
-  final devicesConfig = devices[deviceTypeName];
-  final deviceConfig = devicesConfig[deviceName];
-//  print('deviceConfig=$deviceConfig');
-  final isFramesEnabled = config['frame'];
+  final deviceConfig = config['devices'][enumToStr(deviceType)][deviceName];
+  bool isFrameRequired = config['frame'];
   if (deviceConfig != null) {
     final frame = deviceConfig['frame'];
-    isFrameRequired = frame;
-  } else {
-    isFrameRequired = isFramesEnabled;
+    if (frame != null) isFrameRequired = frame;
   }
   return isFrameRequired;
 }
