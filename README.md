@@ -151,6 +151,12 @@ frame: true
 ````
 Note: emulators and simulators corresponding to the devices in your config file must be installed on your test machine.
 
+## Device Configuration
+Individual devices can be configured in `screenshots.yaml` by specifying per device config parameters. (The `:` at the end of the device name indicates that a map of parameters can optionally follow in YAML.)
+
+### Frames
+The optional frame parameter of the device is used to control whether screenshots generated on a particular device should be placed in a frame. The frame value can be true or false (see example above).
+
 # Integration with Fastlane
 Since _Screenshots_ is intended to be used with Fastlane, after _Screenshots_ completes, the images can be found in your project at:
 ````
