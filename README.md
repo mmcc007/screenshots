@@ -192,10 +192,15 @@ To upgrade, simply re-issue the install command
 ````bash
 $ pub global activate screenshots
 ````
-Note: the _Screenshots_ version should be the same for both the command line and package:
+Note: the _Screenshots_ version should be the same for both the command line and in your `pubspec.yaml`.   
 1. If upgrading the command line version of _Screenshots_, also upgrade
  the version of _Screenshots_ in your pubspec.yaml.    
-2. If upgrading the version of _Screenshots_ in your pubspec.yaml, also upgrade the command line version.    
+2. If upgrading the version of _Screenshots_ in your pubspec.yaml, also upgrade the command line version.
+
+To check the version of screenshots currently installed:
+```
+pub global list
+```
 
 # Sample run on Travis
 To view _Screenshots_ running with the internationalized [example](example) app on macOS in the cloud see:  
