@@ -137,7 +137,7 @@ locales:
   - de-DE
   - en-US
 
-# A list of devices to emulate
+# A map of devices to emulate
 devices:
   ios:
     iPhone X:
