@@ -140,9 +140,9 @@ locales:
 # A map of devices to emulate
 devices:
   ios:
-    iPhone X:
+    iPhone XS Max:
       frame: false
-    iPad Pro (12.9-inch) (2nd generation):
+    iPad Pro (12.9-inch) (3rd generation):
   android:
     Nexus 6P:
 
@@ -156,7 +156,7 @@ Individual devices can be configured in `screenshots.yaml` by specifying per dev
 
 | Parameter | Values | Required | Description |
 | --- | --- | --- | --- |
-|frame|true/false|optional|Controls whether screenshots generated on the device should be placed in a frame. Overrides the global frame setting (see example above).|
+|frame|true/false|optional|Controls whether screenshots generated on the device should be placed in a frame. Overrides the global frame setting (see example `screenshots.yaml` above).|
 
 # Integration with Fastlane
 Since _Screenshots_ is intended to be used with Fastlane, after _Screenshots_ completes, the images can be found in your project at:
