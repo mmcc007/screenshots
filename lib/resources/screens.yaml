@@ -87,6 +87,6 @@ android:
       navbar: resources/android/1536/navigationbar.png
       frame: resources/android/tablets/Nexus 9.png
     offset: +0+0
-    destName: tablet
+    destName: tenInch
     devices:
       - Nexus 9
