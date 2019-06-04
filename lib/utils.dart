@@ -17,8 +17,9 @@ void clearDirectory(String dir) {
 ///
 /// If dstDir does not exist, it is created.
 void moveFiles(String srcDir, String dstDir) {
-  if (!Directory(dstDir).existsSync())
+  if (!Directory(dstDir).existsSync()) {
     Directory(dstDir).createSync(recursive: true);
+  }
   Directory(srcDir).listSync().forEach((file) {
     file.renameSync('$dstDir/${p.basename(file.path)}');
   });
@@ -63,27 +64,10 @@ Future<void> streamCmd(String cmd, List<String> arguments,
     await Future.wait([stdoutFuture, stderrFuture]);
 
     var exitCode = await process.exitCode;
-    if (exitCode != 0)
+    if (exitCode != 0) {
       throw 'command failed: cmd=\'$cmd ${arguments.join(" ")}\'';
+    }
   }
-}
-
-/// Create list of simulators with their ID and status.
-Map<String, Map<String, String>> simulatorsx() {
-  String simulatorInfo = cmd('xcrun', ['simctl', 'list', 'devices'], '.', true);
-  RegExp regExp = new RegExp(r'^    (.*) \((.*-.*-.*-.*)\) \((.*)\).*$',
-      caseSensitive: false, multiLine: true);
-  Iterable<Match> matches = regExp.allMatches(simulatorInfo);
-
-  Map<String, Map<String, String>> simulators = {};
-  for (Match m in matches) {
-    // load into map
-    Map<String, String> simulatorProps = {};
-    simulatorProps['id'] = m.group(2);
-    simulatorProps['status'] = m.group(3);
-    simulators[m.group(1)] = simulatorProps;
-  }
-  return simulators;
 }
 
 /// Creates a list of available iOS devices.
@@ -144,8 +128,9 @@ Map getHighestIosDevice(Map iosDevices, String deviceName) {
   var iOSVersionName = getHighestIosVersion(iOSVersions);
 
   final iosVersionDevices = iosDevices[deviceName][iOSVersionName];
-  if (iosVersionDevices.length == 0)
+  if (iosVersionDevices.length == 0) {
     throw "Error: no available devices found for \'$deviceName\'";
+  }
   // use the first device found for the iOS version
   return iosVersionDevices[0];
 }
@@ -196,3 +181,6 @@ bool isAnyDeviceRunning() {
   return !cmd('flutter', ['devices'], '.', true)
       .contains('No devices detected.');
 }
+
+/// Converts [enum] value to [String].
+String enumToStr(dynamic _enum) => _enum.toString().split('.').last;

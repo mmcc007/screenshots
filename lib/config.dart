@@ -56,7 +56,7 @@ class Config {
     if (config['devices']['android'] != null) {
       // check emulators
       final List emulators = utils.emulators();
-      for (String device in config['devices']['android']) {
+      for (String device in config['devices']['android'].keys) {
         // check screen available for this device
         screenAvailable(screens, device);
 
@@ -76,7 +76,7 @@ class Config {
     if (config['devices']['ios'] != null) {
       // check simulators
       final Map simulators = utils.getIosDevices();
-      for (String deviceName in config['devices']['ios']) {
+      for (String deviceName in config['devices']['ios'].keys) {
         // check screen available for this device
         screenAvailable(screens, deviceName);
 

@@ -16,7 +16,7 @@ void main() {
     };
 
     // called by screenshots before test
-    config.storeEnv(
+    await config.storeEnv(
         config, screens, env['device_name'], env['locale'], env['device_type']);
 
     // called by test

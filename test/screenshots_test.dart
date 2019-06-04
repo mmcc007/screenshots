@@ -8,7 +8,6 @@ import 'package:screenshots/resources.dart';
 import 'package:screenshots/screenshots.dart';
 import 'package:screenshots/utils.dart';
 import 'package:test/test.dart';
-import 'package:screenshots/fastlane.dart' as fastlane;
 
 void main() {
   test('screen info for device: Nexus 5X', () async {
@@ -42,23 +41,6 @@ void main() {
     await Screens().init();
     Map screen = screens.screenProps('iPhone X');
     expect(screen, expected);
-  });
-
-  test('config info for app', () {
-    final expected = {
-      'tests': ['test_driver/main.dart'],
-      'locales': ['en-US'],
-      'frame': true,
-      'devices': {
-        'android': ['Nexus 5X'],
-        'ios': ['iPhone 7 Plus']
-      },
-      'staging': '/tmp/screenshots'
-    };
-
-    final Config config = Config('test/screenshots_test.yaml');
-    Map appConfig = config.config;
-    expect(appConfig, expected);
   });
 
   test('overlay statusbar', () async {
@@ -164,15 +146,6 @@ void main() {
     await imagemagick('frame', options);
   });
 
-  test('parse xcrun simctl list devices', () {
-    Map _simulators = simulatorsx();
-    print('simulators=$_simulators');
-
-    print('iPhone X info: ' + _simulators['iPhone X'].toString());
-
-//     print('first match:' + regExp.firstMatch(screens).toString());
-  });
-
   test('parse json xcrun simctl list devices', () {
     Map iosDevices = getIosDevices();
 
@@ -214,8 +187,9 @@ void main() {
       'resources/android/phones/Nexus_5X.png'
     ];
     final dest = '/tmp';
-    for (String resource in resources)
-      writeImage(await readResourceImage(resource), '$dest/$resource');
+    for (String resource in resources) {
+      await writeImage(await readResourceImage(resource), '$dest/$resource');
+    }
   });
 
   test('unpack images', () async {
@@ -234,13 +208,6 @@ void main() {
 
   test('add prefix to files in directory', () async {
     await prefixFilesInDir('/tmp/screenshots/test', 'my_prefix');
-  });
-
-  test('validate config file', () async {
-    final Screens screens = Screens();
-    await screens.init();
-    final Config config = Config('test/screenshots_test.yaml');
-    expect(await config.validate(screens), true);
   });
 
   test('config guide', () async {
@@ -294,13 +261,6 @@ void main() {
     await streamCmd('ls', ['-33']);
   });
 
-  test('clear all destination directories on init', () async {
-    final Screens screens = Screens();
-    await screens.init();
-    final Config config = Config('test/screenshots_test.yaml');
-    await fastlane.clearFastlaneDirs(config.config, screens);
-  });
-
   test('start emulator on travis', () async {
     final androidHome = Platform.environment['ANDROID_HOME'];
     final emulatorName = 'Nexus_6P_API_27';
@@ -319,9 +279,11 @@ void main() {
   });
 
   test('check for no running emulators, simulators or devices', () {
-    if (cmd('flutter', ['devices'], '.', true).contains('No devices detected.'))
+    if (cmd('flutter', ['devices'], '.', true)
+        .contains('No devices detected.')) {
       print('nothing running');
-    else
+    } else {
       print('something running');
+    }
   });
 }

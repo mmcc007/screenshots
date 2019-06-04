@@ -14,7 +14,9 @@ main() {
 
     final Map devices = {
       'iPhone X': 'iphone_x_1.png',
-      'iPhone XS Max': 'iphone_xs_max_1.png'
+      'iPhone XS Max': 'iphone_xs_max_1.png',
+      'iPad Pro (12.9-inch) (3rd generation)':
+          'ipad_pro_12.9inch_3rd_generation_1.png',
     };
 
     for (final String deviceName in devices.keys) {

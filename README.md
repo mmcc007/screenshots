@@ -137,18 +137,26 @@ locales:
   - de-DE
   - en-US
 
-# A list of devices to emulate
+# A map of devices to emulate
 devices:
   ios:
-    - iPhone X
-    - iPad Pro (12.9-inch) (2nd generation)
+    iPhone XS Max:
+      frame: false
+    iPad Pro (12.9-inch) (3rd generation):
   android:
-    - Nexus 6P
+    Nexus 6P:
 
 # Frame screenshots
 frame: true
 ````
 Note: emulators and simulators corresponding to the devices in your config file must be installed on your test machine.
+
+## Device Parameters
+Individual devices can be configured in `screenshots.yaml` by specifying per device parameters. (The `:` at the end of the device name indicates, in yaml, that a map of parameters can optionally follow.)
+
+| Parameter | Values | Required | Description |
+| --- | --- | --- | --- |
+|frame|true/false|optional|Controls whether screenshots generated on the device should be placed in a frame. Overrides the global frame setting (see example `screenshots.yaml` above).|
 
 # Integration with Fastlane
 Since _Screenshots_ is intended to be used with Fastlane, after _Screenshots_ completes, the images can be found in your project at:
@@ -159,7 +167,7 @@ ios/fastlane/screenshots
 Images are in a format suitable for upload via [deliver](https://docs.fastlane.tools/actions/deliver/) 
 and [supply](https://docs.fastlane.tools/actions/supply/).
 
-Tip: The easiest way to use _Screenshots_ with Fastlane is to call _Screenshots_ before calling Fastlane. Calling Fastlane (for either iOS or Android) will then find the images in the appropriate place.  
+Tip: One way to use _Screenshots_ with Fastlane is to call _Screenshots_ before calling Fastlane (or optionally call from Fastlane). Fastlane (for either iOS or Android) will then find the images in the appropriate place.  
 
 (For a live demo of using Fastlane to upload screenshot images to both store consoles, see demo of Fledge at https://github.com/mmcc007/fledge#demo)
 
@@ -184,10 +192,15 @@ To upgrade, simply re-issue the install command
 ````bash
 $ pub global activate screenshots
 ````
-Note: the _Screenshots_ version should be the same for both the command line and package:
+Note: the _Screenshots_ version should be the same for both the command line and in your `pubspec.yaml`.   
 1. If upgrading the command line version of _Screenshots_, also upgrade
  the version of _Screenshots_ in your pubspec.yaml.    
-2. If upgrading the version of _Screenshots_ in your pubspec.yaml, also upgrade the command line version.    
+2. If upgrading the version of _Screenshots_ in your pubspec.yaml, also upgrade the command line version.
+
+To check the version of _Screenshots_ currently installed:
+```
+pub global list
+```
 
 # Sample run on Travis
 To view _Screenshots_ running with the internationalized [example](example) app on macOS in the cloud see:  
@@ -210,6 +223,7 @@ Priority of this limitation in Flutter project:
 | Date | `flutter driver` | `internationalization` | `test` |
 | --- | --- | --- | ---  |
 | 4/26/2019 | [#1](https://github.com/flutter/flutter/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc+label%3A%22t%3A+flutter+driver%22+) | [#5](https://github.com/flutter/flutter/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc+label%3A%22a%3A+internationalization%22+) | [#7](https://github.com/flutter/flutter/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc+label%3A%22a%3A+tests%22+) |
+| 5/25/2019 | [#1](https://github.com/flutter/flutter/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc+label%3A%22t%3A+flutter+driver%22+) | [#3](https://github.com/flutter/flutter/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc+label%3A%22a%3A+internationalization%22+) | [#6](https://github.com/flutter/flutter/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc+label%3A%22a%3A+tests%22+) |
 
 (This limitation is being tracked by _screenshots_ in [screenshots/issues/20](https://github.com/mmcc007/screenshots/issues/20)).
 
