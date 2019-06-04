@@ -1,3 +1,8 @@
+## 0.2.0
+- Added option to control framing at device level  
+(breaking change)
+- Added screen for iPad Pro (12.9-inch) (3rd generation)
+
 ## 0.1.8
 - Added support default screen for android tablet
 - Added feature to make screenshots environment available to tests
