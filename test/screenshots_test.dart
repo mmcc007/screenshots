@@ -187,8 +187,9 @@ void main() {
       'resources/android/phones/Nexus_5X.png'
     ];
     final dest = '/tmp';
-    for (String resource in resources)
-      writeImage(await readResourceImage(resource), '$dest/$resource');
+    for (String resource in resources) {
+      await writeImage(await readResourceImage(resource), '$dest/$resource');
+    }
   });
 
   test('unpack images', () async {
@@ -278,9 +279,11 @@ void main() {
   });
 
   test('check for no running emulators, simulators or devices', () {
-    if (cmd('flutter', ['devices'], '.', true).contains('No devices detected.'))
+    if (cmd('flutter', ['devices'], '.', true)
+        .contains('No devices detected.')) {
       print('nothing running');
-    else
+    } else {
       print('something running');
+    }
   });
 }

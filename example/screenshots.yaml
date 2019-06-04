@@ -18,16 +18,16 @@ locales:
 devices:
   ios:
 #    iPhone X:
-    iPhone 7 Plus:
-      frame: true
+#    iPhone 7 Plus:
+#      frame: true
 #    iPhone XS Max:
 #      frame: true
-    iPad Pro (12.9-inch) (2nd generation):
+#    iPad Pro (12.9-inch) (2nd generation):
 #    - iPad Pro (12.9-inch) (3rd generation)
   android:
-    Nexus 6P:
-      frame: true
-#    - Nexus 9
+#    Nexus 6P:
+#      frame: true
+    Nexus 9:
 
 # Frame screenshots
-frame: false
+frame: true

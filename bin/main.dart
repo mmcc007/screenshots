@@ -75,8 +75,9 @@ void main(List<String> arguments) async {
 
   // validate args
   final file = File(argResults[configArg]);
-  if (!await file.exists())
+  if (!await file.exists()) {
     _handleError(argParser, "File not found: ${argResults[configArg]}");
+  }
 
   if (utils.isAnyDeviceRunning()) {
     stderr.write(

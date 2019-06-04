@@ -83,14 +83,15 @@ Future overlay(Map config, Map screenResources, String screenshotPath) async {
   String statusbarPath;
   // select black or white status bar based on brightness of area to be overlaid
   // todo: add black and white status bars
-  if (im.thresholdExceeded(screenshotPath, kCrop))
+  if (im.thresholdExceeded(screenshotPath, kCrop)) {
     // use black status bar
     statusbarPath =
         '${config['staging']}/${screenResources['statusbar black']}';
-  else
+  } else {
     // use white status bar
     statusbarPath =
         '${config['staging']}/${screenResources['statusbar white']}';
+  }
 
   final options = {
     'screenshotPath': screenshotPath,

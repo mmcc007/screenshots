@@ -41,17 +41,19 @@ Future clearFastlaneDirs(Map config, Screens screens) async {
 //  final config = Config('test/test_config.yaml').config;
 //  final Map screens = await Screens().init();
 
-  if (config['devices']['ios'] != null)
+  if (config['devices']['ios'] != null) {
     for (String emulatorName in config['devices']['ios'].keys) {
       for (final locale in config['locales']) {
         await clearFastlaneDir(screens, emulatorName, locale, DeviceType.ios);
       }
     }
-  if (config['devices']['android'] != null)
+  }
+  if (config['devices']['android'] != null) {
     for (String simulatorName in config['devices']['android'].keys) {
       for (final locale in config['locales']) {
         await clearFastlaneDir(
             screens, simulatorName, locale, DeviceType.android);
       }
     }
+  }
 }

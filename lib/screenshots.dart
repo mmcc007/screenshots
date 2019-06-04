@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:screenshots/config.dart';
 import 'package:screenshots/screens.dart';
-import 'package:screenshots/process_images.dart' as processImages;
+import 'package:screenshots/process_images.dart' as process_images;
 import 'package:screenshots/resources.dart' as resources;
 import 'package:screenshots/utils.dart' as utils;
 import 'package:screenshots/fastlane.dart' as fastlane;
@@ -44,48 +44,50 @@ Future<void> run([String configPath = kConfigFileName]) async {
 
   // run integration tests in each android emulator for each locale and
   // process screenshots
-  if (configInfo['devices']['android'] != null)
+  if (configInfo['devices']['android'] != null) {
     for (final emulatorName in configInfo['devices']['android'].keys) {
       for (final locale in configInfo['locales']) {
         await emulator(
             emulatorName, true, stagingDir, locale, isMultipleLocales);
 
         // store env for later use by tests
-        config.storeEnv(config, screens, emulatorName, locale, 'android');
+        await config.storeEnv(config, screens, emulatorName, locale, 'android');
 
         for (final testPath in configInfo['tests']) {
           print(
               'Capturing screenshots with test app $testPath on emulator \'$emulatorName\' in locale $locale ...');
           await screenshots(testPath, stagingDir);
           // process screenshots
-          await processImages.process(
+          await process_images.process(
               screens, configInfo, DeviceType.android, emulatorName, locale);
         }
         await emulator(emulatorName, false, stagingDir);
       }
     }
+  }
 
   // run integration tests in each ios simulator for each locale and
   // process screenshots
-  if (configInfo['devices']['ios'] != null)
+  if (configInfo['devices']['ios'] != null) {
     for (final simulatorName in configInfo['devices']['ios'].keys) {
       for (final locale in configInfo['locales']) {
         simulator(simulatorName, true, stagingDir, locale, isMultipleLocales);
 
         // store env for later use by tests
-        config.storeEnv(config, screens, simulatorName, locale, 'ios');
+        await config.storeEnv(config, screens, simulatorName, locale, 'ios');
 
         for (final testPath in configInfo['tests']) {
           print(
               'Capturing screenshots with test app $testPath on simulator \'$simulatorName\' in locale $locale ...');
           await screenshots(testPath, stagingDir);
           // process screenshots
-          await processImages.process(
+          await process_images.process(
               screens, configInfo, DeviceType.ios, simulatorName, locale);
         }
         simulator(simulatorName, false);
       }
     }
+  }
 
   print('\n\nScreen images are available in:');
   print('  ios/fastlane/screenshots');
@@ -139,10 +141,11 @@ Future<void> emulator(String emulatorName, bool start,
             'swiftshader',
           ],
           ProcessStartMode.detached);
-    } else
+    } else {
       // testing locally, so start emulator in normal way
       await utils
           .streamCmd('flutter', ['emulator', '--launch', highestEmulator]);
+    }
 
     // wait for emulator to start
     await utils.streamCmd(
@@ -201,9 +204,10 @@ void simulator(String name, bool start,
     } else {
       print('Starting simulator \'$name\' in locale $locale ...');
     }
-    if (isMultipleLocales)
+    if (isMultipleLocales) {
       utils.streamCmd('$stagingDir/resources/script/simulator-controller',
           [name, 'locale', locale]);
+    }
     utils.cmd('xcrun', ['simctl', 'boot', udid]);
   } else {
     print('Stopping simulator: \'$name\' ...');

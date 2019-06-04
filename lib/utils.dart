@@ -17,8 +17,9 @@ void clearDirectory(String dir) {
 ///
 /// If dstDir does not exist, it is created.
 void moveFiles(String srcDir, String dstDir) {
-  if (!Directory(dstDir).existsSync())
+  if (!Directory(dstDir).existsSync()) {
     Directory(dstDir).createSync(recursive: true);
+  }
   Directory(srcDir).listSync().forEach((file) {
     file.renameSync('$dstDir/${p.basename(file.path)}');
   });
@@ -63,8 +64,9 @@ Future<void> streamCmd(String cmd, List<String> arguments,
     await Future.wait([stdoutFuture, stderrFuture]);
 
     var exitCode = await process.exitCode;
-    if (exitCode != 0)
+    if (exitCode != 0) {
       throw 'command failed: cmd=\'$cmd ${arguments.join(" ")}\'';
+    }
   }
 }
 
@@ -126,8 +128,9 @@ Map getHighestIosDevice(Map iosDevices, String deviceName) {
   var iOSVersionName = getHighestIosVersion(iOSVersions);
 
   final iosVersionDevices = iosDevices[deviceName][iOSVersionName];
-  if (iosVersionDevices.length == 0)
+  if (iosVersionDevices.length == 0) {
     throw "Error: no available devices found for \'$deviceName\'";
+  }
   // use the first device found for the iOS version
   return iosVersionDevices[0];
 }
