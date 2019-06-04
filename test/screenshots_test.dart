@@ -146,15 +146,6 @@ void main() {
     await imagemagick('frame', options);
   });
 
-  test('parse xcrun simctl list devices', () {
-    Map _simulators = simulatorsx();
-    print('simulators=$_simulators');
-
-    print('iPhone X info: ' + _simulators['iPhone X'].toString());
-
-//     print('first match:' + regExp.firstMatch(screens).toString());
-  });
-
   test('parse json xcrun simctl list devices', () {
     Map iosDevices = getIosDevices();
 

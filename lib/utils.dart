@@ -68,24 +68,6 @@ Future<void> streamCmd(String cmd, List<String> arguments,
   }
 }
 
-/// Create list of simulators with their ID and status.
-Map<String, Map<String, String>> simulatorsx() {
-  String simulatorInfo = cmd('xcrun', ['simctl', 'list', 'devices'], '.', true);
-  RegExp regExp = new RegExp(r'^    (.*) \((.*-.*-.*-.*)\) \((.*)\).*$',
-      caseSensitive: false, multiLine: true);
-  Iterable<Match> matches = regExp.allMatches(simulatorInfo);
-
-  Map<String, Map<String, String>> simulators = {};
-  for (Match m in matches) {
-    // load into map
-    Map<String, String> simulatorProps = {};
-    simulatorProps['id'] = m.group(2);
-    simulatorProps['status'] = m.group(3);
-    simulators[m.group(1)] = simulatorProps;
-  }
-  return simulators;
-}
-
 /// Creates a list of available iOS devices.
 /// (really just concerned with simulators for now).
 /// Provides access to their IDs and status'.
