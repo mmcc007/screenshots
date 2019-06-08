@@ -25,6 +25,7 @@ ios:
     devices:
       - iPhone X
       - iPhone XS
+      - iPhone Xs
   6.5inch:
     size: 1242x2688
     resize: 87%
@@ -36,6 +37,7 @@ ios:
     offset: -0-2
     devices:
       - iPhone XS Max
+      - iPhone Xs Max
   12.9inch:
     size: 2048x2732
     resize: 86%
