@@ -1,3 +1,6 @@
+## 0.2.1
+- Added support for iPhone Xs and iPhone Xs Max
+
 ## 0.2.0
 - Added option to control framing at device level  
 (breaking change)
