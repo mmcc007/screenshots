@@ -192,7 +192,7 @@ Future<void> emulator(String emulatorName, bool start,
 void simulator(String name, bool start,
     [String stagingDir,
     String locale = 'en-US',
-    bool isMultipleLocales = false]) {
+    bool isMultipleLocales = false]) async {
   final simulatorInfo = utils.getHighestIosDevice(utils.getIosDevices(), name);
   final udid = simulatorInfo['udid'];
   final state = simulatorInfo['state'];
@@ -205,7 +205,7 @@ void simulator(String name, bool start,
       print('Starting simulator \'$name\' in locale $locale ...');
     }
     if (isMultipleLocales) {
-      utils.streamCmd('$stagingDir/resources/script/simulator-controller',
+      await utils.streamCmd('$stagingDir/resources/script/simulator-controller',
           [name, 'locale', locale]);
     }
     utils.cmd('xcrun', ['simctl', 'boot', udid]);
