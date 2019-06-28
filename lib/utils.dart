@@ -17,7 +17,7 @@ void clearDirectory(String dirPath) {
 
 /// Clear files in a directory [dirPath] ending in [suffix]
 /// Create directory if none exists.
-void clearFilesBySuffix(String dirPath, String suffix) {
+void clearFilesWithSuffix(String dirPath, String suffix) {
   // delete files with suffix
   if (Directory(dirPath).existsSync()) {
     Directory(dirPath).listSync().toList().forEach((e) {

@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:path/path.dart';
 import 'package:screenshots/config.dart';
 import 'package:screenshots/process_images.dart';
 import 'package:screenshots/screens.dart';
@@ -304,7 +303,7 @@ void main() {
         expect(await File('$dirPath/$fileName').exists(), true));
 
     // delete files with suffix
-    clearFilesBySuffix(dirPath, suffix);
+    clearFilesWithSuffix(dirPath, suffix);
 
     // check deleted
     files.forEach((fileName) async =>
