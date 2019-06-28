@@ -10,18 +10,24 @@ import 'package:path/path.dart';
 void clearDirectory(String dirPath) {
   if (Directory(dirPath).existsSync()) {
     Directory(dirPath).deleteSync(recursive: true);
+  } else {
+    Directory(dirPath).createSync(recursive: true);
   }
-  Directory(dirPath).createSync(recursive: true);
 }
 
-/// Deletes files in a directory [dirPath] ending in [suffix]
-void deleteFilesBySuffix(String dirPath, String suffix) {
+/// Clear files in a directory [dirPath] ending in [suffix]
+/// Create directory if none exists.
+void clearFilesBySuffix(String dirPath, String suffix) {
   // delete files with suffix
-  Directory(dirPath).listSync().toList().forEach((e) {
-    if (extension(e.path) == suffix) {
-      File(e.path).delete();
-    }
-  });
+  if (Directory(dirPath).existsSync()) {
+    Directory(dirPath).listSync().toList().forEach((e) {
+      if (extension(e.path) == suffix) {
+        File(e.path).delete();
+      }
+    });
+  } else {
+    Directory(dirPath).createSync(recursive: true);
+  }
 }
 
 /// Move files from [srcDir] to [dstDir].

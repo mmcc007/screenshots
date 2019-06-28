@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:screenshots/screens.dart';
 import 'package:screenshots/screenshots.dart';
@@ -39,7 +40,7 @@ Future clearFastlaneDir(
     // only delete images ending with .png
     // for compatability with FrameIt
     // (see https://github.com/mmcc007/screenshots/issues/61)
-    utils.deleteFilesBySuffix(dirPath, kImageSuffix);
+    utils.clearFilesBySuffix(dirPath, kImageSuffix);
   } else {
     await utils.clearDirectory(dirPath);
   }

@@ -304,7 +304,7 @@ void main() {
         expect(await File('$dirPath/$fileName').exists(), true));
 
     // delete files with suffix
-    deleteFilesBySuffix(dirPath, suffix);
+    clearFilesBySuffix(dirPath, suffix);
 
     // check deleted
     files.forEach((fileName) async =>
