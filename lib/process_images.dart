@@ -60,7 +60,8 @@ void process(Screens screens, Map config, DeviceType deviceType,
 
   // move to final destination for upload to stores via fastlane
   final srcDir = '${config['staging']}/test';
-  final dstDir = fastlane.path(deviceType, locale, '', screenProps['destName']);
+  final dstDir =
+      fastlane.fastlaneDir(deviceType, locale, '', screenProps['destName']);
   // prefix screenshots with name of device before moving
   // (useful for uploading to apple via fastlane)
   await utils.prefixFilesInDir(srcDir, '$deviceName-');

@@ -3,14 +3,25 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:path/path.dart' as p;
+import 'package:path/path.dart';
 
-/// Clear directory [dir].
+/// Clear directory [dirPath].
 /// Create directory if none exists.
-void clearDirectory(String dir) {
-  if (Directory(dir).existsSync()) {
-    Directory(dir).deleteSync(recursive: true);
+void clearDirectory(String dirPath) {
+  if (Directory(dirPath).existsSync()) {
+    Directory(dirPath).deleteSync(recursive: true);
   }
-  Directory(dir).createSync(recursive: true);
+  Directory(dirPath).createSync(recursive: true);
+}
+
+/// Deletes files in a directory [dirPath] ending in [suffix]
+void deleteFilesBySuffix(String dirPath, String suffix) {
+  // delete files with suffix
+  Directory(dirPath).listSync().toList().forEach((e) {
+    if (extension(e.path) == suffix) {
+      File(e.path).delete();
+    }
+  });
 }
 
 /// Move files from [srcDir] to [dstDir].

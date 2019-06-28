@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:path/path.dart';
 import 'package:screenshots/config.dart';
 import 'package:screenshots/process_images.dart';
 import 'package:screenshots/screens.dart';
@@ -285,5 +286,28 @@ void main() {
     } else {
       print('something running');
     }
+  });
+
+  test('delete all files with suffix', () async {
+    final dirPath = '/tmp/tmp';
+    final files = ['image1.png', 'image2.png'];
+    final suffix = 'png';
+
+    clearDirectory(dirPath); // creates empty directory
+
+    // create files
+    files
+        .forEach((fileName) async => await File('$dirPath/$fileName').create());
+
+    // check created
+    files.forEach((fileName) async =>
+        expect(await File('$dirPath/$fileName').exists(), true));
+
+    // delete files with suffix
+    deleteFilesBySuffix(dirPath, suffix);
+
+    // check deleted
+    files.forEach((fileName) async =>
+        expect(await File('$dirPath/$fileName').exists(), false));
   });
 }
