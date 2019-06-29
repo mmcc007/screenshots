@@ -238,10 +238,9 @@ void main() {
     final start = true;
     final stagingDir = '/tmp/tmp';
     final locale = 'en-US';
-    final booted = false;
 //    emulator('Nexus 6P', true, '/tmp/screenshots', 'fr-CA');
     await emulator(
-        emulatorName, start, deviceId, booted, stagingDir, avdName, locale);
+        emulatorName, start, deviceId, stagingDir, avdName, false, locale);
   });
 
   test('move files', () async {
@@ -260,12 +259,11 @@ void main() {
     final start = true;
     final stagingDir = '/tmp/tmp';
     final locale = 'en-US';
-    final booted = false;
 
     final deviceId = getHighestAndroidDevice(emulatorName);
     await unpackScripts(stagingDir);
     await emulator(
-        emulatorName, start, deviceId, booted, stagingDir, avdName, locale);
+        emulatorName, start, deviceId, stagingDir, avdName, false, locale);
   });
 
   test('start simulator', () {
@@ -355,7 +353,6 @@ void main() {
     final deviceId = 'emulator-5554';
     final start = true;
     final stagingDir = '/tmp/tmp';
-    final booted = false;
     final locale = 'en-US'; // default locale (works)
 //    final locale = 'fr-CA'; // fails
     final testAppDir = 'example';
@@ -366,13 +363,13 @@ void main() {
 
     // start emulator
     await emulator(
-        emulatorName, start, deviceId, booted, stagingDir, avdName, locale);
+        emulatorName, start, deviceId, stagingDir, avdName, false, locale);
 
     // run test
     await streamCmd('flutter', ['drive', testAppSrcPath], testAppDir);
 
     // stop emulator
-    await emulator(emulatorName, false, deviceId, booted, stagingDir);
+    await emulator(emulatorName, false, deviceId, stagingDir, avdName);
   },
       timeout:
           Timeout(Duration(seconds: 90))); // increase time to get stacktrace
@@ -384,13 +381,12 @@ void main() {
     final start = true;
     final stagingDir = '/tmp/tmp';
     final locale = 'en-US';
-    final booted = false;
 
     await unpackScripts(stagingDir);
     await emulator(
-        emulatorName, start, deviceId, booted, stagingDir, avdName, locale);
+        emulatorName, start, deviceId, stagingDir, avdName, false, locale);
     final deviceLocale = androidDeviceLocale(deviceId);
-    await emulator(emulatorName, false, deviceId, booted, stagingDir);
+    await emulator(emulatorName, false, deviceId, stagingDir, avdName);
 
     expect(deviceLocale, 'en-US');
   });
