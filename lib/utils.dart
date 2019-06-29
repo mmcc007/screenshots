@@ -258,12 +258,13 @@ String getAvdName(String deviceId) {
 /// Returns matching android device id as [String].
 String findAndroidDeviceId(String avdName) {
   final devicesIds = getAndroidDevices();
+  if (devicesIds.length == 0) return null;
   return devicesIds.firstWhere((id) => avdName == getAvdName(id), orElse: null);
 }
 
 /// Get the list of running devices
 List<String> getAndroidDevices() {
-  return cmd('adb', ['devices'], '.', false)
+  return cmd('adb', ['devices'], '.', true)
       .trim()
       .split('\n')
       .sublist(1)

@@ -45,12 +45,13 @@ Future<void> run([String configPath = kConfigFileName]) async {
   // process screenshots
   if (configInfo['devices']['android'] != null) {
     for (final emulatorName in configInfo['devices']['android'].keys) {
+      final highestAvdName = utils.getHighestAndroidDevice(emulatorName);
+      final deviceId = utils.findAndroidDeviceId(highestAvdName);
+      final alreadyBooted = deviceId == null ? false : true;
+
       for (final locale in configInfo['locales']) {
-        final highestAvdName = utils.getHighestAndroidDevice(emulatorName);
-        final deviceId = utils.findAndroidDeviceId(highestAvdName);
-        final booted = deviceId == null ? false : true;
-        await emulator(emulatorName, true, deviceId, booted, stagingDir,
-            highestAvdName, locale);
+        final freshDeviceId = await emulator(emulatorName, true, deviceId,
+            stagingDir, highestAvdName, alreadyBooted, locale);
 
         // store env for later use by tests
         await config.storeEnv(config, screens, emulatorName, locale, 'android');
@@ -59,12 +60,15 @@ Future<void> run([String configPath = kConfigFileName]) async {
           print(
               'Capturing screenshots with test app $testPath on emulator \'$emulatorName\' in locale $locale ...');
 
-          await screenshots(deviceId, testPath, stagingDir);
+          await screenshots(freshDeviceId, testPath, stagingDir);
           // process screenshots
           await process_images.process(
               screens, configInfo, DeviceType.android, emulatorName, locale);
         }
-        await emulator(emulatorName, false, deviceId, booted, stagingDir);
+        if (!alreadyBooted) {
+          await emulator(
+              emulatorName, false, freshDeviceId, stagingDir, highestAvdName);
+        }
       }
     }
   }
@@ -73,9 +77,9 @@ Future<void> run([String configPath = kConfigFileName]) async {
   // process screenshots
   if (configInfo['devices']['ios'] != null) {
     for (final simulatorName in configInfo['devices']['ios'].keys) {
+      final simulatorInfo =
+          utils.getHighestIosDevice(utils.getIosDevices(), simulatorName);
       for (final locale in configInfo['locales']) {
-        final simulatorInfo =
-            utils.getHighestIosDevice(utils.getIosDevices(), simulatorName);
         simulator(simulatorName, true, simulatorInfo, stagingDir, locale);
 
         // store env for later use by tests
@@ -122,42 +126,50 @@ void screenshots(String deviceId, String testPath, String stagingDir) async {
 ///
 /// Start/stop emulator.
 ///
-Future<void> emulator(
-    String name, bool start, String deviceId, bool booted, String stagingDir,
-    [String avdName, String testLocale = "en-US"]) async {
-  if (start) {
-    print('Starting emulator \'$name\' in locale $testLocale ...');
+Future<String> emulator(
+    String name, bool start, String deviceId, String stagingDir, String avdName,
+    [bool alreadyBooted, String testLocale = "en-US"]) async {
+  // used to keep and report a newly booted device if any
+  String freshDeviceId = deviceId;
 
-    final envVars = Platform.environment;
-    if (envVars['CI'] == 'true') {
-      // testing on CI/CD requires starting emulator in a specific way
-      final androidHome = envVars['ANDROID_HOME'];
-      await utils.streamCmd(
-          '$androidHome/emulator/emulator',
-          [
-            '-avd',
-            avdName,
-            '-no-audio',
-            '-no-window',
-            '-no-snapshot',
-            '-gpu',
-            'swiftshader',
-          ],
-          '.',
-          ProcessStartMode.detached);
+  if (start) {
+    if (alreadyBooted) {
+      print('Using running emulator \'$name\' in locale $testLocale ...');
     } else {
-      // testing locally, so start emulator in normal way
-      if (!booted) {
+      print('Starting emulator \'$name\' in locale $testLocale ...');
+      final envVars = Platform.environment;
+      if (envVars['CI'] == 'true') {
+        // testing on CI/CD requires starting emulator in a specific way
+        final androidHome = envVars['ANDROID_HOME'];
+        await utils.streamCmd(
+            '$androidHome/emulator/emulator',
+            [
+              '-avd',
+              avdName,
+              '-no-audio',
+              '-no-window',
+              '-no-snapshot',
+              '-gpu',
+              'swiftshader',
+            ],
+            '.',
+            ProcessStartMode.detached);
+      } else {
+        // testing locally, so start emulator in normal way
         await utils.streamCmd('flutter', ['emulator', '--launch', avdName]);
       }
+
+      // get fresh id of emulator just booted in this run.
+      freshDeviceId = _getFreshDeviceId(deviceId, avdName);
+
+      // wait for emulator to start
+      await utils.streamCmd(
+          '$stagingDir/resources/script/android-wait-for-emulator',
+          [freshDeviceId]);
     }
 
-    // wait for emulator to start
-    await utils.streamCmd(
-        '$stagingDir/resources/script/android-wait-for-emulator', [deviceId]);
-
     // change locale
-    String emulatorLocale = utils.androidDeviceLocale(deviceId);
+    String emulatorLocale = utils.androidDeviceLocale(freshDeviceId);
 //    print('deviceLocale=$emulatorLocale, testLocale=$testLocale');
     if (emulatorLocale != testLocale) {
       print(
@@ -174,6 +186,8 @@ Future<void> emulator(
       flutterDriverBugWarning();
       // adb shell "setprop persist.sys.locale fr-CA; setprop ctl.restart zygote"
       utils.cmd('adb', [
+        '-s',
+        freshDeviceId,
         'shell',
         'setprop',
         'persist.sys.locale',
@@ -188,15 +202,22 @@ Future<void> emulator(
     // while app is being compiled.
 
   } else {
-    if (!booted) {
-      print('Stopping emulator: \'$name\' ...');
-      utils.cmd('adb', ['-s', deviceId, 'emu', 'kill']);
-      // wait for emulator to stop
-      await utils.streamCmd(
-          '$stagingDir/resources/script/android-wait-for-emulator-to-stop',
-          [deviceId]);
-    }
+    print('Stopping emulator: \'$name\' ...');
+    utils.cmd('adb', ['-s', deviceId, 'emu', 'kill']);
+    // wait for emulator to stop
+    await utils.streamCmd(
+        '$stagingDir/resources/script/android-wait-for-emulator-to-stop',
+        [freshDeviceId]);
   }
+  return freshDeviceId;
+}
+
+String _getFreshDeviceId(String deviceId, String avdName) {
+  String freshDeviceId;
+  deviceId == null
+      ? freshDeviceId = utils.findAndroidDeviceId(avdName)
+      : freshDeviceId = deviceId;
+  return freshDeviceId;
 }
 
 ///
