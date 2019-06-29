@@ -231,9 +231,17 @@ void main() {
     expect(emulator, 'Nexus_5X_API_27');
   });
 
-  test('change android locale', () {
+  test('change android locale', () async {
+    final emulatorName = 'Nexus 6P';
+    final avdName = 'Nexus_6P_API_28';
+    final deviceId = 'emulator-5554';
+    final start = true;
+    final stagingDir = '/tmp/tmp';
+    final locale = 'en-US';
+    final booted = false;
 //    emulator('Nexus 6P', true, '/tmp/screenshots', 'fr-CA');
-    emulator('Nexus 6P', true, '/tmp/screenshots', 'en-US');
+    await emulator(
+        emulatorName, start, deviceId, booted, stagingDir, avdName, locale);
   });
 
   test('move files', () async {
@@ -246,8 +254,25 @@ void main() {
     expect(await File(dstDir + '/' + fileName).exists(), true);
   });
 
+  test('start emulator', () async {
+    final emulatorName = 'Nexus 6P';
+    final avdName = 'Nexus_6P_API_28';
+    final start = true;
+    final stagingDir = '/tmp/tmp';
+    final locale = 'en-US';
+    final booted = false;
+
+    final deviceId = getHighestAndroidDevice(emulatorName);
+    await unpackScripts(stagingDir);
+    await emulator(
+        emulatorName, start, deviceId, booted, stagingDir, avdName, locale);
+  });
+
   test('start simulator', () {
-    simulator('iPhone X', true, '/tmp/screenshots');
+    final simulatorName = 'iPhone X';
+    final simulatorInfo = getHighestIosDevice(getIosDevices(), simulatorName);
+
+    simulator('iPhone X', true, simulatorInfo, '/tmp/screenshots');
 //    simulator('iPhone X', true, '/tmp/screenshots', 'fr-CA');
   });
 
@@ -326,8 +351,11 @@ void main() {
   test('change locale on android and test', () async {
 //    final emulatorName = 'Nexus 5X'; // root disabled so cannot change locale
     final emulatorName = 'Nexus 6P';
+    final avdName = 'Nexus_6P_API_28';
+    final deviceId = 'emulator-5554';
     final start = true;
     final stagingDir = '/tmp/tmp';
+    final booted = false;
     final locale = 'en-US'; // default locale (works)
 //    final locale = 'fr-CA'; // fails
     final testAppDir = 'example';
@@ -337,27 +365,32 @@ void main() {
     await unpackScripts(stagingDir);
 
     // start emulator
-    await emulator(emulatorName, start, stagingDir, locale);
+    await emulator(
+        emulatorName, start, deviceId, booted, stagingDir, avdName, locale);
 
     // run test
     await streamCmd('flutter', ['drive', testAppSrcPath], testAppDir);
 
     // stop emulator
-    await emulator(emulatorName, false, stagingDir);
+    await emulator(emulatorName, false, deviceId, booted, stagingDir);
   },
       timeout:
           Timeout(Duration(seconds: 90))); // increase time to get stacktrace
 
   test('get android device locale', () async {
     final emulatorName = 'Nexus 6P';
+    final avdName = 'Nexus_6P_API_28';
+    final deviceId = 'emulator-5554';
     final start = true;
     final stagingDir = '/tmp/tmp';
     final locale = 'en-US';
+    final booted = false;
 
     await unpackScripts(stagingDir);
-    await emulator(emulatorName, start, stagingDir, locale);
-    final deviceLocale = androidDeviceLocale();
-    await emulator(emulatorName, false, stagingDir);
+    await emulator(
+        emulatorName, start, deviceId, booted, stagingDir, avdName, locale);
+    final deviceLocale = androidDeviceLocale(deviceId);
+    await emulator(emulatorName, false, deviceId, booted, stagingDir);
 
     expect(deviceLocale, 'en-US');
   });
@@ -389,13 +422,14 @@ void main() {
     await unpackScripts(stagingDir);
 
     // start simulator
-    await simulator(simulatorName, start, stagingDir, locale);
+    final simulatorInfo = getHighestIosDevice(getIosDevices(), simulatorName);
+    await simulator(simulatorName, start, simulatorInfo, stagingDir, locale);
 
     // run test
     await streamCmd('flutter', ['drive', testAppSrcPath], testAppDir);
 
     // stop simulator
-    await simulator(simulatorName, false, stagingDir);
+    await simulator(simulatorName, false, simulatorInfo);
   },
       timeout:
           Timeout(Duration(minutes: 20))); // increase time to get stacktrace
@@ -406,5 +440,27 @@ void main() {
 //    print('localeInfo=$localeInfo');
 //    print('locale=$locale');
     expect(locale, 'en-US');
+  });
+
+  test('get avd from emulator', () {
+    final emulatorName = 'emulator-5554';
+    final expected = 'Nexus_6P_API_28';
+    String avdName = '';
+//    avdName = adbCmd(['-s', emulatorName, 'emu', 'avd', 'name']);
+    avdName = getAvdName(emulatorName);
+    expect(avdName, expected);
+  });
+
+  test('find emulator with matching avd', () {
+    final avdName = 'Nexus_6P_API_28';
+    final matchingDevice = 'emulator-5554';
+    String device = findAndroidDeviceId(avdName);
+    print('device=$device');
+    expect(device, matchingDevice);
+  });
+
+  test('is android device booted', () {
+    final bootedDevices = getAndroidDevices();
+    print('booted=$bootedDevices');
   });
 }

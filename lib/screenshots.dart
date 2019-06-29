@@ -46,7 +46,11 @@ Future<void> run([String configPath = kConfigFileName]) async {
   if (configInfo['devices']['android'] != null) {
     for (final emulatorName in configInfo['devices']['android'].keys) {
       for (final locale in configInfo['locales']) {
-        await emulator(emulatorName, true, stagingDir, locale);
+        final highestAvdName = utils.getHighestAndroidDevice(emulatorName);
+        final deviceId = utils.findAndroidDeviceId(highestAvdName);
+        final booted = deviceId == null ? false : true;
+        await emulator(emulatorName, true, deviceId, booted, stagingDir,
+            highestAvdName, locale);
 
         // store env for later use by tests
         await config.storeEnv(config, screens, emulatorName, locale, 'android');
@@ -54,12 +58,13 @@ Future<void> run([String configPath = kConfigFileName]) async {
         for (final testPath in configInfo['tests']) {
           print(
               'Capturing screenshots with test app $testPath on emulator \'$emulatorName\' in locale $locale ...');
-          await screenshots(testPath, stagingDir);
+
+          await screenshots(deviceId, testPath, stagingDir);
           // process screenshots
           await process_images.process(
               screens, configInfo, DeviceType.android, emulatorName, locale);
         }
-        await emulator(emulatorName, false, stagingDir);
+        await emulator(emulatorName, false, deviceId, booted, stagingDir);
       }
     }
   }
@@ -69,7 +74,9 @@ Future<void> run([String configPath = kConfigFileName]) async {
   if (configInfo['devices']['ios'] != null) {
     for (final simulatorName in configInfo['devices']['ios'].keys) {
       for (final locale in configInfo['locales']) {
-        simulator(simulatorName, true, stagingDir, locale);
+        final simulatorInfo =
+            utils.getHighestIosDevice(utils.getIosDevices(), simulatorName);
+        simulator(simulatorName, true, simulatorInfo, stagingDir, locale);
 
         // store env for later use by tests
         await config.storeEnv(config, screens, simulatorName, locale, 'ios');
@@ -77,12 +84,12 @@ Future<void> run([String configPath = kConfigFileName]) async {
         for (final testPath in configInfo['tests']) {
           print(
               'Capturing screenshots with test app $testPath on simulator \'$simulatorName\' in locale $locale ...');
-          await screenshots(testPath, stagingDir);
+          await screenshots(simulatorInfo['udid'], testPath, stagingDir);
           // process screenshots
           await process_images.process(
               screens, configInfo, DeviceType.ios, simulatorName, locale);
         }
-        simulator(simulatorName, false);
+        simulator(simulatorName, false, simulatorInfo);
       }
     }
   }
@@ -105,19 +112,19 @@ Future<void> run([String configPath = kConfigFileName]) async {
 /// Assumes the integration test captures the screen shots into a known directory using
 /// provided [capture_screen.screenshot()].
 ///
-void screenshots(String testPath, String stagingDir) async {
+void screenshots(String deviceId, String testPath, String stagingDir) async {
   // clear existing screenshots from staging area
   utils.clearDirectory('$stagingDir/test');
   // run the test
-  await utils.streamCmd('flutter', ['drive', testPath]);
+  await utils.streamCmd('flutter', ['-d', deviceId, 'drive', testPath]);
 }
 
 ///
 /// Start/stop emulator.
 ///
-Future<void> emulator(String name, bool start,
-    [String stagingDir, String testLocale = "en-US"]) async {
-  final highestEmulator = utils.getHighestAndroidDevice(name);
+Future<void> emulator(
+    String name, bool start, String deviceId, bool booted, String stagingDir,
+    [String avdName, String testLocale = "en-US"]) async {
   if (start) {
     print('Starting emulator \'$name\' in locale $testLocale ...');
 
@@ -129,7 +136,7 @@ Future<void> emulator(String name, bool start,
           '$androidHome/emulator/emulator',
           [
             '-avd',
-            highestEmulator,
+            avdName,
             '-no-audio',
             '-no-window',
             '-no-snapshot',
@@ -140,16 +147,17 @@ Future<void> emulator(String name, bool start,
           ProcessStartMode.detached);
     } else {
       // testing locally, so start emulator in normal way
-      await utils
-          .streamCmd('flutter', ['emulator', '--launch', highestEmulator]);
+      if (!booted) {
+        await utils.streamCmd('flutter', ['emulator', '--launch', avdName]);
+      }
     }
 
     // wait for emulator to start
     await utils.streamCmd(
-        '$stagingDir/resources/script/android-wait-for-emulator', []);
+        '$stagingDir/resources/script/android-wait-for-emulator', [deviceId]);
 
     // change locale
-    String emulatorLocale = utils.androidDeviceLocale();
+    String emulatorLocale = utils.androidDeviceLocale(deviceId);
 //    print('deviceLocale=$emulatorLocale, testLocale=$testLocale');
     if (emulatorLocale != testLocale) {
       print(
@@ -164,7 +172,7 @@ Future<void> emulator(String name, bool start,
             '    https://stackoverflow.com/questions/43923996/adb-root-is-not-working-on-emulator/45668555#45668555 for details.\n');
       }
       flutterDriverBugWarning();
-//      adb shell "setprop persist.sys.locale fr-CA; setprop ctl.restart zygote"
+      // adb shell "setprop persist.sys.locale fr-CA; setprop ctl.restart zygote"
       utils.cmd('adb', [
         'shell',
         'setprop',
@@ -180,20 +188,22 @@ Future<void> emulator(String name, bool start,
     // while app is being compiled.
 
   } else {
-    print('Stopping emulator: \'$name\' ...');
-    utils.cmd('adb', ['emu', 'kill']);
-    // wait for emulator to stop
-    await utils.streamCmd(
-        '$stagingDir/resources/script/android-wait-for-emulator-to-stop', []);
+    if (!booted) {
+      print('Stopping emulator: \'$name\' ...');
+      utils.cmd('adb', ['-s', deviceId, 'emu', 'kill']);
+      // wait for emulator to stop
+      await utils.streamCmd(
+          '$stagingDir/resources/script/android-wait-for-emulator-to-stop',
+          [deviceId]);
+    }
   }
 }
 
 ///
 /// Start/stop simulator.
 ///
-void simulator(String name, bool start,
+void simulator(String name, bool start, Map simulatorInfo,
     [String stagingDir, String testLocale = 'en-US']) {
-  final simulatorInfo = utils.getHighestIosDevice(utils.getIosDevices(), name);
   final udId = simulatorInfo['udid'];
   final state = simulatorInfo['state'];
 //  print('simulatorInfo=$simulatorInfo');
@@ -216,8 +226,10 @@ void simulator(String name, bool start,
     }
     utils.cmd('xcrun', ['simctl', 'boot', udId]);
   } else {
-    print('Stopping simulator: \'$name\' ...');
-    if (state == 'Booted') utils.cmd('xcrun', ['simctl', 'shutdown', udId]);
+    if (state != 'Booted') {
+      print('Stopping simulator: \'$name\' ...');
+      utils.cmd('xcrun', ['simctl', 'shutdown', udId]);
+    }
   }
 }
 

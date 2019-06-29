@@ -56,6 +56,7 @@ String cmd(String cmd, List<String> arguments,
     stderr.write(result.stderr);
     throw 'command failed: cmd=\'$cmd ${arguments.join(" ")}\'';
   }
+//  print('stdout=${result.stdout}');
   if (keepNewline) {
     // return stdout
     return result.stdout;
@@ -70,7 +71,8 @@ String cmd(String cmd, List<String> arguments,
 Future<void> streamCmd(String cmd, List<String> arguments,
     [String workingDirectory = '.',
     ProcessStartMode mode = ProcessStartMode.normal]) async {
-//  print('streamCmd=\'$cmd ${arguments.join(" ")}\'');
+//  print(
+//      'streamCmd=\'$cmd ${arguments.join(" ")}\', workingDirectory=$workingDirectory, mode=$mode');
 
   final process = await Process.start(cmd, arguments,
       workingDirectory: workingDirectory, mode: mode);
@@ -222,9 +224,13 @@ String removeNewline(String str) {
 }
 
 /// Returns locale of currently attached android device.
-String androidDeviceLocale() {
-  final deviceLocale =
-      cmd('adb', ['shell', 'getprop persist.sys.locale'], '.', true, false);
+String androidDeviceLocale(String deviceId) {
+  final deviceLocale = cmd(
+      'adb',
+      ['-s', deviceId, 'shell', 'getprop persist.sys.locale'],
+      '.',
+      true,
+      false);
   return deviceLocale;
 }
 
@@ -237,4 +243,30 @@ String iosSimulatorLocale(String udId) {
       cmd('plutil', ['-convert', 'json', '-o', '-', settingsPath], '.', true));
   final locale = localeInfo['AppleLocale'];
   return locale;
+}
+
+/// Get AVD name from device id [deviceId].
+/// Returns AVD name as [String].
+String getAvdName(String deviceId) {
+  return cmd('adb', ['-s', deviceId, 'emu', 'avd', 'name'], '.', true)
+      .split('\r\n')
+      .map((line) => line.trim())
+      .first;
+}
+
+/// Find android device id with matching [avdName].
+/// Returns matching android device id as [String].
+String findAndroidDeviceId(String avdName) {
+  final devicesIds = getAndroidDevices();
+  return devicesIds.firstWhere((id) => avdName == getAvdName(id), orElse: null);
+}
+
+/// Get the list of running devices
+List<String> getAndroidDevices() {
+  return cmd('adb', ['devices'], '.', false)
+      .trim()
+      .split('\n')
+      .sublist(1)
+      .map((device) => device.split('\t').first)
+      .toList();
 }

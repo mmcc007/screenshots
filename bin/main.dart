@@ -79,17 +79,17 @@ void main(List<String> arguments) async {
     _handleError(argParser, "File not found: ${argResults[configArg]}");
   }
 
-  if (utils.isAnyDeviceRunning()) {
-    stderr.write(
-        '#######################################################################\n');
-    stderr
-        .write("# Screenshots expects no devices to be running at startup. \n");
-    stderr.write(
-        "# Please disconnect all devices and shutdown all simulators/emulators.\n");
-    stderr.write(
-        '#######################################################################\n');
-    exit(1);
-  }
+//  if (utils.isAnyDeviceRunning()) {
+//    stderr.write(
+//        '#######################################################################\n');
+//    stderr
+//        .write("# Screenshots expects no devices to be running at startup. \n");
+//    stderr.write(
+//        "# Please disconnect all devices and shutdown all simulators/emulators.\n");
+//    stderr.write(
+//        '#######################################################################\n');
+//    exit(1);
+//  }
 
   await screenshots.run(argResults[configArg]);
 }

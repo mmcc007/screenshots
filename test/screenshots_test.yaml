@@ -26,7 +26,8 @@ devices:
 #   "iPad Retina",
 #   "iPad Pro"
   android:
-    Nexus 5X:
+    Nexus 5X: # root disabled
+    Nexus 6P:
 
 # Frame screenshots
 frame: true

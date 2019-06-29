@@ -11,7 +11,7 @@ timeout_in_sec=360
 
 until [[ "$bootanim" =~ "error: no emulators found" ]]; do
 #until [[ "$bootanim" =~ "error: closed" ]]; do
-  bootanim=`adb -e shell getprop init.svc.bootanim 2>&1 &`
+  bootanim=`adb -s $1 -e shell getprop init.svc.bootanim 2>&1 &`
   #echo $bootanim
   if [[ "$bootanim" =~ "device not found" || "$bootanim" =~ "device offline"
     || "$bootanim" =~ "running" || "$bootanim" =~ "stopped" ]]; then
