@@ -35,14 +35,10 @@ Future clearFastlaneDir(
   final dirPath = fastlaneDir(deviceType, locale, '', screenProps['destName']);
 
   print('Clearing images in $dirPath for \'$deviceName\'...');
-  if (deviceType == DeviceType.ios) {
-    // only delete images ending with .png
-    // for compatability with FrameIt
-    // (see https://github.com/mmcc007/screenshots/issues/61)
-    utils.clearFilesWithSuffix(dirPath, kImageSuffix);
-  } else {
-    await utils.clearDirectory(dirPath);
-  }
+  // only delete images ending with .png
+  // for compatability with FrameIt
+  // (see https://github.com/mmcc007/screenshots/issues/61)
+  utils.clearFilesWithSuffix(dirPath, kImageSuffix);
 }
 
 /// clear configured fastlane directories.
