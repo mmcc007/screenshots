@@ -47,24 +47,33 @@ void moveFiles(String srcDir, String dstDir) {
 ///
 /// If [silent] is false, output to stdout.
 String cmd(String cmd, List<String> arguments,
-    [String workingDir = '.', bool silent = false]) {
-//  print('cmd=\'$cmd ${arguments.join(" ")}\'');
+    [String workingDir = '.', bool silent = false, bool keepNewline = true]) {
+//  print(
+//      'cmd=\'$cmd ${arguments.join(" ")}\', workingDir=$workingDir, silent=$silent, keepNewLine=$keepNewline');
   final result = Process.runSync(cmd, arguments, workingDirectory: workingDir);
   if (!silent) stdout.write(result.stdout);
   if (result.exitCode != 0) {
     stderr.write(result.stderr);
     throw 'command failed: cmd=\'$cmd ${arguments.join(" ")}\'';
   }
-  return result.stdout;
+  if (keepNewline) {
+    // return stdout
+    return result.stdout;
+  } else {
+    // remove last char if newline
+    return removeNewline(result.stdout);
+  }
 }
 
 /// Execute command [cmd] with arguments [arguments] in a separate process
 /// and stream stdout/stderr.
 Future<void> streamCmd(String cmd, List<String> arguments,
-    [ProcessStartMode mode = ProcessStartMode.normal]) async {
+    [String workingDirectory = '.',
+    ProcessStartMode mode = ProcessStartMode.normal]) async {
 //  print('streamCmd=\'$cmd ${arguments.join(" ")}\'');
 
-  final process = await Process.start(cmd, arguments, mode: mode);
+  final process = await Process.start(cmd, arguments,
+      workingDirectory: workingDirectory, mode: mode);
 
   if (mode == ProcessStartMode.normal) {
     final stdoutFuture = process.stdout
@@ -194,6 +203,7 @@ Future prefixFilesInDir(String dirPath, String prefix) async {
   }
 }
 
+/// Check if any device is running.
 bool isAnyDeviceRunning() {
   return !cmd('flutter', ['devices'], '.', true)
       .contains('No devices detected.');
@@ -201,3 +211,30 @@ bool isAnyDeviceRunning() {
 
 /// Converts [enum] value to [String].
 String enumToStr(dynamic _enum) => _enum.toString().split('.').last;
+
+/// Remove newline at end of [str] if present.
+String removeNewline(String str) {
+  String cleanStr = '';
+  str.endsWith('\n')
+      ? cleanStr = str.substring(0, str.length - 1)
+      : cleanStr = str;
+  return cleanStr;
+}
+
+/// Returns locale of currently attached android device.
+String androidDeviceLocale() {
+  final deviceLocale =
+      cmd('adb', ['shell', 'getprop persist.sys.locale'], '.', true, false);
+  return deviceLocale;
+}
+
+/// Returns locale of simulator with udid [udId].
+String iosSimulatorLocale(String udId) {
+  final env = Platform.environment;
+  final settingsPath =
+      '${env['HOME']}/Library/Developer/CoreSimulator/Devices/$udId/data/Library/Preferences/.GlobalPreferences.plist';
+  final localeInfo = jsonDecode(
+      cmd('plutil', ['-convert', 'json', '-o', '-', settingsPath], '.', true));
+  final locale = localeInfo['AppleLocale'];
+  return locale;
+}

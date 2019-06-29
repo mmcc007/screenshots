@@ -275,12 +275,12 @@ void main() {
           '-gpu',
           'swiftshader',
         ],
+        '.',
         ProcessStartMode.detached);
   });
 
   test('check for no running emulators, simulators or devices', () {
-    if (cmd('flutter', ['devices'], '.', true)
-        .contains('No devices detected.')) {
+    if (isAnyDeviceRunning()) {
       print('nothing running');
     } else {
       print('something running');
@@ -308,5 +308,103 @@ void main() {
     // check deleted
     files.forEach((fileName) async =>
         expect(await File('$dirPath/$fileName').exists(), false));
+  });
+
+  // reproduce https://github.com/flutter/flutter/issues/27785
+  // on android (hangs during test)
+  // tested on android emulator in default locale (en-US) and it worked
+  // tested on android emulator in automatically changed to locale fr-CA and it hangs
+  // tested on android emulator booted in locale fr-CA and it hangs
+//  [trace] FlutterDriver: Isolate found with number: 939713595
+//  [trace] FlutterDriver: Isolate is paused at start.
+//  [trace] FlutterDriver: Attempting to resume isolate
+//  [trace] FlutterDriver: Waiting for service extension
+//  [info ] FlutterDriver: Connected to Flutter application.
+//  00:04 +0: end-to-end test tap on the floating action button; verify counter
+//  [warning] FlutterDriver: waitFor message is taking a long time to complete...
+//  hangs
+  test('change locale on android and test', () async {
+//    final emulatorName = 'Nexus 5X'; // root disabled so cannot change locale
+    final emulatorName = 'Nexus 6P';
+    final start = true;
+    final stagingDir = '/tmp/tmp';
+    final locale = 'en-US'; // default locale (works)
+//    final locale = 'fr-CA'; // fails
+    final testAppDir = 'example';
+    final testAppSrcPath = 'test_driver/main.dart';
+
+    // unpack resources
+    await unpackScripts(stagingDir);
+
+    // start emulator
+    await emulator(emulatorName, start, stagingDir, locale);
+
+    // run test
+    await streamCmd('flutter', ['drive', testAppSrcPath], testAppDir);
+
+    // stop emulator
+    await emulator(emulatorName, false, stagingDir);
+  },
+      timeout:
+          Timeout(Duration(seconds: 90))); // increase time to get stacktrace
+
+  test('get android device locale', () async {
+    final emulatorName = 'Nexus 6P';
+    final start = true;
+    final stagingDir = '/tmp/tmp';
+    final locale = 'en-US';
+
+    await unpackScripts(stagingDir);
+    await emulator(emulatorName, start, stagingDir, locale);
+    final deviceLocale = androidDeviceLocale();
+    await emulator(emulatorName, false, stagingDir);
+
+    expect(deviceLocale, 'en-US');
+  });
+
+  test('remove newline from end of string if present', () {
+    final str = 'string';
+    final testStr = '$str\n';
+    String cleanStr = removeNewline(testStr);
+
+    expect(cleanStr, str);
+  });
+
+  // reproduce https://github.com/flutter/flutter/issues/27785
+  // on ios
+  // tested on ios device in default locale (en-US) and it worked
+  // tested on ios device in manually changed to locale fr-CA and it hangs
+  // tested on ios simulator in default locale (en-US) and it worked
+  // tested on ios simulator in automatically changed to locale fr-CA and it hangs
+  test('change locale on iOS and test', () async {
+    final simulatorName = 'iPhone X';
+    final start = true;
+    final stagingDir = '/tmp/tmp';
+//    final locale = 'en-US'; // default locale (works)
+    final locale = 'fr-CA'; // fails
+    final testAppDir = 'example';
+    final testAppSrcPath = 'test_driver/main.dart';
+
+    // unpack resources
+    await unpackScripts(stagingDir);
+
+    // start simulator
+    await simulator(simulatorName, start, stagingDir, locale);
+
+    // run test
+    await streamCmd('flutter', ['drive', testAppSrcPath], testAppDir);
+
+    // stop simulator
+    await simulator(simulatorName, false, stagingDir);
+  },
+      timeout:
+          Timeout(Duration(minutes: 20))); // increase time to get stacktrace
+
+  test('get ios simulator locale', () async {
+    final udId = '03D4FC12-3927-4C8B-A226-17DE34AE9C18';
+    var locale = iosSimulatorLocale(udId);
+//    print('localeInfo=$localeInfo');
+//    print('locale=$locale');
+    expect(locale, 'en-US');
   });
 }
