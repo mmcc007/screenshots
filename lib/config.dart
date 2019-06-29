@@ -110,7 +110,7 @@ class Config {
           '  for details.\n'
           '  and provide a thumbs-up on the comment to prioritize a fix for this issue!\n\n'
           '  In the meantime, while waiting for a fix, only use the default locale\n'
-          '  in screenshots.yaml\n\n');
+          '  for your location in screenshots.yaml\n\n');
     }
 
     return true;
