@@ -155,6 +155,9 @@ Future<String> emulator(String deviceName, bool start, String deviceId,
             ],
             '.',
             ProcessStartMode.detached);
+        // wait for emulator to start
+        await utils.streamCmd(
+            '$stagingDir/resources/script/android-wait-for-emulator', []);
       } else {
         // testing locally, so start emulator in normal way
         await utils.streamCmd('flutter', ['emulator', '--launch', avdName]);
@@ -162,11 +165,6 @@ Future<String> emulator(String deviceName, bool start, String deviceId,
 
       // get fresh id of emulator just booted in this run.
       freshDeviceId = await _getFreshDeviceId(deviceId, deviceName);
-
-      // wait for emulator to start
-      await utils.streamCmd(
-          '$stagingDir/resources/script/android-wait-for-emulator',
-          [freshDeviceId]);
     }
 
     // change locale
