@@ -55,14 +55,13 @@ class Config {
   Future<bool> validate(Screens screens) async {
     if (config['devices']['android'] != null) {
       // check emulators
-      final List emulators = utils.emulators();
+      final List emulators = utils.getAvdNames();
       for (String device in config['devices']['android'].keys) {
         // check screen available for this device
         screenAvailable(screens, device);
 
         // check emulator installed
-        bool emulatorInstalled = isEmulatorInstalled(emulators, device);
-        if (!emulatorInstalled) {
+        if (!isEmulatorInstalled(emulators, device)) {
           stderr.write('Error: emulator not installed for '
               'device \'$device\' in $configPath.\n');
           stdout.write('\nInstall the missing emulator or use a supported '
@@ -123,7 +122,7 @@ class Config {
     final deviceNameNormalized = deviceName.replaceAll(' ', '_');
     for (String emulatorName in emulatorNames) {
       if (emulatorName.contains(deviceNameNormalized)) {
-        final highestEmulatorName = utils.getHighestAndroidDevice(deviceName);
+        final highestEmulatorName = utils.getHighestAVD(deviceName);
         if (highestEmulatorName != deviceNameNormalized && !emulatorInstalled) {
           print('Warning: \'$deviceName\' does not have a matching emulator.');
           print('       : Using \'$highestEmulatorName\'.');
@@ -162,7 +161,7 @@ class Config {
 
   void configGuide(Screens screens) {
     stdout.write('\nGuide:');
-    installedEmulators(utils.emulators());
+    installedEmulators(utils.getAvdNames());
     installedSimulators(utils.getIosDevices());
     supportedDevices(screens);
     stdout.write(
