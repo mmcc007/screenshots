@@ -44,31 +44,31 @@ Future<void> run([String configPath = kConfigFileName]) async {
   // run integration tests in each android emulator for each locale and
   // process screenshots
   if (configInfo['devices']['android'] != null) {
-    for (final emulatorName in configInfo['devices']['android'].keys) {
-      final highestAvdName = utils.getHighestAndroidDevice(emulatorName);
+    for (final deviceName in configInfo['devices']['android'].keys) {
+      final highestAvdName = utils.getHighestAVD(deviceName);
       // find first running emulator that is using this avd (if any)
       final deviceId = utils.findAndroidDeviceId(highestAvdName);
       final alreadyBooted = deviceId == null ? false : true;
 
       for (final locale in configInfo['locales']) {
-        final freshDeviceId = await emulator(emulatorName, true, deviceId,
+        final freshDeviceId = await emulator(deviceName, true, deviceId,
             stagingDir, highestAvdName, alreadyBooted, locale);
 
         // store env for later use by tests
-        await config.storeEnv(config, screens, emulatorName, locale, 'android');
+        await config.storeEnv(config, screens, deviceName, locale, 'android');
 
         for (final testPath in configInfo['tests']) {
           print(
-              'Capturing screenshots with test app $testPath on emulator \'$emulatorName\' in locale $locale ...');
+              'Capturing screenshots with test app $testPath on emulator \'$deviceName\' in locale $locale ...');
 
           await screenshots(freshDeviceId, testPath, stagingDir);
           // process screenshots
           await process_images.process(
-              screens, configInfo, DeviceType.android, emulatorName, locale);
+              screens, configInfo, DeviceType.android, deviceName, locale);
         }
         if (!alreadyBooted) {
           await emulator(
-              emulatorName, false, freshDeviceId, stagingDir, highestAvdName);
+              deviceName, false, freshDeviceId, stagingDir, highestAvdName);
         }
       }
     }
@@ -127,17 +127,17 @@ void screenshots(String deviceId, String testPath, String stagingDir) async {
 ///
 /// Start/stop emulator.
 ///
-Future<String> emulator(
-    String name, bool start, String deviceId, String stagingDir, String avdName,
+Future<String> emulator(String deviceName, bool start, String deviceId,
+    String stagingDir, String avdName,
     [bool alreadyBooted, String testLocale = "en-US"]) async {
   // used to keep and report a newly booted device if any
   String freshDeviceId = deviceId;
 
   if (start) {
     if (alreadyBooted) {
-      print('Using running emulator \'$name\' in locale $testLocale ...');
+      print('Using running emulator \'$deviceName\' in locale $testLocale ...');
     } else {
-      print('Starting emulator \'$name\' in locale $testLocale ...');
+      print('Starting emulator \'$deviceName\' in locale $testLocale ...');
       final envVars = Platform.environment;
       if (envVars['CI'] == 'true') {
         // testing on CI/CD requires starting emulator in a specific way
@@ -161,7 +161,7 @@ Future<String> emulator(
       }
 
       // get fresh id of emulator just booted in this run.
-      freshDeviceId = _getFreshDeviceId(deviceId, avdName);
+      freshDeviceId = await _getFreshDeviceId(deviceId, deviceName);
 
       // wait for emulator to start
       await utils.streamCmd(
@@ -173,7 +173,7 @@ Future<String> emulator(
     String emulatorLocale = utils.androidDeviceLocale(freshDeviceId);
     if (emulatorLocale != testLocale) {
       print(
-          'Changing locale from $emulatorLocale to $testLocale on \'$name\'...');
+          'Changing locale from $emulatorLocale to $testLocale on \'$deviceName\'...');
       if (utils.cmd('adb', ['root'], '.', true) ==
           'adbd cannot run as root in production builds\n') {
         stdout.write(
@@ -202,8 +202,8 @@ Future<String> emulator(
     // while app is being compiled.
 
   } else {
-    print('Stopping emulator: \'$name\' ...');
-    if (deviceId != null) {
+    print('Stopping emulator: \'$deviceName\' ...');
+    if (deviceId == null) {
       throw 'Error: unknown deviceId';
     }
     utils.cmd('adb', ['-s', deviceId, 'emu', 'kill']);
@@ -215,11 +215,11 @@ Future<String> emulator(
   return freshDeviceId;
 }
 
-String _getFreshDeviceId(String deviceId, String avdName) {
+Future<String> _getFreshDeviceId(String deviceId, String deviceName) async {
   String freshDeviceId;
   deviceId == null
-      ? freshDeviceId = utils.findAndroidDeviceId(avdName)
-      : freshDeviceId = null;
+      ? freshDeviceId = await utils.getBootedAndroidDeviceId(deviceName)
+      : freshDeviceId = deviceId;
   if (freshDeviceId == null) {
     throw 'Error: unknown deviceId';
   }

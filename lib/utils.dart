@@ -5,6 +5,8 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:path/path.dart';
 
+import 'flutter_tools/lib/src/base/utils.dart';
+
 /// Clear directory [dirPath].
 /// Create directory if none exists.
 void clearDirectory(String dirPath) {
@@ -172,22 +174,23 @@ String getHighestIosVersion(Map iOSVersions) {
   return iOSVersionName;
 }
 
-/// Create list of emulators
-List<String> emulators() {
+/// Create list of avds,
+List<String> getAvdNames() {
   return cmd('emulator', ['-list-avds'], '.', true).split('\n');
 }
 
-/// Find the android device with the highest available android version
-String getHighestAndroidDevice(String deviceName) {
+/// Get the highest available avd version for the android device.
+String getHighestAVD(String deviceName) {
   final deviceNameNormalized = deviceName.replaceAll(' ', '_');
-  final devices =
-      emulators().where((name) => name.contains(deviceNameNormalized)).toList();
+  final avds = getAvdNames()
+      .where((name) => name.contains(deviceNameNormalized))
+      .toList();
   // sort list in android API order
-  devices.sort((v1, v2) {
+  avds.sort((v1, v2) {
     return v1.compareTo(v2);
   });
 
-  return devices.last;
+  return avds.last;
 }
 
 /// Adds prefix to all files in a directory
@@ -205,7 +208,8 @@ String enumToStr(dynamic _enum) => _enum.toString().split('.').last;
 /// Returns locale of currently attached android device.
 String androidDeviceLocale(String deviceId) {
   final deviceLocale = cmd('adb',
-      ['-s', deviceId, 'shell', 'getprop persist.sys.locale'], '.', true);
+          ['-s', deviceId, 'shell', 'getprop persist.sys.locale'], '.', true)
+      .trim();
   return deviceLocale;
 }
 
@@ -242,7 +246,24 @@ List<String> getAndroidDeviceIds() {
   return cmd('adb', ['devices'], '.', true)
       .trim()
       .split('\n')
-      .sublist(1)
+      .sublist(1) // remove first line
       .map((device) => device.split('\t').first)
       .toList();
+}
+
+/// Get deviceId for a booting emulator
+Future<String> getBootedAndroidDeviceId(String deviceName) async {
+  final avdName = getHighestAVD(deviceName);
+  final pollingInterval = 500;
+  String deviceId = null;
+  final poller = Poller(() async {
+    deviceId = findAndroidDeviceId(avdName);
+  }, Duration(milliseconds: pollingInterval),
+      initialDelay: Duration(milliseconds: pollingInterval));
+  while (deviceId == null) {
+    print('Waiting for $deviceName to boot...');
+    await Future.delayed(Duration(milliseconds: pollingInterval));
+  }
+  poller.cancel();
+  return deviceId;
 }
