@@ -7,7 +7,7 @@ import 'dart:async';
 import 'package:meta/meta.dart';
 
 import '../android/android_sdk.dart';
-import '../android/android_workflow.dart';
+//import '../android/android_workflow.dart';
 import '../base/file_system.dart';
 import '../base/io.dart';
 import '../base/process_manager.dart';
@@ -19,7 +19,8 @@ class AndroidEmulators extends EmulatorDiscovery {
   bool get supportsPlatform => true;
 
   @override
-  bool get canListAnything => androidWorkflow.canListEmulators;
+//  bool get canListAnything => androidWorkflow.canListEmulators;
+  bool get canListAnything => true;
 
   @override
   Future<List<Emulator>> get emulators async => getEmulatorAvds();
@@ -27,7 +28,7 @@ class AndroidEmulators extends EmulatorDiscovery {
 
 class AndroidEmulator extends Emulator {
   AndroidEmulator(String id, [this._properties])
-    : super(id, _properties != null && _properties.isNotEmpty);
+      : super(id, _properties != null && _properties.isNotEmpty);
 
   Map<String, String> _properties;
 
@@ -44,13 +45,13 @@ class AndroidEmulator extends Emulator {
 
   @override
   Future<void> launch() async {
-    final Future<void> launchResult =
-        processManager.run(<String>[getEmulatorPath(), '-avd', id])
-            .then((ProcessResult runResult) {
-              if (runResult.exitCode != 0) {
-                throw '${runResult.stdout}\n${runResult.stderr}'.trimRight();
-              }
-            });
+    final Future<void> launchResult = processManager
+        .run(<String>[getEmulatorPath(), '-avd', id]).then(
+            (ProcessResult runResult) {
+      if (runResult.exitCode != 0) {
+        throw '${runResult.stdout}\n${runResult.stderr}'.trimRight();
+      }
+    });
     // The emulator continues running on a successful launch, so if it hasn't
     // quit within 3 seconds we assume that's a success and just return. This
     // means that on a slow machine, a failure that takes more than three
@@ -69,7 +70,8 @@ List<AndroidEmulator> getEmulatorAvds() {
     return <AndroidEmulator>[];
   }
 
-  final String listAvdsOutput = processManager.runSync(<String>[emulatorPath, '-list-avds']).stdout;
+  final String listAvdsOutput =
+      processManager.runSync(<String>[emulatorPath, '-list-avds']).stdout;
 
   final List<AndroidEmulator> emulators = <AndroidEmulator>[];
   if (listAvdsOutput != null) {

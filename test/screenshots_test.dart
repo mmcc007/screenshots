@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:screenshots/config.dart';
+import 'package:screenshots/flutter_tools/lib/src/base/utils.dart';
 import 'package:screenshots/process_images.dart';
 import 'package:screenshots/screens.dart';
 import 'package:screenshots/image_magick.dart';
@@ -302,14 +304,6 @@ void main() {
         ProcessStartMode.detached);
   });
 
-  test('check for no running emulators, simulators or devices', () {
-    if (isAnyDeviceRunning()) {
-      print('nothing running');
-    } else {
-      print('something running');
-    }
-  });
-
   test('delete all files with suffix', () async {
     final dirPath = '/tmp/tmp';
     final files = ['image1.png', 'image2.png'];
@@ -391,14 +385,6 @@ void main() {
     expect(deviceLocale, 'en-US');
   });
 
-  test('remove newline from end of string if present', () {
-    final str = 'string';
-    final testStr = '$str\n';
-    String cleanStr = removeNewline(testStr);
-
-    expect(cleanStr, str);
-  });
-
   // reproduce https://github.com/flutter/flutter/issues/27785
   // on ios
   // tested on ios device in default locale (en-US) and it worked
@@ -438,25 +424,43 @@ void main() {
     expect(locale, 'en-US');
   });
 
-  test('get avd from emulator', () {
-    final emulatorName = 'emulator-5554';
+  test('get avd from a running emulator', () {
+    final deviceId = 'emulator-5554';
     final expected = 'Nexus_6P_API_28';
-    String avdName = '';
-//    avdName = adbCmd(['-s', emulatorName, 'emu', 'avd', 'name']);
-    avdName = getAvdName(emulatorName);
+    final avdName = getAvdName(deviceId);
     expect(avdName, expected);
   });
 
-  test('find emulator with matching avd', () {
+  test('find running emulator with matching avd', () {
     final avdName = 'Nexus_6P_API_28';
-    final matchingDevice = 'emulator-5554';
-    String device = findAndroidDeviceId(avdName);
-    print('device=$device');
-    expect(device, matchingDevice);
+    final expected = 'emulator-5554';
+    String deviceId = findAndroidDeviceId(avdName);
+    print('device=$deviceId');
+    expect(deviceId, expected);
   });
 
-  test('is android device booted', () {
-    final bootedDevices = getAndroidDevices();
-    print('booted=$bootedDevices');
+  test('boot android device if not booted', () async {
+    final deviceName = 'Nexus 6P';
+    final avdName = getHighestAndroidDevice(deviceName);
+    String deviceId = findAndroidDeviceId(avdName);
+    if (deviceId == null) {
+      // boot emulator
+      print('booting $avdName...');
+      await streamCmd('flutter', ['emulator', '--launch', avdName]);
+      final poller = Poller(() async {
+        deviceId = findAndroidDeviceId(avdName);
+      }, Duration(milliseconds: 500), initialDelay: Duration(milliseconds: 0));
+      while (deviceId == null) {
+        print('deviceId=$deviceId');
+        await Future.delayed(const Duration(milliseconds: 50));
+      }
+      poller.cancel();
+      print('booted $deviceName on $deviceId');
+      // shutdown
+      print('shutting down $deviceName...');
+      cmd('adb', ['-s', deviceId, 'emu', 'kill']);
+    } else {
+      print('already booted');
+    }
   });
 }

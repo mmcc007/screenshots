@@ -19,6 +19,8 @@ dependencies:
 
 dev_dependencies:
   test: ^1.5.1+1
+  test_api: ^0.2.5
+  mockito: ^4.1.0
 
 executables:
   screenshots: main
