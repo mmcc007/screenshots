@@ -165,6 +165,11 @@ Future<String> emulator(String deviceName, bool start, String deviceId,
 
       // get fresh id of emulator just booted in this run.
       freshDeviceId = await _getFreshDeviceId(deviceId, deviceName);
+
+      // confirm fully booted before continuing (or getting locale may not work)
+      await utils.streamCmd(
+          '$stagingDir/resources/script/android-wait-for-emulator', []);
+
     }
 
     // change locale
