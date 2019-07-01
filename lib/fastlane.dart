@@ -10,7 +10,7 @@ import 'package:screenshots/utils.dart' as utils;
 // android/fastlane/metadata/android/en-US/images/sevenInchScreenshots
 
 /// Generate fastlane paths for ios and android.
-String path(DeviceType deviceType, String locale,
+String fastlaneDir(DeviceType deviceType, String locale,
     [String deviceName, String screenName]) {
   const androidPrefix = 'android/fastlane/metadata/android';
   const iosPrefix = 'ios/fastlane/screenshots';
@@ -28,12 +28,17 @@ String path(DeviceType deviceType, String locale,
 /// Clear image destination.
 Future clearFastlaneDir(
     Screens screens, deviceName, locale, DeviceType deviceType) async {
+  const kImageSuffix = 'png';
+
   final Map screenProps = screens.screenProps(deviceName);
 
-  final dstDir = path(deviceType, locale, '', screenProps['destName']);
+  final dirPath = fastlaneDir(deviceType, locale, '', screenProps['destName']);
 
-  print('Clearing images in $dstDir for \'$deviceName\'...');
-  await utils.clearDirectory(dstDir);
+  print('Clearing images in $dirPath for \'$deviceName\'...');
+  // only delete images ending with .png
+  // for compatability with FrameIt
+  // (see https://github.com/mmcc007/screenshots/issues/61)
+  utils.clearFilesWithSuffix(dirPath, kImageSuffix);
 }
 
 /// clear configured fastlane directories.

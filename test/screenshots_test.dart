@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:screenshots/config.dart';
+import 'package:screenshots/flutter_tools/lib/src/base/utils.dart';
 import 'package:screenshots/process_images.dart';
 import 'package:screenshots/screens.dart';
 import 'package:screenshots/image_magick.dart';
@@ -224,16 +226,23 @@ void main() {
   });
 
   test('map device name to emulator', () {
-    final _emulators = emulators();
+    final _emulators = getAvdNames();
     print(_emulators);
     final emulator =
         _emulators.firstWhere((emulator) => emulator.contains('Nexus_5X'));
     expect(emulator, 'Nexus_5X_API_27');
   });
 
-  test('change android locale', () {
+  test('change android locale', () async {
+    final emulatorName = 'Nexus 6P';
+    final avdName = 'Nexus_6P_API_28';
+    final deviceId = 'emulator-5554';
+    final start = true;
+    final stagingDir = '/tmp/tmp';
+    final locale = 'en-US';
 //    emulator('Nexus 6P', true, '/tmp/screenshots', 'fr-CA');
-    emulator('Nexus 6P', true, '/tmp/screenshots', 'en-US');
+    await emulator(
+        emulatorName, start, deviceId, stagingDir, avdName, false, locale);
   });
 
   test('move files', () async {
@@ -246,8 +255,24 @@ void main() {
     expect(await File(dstDir + '/' + fileName).exists(), true);
   });
 
+  test('start emulator', () async {
+    final emulatorName = 'Nexus 6P';
+    final avdName = 'Nexus_6P_API_28';
+    final start = true;
+    final stagingDir = '/tmp/tmp';
+    final locale = 'en-US';
+
+    final deviceId = getHighestAVD(emulatorName);
+    await unpackScripts(stagingDir);
+    await emulator(
+        emulatorName, start, deviceId, stagingDir, avdName, false, locale);
+  });
+
   test('start simulator', () {
-    simulator('iPhone X', true, '/tmp/screenshots');
+    final simulatorName = 'iPhone X';
+    final simulatorInfo = getHighestIosDevice(getIosDevices(), simulatorName);
+
+    simulator('iPhone X', true, simulatorInfo, '/tmp/screenshots');
 //    simulator('iPhone X', true, '/tmp/screenshots', 'fr-CA');
   });
 
@@ -275,15 +300,161 @@ void main() {
           '-gpu',
           'swiftshader',
         ],
+        '.',
         ProcessStartMode.detached);
   });
 
-  test('check for no running emulators, simulators or devices', () {
-    if (cmd('flutter', ['devices'], '.', true)
-        .contains('No devices detected.')) {
-      print('nothing running');
+  test('delete all files with suffix', () async {
+    final dirPath = '/tmp/tmp';
+    final files = ['image1.png', 'image2.png'];
+    final suffix = 'png';
+
+    clearDirectory(dirPath); // creates empty directory
+
+    // create files
+    files
+        .forEach((fileName) async => await File('$dirPath/$fileName').create());
+
+    // check created
+    files.forEach((fileName) async =>
+        expect(await File('$dirPath/$fileName').exists(), true));
+
+    // delete files with suffix
+    clearFilesWithSuffix(dirPath, suffix);
+
+    // check deleted
+    files.forEach((fileName) async =>
+        expect(await File('$dirPath/$fileName').exists(), false));
+  });
+
+  // reproduce https://github.com/flutter/flutter/issues/27785
+  // on android (hangs during test)
+  // tested on android emulator in default locale (en-US) and it worked
+  // tested on android emulator in automatically changed to locale fr-CA and it hangs
+  // tested on android emulator booted in locale fr-CA and it hangs
+//  [trace] FlutterDriver: Isolate found with number: 939713595
+//  [trace] FlutterDriver: Isolate is paused at start.
+//  [trace] FlutterDriver: Attempting to resume isolate
+//  [trace] FlutterDriver: Waiting for service extension
+//  [info ] FlutterDriver: Connected to Flutter application.
+//  00:04 +0: end-to-end test tap on the floating action button; verify counter
+//  [warning] FlutterDriver: waitFor message is taking a long time to complete...
+//  hangs
+  test('change locale on android and test', () async {
+//    final emulatorName = 'Nexus 5X'; // root disabled so cannot change locale
+    final emulatorName = 'Nexus 6P';
+    final avdName = 'Nexus_6P_API_28';
+    final deviceId = 'emulator-5554';
+    final start = true;
+    final stagingDir = '/tmp/tmp';
+    final locale = 'en-US'; // default locale (works)
+//    final locale = 'fr-CA'; // fails
+    final testAppDir = 'example';
+    final testAppSrcPath = 'test_driver/main.dart';
+
+    // unpack resources
+    await unpackScripts(stagingDir);
+
+    // start emulator
+    await emulator(
+        emulatorName, start, deviceId, stagingDir, avdName, false, locale);
+
+    // run test
+    await streamCmd('flutter', ['drive', testAppSrcPath], testAppDir);
+
+    // stop emulator
+    await emulator(emulatorName, false, deviceId, stagingDir, avdName);
+  },
+      timeout:
+          Timeout(Duration(seconds: 90))); // increase time to get stacktrace
+
+  test('get android device locale', () async {
+    final emulatorName = 'Nexus 6P';
+    final avdName = 'Nexus_6P_API_28';
+    final deviceId = 'emulator-5554';
+    final start = true;
+    final stagingDir = '/tmp/tmp';
+    final locale = 'en-US';
+
+    await unpackScripts(stagingDir);
+    await emulator(
+        emulatorName, start, deviceId, stagingDir, avdName, false, locale);
+    final deviceLocale = androidDeviceLocale(deviceId);
+    await emulator(emulatorName, false, deviceId, stagingDir, avdName);
+
+    expect(deviceLocale, 'en-US');
+  });
+
+  // reproduce https://github.com/flutter/flutter/issues/27785
+  // on ios
+  // tested on ios device in default locale (en-US) and it worked
+  // tested on ios device in manually changed to locale fr-CA and it hangs
+  // tested on ios simulator in default locale (en-US) and it worked
+  // tested on ios simulator in automatically changed to locale fr-CA and it hangs
+  test('change locale on iOS and test', () async {
+    final simulatorName = 'iPhone X';
+    final start = true;
+    final stagingDir = '/tmp/tmp';
+//    final locale = 'en-US'; // default locale (works)
+    final locale = 'fr-CA'; // fails
+    final testAppDir = 'example';
+    final testAppSrcPath = 'test_driver/main.dart';
+
+    // unpack resources
+    await unpackScripts(stagingDir);
+
+    // start simulator
+    final simulatorInfo = getHighestIosDevice(getIosDevices(), simulatorName);
+    await simulator(simulatorName, start, simulatorInfo, stagingDir, locale);
+
+    // run test
+    await streamCmd('flutter', ['drive', testAppSrcPath], testAppDir);
+
+    // stop simulator
+    await simulator(simulatorName, false, simulatorInfo);
+  },
+      timeout:
+          Timeout(Duration(minutes: 20))); // increase time to get stacktrace
+
+  test('get ios simulator locale', () async {
+    final udId = '03D4FC12-3927-4C8B-A226-17DE34AE9C18';
+    var locale = iosSimulatorLocale(udId);
+//    print('localeInfo=$localeInfo');
+//    print('locale=$locale');
+    expect(locale, 'en-US');
+  });
+
+  test('get avd from a running emulator', () {
+    final deviceId = 'emulator-5554';
+    final expected = 'Nexus_6P_API_28';
+    final avdName = getAvdName(deviceId);
+    expect(avdName, expected);
+  });
+
+  test('find running emulator with matching avd', () {
+    final avdName = 'Nexus_6P_API_28';
+    final expected = 'emulator-5554';
+    String deviceId = findAndroidDeviceId(avdName);
+    print('device=$deviceId');
+    expect(deviceId, expected);
+  });
+
+  test('boot android device if not booted', () async {
+    final deviceName = 'Nexus 6P';
+    final avdName = getHighestAVD(deviceName);
+    String deviceId = findAndroidDeviceId(avdName);
+    if (deviceId == null) {
+      // boot emulator
+      print('booting $deviceName...');
+      await streamCmd('flutter', ['emulator', '--launch', avdName]);
+      deviceId = await getBootedAndroidDeviceId(deviceName);
+      print('booted $deviceName on $deviceId');
+      // shutdown
+      print('shutting down $deviceName...');
+      cmd('adb', ['-s', deviceId, 'emu', 'kill']);
     } else {
-      print('something running');
+      print('already booted');
     }
+    expect(deviceId, isNotNull);
   });
 }

@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:screenshots/config.dart';
-import 'package:screenshots/screens.dart';
-import 'package:screenshots/process_images.dart' as process_images;
-import 'package:screenshots/resources.dart' as resources;
-import 'package:screenshots/utils.dart' as utils;
-import 'package:screenshots/fastlane.dart' as fastlane;
+import 'config.dart';
+import 'screens.dart';
+import 'process_images.dart' as process_images;
+import 'resources.dart' as resources;
+import 'utils.dart' as utils;
+import 'fastlane.dart' as fastlane;
 
 /// default config file name
 const String kConfigFileName = 'screenshots.yaml';
@@ -27,7 +27,7 @@ enum DeviceType { android, ios }
 /// 4. Move processed screenshots to fastlane destination for upload to stores.
 /// 5. Stop emulator/simulator.
 Future<void> run([String configPath = kConfigFileName]) async {
-  final screens = await Screens();
+  final screens = Screens();
   await screens.init();
 
   final config = Config(configPath);
@@ -40,28 +40,36 @@ Future<void> run([String configPath = kConfigFileName]) async {
   await Directory(stagingDir + '/test').create(recursive: true);
   await resources.unpackScripts(stagingDir);
   await fastlane.clearFastlaneDirs(configInfo, screens);
-  final isMultipleLocales = configInfo['locales'].length > 1;
 
   // run integration tests in each android emulator for each locale and
   // process screenshots
   if (configInfo['devices']['android'] != null) {
-    for (final emulatorName in configInfo['devices']['android'].keys) {
+    for (final deviceName in configInfo['devices']['android'].keys) {
+      final highestAvdName = utils.getHighestAVD(deviceName);
+      // find first running emulator that is using this avd (if any)
+      final deviceId = utils.findAndroidDeviceId(highestAvdName);
+      final alreadyBooted = deviceId == null ? false : true;
+
       for (final locale in configInfo['locales']) {
-        await emulator(
-            emulatorName, true, stagingDir, locale, isMultipleLocales);
+        final freshDeviceId = await emulator(deviceName, true, deviceId,
+            stagingDir, highestAvdName, alreadyBooted, locale);
 
         // store env for later use by tests
-        await config.storeEnv(config, screens, emulatorName, locale, 'android');
+        await config.storeEnv(config, screens, deviceName, locale, 'android');
 
         for (final testPath in configInfo['tests']) {
           print(
-              'Capturing screenshots with test app $testPath on emulator \'$emulatorName\' in locale $locale ...');
-          await screenshots(testPath, stagingDir);
+              'Capturing screenshots with test app $testPath on emulator \'$deviceName\' in locale $locale ...');
+
+          await screenshots(freshDeviceId, testPath, stagingDir);
           // process screenshots
           await process_images.process(
-              screens, configInfo, DeviceType.android, emulatorName, locale);
+              screens, configInfo, DeviceType.android, deviceName, locale);
         }
-        await emulator(emulatorName, false, stagingDir);
+        if (!alreadyBooted) {
+          await emulator(
+              deviceName, false, freshDeviceId, stagingDir, highestAvdName);
+        }
       }
     }
   }
@@ -70,8 +78,10 @@ Future<void> run([String configPath = kConfigFileName]) async {
   // process screenshots
   if (configInfo['devices']['ios'] != null) {
     for (final simulatorName in configInfo['devices']['ios'].keys) {
+      final simulatorInfo =
+          utils.getHighestIosDevice(utils.getIosDevices(), simulatorName);
       for (final locale in configInfo['locales']) {
-        simulator(simulatorName, true, stagingDir, locale, isMultipleLocales);
+        await simulator(simulatorName, true, simulatorInfo, stagingDir, locale);
 
         // store env for later use by tests
         await config.storeEnv(config, screens, simulatorName, locale, 'ios');
@@ -79,12 +89,12 @@ Future<void> run([String configPath = kConfigFileName]) async {
         for (final testPath in configInfo['tests']) {
           print(
               'Capturing screenshots with test app $testPath on simulator \'$simulatorName\' in locale $locale ...');
-          await screenshots(testPath, stagingDir);
+          await screenshots(simulatorInfo['udid'], testPath, stagingDir);
           // process screenshots
           await process_images.process(
               screens, configInfo, DeviceType.ios, simulatorName, locale);
         }
-        simulator(simulatorName, false);
+        await simulator(simulatorName, false, simulatorInfo);
       }
     }
   }
@@ -107,110 +117,151 @@ Future<void> run([String configPath = kConfigFileName]) async {
 /// Assumes the integration test captures the screen shots into a known directory using
 /// provided [capture_screen.screenshot()].
 ///
-void screenshots(String testPath, String stagingDir) async {
+void screenshots(String deviceId, String testPath, String stagingDir) async {
   // clear existing screenshots from staging area
   utils.clearDirectory('$stagingDir/test');
   // run the test
-  await utils.streamCmd('flutter', ['drive', testPath]);
+  await utils.streamCmd('flutter', ['-d', deviceId, 'drive', testPath]);
 }
 
 ///
 /// Start/stop emulator.
 ///
-Future<void> emulator(String emulatorName, bool start,
-    [String stagingDir,
-    String locale = "en-US",
-    bool isMultipleLocales = false]) async {
-  final highestEmulator = utils.getHighestAndroidDevice(emulatorName);
-  if (start) {
-    print('Starting emulator \'$emulatorName\' in locale $locale ...');
+Future<String> emulator(String deviceName, bool start, String deviceId,
+    String stagingDir, String avdName,
+    [bool alreadyBooted, String testLocale = "en-US"]) async {
+  // used to keep and report a newly booted device if any
+  String freshDeviceId = deviceId;
 
-    final envVars = Platform.environment;
-    if (envVars['CI'] == 'true') {
-      // testing on CI/CD requires starting emulator in a specific way
-      final androidHome = envVars['ANDROID_HOME'];
-      await utils.streamCmd(
-          '$androidHome/emulator/emulator',
-          [
-            '-avd',
-            highestEmulator,
-            '-no-audio',
-            '-no-window',
-            '-no-snapshot',
-            '-gpu',
-            'swiftshader',
-          ],
-          ProcessStartMode.detached);
+  if (start) {
+    if (alreadyBooted) {
+      print('Using running emulator \'$deviceName\' in locale $testLocale ...');
     } else {
-      // testing locally, so start emulator in normal way
-      await utils
-          .streamCmd('flutter', ['emulator', '--launch', highestEmulator]);
+      print('Starting emulator \'$deviceName\' in locale $testLocale ...');
+      final envVars = Platform.environment;
+      if (envVars['CI'] == 'true') {
+        // testing on CI/CD requires starting emulator in a specific way
+        final androidHome = envVars['ANDROID_HOME'];
+        await utils.streamCmd(
+            '$androidHome/emulator/emulator',
+            [
+              '-avd',
+              avdName,
+              '-no-audio',
+              '-no-window',
+              '-no-snapshot',
+              '-gpu',
+              'swiftshader',
+            ],
+            '.',
+            ProcessStartMode.detached);
+        // wait for emulator to start
+        await utils.streamCmd(
+            '$stagingDir/resources/script/android-wait-for-emulator', []);
+      } else {
+        // testing locally, so start emulator in normal way
+        await utils.streamCmd('flutter', ['emulator', '--launch', avdName]);
+      }
+
+      // get fresh id of emulator just booted in this run.
+      freshDeviceId = await _getFreshDeviceId(deviceId, deviceName);
+
+      // confirm fully booted before continuing (or getting locale may not work)
+      await utils.streamCmd(
+          '$stagingDir/resources/script/android-wait-for-emulator', []);
+
     }
 
-    // wait for emulator to start
-    await utils.streamCmd(
-        '$stagingDir/resources/script/android-wait-for-emulator', []);
-
     // change locale
-    if (isMultipleLocales) {
+    String emulatorLocale = utils.androidDeviceLocale(freshDeviceId);
+    if (emulatorLocale != testLocale) {
+      print(
+          'Changing locale from $emulatorLocale to $testLocale on \'$deviceName\'...');
       if (utils.cmd('adb', ['root'], '.', true) ==
           'adbd cannot run as root in production builds\n') {
         stdout.write(
-            'Warning: locale has not been changed. Running in default locale.\n');
+            'Warning: locale will not be changed. Running in locale \'$emulatorLocale\'.\n');
         stdout.write(
             'To change locale you must use a non-production emulator (one that does not depend on Play Store). See:\n');
         stdout.write(
             '    https://stackoverflow.com/questions/43923996/adb-root-is-not-working-on-emulator/45668555#45668555 for details.\n');
-      } else {
-//      adb shell "setprop persist.sys.locale fr-CA; setprop ctl.restart zygote"
-        utils.cmd('adb', [
-          'shell',
-          'setprop',
-          'persist.sys.locale',
-          locale,
-          ';',
-          'setprop',
-          'ctl.restart',
-          'zygote'
-        ]);
-        // note: there should be enough time to allow the emulator to restart
-        // while app is being compiled.
       }
+      flutterDriverBugWarning();
+      // adb shell "setprop persist.sys.locale fr-CA; setprop ctl.restart zygote"
+      utils.cmd('adb', [
+        '-s',
+        freshDeviceId,
+        'shell',
+        'setprop',
+        'persist.sys.locale',
+        testLocale,
+        ';',
+        'setprop',
+        'ctl.restart',
+        'zygote'
+      ]);
     }
+    // note: there should be enough time to allow the emulator to restart
+    // while app is being compiled.
+
   } else {
-    print('Stopping emulator: \'$emulatorName\' ...');
-    utils.cmd('adb', ['emu', 'kill']);
+    print('Stopping emulator: \'$deviceName\' ...');
+    if (deviceId == null) {
+      throw 'Error: unknown deviceId';
+    }
+    utils.cmd('adb', ['-s', deviceId, 'emu', 'kill']);
     // wait for emulator to stop
     await utils.streamCmd(
-        '$stagingDir/resources/script/android-wait-for-emulator-to-stop', []);
+        '$stagingDir/resources/script/android-wait-for-emulator-to-stop',
+        [freshDeviceId]);
   }
+  return freshDeviceId;
+}
+
+Future<String> _getFreshDeviceId(String deviceId, String deviceName) async {
+  String freshDeviceId;
+  deviceId == null
+      ? freshDeviceId = await utils.getBootedAndroidDeviceId(deviceName)
+      : freshDeviceId = deviceId;
+  if (freshDeviceId == null) {
+    throw 'Error: unknown deviceId';
+  }
+  return freshDeviceId;
 }
 
 ///
 /// Start/stop simulator.
 ///
-void simulator(String name, bool start,
-    [String stagingDir,
-    String locale = 'en-US',
-    bool isMultipleLocales = false]) async {
-  final simulatorInfo = utils.getHighestIosDevice(utils.getIosDevices(), name);
-  final udid = simulatorInfo['udid'];
-  final state = simulatorInfo['state'];
-//  print('simulatorInfo=$simulatorInfo');
+Future<void> simulator(String name, bool start, Map simulatorInfo,
+    [String stagingDir, String testLocale = 'en-US']) async {
+  final udId = simulatorInfo['udid'];
+  final isAlreadyBooted = simulatorInfo['state'] == 'Booted';
   if (start) {
-    if (state == 'Booted') {
-      print('Restarting simulator \'$name\' in locale $locale ...');
-      utils.cmd('xcrun', ['simctl', 'shutdown', udid]);
+    if (isAlreadyBooted) {
+      print('Restarting simulator \'$name\' in locale $testLocale ...');
+      utils.cmd('xcrun', ['simctl', 'shutdown', udId]);
     } else {
-      print('Starting simulator \'$name\' in locale $locale ...');
+      print('Starting simulator \'$name\' in locale $testLocale ...');
     }
-    if (isMultipleLocales) {
+    final simulatorLocale = utils.iosSimulatorLocale(udId);
+    if (simulatorLocale != testLocale) {
+      print(
+          'Changing locale from $simulatorLocale to $testLocale on \'$name\'...');
+      flutterDriverBugWarning();
+
       await utils.streamCmd('$stagingDir/resources/script/simulator-controller',
-          [name, 'locale', locale]);
+          [name, 'locale', testLocale]);
     }
-    utils.cmd('xcrun', ['simctl', 'boot', udid]);
+    utils.cmd('xcrun', ['simctl', 'boot', udId]);
   } else {
-    print('Stopping simulator: \'$name\' ...');
-    if (state == 'Booted') utils.cmd('xcrun', ['simctl', 'shutdown', udid]);
+    if (!isAlreadyBooted) {
+      print('Stopping simulator: \'$name\' ...');
+      utils.cmd('xcrun', ['simctl', 'shutdown', udId]);
+    }
   }
+}
+
+void flutterDriverBugWarning() {
+  stdout.write(
+      '\nWarning: running tests in a non-default locale will cause test to hang due to a bug in Flutter Driver (not related to \'screenshots\'). Modify your screenshots.yaml to use only the default locale for your location. For details of bug see comment at https://github.com/flutter/flutter/issues/27785#issue-408955077. Give comment a thumbs-up to get it fixed!\n\n');
 }

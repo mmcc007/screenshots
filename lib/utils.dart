@@ -3,14 +3,33 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:path/path.dart' as p;
+import 'package:path/path.dart';
 
-/// Clear directory [dir].
+import 'flutter_tools/lib/src/base/utils.dart';
+
+/// Clear directory [dirPath].
 /// Create directory if none exists.
-void clearDirectory(String dir) {
-  if (Directory(dir).existsSync()) {
-    Directory(dir).deleteSync(recursive: true);
+void clearDirectory(String dirPath) {
+  if (Directory(dirPath).existsSync()) {
+    Directory(dirPath).deleteSync(recursive: true);
+  } else {
+    Directory(dirPath).createSync(recursive: true);
   }
-  Directory(dir).createSync(recursive: true);
+}
+
+/// Clear files in a directory [dirPath] ending in [suffix]
+/// Create directory if none exists.
+void clearFilesWithSuffix(String dirPath, String suffix) {
+  // delete files with suffix
+  if (Directory(dirPath).existsSync()) {
+    Directory(dirPath).listSync().toList().forEach((e) {
+      if (extension(e.path) == suffix) {
+        File(e.path).delete();
+      }
+    });
+  } else {
+    Directory(dirPath).createSync(recursive: true);
+  }
 }
 
 /// Move files from [srcDir] to [dstDir].
@@ -31,23 +50,28 @@ void moveFiles(String srcDir, String dstDir) {
 /// If [silent] is false, output to stdout.
 String cmd(String cmd, List<String> arguments,
     [String workingDir = '.', bool silent = false]) {
-//  print('cmd=\'$cmd ${arguments.join(" ")}\'');
+//  print(
+//      'cmd=\'$cmd ${arguments.join(" ")}\', workingDir=$workingDir, silent=$silent');
   final result = Process.runSync(cmd, arguments, workingDirectory: workingDir);
   if (!silent) stdout.write(result.stdout);
   if (result.exitCode != 0) {
     stderr.write(result.stderr);
     throw 'command failed: cmd=\'$cmd ${arguments.join(" ")}\'';
   }
+  // return stdout
   return result.stdout;
 }
 
 /// Execute command [cmd] with arguments [arguments] in a separate process
 /// and stream stdout/stderr.
 Future<void> streamCmd(String cmd, List<String> arguments,
-    [ProcessStartMode mode = ProcessStartMode.normal]) async {
-//  print('streamCmd=\'$cmd ${arguments.join(" ")}\'');
+    [String workingDirectory = '.',
+    ProcessStartMode mode = ProcessStartMode.normal]) async {
+//  print(
+//      'streamCmd=\'$cmd ${arguments.join(" ")}\', workingDirectory=$workingDirectory, mode=$mode');
 
-  final process = await Process.start(cmd, arguments, mode: mode);
+  final process = await Process.start(cmd, arguments,
+      workingDirectory: workingDirectory, mode: mode);
 
   if (mode == ProcessStartMode.normal) {
     final stdoutFuture = process.stdout
@@ -150,22 +174,23 @@ String getHighestIosVersion(Map iOSVersions) {
   return iOSVersionName;
 }
 
-/// Create list of emulators
-List<String> emulators() {
+/// Create list of avds,
+List<String> getAvdNames() {
   return cmd('emulator', ['-list-avds'], '.', true).split('\n');
 }
 
-/// Find the android device with the highest available android version
-String getHighestAndroidDevice(String deviceName) {
+/// Get the highest available avd version for the android device.
+String getHighestAVD(String deviceName) {
   final deviceNameNormalized = deviceName.replaceAll(' ', '_');
-  final devices =
-      emulators().where((name) => name.contains(deviceNameNormalized)).toList();
+  final avds = getAvdNames()
+      .where((name) => name.contains(deviceNameNormalized))
+      .toList();
   // sort list in android API order
-  devices.sort((v1, v2) {
+  avds.sort((v1, v2) {
     return v1.compareTo(v2);
   });
 
-  return devices.last;
+  return avds.last;
 }
 
 /// Adds prefix to all files in a directory
@@ -177,10 +202,68 @@ Future prefixFilesInDir(String dirPath, String prefix) async {
   }
 }
 
-bool isAnyDeviceRunning() {
-  return !cmd('flutter', ['devices'], '.', true)
-      .contains('No devices detected.');
-}
-
 /// Converts [enum] value to [String].
 String enumToStr(dynamic _enum) => _enum.toString().split('.').last;
+
+/// Returns locale of currently attached android device.
+String androidDeviceLocale(String deviceId) {
+  final deviceLocale = cmd('adb',
+          ['-s', deviceId, 'shell', 'getprop persist.sys.locale'], '.', true)
+      .trim();
+  return deviceLocale;
+}
+
+/// Returns locale of simulator with udid [udId].
+String iosSimulatorLocale(String udId) {
+  final env = Platform.environment;
+  final settingsPath =
+      '${env['HOME']}/Library/Developer/CoreSimulator/Devices/$udId/data/Library/Preferences/.GlobalPreferences.plist';
+  final localeInfo = jsonDecode(
+      cmd('plutil', ['-convert', 'json', '-o', '-', settingsPath], '.', true));
+  final locale = localeInfo['AppleLocale'];
+  return locale;
+}
+
+/// Get AVD name from device id [deviceId].
+/// Returns AVD name as [String].
+String getAvdName(String deviceId) {
+  return cmd('adb', ['-s', deviceId, 'emu', 'avd', 'name'], '.', true)
+      .split('\r\n')
+      .map((line) => line.trim())
+      .first;
+}
+
+/// Find android device id with matching [avdName].
+/// Returns matching android device id as [String].
+String findAndroidDeviceId(String avdName) {
+  final devicesIds = getAndroidDeviceIds();
+  if (devicesIds.length == 0) return null;
+  return devicesIds.firstWhere((id) => avdName == getAvdName(id), orElse: null);
+}
+
+/// Get the list of running devices by id.
+List<String> getAndroidDeviceIds() {
+  return cmd('adb', ['devices'], '.', true)
+      .trim()
+      .split('\n')
+      .sublist(1) // remove first line
+      .map((device) => device.split('\t').first)
+      .toList();
+}
+
+/// Get deviceId for a booting emulator
+Future<String> getBootedAndroidDeviceId(String deviceName) async {
+  final avdName = getHighestAVD(deviceName);
+  final pollingInterval = 500;
+  String deviceId = null;
+  final poller = Poller(() async {
+    deviceId = findAndroidDeviceId(avdName);
+  }, Duration(milliseconds: pollingInterval),
+      initialDelay: Duration(milliseconds: pollingInterval));
+  while (deviceId == null) {
+    print('Waiting for $deviceName to boot...');
+    await Future.delayed(Duration(milliseconds: pollingInterval));
+  }
+  poller.cancel();
+  return deviceId;
+}
