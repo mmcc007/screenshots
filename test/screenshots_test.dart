@@ -226,7 +226,7 @@ void main() {
   });
 
   test('map device name to emulator', () {
-    final _emulators = emulators();
+    final _emulators = getAvdNames();
     print(_emulators);
     final emulator =
         _emulators.firstWhere((emulator) => emulator.contains('Nexus_5X'));
@@ -262,7 +262,7 @@ void main() {
     final stagingDir = '/tmp/tmp';
     final locale = 'en-US';
 
-    final deviceId = getHighestAndroidDevice(emulatorName);
+    final deviceId = getHighestAVD(emulatorName);
     await unpackScripts(stagingDir);
     await emulator(
         emulatorName, start, deviceId, stagingDir, avdName, false, locale);
@@ -441,20 +441,13 @@ void main() {
 
   test('boot android device if not booted', () async {
     final deviceName = 'Nexus 6P';
-    final avdName = getHighestAndroidDevice(deviceName);
+    final avdName = getHighestAVD(deviceName);
     String deviceId = findAndroidDeviceId(avdName);
     if (deviceId == null) {
       // boot emulator
-      print('booting $avdName...');
+      print('booting $deviceName...');
       await streamCmd('flutter', ['emulator', '--launch', avdName]);
-      final poller = Poller(() async {
-        deviceId = findAndroidDeviceId(avdName);
-      }, Duration(milliseconds: 500), initialDelay: Duration(milliseconds: 0));
-      while (deviceId == null) {
-        print('deviceId=$deviceId');
-        await Future.delayed(const Duration(milliseconds: 50));
-      }
-      poller.cancel();
+      deviceId = await getBootedAndroidDeviceId(deviceName);
       print('booted $deviceName on $deviceId');
       // shutdown
       print('shutting down $deviceName...');
@@ -462,5 +455,6 @@ void main() {
     } else {
       print('already booted');
     }
+    expect(deviceId, isNotNull);
   });
 }
