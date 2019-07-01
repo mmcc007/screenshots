@@ -169,7 +169,6 @@ Future<String> emulator(String deviceName, bool start, String deviceId,
       // confirm fully booted before continuing (or getting locale may not work)
       await utils.streamCmd(
           '$stagingDir/resources/script/android-wait-for-emulator', []);
-
     }
 
     // change locale

@@ -1,8 +1,6 @@
-import 'dart:async';
 import 'dart:io';
 
 import 'package:screenshots/config.dart';
-import 'package:screenshots/flutter_tools/lib/src/base/utils.dart';
 import 'package:screenshots/process_images.dart';
 import 'package:screenshots/screens.dart';
 import 'package:screenshots/image_magick.dart';
