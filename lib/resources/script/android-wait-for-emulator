@@ -10,11 +10,7 @@ failcounter=0
 timeout_in_sec=600 # 10 minutes (for slow emulators in cloud)
 
 until [[ "$bootanim" =~ "stopped" ]]; do
-  if [[ -z "$1" ]]; then # no argument
-    bootanim=`adb -e shell getprop init.svc.bootanim 2>&1 &`
-  else
-    bootanim=`adb -s $1 -e shell getprop init.svc.bootanim 2>&1 &`
-  endif
+  bootanim=`adb -s $1 -e shell getprop init.svc.bootanim 2>&1 &`
   if [[ "$bootanim" =~ "device not found" || "$bootanim" =~ "device offline"
     || "$bootanim" =~ "running" ]]; then
     let "failcounter += 1"

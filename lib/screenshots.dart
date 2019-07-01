@@ -46,6 +46,7 @@ Future<void> run([String configPath = kConfigFileName]) async {
   if (configInfo['devices']['android'] != null) {
     for (final emulatorName in configInfo['devices']['android'].keys) {
       final highestAvdName = utils.getHighestAndroidDevice(emulatorName);
+      // find first running emulator that is using this avd (if any)
       final deviceId = utils.findAndroidDeviceId(highestAvdName);
       final alreadyBooted = deviceId == null ? false : true;
 
@@ -80,7 +81,7 @@ Future<void> run([String configPath = kConfigFileName]) async {
       final simulatorInfo =
           utils.getHighestIosDevice(utils.getIosDevices(), simulatorName);
       for (final locale in configInfo['locales']) {
-        simulator(simulatorName, true, simulatorInfo, stagingDir, locale);
+        await simulator(simulatorName, true, simulatorInfo, stagingDir, locale);
 
         // store env for later use by tests
         await config.storeEnv(config, screens, simulatorName, locale, 'ios');
@@ -93,7 +94,7 @@ Future<void> run([String configPath = kConfigFileName]) async {
           await process_images.process(
               screens, configInfo, DeviceType.ios, simulatorName, locale);
         }
-        simulator(simulatorName, false, simulatorInfo);
+        await simulator(simulatorName, false, simulatorInfo);
       }
     }
   }
@@ -170,7 +171,6 @@ Future<String> emulator(
 
     // change locale
     String emulatorLocale = utils.androidDeviceLocale(freshDeviceId);
-//    print('deviceLocale=$emulatorLocale, testLocale=$testLocale');
     if (emulatorLocale != testLocale) {
       print(
           'Changing locale from $emulatorLocale to $testLocale on \'$name\'...');
@@ -203,6 +203,9 @@ Future<String> emulator(
 
   } else {
     print('Stopping emulator: \'$name\' ...');
+    if (deviceId != null) {
+      throw 'Error: unknown deviceId';
+    }
     utils.cmd('adb', ['-s', deviceId, 'emu', 'kill']);
     // wait for emulator to stop
     await utils.streamCmd(
@@ -216,21 +219,22 @@ String _getFreshDeviceId(String deviceId, String avdName) {
   String freshDeviceId;
   deviceId == null
       ? freshDeviceId = utils.findAndroidDeviceId(avdName)
-      : freshDeviceId = deviceId;
+      : freshDeviceId = null;
+  if (freshDeviceId == null) {
+    throw 'Error: unknown deviceId';
+  }
   return freshDeviceId;
 }
 
 ///
 /// Start/stop simulator.
 ///
-void simulator(String name, bool start, Map simulatorInfo,
-    [String stagingDir, String testLocale = 'en-US']) {
+Future<void> simulator(String name, bool start, Map simulatorInfo,
+    [String stagingDir, String testLocale = 'en-US']) async {
   final udId = simulatorInfo['udid'];
-  final state = simulatorInfo['state'];
-//  print('simulatorInfo=$simulatorInfo');
+  final isAlreadyBooted = simulatorInfo['state'] == 'Booted';
   if (start) {
-    if (state == 'Booted') {
-      // for testing
+    if (isAlreadyBooted) {
       print('Restarting simulator \'$name\' in locale $testLocale ...');
       utils.cmd('xcrun', ['simctl', 'shutdown', udId]);
     } else {
@@ -242,12 +246,12 @@ void simulator(String name, bool start, Map simulatorInfo,
           'Changing locale from $simulatorLocale to $testLocale on \'$name\'...');
       flutterDriverBugWarning();
 
-      utils.streamCmd('$stagingDir/resources/script/simulator-controller',
+      await utils.streamCmd('$stagingDir/resources/script/simulator-controller',
           [name, 'locale', testLocale]);
     }
     utils.cmd('xcrun', ['simctl', 'boot', udId]);
   } else {
-    if (state != 'Booted') {
+    if (!isAlreadyBooted) {
       print('Stopping simulator: \'$name\' ...');
       utils.cmd('xcrun', ['simctl', 'shutdown', udId]);
     }

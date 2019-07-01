@@ -47,23 +47,17 @@ void moveFiles(String srcDir, String dstDir) {
 ///
 /// If [silent] is false, output to stdout.
 String cmd(String cmd, List<String> arguments,
-    [String workingDir = '.', bool silent = false, bool keepNewline = true]) {
+    [String workingDir = '.', bool silent = false]) {
 //  print(
-//      'cmd=\'$cmd ${arguments.join(" ")}\', workingDir=$workingDir, silent=$silent, keepNewLine=$keepNewline');
+//      'cmd=\'$cmd ${arguments.join(" ")}\', workingDir=$workingDir, silent=$silent');
   final result = Process.runSync(cmd, arguments, workingDirectory: workingDir);
   if (!silent) stdout.write(result.stdout);
   if (result.exitCode != 0) {
     stderr.write(result.stderr);
     throw 'command failed: cmd=\'$cmd ${arguments.join(" ")}\'';
   }
-//  print('stdout=${result.stdout}');
-  if (keepNewline) {
-    // return stdout
-    return result.stdout;
-  } else {
-    // remove last char if newline
-    return removeNewline(result.stdout);
-  }
+  // return stdout
+  return result.stdout;
 }
 
 /// Execute command [cmd] with arguments [arguments] in a separate process
@@ -205,32 +199,13 @@ Future prefixFilesInDir(String dirPath, String prefix) async {
   }
 }
 
-/// Check if any device is running.
-bool isAnyDeviceRunning() {
-  return !cmd('flutter', ['devices'], '.', true)
-      .contains('No devices detected.');
-}
-
 /// Converts [enum] value to [String].
 String enumToStr(dynamic _enum) => _enum.toString().split('.').last;
 
-/// Remove newline at end of [str] if present.
-String removeNewline(String str) {
-  String cleanStr = '';
-  str.endsWith('\n')
-      ? cleanStr = str.substring(0, str.length - 1)
-      : cleanStr = str;
-  return cleanStr;
-}
-
 /// Returns locale of currently attached android device.
 String androidDeviceLocale(String deviceId) {
-  final deviceLocale = cmd(
-      'adb',
-      ['-s', deviceId, 'shell', 'getprop persist.sys.locale'],
-      '.',
-      true,
-      false);
+  final deviceLocale = cmd('adb',
+      ['-s', deviceId, 'shell', 'getprop persist.sys.locale'], '.', true);
   return deviceLocale;
 }
 
@@ -257,13 +232,13 @@ String getAvdName(String deviceId) {
 /// Find android device id with matching [avdName].
 /// Returns matching android device id as [String].
 String findAndroidDeviceId(String avdName) {
-  final devicesIds = getAndroidDevices();
+  final devicesIds = getAndroidDeviceIds();
   if (devicesIds.length == 0) return null;
   return devicesIds.firstWhere((id) => avdName == getAvdName(id), orElse: null);
 }
 
-/// Get the list of running devices
-List<String> getAndroidDevices() {
+/// Get the list of running devices by id.
+List<String> getAndroidDeviceIds() {
   return cmd('adb', ['devices'], '.', true)
       .trim()
       .split('\n')
