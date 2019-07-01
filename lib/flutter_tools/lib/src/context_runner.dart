@@ -31,8 +31,8 @@ import 'emulator.dart';
 //import 'fuchsia/fuchsia_sdk.dart' show FuchsiaSdk, FuchsiaArtifacts;
 //import 'fuchsia/fuchsia_workflow.dart' show FuchsiaWorkflow;
 //import 'ios/ios_workflow.dart';
-//import 'ios/mac.dart';
-//import 'ios/simulators.dart';
+import 'ios/mac.dart';
+import 'ios/simulators.dart';
 import 'ios/xcodeproj.dart';
 //import 'linux/linux_workflow.dart';
 //import 'macos/cocoapods.dart';
@@ -85,8 +85,8 @@ Future<T> runInContext<T>(
 //      FuchsiaWorkflow: () => FuchsiaWorkflow(),
 //      GenSnapshot: () => const GenSnapshot(),
 //      HotRunnerConfig: () => HotRunnerConfig(),
-//      IMobileDevice: () => const IMobileDevice(),
-//      IOSSimulatorUtils: () => IOSSimulatorUtils(),
+      IMobileDevice: () => const IMobileDevice(),
+      IOSSimulatorUtils: () => IOSSimulatorUtils(),
 //      IOSValidator: () => const IOSValidator(),
 //      IOSWorkflow: () => const IOSWorkflow(),
 //      KernelCompilerFactory: () => const KernelCompilerFactory(),
@@ -95,7 +95,7 @@ Future<T> runInContext<T>(
 //      MacOSWorkflow: () => const MacOSWorkflow(),
       OperatingSystemUtils: () => OperatingSystemUtils(),
 //      PlistBuddy: () => const PlistBuddy(),
-//      SimControl: () => SimControl(),
+      SimControl: () => SimControl(),
       Stdio: () => const Stdio(),
 //      SystemClock: () => const SystemClock(),
       TimeoutConfiguration: () => const TimeoutConfiguration(),
