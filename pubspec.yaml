@@ -12,6 +12,10 @@ dependencies:
   yaml: ^2.1.15
   resource: ^2.1.5
   path: ^1.6.2
+  file: ^5.0.8
+  archive: ^2.0.9
+  platform: ^2.2.0
+  process: ^3.0.9
 
 dev_dependencies:
   test: ^1.5.1+1
