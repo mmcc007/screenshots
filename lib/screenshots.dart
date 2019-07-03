@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'config.dart';
+import 'daemon_client.dart';
 import 'screens.dart';
 import 'process_images.dart' as process_images;
 import 'resources.dart' as resources;
@@ -16,6 +17,8 @@ const String kEnvFileName = 'env.json';
 
 /// Distinguish device OS.
 enum DeviceType { android, ios }
+
+final daemonClient = DaemonClient.instance;
 
 /// Capture screenshots, process, and load into fastlane according to config file.
 ///
@@ -41,7 +44,10 @@ Future<void> run([String configPath = kConfigFileName]) async {
   await resources.unpackScripts(stagingDir);
   await fastlane.clearFastlaneDirs(configInfo, screens);
 
-  // run integration tests in each android emulator for each locale and
+  // start flutter daemon
+  await daemonClient.start;
+
+  // run integration tests in each android device (or emulator) for each locale and
   // process screenshots
   if (configInfo['devices']['android'] != null) {
     for (final deviceName in configInfo['devices']['android'].keys) {
@@ -98,6 +104,9 @@ Future<void> run([String configPath = kConfigFileName]) async {
       }
     }
   }
+
+  // shutdown daemon
+  await daemonClient.stop;
 
   print('\n\nScreen images are available in:');
   print('  ios/fastlane/screenshots');
@@ -160,7 +169,7 @@ Future<String> emulator(String deviceName, bool start, String deviceId,
             '$stagingDir/resources/script/android-wait-for-emulator', []);
       } else {
         // testing locally, so start emulator in normal way
-        await utils.streamCmd('flutter', ['emulator', '--launch', avdName]);
+        await daemonClient.launchEmulator(avdName);
       }
 
       // get fresh id of emulator just booted in this run.
@@ -200,7 +209,7 @@ Future<String> emulator(String deviceName, bool start, String deviceId,
         'zygote'
       ]);
     }
-    // note: there should be enough time to allow the emulator to restart
+    // note: there should be enough time for the emulator to (re)start
     // while app is being compiled.
 
   } else {
@@ -247,7 +256,7 @@ Future<void> simulator(String name, bool start, Map simulatorInfo,
       await utils.streamCmd('$stagingDir/resources/script/simulator-controller',
           [name, 'locale', testLocale]);
     }
-    utils.cmd('xcrun', ['simctl', 'boot', udId]);
+    await daemonClient.launchEmulator(udId);
   } else {
     if (!isAlreadyBooted) {
       print('Stopping simulator: \'$name\' ...');

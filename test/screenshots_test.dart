@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:screenshots/config.dart';
+import 'package:screenshots/daemon_client.dart';
 import 'package:screenshots/process_images.dart';
 import 'package:screenshots/screens.dart';
 import 'package:screenshots/image_magick.dart';
@@ -238,7 +239,7 @@ void main() {
     final start = true;
     final stagingDir = '/tmp/tmp';
     final locale = 'en-US';
-//    emulator('Nexus 6P', true, '/tmp/screenshots', 'fr-CA');
+    await daemonClient.start;
     await emulator(
         emulatorName, start, deviceId, stagingDir, avdName, false, locale);
   });
@@ -262,15 +263,16 @@ void main() {
 
     final deviceId = getHighestAVD(emulatorName);
     await unpackScripts(stagingDir);
+    await daemonClient.start;
     await emulator(
         emulatorName, start, deviceId, stagingDir, avdName, false, locale);
   });
 
-  test('start simulator', () {
+  test('start simulator', () async {
     final simulatorName = 'iPhone X';
     final simulatorInfo = getHighestIosDevice(getIosDevices(), simulatorName);
-
-    simulator('iPhone X', true, simulatorInfo, '/tmp/screenshots');
+    await daemonClient.start;
+    await simulator('iPhone X', true, simulatorInfo, '/tmp/screenshots');
 //    simulator('iPhone X', true, '/tmp/screenshots', 'fr-CA');
   });
 
@@ -353,6 +355,7 @@ void main() {
     // unpack resources
     await unpackScripts(stagingDir);
 
+    await daemonClient.start;
     // start emulator
     await emulator(
         emulatorName, start, deviceId, stagingDir, avdName, false, locale);
@@ -375,6 +378,7 @@ void main() {
     final locale = 'en-US';
 
     await unpackScripts(stagingDir);
+    await daemonClient.start;
     await emulator(
         emulatorName, start, deviceId, stagingDir, avdName, false, locale);
     final deviceLocale = androidDeviceLocale(deviceId);
@@ -403,6 +407,7 @@ void main() {
 
     // start simulator
     final simulatorInfo = getHighestIosDevice(getIosDevices(), simulatorName);
+    await daemonClient.start;
     await simulator(simulatorName, start, simulatorInfo, stagingDir, locale);
 
     // run test
