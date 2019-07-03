@@ -18,6 +18,7 @@ const String kEnvFileName = 'env.json';
 /// Distinguish device OS.
 enum DeviceType { android, ios }
 
+/// Flutter daemon
 final daemonClient = DaemonClient.instance;
 
 /// Capture screenshots, process, and load into fastlane according to config file.
@@ -256,7 +257,7 @@ Future<void> simulator(String name, bool start, Map simulatorInfo,
       await utils.streamCmd('$stagingDir/resources/script/simulator-controller',
           [name, 'locale', testLocale]);
     }
-    await daemonClient.launchEmulator(udId);
+    utils.cmd('xcrun', ['simctl', 'boot', udId]);
   } else {
     if (!isAlreadyBooted) {
       print('Stopping simulator: \'$name\' ...');
