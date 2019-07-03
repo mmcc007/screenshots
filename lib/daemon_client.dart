@@ -2,11 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:path/path.dart';
-
 import 'utils.dart';
 
-/// Creates and communicates with flutter tools daemon.
+/// Creates and communicates with flutter daemon.
 class DaemonClient {
   DaemonClient._();
 
@@ -19,25 +17,19 @@ class DaemonClient {
   bool _connected = false;
   Completer _waitForConnection;
   Completer _waitForResponse;
-  List _iosDevices;
+  List _iosDevices; // contains model of device, used by screenshots
 
   Future<void> get start async {
-    final flutterHome =
-        dirname(dirname((cmd('which', ['flutter'], '.', true))));
-    final flutterToolsHome = '$flutterHome/packages/flutter_tools';
-    _process = await Process.start(
-        'dart', <String>['bin/flutter_tools.dart', 'daemon'],
-        workingDirectory: flutterToolsHome);
-//    print('daemon client process started, pid: ${process.pid}');
-    _listen();
-    _waitForConnection = Completer<bool>();
-    _connected = await _waitForConnection.future;
+    if (!_connected) {
+      _process = await Process.start('flutter', ['daemon']);
+      _listen();
+      _waitForConnection = Completer<bool>();
+      _connected = await _waitForConnection.future;
 
-    // enable device discovery
-    await _sendCommand(<String, dynamic>{'method': 'device.enable'});
-    _iosDevices = iosDevices();
-    // wait for devices to be discovered
-    await Future.delayed(Duration(milliseconds: 1500));
+      // enable device discovery
+      await _sendCommand(<String, dynamic>{'method': 'device.enable'});
+      _iosDevices = iosDevices();
+    }
   }
 
   Future<List> get emulators async {
@@ -70,13 +62,10 @@ class DaemonClient {
   }
 
   int _exitCode = 0;
-  bool _stopped = false;
   Future<int> get stop async {
-    if (_stopped) return _exitCode;
+    if (!_connected) return _exitCode;
     await _sendCommand(<String, dynamic>{'method': 'daemon.shutdown'});
     _connected = false;
-//    _dispose();
-    // wait for exit code
     _exitCode = await _process.exitCode;
     return _exitCode;
   }
@@ -113,15 +102,8 @@ class DaemonClient {
         return jsonDecode(response);
       }
     }
-    throw 'not connected to daemon';
+    throw 'Error: not connected to daemon.';
   }
-
-//  StreamSubscription<String> _stdioSub;
-//  StreamSubscription<List<int>> _stderrSub;
-//  void _dispose() {
-//    _stdioSub?.cancel();
-//    _stderrSub?.cancel();
-//  }
 }
 
 Future shutdownEmulator(DaemonClient daemonClient, String id) async {
