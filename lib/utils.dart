@@ -233,7 +233,6 @@ String getAndroidEmulatorId(String deviceId) {
 /// Returns matching android device id as [String].
 String findAndroidDeviceId(String emulatorId) {
   final devicesIds = getAndroidDeviceIds();
-  print('deviceIds=$devicesIds');
   if (devicesIds.length == 0) return null;
   return devicesIds.firstWhere(
       (deviceId) => emulatorId == getAndroidEmulatorId(deviceId),
