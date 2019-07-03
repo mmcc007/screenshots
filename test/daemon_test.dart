@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:path/path.dart';
 import 'package:screenshots/daemon_client.dart';
+import 'package:screenshots/screenshots.dart';
 import 'package:screenshots/utils.dart';
 import 'package:test/test.dart';
 
@@ -73,20 +75,25 @@ main() {
   });
 
   test('launch android emulator via daemon', () async {
-    final id = 'Nexus_6P_API_28';
+    final emulatorId = 'Nexus_6P_API_28';
     final daemonClient = DaemonClient.instance;
-//    daemonClient.verbose = true;
     await daemonClient.start;
-    await daemonClient.launchEmulator(id);
+    print('starting $emulatorId...');
+    daemonClient.verbose = true;
+    await daemonClient.launchEmulator(emulatorId);
+    daemonClient.verbose = false;
+    print('$emulatorId started up');
+    expect(findAndroidDeviceId(emulatorId), 'emulator-5554');
+    print('emulator startup confirmed');
 
     // shutdown
-    await shutdownEmulator(daemonClient, id);
+    await shutdownAndroidEmulator(daemonClient, emulatorId);
   });
 
-  test('wait for emulator to shutdown', () async {
+  test('wait for android emulator to shutdown', () async {
     final deviceId = 'emulator-5554';
     final deviceName = 'my device';
-    await waitEmulatorShutdown(deviceId, deviceName);
+    await waitAndroidEmulatorShutdown(deviceId, deviceName);
   });
 
   test('launch ios simulator', () async {
@@ -119,26 +126,112 @@ main() {
     final devices = iosDevices();
     print('devices=$devices');
 
-    final device = devices
-        .firstWhere((device) => device['deviceId'] == deviceId, orElse: null);
+    final device = devices.firstWhere(
+        (device) => device['deviceId'] == deviceId,
+        orElse: () => null);
     print('model=${device['model']}');
   });
 
   test('run test on real device', () async {
     final deviceName = 'iPhone 5c';
     final testPath = 'test_driver/main.dart';
-    final stagingDir = '/tmp/tmp';
     final daemonClient = DaemonClient.instance;
     await daemonClient.start;
     final devices = await daemonClient.devices;
     print('devices=$devices');
     final device = devices.firstWhere(
         (device) => device['model'].contains(deviceName),
-        orElse: null);
+        orElse: () => null);
     // clear existing screenshots from staging area
-    clearDirectory('$stagingDir/test');
+//    clearDirectory('$stagingDir/test');
     // run the test
     await streamCmd(
         'flutter', ['-d', device['id'], 'drive', testPath], 'example');
   }, timeout: Timeout(Duration(minutes: 2)));
+
+  test('wait for start of android emulator', () async {
+    final id = 'Nexus_6P_API_28';
+    daemonClient.verbose = true;
+    await daemonClient.start;
+    daemonClient.verbose;
+    await daemonClient.launchEmulator(id);
+
+    // wait for emulator to finish startup
+//    await daemonClient.waitEmulator(id);
+    expect(findAndroidDeviceId(id), 'emulator-5554');
+
+    // shutdown
+    await shutdownAndroidEmulator(daemonClient, id);
+  });
+
+  test('run test on matching device or emulator', () async {
+    final deviceName = 'iPhone 5c'; // device
+//    final deviceName = 'Nexus 6P'; // android emulator
+//    final deviceName = 'iPhone 7'; // ios simulator
+    final testPath = 'test_driver/main.dart';
+
+    await daemonClient.start;
+
+    // look for matching device first
+    final devices = await daemonClient.devices;
+    final device = devices.firstWhere(
+        (device) => device['platform'] == 'ios'
+            ? device['model'].contains(deviceName)
+            : device['name'] == deviceName,
+        orElse: () => null);
+
+    String deviceId;
+    Map emulator = null;
+    Map simulatorInfo = null;
+    if (device == null) {
+      // if no matching device look for matching emulator
+      emulator = await findEmulator(daemonClient, deviceName);
+      if (emulator == null) {
+        simulatorInfo = getHighestIosDevice(getIosDevices(), deviceName);
+        deviceId = simulatorInfo['udid'];
+        cmd('xcrun', ['simctl', 'boot', deviceId]);
+      } else {
+        final emulatorId = emulator['id'];
+//      daemonClient.verbose = true;
+        await daemonClient.launchEmulator(emulatorId);
+//      daemonClient.verbose = false;
+        deviceId = findAndroidDeviceId(emulatorId);
+      }
+    } else {
+      deviceId = device['id'];
+    }
+
+    // run test
+    await streamCmd('flutter', ['-d', deviceId, 'drive', testPath], 'example');
+
+    // if an emulator was started, shut it down
+    if (emulator != null) {
+      await shutdownAndroidEmulator(daemonClient, emulator['id']);
+    }
+    if (simulatorInfo != null) {
+      cmd('xcrun', ['simctl', 'shutdown', deviceId]);
+    }
+  }, timeout: Timeout(Duration(minutes: 2)));
+
+  test('firstwhere', () {
+    final expected = {'id': 2};
+    final listOfMap = [
+      {'id': 1},
+      expected,
+      {'id': 3}
+    ];
+    final findIt = (List list, int id) =>
+        list.firstWhere((map) => map['id'] == id, orElse: () => null);
+
+    // found
+    expect(findIt(listOfMap, expected['id']), expected);
+    // not found
+    expect(findIt(listOfMap, 4), null);
+  });
+}
+
+Future<Map> findEmulator(DaemonClient daemonClient, String emulatorName) async {
+  final emulators = await daemonClient.emulators;
+  return emulators.firstWhere((emulator) => emulator['name'] == emulatorName,
+      orElse: () => null);
 }
