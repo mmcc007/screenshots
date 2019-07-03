@@ -208,11 +208,7 @@ Future<String> emulator(String deviceName, bool start, String deviceId,
     if (deviceId == null) {
       throw 'Error: unknown deviceId';
     }
-    utils.cmd('adb', ['-s', deviceId, 'emu', 'kill']);
-    // wait for emulator to stop
-    await utils.streamCmd(
-        '$stagingDir/resources/script/android-wait-for-emulator-to-stop',
-        [freshDeviceId]);
+    await utils.stopEmulator(deviceId, stagingDir);
   }
   return freshDeviceId;
 }
