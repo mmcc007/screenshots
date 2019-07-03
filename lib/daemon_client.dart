@@ -91,15 +91,15 @@ class DaemonClient {
         _waitForConnection.complete(true);
       }
       // get response
-      if (line.contains('result') ||
-          line.contains('"error"') ||
+      if (line.contains('"result":') ||
+          line.contains('"error":') ||
           line == '[{"id":${_messageId - 1}}]') {
         _waitForResponse.complete(line);
       }
       // get event
-      if (line.contains('event')) {
+      if (line.contains('[{"event":')) {
         _waitForEvent.complete(line);
-        _waitForEvent = Completer<String>(); // wait for next event
+        _waitForEvent = Completer<String>(); // enable wait for next event
       }
     });
     _process.stderr.listen((dynamic data) => stderr.add(data));
