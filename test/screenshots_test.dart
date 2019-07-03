@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:screenshots/config.dart';
-import 'package:screenshots/daemon_client.dart';
 import 'package:screenshots/process_images.dart';
 import 'package:screenshots/screens.dart';
 import 'package:screenshots/image_magick.dart';
@@ -430,8 +429,8 @@ void main() {
   test('get avd from a running emulator', () {
     final deviceId = 'emulator-5554';
     final expected = 'Nexus_6P_API_28';
-    final avdName = getAvdName(deviceId);
-    expect(avdName, expected);
+    final emulatorId = getAndroidEmulatorId(deviceId);
+    expect(emulatorId, expected);
   });
 
   test('find running emulator with matching avd', () {
