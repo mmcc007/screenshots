@@ -73,24 +73,22 @@ Future<void> streamCmd(String cmd, List<String> arguments,
   final process = await Process.start(cmd, arguments,
       workingDirectory: workingDirectory, mode: mode);
 
-  if (mode == ProcessStartMode.normal) {
-    final stdoutFuture = process.stdout
-        .transform(utf8.decoder)
-        .transform(LineSplitter())
-        .listen(stdout.writeln)
-        .asFuture();
-    final stderrFuture = process.stderr
-        .transform(utf8.decoder)
-        .transform(LineSplitter())
-        .listen(stderr.writeln)
-        .asFuture();
+  final stdoutFuture = process.stdout
+      .transform(utf8.decoder)
+      .transform(LineSplitter())
+      .listen(stdout.writeln)
+      .asFuture();
+  final stderrFuture = process.stderr
+      .transform(utf8.decoder)
+      .transform(LineSplitter())
+      .listen(stderr.writeln)
+      .asFuture();
 
-    await Future.wait([stdoutFuture, stderrFuture]);
+  await Future.wait([stdoutFuture, stderrFuture]);
 
-    var exitCode = await process.exitCode;
-    if (exitCode != 0) {
-      throw 'command failed: cmd=\'$cmd ${arguments.join(" ")}\'';
-    }
+  var exitCode = await process.exitCode;
+  if (exitCode != 0) {
+    throw 'command failed: cmd=\'$cmd ${arguments.join(" ")}\'';
   }
 }
 
@@ -266,4 +264,77 @@ Future<String> getBootedAndroidDeviceId(String deviceName) async {
   }
   poller.cancel();
   return deviceId;
+}
+
+Future stopEmulator(String deviceId, String stagingDir) async {
+  cmd('adb', ['-s', deviceId, 'emu', 'kill']);
+  // wait for emulator to stop
+  await streamCmd(
+      '$stagingDir/resources/script/android-wait-for-emulator-to-stop',
+      [deviceId]);
+}
+
+/// Wait for android emulator to stop.
+Future<void> waitEmulatorShutdown(String deviceId, String deviceName) async {
+  final pollingInterval = 500;
+  final notFound = 'not found';
+  String status = '';
+  final poller = Poller(() async {
+    status = cmd(
+            'sh',
+            [
+              '-c',
+              'adb -s $deviceId -e shell getprop sys.boot_completed || echo \"$notFound\"'
+            ],
+            '.',
+            true)
+        .trim();
+  }, Duration(milliseconds: pollingInterval));
+
+  while (!(status == notFound)) {
+    print('Waiting for \'$deviceName\' to shutdown...');
+    await Future.delayed(Duration(milliseconds: pollingInterval));
+//    print('status=$status');
+  }
+  poller.cancel();
+  print('... \'$deviceName\' shutdown complete.');
+}
+
+// from https://github.com/flutter/flutter/blob/master/packages/flutter_tools/lib/src/base/utils.dart#L255-L292
+typedef AsyncCallback = Future<void> Function();
+
+/// A [Timer] inspired class that:
+///   - has a different initial value for the first callback delay
+///   - waits for a callback to be complete before it starts the next timer
+class Poller {
+  Poller(this.callback, this.pollingInterval,
+      {this.initialDelay = Duration.zero}) {
+    Future<void>.delayed(initialDelay, _handleCallback);
+  }
+
+  final AsyncCallback callback;
+  final Duration initialDelay;
+  final Duration pollingInterval;
+
+  bool _canceled = false;
+  Timer _timer;
+
+  Future<void> _handleCallback() async {
+    if (_canceled) return;
+
+    try {
+      await callback();
+    } catch (error) {
+      print('Error from poller: $error');
+    }
+
+    if (!_canceled) _timer = Timer(pollingInterval, _handleCallback);
+  }
+
+  /// Cancels the poller.
+  void cancel() {
+    _canceled = true;
+    _timer?.cancel();
+    _timer = null;
+  }
 }
