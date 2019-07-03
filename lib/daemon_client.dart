@@ -17,6 +17,7 @@ class DaemonClient {
   bool _connected = false;
   Completer _waitForConnection;
   Completer _waitForResponse;
+  Completer _waitForEvent = Completer<String>();
   List _iosDevices; // contains model of device, used by screenshots
 
   Future<void> get start async {
@@ -29,6 +30,8 @@ class DaemonClient {
       // enable device discovery
       await _sendCommand(<String, dynamic>{'method': 'device.enable'});
       _iosDevices = iosDevices();
+      // wait for device discovery
+      await Future.delayed(Duration(milliseconds: 500));
     }
   }
 
@@ -36,25 +39,33 @@ class DaemonClient {
     return _sendCommand(<String, dynamic>{'method': 'emulator.getEmulators'});
   }
 
-  Future<List> launchEmulator(String id) async {
-    return _sendCommand(<String, dynamic>{
+  Future<void> launchEmulator(String id) async {
+    unawaited(_sendCommand(<String, dynamic>{
       'method': 'emulator.launch',
       'params': <String, dynamic>{
         'emulatorId': id,
       },
-    });
+    }));
+
+    // wait for expected device-added-emulator event
+    final deviceAdded = await _waitForEvent.future;
+    if (!(deviceAdded.contains('device.added') &&
+        deviceAdded.contains('"emulator":true'))) {
+      throw 'Error: emulator $id not started: $deviceAdded';
+    }
+
+    return Future.value();
   }
 
   Future<List> get devices async {
     final devices =
         await _sendCommand(<String, dynamic>{'method': 'device.getDevices'});
     return Future.value(devices.map((device) {
-      // add model name if ios device
-      // todo: do same for android?
+      // add model name if real ios device present
       if (device['platform'] == 'ios' && device['emulator'] == false) {
         final iosDevice = _iosDevices.firstWhere(
             (iosDevice) => iosDevice['id'] == device['id'],
-            orElse: null);
+            orElse: () => null);
         device['model'] = iosDevice['model'];
       }
       return device;
@@ -80,8 +91,15 @@ class DaemonClient {
         _waitForConnection.complete(true);
       }
       // get response
-      if (line.contains('result') || line == '[{"id":${_messageId - 1}}]') {
+      if (line.contains('result') ||
+          line.contains('"error"') ||
+          line == '[{"id":${_messageId - 1}}]') {
         _waitForResponse.complete(line);
+      }
+      // get event
+      if (line.contains('event')) {
+        _waitForEvent.complete(line);
+        _waitForEvent = Completer<String>(); // wait for next event
       }
     });
     _process.stderr.listen((dynamic data) => stderr.add(data));
@@ -98,6 +116,8 @@ class DaemonClient {
       if (response.contains('result')) {
         final respExp = RegExp(r'result":(.*)}\]');
         return jsonDecode(respExp.firstMatch(response).group(1));
+      } else if (response.contains('error')) {
+        throw 'Error: command $command failed:\n ${jsonDecode(response)[0]['error']}';
       } else {
         return jsonDecode(response);
       }
@@ -106,19 +126,24 @@ class DaemonClient {
   }
 }
 
-Future shutdownEmulator(DaemonClient daemonClient, String id) async {
+Future shutdownAndroidEmulator(
+    DaemonClient daemonClient, String emulatorId) async {
   final emulators = await daemonClient.emulators;
-  final emulator = emulators.firstWhere((emulator) => emulator['id'] == id);
+  final emulator = emulators.firstWhere(
+      (emulator) => emulator['id'] == emulatorId,
+      orElse: () =>
+          throw 'Error: emulator for emulatorId $emulatorId not found');
   final devices = await daemonClient.devices;
   final device = devices.firstWhere(
       (device) =>
           //            device['emulator'] == true && // bug??
           device['id'].contains('emulator') &&
           device['platform'] != 'ios' &&
-          getAvdName(device['id']) == id,
-      orElse: null);
+          getAndroidEmulatorId(device['id']) == emulatorId,
+      orElse: () =>
+          throw 'Error: device not found for emulatorId: $emulatorId');
   cmd('adb', ['-s', device['id'], 'emu', 'kill'], '.', true);
-  await waitEmulatorShutdown(device['id'], emulator['name']);
+  await waitAndroidEmulatorShutdown(device['id'], emulator['name']);
 }
 
 /// Get attached ios devices with id and model.
@@ -134,3 +159,14 @@ List iosDevices() {
     return device;
   }).toList();
 }
+
+/// Indicates to the linter that the given future is intentionally not `await`-ed.
+///
+/// Has the same functionality as `unawaited` from `package:pedantic`.
+///
+/// In an async context, it is normally expected than all Futures are awaited,
+/// and that is the basis of the lint unawaited_futures which is turned on for
+/// the flutter_tools package. However, there are times where one or more
+/// futures are intentionally not awaited. This function may be used to ignore a
+/// particular future. It silences the unawaited_futures lint.
+void unawaited(Future<void> future) {}
