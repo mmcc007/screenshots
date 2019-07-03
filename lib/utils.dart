@@ -5,8 +5,6 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:path/path.dart';
 
-import 'flutter_tools/lib/src/base/utils.dart';
-
 /// Clear directory [dirPath].
 /// Create directory if none exists.
 void clearDirectory(String dirPath) {
@@ -222,21 +220,24 @@ String iosSimulatorLocale(String udId) {
   return locale;
 }
 
-/// Get AVD name from device id [deviceId].
-/// Returns AVD name as [String].
-String getAvdName(String deviceId) {
+/// Get android emulator id from a running device with id [deviceId].
+/// Returns emulator id as [String].
+String getAndroidEmulatorId(String deviceId) {
   return cmd('adb', ['-s', deviceId, 'emu', 'avd', 'name'], '.', true)
       .split('\r\n')
       .map((line) => line.trim())
       .first;
 }
 
-/// Find android device id with matching [avdName].
+/// Find android device id with matching [emulatorId].
 /// Returns matching android device id as [String].
-String findAndroidDeviceId(String avdName) {
+String findAndroidDeviceId(String emulatorId) {
   final devicesIds = getAndroidDeviceIds();
+  print('deviceIds=$devicesIds');
   if (devicesIds.length == 0) return null;
-  return devicesIds.firstWhere((id) => avdName == getAvdName(id), orElse: null);
+  return devicesIds.firstWhere(
+      (deviceId) => emulatorId == getAndroidEmulatorId(deviceId),
+      orElse: () => null);
 }
 
 /// Get the list of running devices by id.
@@ -275,7 +276,8 @@ Future stopEmulator(String deviceId, String stagingDir) async {
 }
 
 /// Wait for android emulator to stop.
-Future<void> waitEmulatorShutdown(String deviceId, String deviceName) async {
+Future<void> waitAndroidEmulatorShutdown(
+    String deviceId, String deviceName) async {
   final pollingInterval = 500;
   final notFound = 'not found';
   String status = '';
