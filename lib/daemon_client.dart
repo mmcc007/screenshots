@@ -40,18 +40,18 @@ class DaemonClient {
   }
 
   Future<void> launchEmulator(String id) async {
-    unawaited(_sendCommand(<String, dynamic>{
+    await _sendCommand(<String, dynamic>{
       'method': 'emulator.launch',
       'params': <String, dynamic>{
         'emulatorId': id,
       },
-    }));
+    });
 
     // wait for expected device-added-emulator event
-    final deviceAdded = await _waitForEvent.future;
-    if (!(deviceAdded.contains('device.added') &&
-        deviceAdded.contains('"emulator":true'))) {
-      throw 'Error: emulator $id not started: $deviceAdded';
+    final event = await _waitForEvent.future;
+    if (!(event.contains('device.added') &&
+        event.contains('"emulator":true'))) {
+      throw 'Error: emulator $id not started: $event';
     }
 
     return Future.value();
@@ -65,7 +65,8 @@ class DaemonClient {
       if (device['platform'] == 'ios' && device['emulator'] == false) {
         final iosDevice = _iosDevices.firstWhere(
             (iosDevice) => iosDevice['id'] == device['id'],
-            orElse: () => null);
+            orElse: () =>
+                throw 'Error: could not find model name for real ios device: ${device['name']}');
         device['model'] = iosDevice['model'];
       }
       return device;
@@ -126,24 +127,9 @@ class DaemonClient {
   }
 }
 
-Future shutdownAndroidEmulator(
-    DaemonClient daemonClient, String emulatorId) async {
-  final emulators = await daemonClient.emulators;
-  final emulator = emulators.firstWhere(
-      (emulator) => emulator['id'] == emulatorId,
-      orElse: () =>
-          throw 'Error: emulator for emulatorId $emulatorId not found');
-  final devices = await daemonClient.devices;
-  final device = devices.firstWhere(
-      (device) =>
-          //            device['emulator'] == true && // bug??
-          device['id'].contains('emulator') &&
-          device['platform'] != 'ios' &&
-          getAndroidEmulatorId(device['id']) == emulatorId,
-      orElse: () =>
-          throw 'Error: device not found for emulatorId: $emulatorId');
-  cmd('adb', ['-s', device['id'], 'emu', 'kill'], '.', true);
-  await waitAndroidEmulatorShutdown(device['id'], emulator['name']);
+Future shutdownAndroidEmulator(String deviceId, String emulatorName) async {
+  cmd('adb', ['-s', deviceId, 'emu', 'kill'], '.', true);
+  await waitAndroidEmulatorShutdown(deviceId, emulatorName);
 }
 
 /// Get attached ios devices with id and model.
