@@ -148,26 +148,9 @@ Future<String> emulator(String deviceName, bool start, String deviceId,
       print('Using running emulator \'$deviceName\' in locale $testLocale ...');
     } else {
       print('Starting emulator \'$deviceName\' in locale $testLocale ...');
-      final envVars = Platform.environment;
-      if (envVars['CI'] == 'true') {
+      if (Platform.environment['CI'] == 'true') {
         // testing on CI/CD requires starting emulator in a specific way
-        final androidHome = envVars['ANDROID_HOME'];
-        await utils.streamCmd(
-            '$androidHome/emulator/emulator',
-            [
-              '-avd',
-              avdName,
-              '-no-audio',
-              '-no-window',
-              '-no-snapshot',
-              '-gpu',
-              'swiftshader',
-            ],
-            '.',
-            ProcessStartMode.detached);
-        // wait for emulator to start
-        await utils.streamCmd(
-            '$stagingDir/resources/script/android-wait-for-emulator', []);
+        await startAndroidEmulatorOnCI(avdName, stagingDir);
       } else {
         // testing locally, so start emulator in normal way
         await daemonClient.launchEmulator(avdName);
@@ -182,34 +165,7 @@ Future<String> emulator(String deviceName, bool start, String deviceId,
     }
 
     // change locale
-    String emulatorLocale = utils.androidDeviceLocale(freshDeviceId);
-    if (emulatorLocale != testLocale) {
-      print(
-          'Changing locale from $emulatorLocale to $testLocale on \'$deviceName\'...');
-      if (utils.cmd('adb', ['root'], '.', true) ==
-          'adbd cannot run as root in production builds\n') {
-        stdout.write(
-            'Warning: locale will not be changed. Running in locale \'$emulatorLocale\'.\n');
-        stdout.write(
-            'To change locale you must use a non-production emulator (one that does not depend on Play Store). See:\n');
-        stdout.write(
-            '    https://stackoverflow.com/questions/43923996/adb-root-is-not-working-on-emulator/45668555#45668555 for details.\n');
-      }
-      flutterDriverBugWarning();
-      // adb shell "setprop persist.sys.locale fr-CA; setprop ctl.restart zygote"
-      utils.cmd('adb', [
-        '-s',
-        freshDeviceId,
-        'shell',
-        'setprop',
-        'persist.sys.locale',
-        testLocale,
-        ';',
-        'setprop',
-        'ctl.restart',
-        'zygote'
-      ]);
-    }
+    setAndroidLocale(freshDeviceId, deviceName, testLocale);
     // note: there should be enough time for the emulator to (re)start
     // while app is being compiled.
 
@@ -221,6 +177,58 @@ Future<String> emulator(String deviceName, bool start, String deviceId,
     await utils.stopEmulator(deviceId, stagingDir);
   }
   return freshDeviceId;
+}
+
+Future startAndroidEmulatorOnCI(String emulatorId, String stagingDir) async {
+  // testing on CI/CD requires starting emulator in a specific way
+  final androidHome = Platform.environment['ANDROID_HOME'];
+  await utils.streamCmd(
+      '$androidHome/emulator/emulator',
+      [
+        '-avd',
+        emulatorId,
+        '-no-audio',
+        '-no-window',
+        '-no-snapshot',
+        '-gpu',
+        'swiftshader',
+      ],
+      '.',
+      ProcessStartMode.detached);
+  // wait for emulator to start
+  await utils
+      .streamCmd('$stagingDir/resources/script/android-wait-for-emulator', []);
+}
+
+void setAndroidLocale(String deviceId, String deviceName, String testLocale) {
+  String deviceLocale = utils.androidDeviceLocale(deviceId);
+  if (deviceLocale != testLocale) {
+    print(
+        'Changing locale from $deviceLocale to $testLocale on \'$deviceName\'...');
+    if (utils.cmd('adb', ['root'], '.', true) ==
+        'adbd cannot run as root in production builds\n') {
+      stdout.write(
+          'Warning: locale will not be changed. Running in locale \'$deviceLocale\'.\n');
+      stdout.write(
+          'To change locale you must use a non-production emulator (one that does not depend on Play Store). See:\n');
+      stdout.write(
+          '    https://stackoverflow.com/questions/43923996/adb-root-is-not-working-on-emulator/45668555#45668555 for details.\n');
+    }
+    flutterDriverBugWarning();
+    // adb shell "setprop persist.sys.locale fr-CA; setprop ctl.restart zygote"
+    utils.cmd('adb', [
+      '-s',
+      deviceId,
+      'shell',
+      'setprop',
+      'persist.sys.locale',
+      testLocale,
+      ';',
+      'setprop',
+      'ctl.restart',
+      'zygote'
+    ]);
+  }
 }
 
 Future<String> _getFreshDeviceId(String deviceId, String deviceName) async {
