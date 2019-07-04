@@ -161,75 +161,6 @@ main() {
     await shutdownAndroidEmulator(deviceId, name);
   });
 
-  test('run test on matching device or emulator', () async {
-    final realDevice = 'iPhone 5c'; // device
-    final androidEmulator = 'Nexus 6P'; // android emulator
-    final iosSimulator = 'iPhone 7'; // ios simulator
-    final deviceNames = [realDevice, androidEmulator, iosSimulator];
-    final testPath = 'test_driver/main.dart';
-
-    await daemonClient.start;
-
-    for (final deviceName in deviceNames) {
-      // look for matching device first
-      final devices = await daemonClient.devices;
-      final emulators = await daemonClient.emulators;
-      print('devices=$devices');
-      print('emulators=$emulators');
-      final device = devices.firstWhere((device) {
-        if (device['platform'] == 'ios') {
-          // ios device or simulator
-          if (device['emulator']) {
-            return device['name'] == deviceName;
-          } else {
-            return device['model'].contains(deviceName);
-          }
-        } else {
-          // android device or emulator
-          if (device['emulator']) {
-            return findDeviceEmulator(emulators, device['id'])['name'] ==
-                deviceName;
-          } else {
-            return device['name'] == deviceName;
-          }
-        }
-      }, orElse: () => null);
-
-      String deviceId;
-      Map emulator = null;
-      Map simulatorInfo = null;
-      if (device != null) {
-        deviceId = device['id'];
-      } else {
-        // if no matching device, look for matching android emulator
-        emulator = findEmulator(emulators, deviceName);
-        if (emulator != null) {
-          final emulatorId = emulator['id'];
-          await daemonClient.launchEmulator(emulatorId);
-          deviceId = findAndroidDeviceId(emulatorId);
-        } else {
-          // if no matching android emulator, look for matching ios simulator
-          simulatorInfo = getHighestIosDevice(getIosDevices(), deviceName);
-          deviceId = simulatorInfo['udid'];
-          cmd('xcrun', ['simctl', 'boot', deviceId]);
-        }
-      }
-
-      // run test
-      print('Running test on $deviceName...');
-      await streamCmd(
-          'flutter', ['-d', deviceId, 'drive', testPath], 'example');
-
-      // if an emulator was started, shut it down
-      if (emulator != null) {
-        await shutdownAndroidEmulator(deviceId, emulator['name']);
-      }
-      if (simulatorInfo != null) {
-        cmd('xcrun', ['simctl', 'shutdown', deviceId]);
-      }
-    }
-  }, timeout: Timeout(Duration(minutes: 4)));
-
   test('firstwhere', () {
     final expected = {'id': 2};
     final listOfMap = [
@@ -245,6 +176,109 @@ main() {
     // not found
     expect(findIt(listOfMap, 4), null);
   });
+
+  test('run test on matching devices or emulators', () async {
+    final realDevice = 'iPhone 5c'; // device
+    final androidEmulator = 'Nexus 6P'; // android emulator
+    final iosSimulator = 'iPhone 7'; // ios simulator
+    final deviceNames = [realDevice, androidEmulator, iosSimulator];
+//    final locales = ['en-US', 'fr-CA'];
+    final locales = ['en-US'];
+    final testPath = 'test_driver/main.dart';
+
+    await daemonClient.start;
+    final devices = await daemonClient.devices;
+    final emulators = await daemonClient.emulators;
+
+    await runTestOnAll(deviceNames, devices, emulators, locales, testPath);
+  }, timeout: Timeout(Duration(minutes: 4)));
+}
+
+Future runTestOnAll(List<String> deviceNames, List devices, List emulators,
+    List locales, String testPath) async {
+  for (final deviceName in deviceNames) {
+    // look for matching device first
+    final device = devices.firstWhere((device) {
+      if (device['platform'] == 'ios') {
+        if (device['emulator']) {
+          // running ios simulator
+          return device['name'] == deviceName;
+        } else {
+          // real ios device
+          return device['model'].contains(deviceName);
+        }
+      } else {
+        if (device['emulator']) {
+          // running android emulator
+          return findDeviceEmulator(emulators, device['id'])['name'] ==
+              deviceName;
+        } else {
+          // real android device
+          return device['name'] == deviceName;
+        }
+      }
+    }, orElse: () => null);
+
+    String deviceId;
+    Map emulator = null;
+    Map simulator = null;
+    if (device != null) {
+      deviceId = device['id'];
+    } else {
+      // if no matching device, look for matching android emulator
+      emulator = findEmulator(emulators, deviceName);
+      if (emulator != null) {
+        final emulatorId = emulator['id'];
+        await daemonClient.launchEmulator(emulatorId);
+        deviceId = findAndroidDeviceId(emulatorId);
+      } else {
+        // if no matching android emulator, look for matching ios simulator
+        simulator = getHighestIosDevice(getIosDevices(), deviceName);
+        deviceId = simulator['udid'];
+        cmd('xcrun', ['simctl', 'boot', deviceId]);
+      }
+    }
+
+    for (final locale in locales) {
+      // set locale
+      if ((device != null &&
+              device['platform'] == 'ios' &&
+              device['emulator']) ||
+          (device == null && simulator != null)) {
+        // a running simulator
+        final deviceLocale = iosSimulatorLocale(deviceId);
+        print('simulator locale=$deviceLocale');
+        if (locale != deviceLocale) {}
+      }
+
+      if ((device != null && device['platform'] != 'ios') ||
+          (device == null && emulator != null)) {
+        // a running android device or emulator
+        final deviceLocale = androidDeviceLocale(deviceId);
+        print('android device or emulator locale=$deviceLocale');
+        if (locale != deviceLocale) {}
+      }
+
+      if ((device != null &&
+          device['platform'] == 'ios' &&
+          !device['emulator'])) {
+        // a running ios device
+        print('Warning: the locale for an ios device cannot be changed.');
+      }
+
+      // run test
+      print('Running test on $deviceName in locale $locale...');
+//      await streamCmd(
+//          'flutter', ['-d', deviceId, 'drive', testPath], 'example');
+    }
+    // if an emulator was started, shut it down
+    if (emulator != null) {
+      await shutdownAndroidEmulator(deviceId, emulator['name']);
+    }
+    if (simulator != null) {
+      cmd('xcrun', ['simctl', 'shutdown', deviceId]);
+    }
+  }
 }
 
 Map findEmulator(List emulators, String emulatorName) {
