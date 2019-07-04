@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:path/path.dart';
 import 'package:screenshots/daemon_client.dart';
+import 'package:screenshots/resources.dart';
 import 'package:screenshots/screenshots.dart';
 import 'package:screenshots/utils.dart';
 import 'package:test/test.dart';
@@ -184,18 +185,23 @@ main() {
     final deviceNames = [realDevice, androidEmulator, iosSimulator];
 //    final locales = ['en-US', 'fr-CA'];
     final locales = ['en-US'];
+//    final locales = ['fr-CA'];
     final testPath = 'test_driver/main.dart';
+    final stagingDir = '/tmp/tmp';
+
+    await unpackScripts(stagingDir);
 
     await daemonClient.start;
     final devices = await daemonClient.devices;
     final emulators = await daemonClient.emulators;
 
-    await runTestOnAll(deviceNames, devices, emulators, locales, testPath);
+    await runTestOnAll(
+        deviceNames, devices, emulators, locales, stagingDir, testPath);
   }, timeout: Timeout(Duration(minutes: 4)));
 }
 
 Future runTestOnAll(List<String> deviceNames, List devices, List emulators,
-    List locales, String testPath) async {
+    List locales, String stagingDir, String testPath) async {
   for (final deviceName in deviceNames) {
     // look for matching device first
     final device = devices.firstWhere((device) {
@@ -229,18 +235,39 @@ Future runTestOnAll(List<String> deviceNames, List devices, List emulators,
       emulator = findEmulator(emulators, deviceName);
       if (emulator != null) {
         final emulatorId = emulator['id'];
+        print('Starting $deviceName...');
+//        daemonClient.verbose = true;
         await daemonClient.launchEmulator(emulatorId);
+//        daemonClient.verbose = false;
         deviceId = findAndroidDeviceId(emulatorId);
+        print('... $deviceName started.');
       } else {
         // if no matching android emulator, look for matching ios simulator
         simulator = getHighestIosDevice(getIosDevices(), deviceName);
         deviceId = simulator['udid'];
+        print('Starting $deviceName...');
+//        daemonClient.verbose = true;
         cmd('xcrun', ['simctl', 'boot', deviceId]);
+//        daemonClient.verbose = false;
+        print('... $deviceName started.');
       }
     }
 
     for (final locale in locales) {
-      // set locale
+      if ((device != null && device['platform'] != 'ios') ||
+          (device == null && emulator != null)) {
+        // a running android device or emulator
+        final deviceLocale = androidDeviceLocale(deviceId);
+        print('android device or emulator locale=$deviceLocale');
+        if (locale != deviceLocale) {
+          print('Changing locale from $deviceLocale to $locale...');
+          daemonClient.verbose = true;
+          setAndroidLocale(deviceId, deviceName, locale);
+          daemonClient.verbose = false;
+          print('... locale change complete.');
+        }
+      }
+
       if ((device != null &&
               device['platform'] == 'ios' &&
               device['emulator']) ||
@@ -248,15 +275,16 @@ Future runTestOnAll(List<String> deviceNames, List devices, List emulators,
         // a running simulator
         final deviceLocale = iosSimulatorLocale(deviceId);
         print('simulator locale=$deviceLocale');
-        if (locale != deviceLocale) {}
-      }
-
-      if ((device != null && device['platform'] != 'ios') ||
-          (device == null && emulator != null)) {
-        // a running android device or emulator
-        final deviceLocale = androidDeviceLocale(deviceId);
-        print('android device or emulator locale=$deviceLocale');
-        if (locale != deviceLocale) {}
+        if (locale != deviceLocale) {
+          print('Changing locale from $deviceLocale to $locale');
+          daemonClient.verbose = true;
+          cmd('xcrun', ['simctl', 'shutdown', deviceId]);
+          await streamCmd('$stagingDir/resources/script/simulator-controller',
+              [deviceId, 'locale', locale]);
+          cmd('xcrun', ['simctl', 'boot', deviceId]);
+          daemonClient.verbose = true;
+          print('...locale change complete.');
+        }
       }
 
       if ((device != null &&
@@ -267,16 +295,18 @@ Future runTestOnAll(List<String> deviceNames, List devices, List emulators,
       }
 
       // run test
-      print('Running test on $deviceName in locale $locale...');
-//      await streamCmd(
-//          'flutter', ['-d', deviceId, 'drive', testPath], 'example');
+      print('Running test on \'$deviceName\' in locale $locale...');
+      await streamCmd(
+          'flutter', ['-d', deviceId, 'drive', testPath], 'example');
     }
     // if an emulator was started, shut it down
     if (emulator != null) {
       await shutdownAndroidEmulator(deviceId, emulator['name']);
     }
     if (simulator != null) {
+      print('Waiting for \'$deviceName\' to shutdown...');
       cmd('xcrun', ['simctl', 'shutdown', deviceId]);
+      print('... \'$deviceName\' shutdown complete.');
     }
   }
 }
