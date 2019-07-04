@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -65,7 +64,6 @@ main() {
   });
 
   test('start daemon client', () async {
-    final daemonClient = DaemonClient.instance;
     await daemonClient.start;
     print('emulators: ${await daemonClient.emulators}');
     print('devices: ${await daemonClient.devices}');
@@ -76,18 +74,19 @@ main() {
 
   test('launch android emulator via daemon', () async {
     final emulatorId = 'Nexus_6P_API_28';
-    final daemonClient = DaemonClient.instance;
+    final name = 'Nexus 6P';
+    final deviceId = 'emulator-5554';
     await daemonClient.start;
     print('starting $emulatorId...');
     daemonClient.verbose = true;
     await daemonClient.launchEmulator(emulatorId);
     daemonClient.verbose = false;
     print('$emulatorId started up');
-    expect(findAndroidDeviceId(emulatorId), 'emulator-5554');
+    expect(findAndroidDeviceId(emulatorId), deviceId);
     print('emulator startup confirmed');
 
     // shutdown
-    await shutdownAndroidEmulator(daemonClient, emulatorId);
+    await shutdownAndroidEmulator(deviceId, name);
   });
 
   test('wait for android emulator to shutdown', () async {
@@ -98,7 +97,6 @@ main() {
 
   test('launch ios simulator', () async {
     final emulatorId = 'apple_ios_simulator';
-    final daemonClient = DaemonClient.instance;
 //    daemonClient.verbose = true;
     await daemonClient.start;
     await daemonClient.launchEmulator(emulatorId);
@@ -135,7 +133,6 @@ main() {
   test('run test on real device', () async {
     final deviceName = 'iPhone 5c';
     final testPath = 'test_driver/main.dart';
-    final daemonClient = DaemonClient.instance;
     await daemonClient.start;
     final devices = await daemonClient.devices;
     print('devices=$devices');
@@ -151,15 +148,17 @@ main() {
 
   test('wait for start of android emulator', () async {
     final id = 'Nexus_6P_API_28';
+    final name = 'Nexus 6P';
+    final deviceId = 'emulator-5554';
     daemonClient.verbose = true;
     await daemonClient.start;
     daemonClient.verbose;
     await daemonClient.launchEmulator(id);
 
-    expect(findAndroidDeviceId(id), 'emulator-5554');
+    expect(findAndroidDeviceId(id), deviceId);
 
     // shutdown
-    await shutdownAndroidEmulator(daemonClient, id);
+    await shutdownAndroidEmulator(deviceId, name);
   });
 
   test('run test on matching device or emulator', () async {
@@ -174,11 +173,27 @@ main() {
     for (final deviceName in deviceNames) {
       // look for matching device first
       final devices = await daemonClient.devices;
-      final device = devices.firstWhere(
-          (device) => device['platform'] == 'ios'
-              ? device['model'].contains(deviceName)
-              : device['name'] == deviceName,
-          orElse: () => null);
+      final emulators = await daemonClient.emulators;
+      print('devices=$devices');
+      print('emulators=$emulators');
+      final device = devices.firstWhere((device) {
+        if (device['platform'] == 'ios') {
+          // ios device or simulator
+          if (device['emulator']) {
+            return device['name'] == deviceName;
+          } else {
+            return device['model'].contains(deviceName);
+          }
+        } else {
+          // android device or emulator
+          if (device['emulator']) {
+            return findDeviceEmulator(emulators, device['id'])['name'] ==
+                deviceName;
+          } else {
+            return device['name'] == deviceName;
+          }
+        }
+      }, orElse: () => null);
 
       String deviceId;
       Map emulator = null;
@@ -187,7 +202,7 @@ main() {
         deviceId = device['id'];
       } else {
         // if no matching device, look for matching android emulator
-        emulator = await findEmulator(daemonClient, deviceName);
+        emulator = findEmulator(emulators, deviceName);
         if (emulator != null) {
           final emulatorId = emulator['id'];
           await daemonClient.launchEmulator(emulatorId);
@@ -207,7 +222,7 @@ main() {
 
       // if an emulator was started, shut it down
       if (emulator != null) {
-        await shutdownAndroidEmulator(daemonClient, emulator['id']);
+        await shutdownAndroidEmulator(deviceId, emulator['name']);
       }
       if (simulatorInfo != null) {
         cmd('xcrun', ['simctl', 'shutdown', deviceId]);
@@ -232,8 +247,13 @@ main() {
   });
 }
 
-Future<Map> findEmulator(DaemonClient daemonClient, String emulatorName) async {
-  final emulators = await daemonClient.emulators;
+Map findEmulator(List emulators, String emulatorName) {
   return emulators.firstWhere((emulator) => emulator['name'] == emulatorName,
+      orElse: () => null);
+}
+
+Map findDeviceEmulator(List emulators, String deviceId) {
+  return emulators.firstWhere(
+      (emulator) => emulator['id'] == getAndroidEmulatorId(deviceId),
       orElse: () => null);
 }
