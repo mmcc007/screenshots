@@ -43,9 +43,6 @@ Future clearFastlaneDir(
 
 /// clear configured fastlane directories.
 Future clearFastlaneDirs(Map config, Screens screens) async {
-//  final config = Config('test/test_config.yaml').config;
-//  final Map screens = await Screens().init();
-
   if (config['devices']['ios'] != null) {
     for (String emulatorName in config['devices']['ios'].keys) {
       for (final locale in config['locales']) {
