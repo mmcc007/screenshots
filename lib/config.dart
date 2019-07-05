@@ -20,14 +20,14 @@ class Config {
   }
 
   /// Get configuration information for supported devices
-  Map get config => docYaml.value;
+  Map get configInfo => docYaml.value;
 
   /// Current screenshots runtime environment
   /// (updated before start of each test)
   Map get screenshotsEnv => _screenshotsEnv;
 
   File get _envStore {
-    return File(config['staging'] + '/' + kEnvFileName);
+    return File(configInfo['staging'] + '/' + kEnvFileName);
   }
 
   /// Records screenshots environment before start of each test
@@ -53,10 +53,10 @@ class Config {
   /// Check emulators and simulators are installed,
   /// matching screen is available and tests exist.
   Future<bool> validate(Screens screens) async {
-    if (config['devices']['android'] != null) {
+    if (configInfo['devices']['android'] != null) {
       // check emulators
       final List emulators = utils.getAvdNames();
-      for (String device in config['devices']['android'].keys) {
+      for (String device in configInfo['devices']['android'].keys) {
         // check screen available for this device
         screenAvailable(screens, device);
 
@@ -72,10 +72,10 @@ class Config {
       }
     }
 
-    if (config['devices']['ios'] != null) {
+    if (configInfo['devices']['ios'] != null) {
       // check simulators
       final Map simulators = utils.getIosDevices();
-      for (String deviceName in config['devices']['ios'].keys) {
+      for (String deviceName in configInfo['devices']['ios'].keys) {
         // check screen available for this device
         screenAvailable(screens, deviceName);
 
@@ -92,7 +92,7 @@ class Config {
       }
     }
 
-    for (String test in config['tests']) {
+    for (String test in configInfo['tests']) {
       if (!await File(test).exists()) {
         stderr.write('Missing test: $test from $configPath not found.\n');
         exit(1);
@@ -101,7 +101,7 @@ class Config {
 
     //  Due to issue with locales, issue warning for multiple locales.
     //  https://github.com/flutter/flutter/issues/27785
-    if (config['locales'].length > 1) {
+    if (configInfo['locales'].length > 1) {
       stdout.write('Warning: Flutter integration tests do not work in '
           'multiple locals.\n');
       stdout.write('  See comment on issue:\n'

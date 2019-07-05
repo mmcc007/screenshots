@@ -34,7 +34,7 @@ Future<void> run([String configPath = kConfigFileName]) async {
   final config = Config(configPath);
   // validate config file
   await config.validate(screens);
-  final Map configInfo = config.config;
+  final Map configInfo = config.configInfo;
 
   // init
   final stagingDir = configInfo['staging'];
