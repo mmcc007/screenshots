@@ -6,9 +6,13 @@ import 'utils.dart';
 
 /// Creates and communicates with flutter daemon.
 class DaemonClient {
-  DaemonClient._();
+  static final DaemonClient _daemonClient = new DaemonClient._internal();
 
-  static final DaemonClient instance = DaemonClient._();
+  factory DaemonClient() {
+    return _daemonClient;
+  }
+
+  DaemonClient._internal();
 
   bool verbose = false;
 

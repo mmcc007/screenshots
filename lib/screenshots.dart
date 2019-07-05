@@ -18,9 +18,6 @@ const String kEnvFileName = 'env.json';
 /// Distinguish device OS.
 enum DeviceType { android, ios }
 
-/// Flutter daemon
-final daemonClient = DaemonClient.instance;
-
 /// Capture screenshots, process, and load into fastlane according to config file.
 ///
 /// For each locale and emulator/simulator:
@@ -46,6 +43,7 @@ Future<void> run([String configPath = kConfigFileName]) async {
   await fastlane.clearFastlaneDirs(configInfo, screens);
 
   // start flutter daemon
+  final daemonClient = DaemonClient();
   await daemonClient.start;
 
   // run integration tests in each android device (or emulator) for each locale and
@@ -58,8 +56,8 @@ Future<void> run([String configPath = kConfigFileName]) async {
       final alreadyBooted = deviceId == null ? false : true;
 
       for (final locale in configInfo['locales']) {
-        final freshDeviceId = await emulator(deviceName, true, deviceId,
-            stagingDir, highestAvdName, alreadyBooted, locale);
+        final freshDeviceId = await emulator(daemonClient, deviceName, true,
+            deviceId, stagingDir, highestAvdName, alreadyBooted, locale);
 
         // store env for later use by tests
         await config.storeEnv(config, screens, deviceName, locale, 'android');
@@ -74,8 +72,8 @@ Future<void> run([String configPath = kConfigFileName]) async {
               screens, configInfo, DeviceType.android, deviceName, locale);
         }
         if (!alreadyBooted) {
-          await emulator(
-              deviceName, false, freshDeviceId, stagingDir, highestAvdName);
+          await emulator(daemonClient, deviceName, false, freshDeviceId,
+              stagingDir, highestAvdName);
         }
       }
     }
@@ -137,8 +135,8 @@ void screenshots(String deviceId, String testPath, String stagingDir) async {
 ///
 /// Start/stop emulator.
 ///
-Future<String> emulator(String deviceName, bool start, String deviceId,
-    String stagingDir, String avdName,
+Future<String> emulator(DaemonClient daemonClient, String deviceName,
+    bool start, String deviceId, String stagingDir, String avdName,
     [bool alreadyBooted, String testLocale = "en-US"]) async {
   // used to keep and report a newly booted device if any
   String freshDeviceId = deviceId;

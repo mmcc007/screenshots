@@ -65,6 +65,7 @@ main() {
   });
 
   test('start daemon client', () async {
+    final daemonClient = DaemonClient();
     await daemonClient.start;
     print('emulators: ${await daemonClient.emulators}');
     print('devices: ${await daemonClient.devices}');
@@ -77,6 +78,7 @@ main() {
     final emulatorId = 'Nexus_6P_API_28';
     final name = 'Nexus 6P';
     final deviceId = 'emulator-5554';
+    final daemonClient = DaemonClient();
     await daemonClient.start;
     print('starting $emulatorId...');
     daemonClient.verbose = true;
@@ -98,6 +100,7 @@ main() {
 
   test('launch ios simulator', () async {
     final emulatorId = 'apple_ios_simulator';
+    final daemonClient = DaemonClient();
 //    daemonClient.verbose = true;
     await daemonClient.start;
     await daemonClient.launchEmulator(emulatorId);
@@ -134,6 +137,7 @@ main() {
   test('run test on real device', () async {
     final deviceName = 'iPhone 5c';
     final testPath = 'test_driver/main.dart';
+    final daemonClient = DaemonClient();
     await daemonClient.start;
     final devices = await daemonClient.devices;
     print('devices=$devices');
@@ -151,6 +155,7 @@ main() {
     final id = 'Nexus_6P_API_28';
     final name = 'Nexus 6P';
     final deviceId = 'emulator-5554';
+    final daemonClient = DaemonClient();
     daemonClient.verbose = true;
     await daemonClient.start;
     daemonClient.verbose;
@@ -191,17 +196,24 @@ main() {
 
     await unpackScripts(stagingDir);
 
+    final daemonClient = DaemonClient();
     await daemonClient.start;
     final devices = await daemonClient.devices;
     final emulators = await daemonClient.emulators;
 
-    await runTestOnAll(
-        deviceNames, devices, emulators, locales, stagingDir, testPath);
+    await runTestOnAll(daemonClient, deviceNames, devices, emulators, locales,
+        stagingDir, testPath);
   }, timeout: Timeout(Duration(minutes: 4)));
 }
 
-Future runTestOnAll(List<String> deviceNames, List devices, List emulators,
-    List locales, String stagingDir, String testPath) async {
+Future runTestOnAll(
+    DaemonClient daemonClient,
+    List<String> deviceNames,
+    List devices,
+    List emulators,
+    List locales,
+    String stagingDir,
+    String testPath) async {
   for (final deviceName in deviceNames) {
     // look for matching device first
     final device = devices.firstWhere((device) {
