@@ -1,5 +1,5 @@
 import 'package:screenshots/config.dart';
-import 'package:screenshots/process_images.dart';
+import 'package:screenshots/image_processor.dart';
 import 'package:screenshots/screens.dart';
 import 'package:screenshots/screenshots.dart';
 import 'package:test/test.dart';
@@ -97,8 +97,8 @@ void main() {
   test('check if frame is needed', () {
     final Map config = loadYaml(screenshotsYaml);
 
-    expect(isFrameRequired(config, DeviceType.ios, 'iPhone X'), true);
-    expect(isFrameRequired(config, DeviceType.ios, 'iPhone 7 Plus'), false);
-    expect(isFrameRequired(config, DeviceType.android, 'Nexus 5X'), true);
+    expect(ImageProcessor.isFrameRequired(config, DeviceType.ios, 'iPhone X'), true);
+    expect(ImageProcessor.isFrameRequired(config, DeviceType.ios, 'iPhone 7 Plus'), false);
+    expect(ImageProcessor.isFrameRequired(config, DeviceType.android, 'Nexus 5X'), true);
   });
 }
