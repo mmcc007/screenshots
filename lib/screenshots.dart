@@ -31,9 +31,14 @@ Future<void> run([String configPath = kConfigFileName]) async {
   final screens = Screens();
   await screens.init();
 
+  // start flutter daemon
+  final daemonClient = DaemonClient();
+  await daemonClient.start;
+  final devices = await daemonClient.devices;
+
   final config = Config(configPath);
   // validate config file
-  await config.validate(screens);
+  await config.validate(screens, devices);
   final Map configInfo = config.configInfo;
 
   // init
@@ -41,10 +46,6 @@ Future<void> run([String configPath = kConfigFileName]) async {
   await Directory(stagingDir + '/test').create(recursive: true);
   await resources.unpackScripts(stagingDir);
   await fastlane.clearFastlaneDirs(configInfo, screens);
-
-  // start flutter daemon
-  final daemonClient = DaemonClient();
-  await daemonClient.start;
 
   final imageProcessor = ImageProcessor(screens, configInfo);
 

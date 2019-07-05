@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:screenshots/image_processor.dart';
 import 'package:screenshots/screens.dart';
 import 'package:screenshots/screenshots.dart';
 import 'package:yaml/yaml.dart';
@@ -50,43 +51,48 @@ class Config {
     _screenshotsEnv = json.decode(await _envStore.readAsString());
   }
 
-  /// Check emulators and simulators are installed,
+  /// Check emulators and simulators are installed, devices attached,
   /// matching screen is available and tests exist.
-  Future<bool> validate(Screens screens) async {
+  Future<bool> validate(Screens screens, List allDevices) async {
     if (configInfo['devices']['android'] != null) {
-      // check emulators
+      final devices = utils.getAndroidDevices(allDevices);
       final List emulators = utils.getAvdNames();
-      for (String device in configInfo['devices']['android'].keys) {
-        // check screen available for this device
-        screenAvailable(screens, device);
+      for (String deviceName in configInfo['devices']['android'].keys) {
+        if (ImageProcessor.isFrameRequired(
+            configInfo, DeviceType.android, deviceName))
+          // check screen available for this device
+          screenAvailable(screens, deviceName);
+
+        // is device attached
+        final isDeviceAttached = getDevice(devices, deviceName) == null;
 
         // check emulator installed
-        if (!isEmulatorInstalled(emulators, device)) {
-          stderr.write('Error: emulator not installed for '
-              'device \'$device\' in $configPath.\n');
-          stdout.write('\nInstall the missing emulator or use a supported '
-              'device with an installed emulator in $configPath.\n');
-          configGuide(screens);
+        if (!isDeviceAttached && !isEmulatorInstalled(emulators, deviceName)) {
+          stderr.write('Error: no device attached or emulator installed for '
+              'device \'$deviceName\' in $configPath.\n');
+          configGuide(screens, allDevices);
           exit(1);
         }
       }
     }
 
     if (configInfo['devices']['ios'] != null) {
-      // check simulators
+      final devices = utils.getIosDevicesX(allDevices);
       final Map simulators = utils.getIosDevices();
       for (String deviceName in configInfo['devices']['ios'].keys) {
-        // check screen available for this device
-        screenAvailable(screens, deviceName);
+        if (ImageProcessor.isFrameRequired(
+            configInfo, DeviceType.ios, deviceName))
+          // check screen available for this device
+          screenAvailable(screens, deviceName);
+
+        final isDeviceAttached = getDevice(devices, deviceName) == null;
 
         // check simulator installed
-        bool simulatorInstalled = isSimulatorInstalled(simulators, deviceName);
-        if (!simulatorInstalled) {
-          stderr.write('Error: simulator not installed for '
+        if (!isDeviceAttached &&
+            !isSimulatorInstalled(simulators, deviceName)) {
+          stderr.write('Error: no device attached or simulator installed for '
               'device \'$deviceName\' in $configPath.\n');
-          stdout.write('\nInstall the missing simulator or use a supported '
-              'device with an installed simulator in $configPath.\n');
-          configGuide(screens);
+          configGuide(screens, allDevices);
           exit(1);
         }
       }
@@ -113,6 +119,14 @@ class Config {
     }
 
     return true;
+  }
+
+  getDevice(List devices, String deviceName) {
+    // find device attached
+    final deviceAttached = devices.firstWhere(
+        (device) => device['name'] == deviceName,
+        orElse: () => null);
+    return deviceAttached;
   }
 
   /// Checks if an emulator is installed, matching the device named in config file.
@@ -159,14 +173,19 @@ class Config {
     return simulatorInstalled;
   }
 
-  void configGuide(Screens screens) {
+  void configGuide(Screens screens, List devices) {
     stdout.write('\nGuide:');
+    attachedDevices([
+      ...utils.getIosDevicesX(devices),
+      ...utils.getAndroidDevices(devices)
+    ]);
     installedEmulators(utils.getAvdNames());
     installedSimulators(utils.getIosDevices());
     supportedDevices(screens);
     stdout.write(
-        '\n  Each device listed in screenshots.yaml must have a supported '
-        'screen and emulator/simulator.\n');
+        '\n  Each device listed in screenshots.yaml with framing required must'
+        '\n    1. have a supported screen'
+        '\n    2. an attached device or an installed emulator/simulator.\n\n');
   }
 
   // check screen is available for device
@@ -174,13 +193,13 @@ class Config {
     if (screens.screenProps(deviceName) == null) {
       stderr.write(
           'Error: screen not available for device \'$deviceName\' in $configPath.\n');
-      stdout.write('\n  Use a supported device in $configPath.\n\n'
-          '  If device is required, request screen support for device by\n'
+      stderr.flush();
+      stdout.write(
+          '\n  Use a supported device or set \'frame: false\' for device in $configPath.\n\n'
+          '  If framing for device is required, request screen support by\n'
           '  creating an issue in:\n'
           '  https://github.com/mmcc007/screenshots/issues.\n\n');
       supportedDevices(screens);
-
-//      stderr.flush();
       exit(1);
     }
   }
@@ -195,6 +214,15 @@ class Config {
         }
       });
     });
+  }
+
+  void attachedDevices(List devices) {
+    stdout.write('\n  Attached devices:\n');
+    for (final device in devices) {
+      device['platform'] == 'ios'
+          ? stdout.write('    ${device['model']}\n')
+          : stdout.write('    ${device['name']}\n');
+    }
   }
 
   void installedEmulators(List emulators) {

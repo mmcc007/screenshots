@@ -139,8 +139,14 @@ Future shutdownAndroidEmulator(String deviceId, String emulatorName) async {
 /// Get attached ios devices with id and model.
 List iosDevices() {
   final regExp = RegExp(r'Found (\w+) \(\w+, (.*), \w+, \w+\)');
+  final noAttachedDevices = 'no attached devices';
   final iosDeployDevices =
-      cmd('ios-deploy', ['-c'], '.', true).trim().split('\n').sublist(1);
+      cmd('sh', ['-c', 'ios-deploy -c || echo "$noAttachedDevices"'], '.', true)
+          .trim()
+          .split('\n')
+          .sublist(1);
+//  print('iosDeployDevices=$iosDeployDevices');
+  if (iosDeployDevices[0] == noAttachedDevices) return [];
   return iosDeployDevices.map((line) {
     final matches = regExp.firstMatch(line);
     final device = {};

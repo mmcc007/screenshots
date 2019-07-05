@@ -215,7 +215,9 @@ void main() {
     final Screens screens = Screens();
     await screens.init();
     final Config config = Config('test/screenshots_test.yaml');
-    config.configGuide(screens);
+    final daemonClient = DaemonClient();
+    await daemonClient.start;
+    config.configGuide(screens, await daemonClient.devices);
   });
 
   test('rooted emulator', () {
@@ -467,5 +469,15 @@ void main() {
       print('already booted');
     }
     expect(deviceId, isNotNull);
+  });
+
+  test('get real devices', () async {
+    final daemonClient = DaemonClient();
+    await daemonClient.start;
+    final devices = await daemonClient.devices;
+    final iosDevices = getIosDevicesX(devices);
+    final androidDevices = getAndroidDevices(devices);
+    print('iosDevices=$iosDevices');
+    print('androidDevices=$androidDevices');
   });
 }

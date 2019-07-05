@@ -339,3 +339,17 @@ class Poller {
     _timer = null;
   }
 }
+
+List getIosDevicesX(List devices) {
+  final iosDevices = devices
+      .where((device) => device['platform'] == 'ios' && !device['emulator'])
+      .toList();
+  return iosDevices;
+}
+
+List getAndroidDevices(List devices) {
+  final iosDevices = devices
+      .where((device) => device['platform'] != 'ios' && !device['emulator'])
+      .toList();
+  return iosDevices;
+}

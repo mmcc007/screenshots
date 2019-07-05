@@ -133,10 +133,11 @@ main() {
     final devices = iosDevices();
     print('devices=$devices');
 
-    final device = devices.firstWhere(
-        (device) => device['deviceId'] == deviceId,
+    final device = devices.firstWhere((device) => device['id'] == deviceId,
         orElse: () => null);
-    print('model=${device['model']}');
+    device == null
+        ? print('device not attached')
+        : print('model=${device['model']}');
   });
 
   test('run test on real device', () async {
