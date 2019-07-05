@@ -12,7 +12,7 @@ import 'package:screenshots/capture_screen.dart';
 void main() {
   group('end-to-end test', () {
     FlutterDriver driver;
-    final Map config = Config().config;
+    final Map config = Config().configInfo;
 
     setUpAll(() async {
       // Connect to a running Flutter application instance.
