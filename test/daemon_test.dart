@@ -12,7 +12,6 @@ import 'package:screenshots/screens.dart';
 import 'package:screenshots/screenshots.dart';
 import 'package:screenshots/utils.dart';
 import 'package:test/test.dart';
-import 'package:yaml/yaml.dart';
 
 main() {
   test('start shipped daemon client', () async {
