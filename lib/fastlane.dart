@@ -10,14 +10,14 @@ import 'package:screenshots/utils.dart' as utils;
 // android/fastlane/metadata/android/en-US/images/sevenInchScreenshots
 
 /// Generate fastlane paths for ios and android.
-String fastlaneDir(DeviceType deviceType, String locale,
-    [String deviceName, String screenName]) {
+String fastlaneDir(
+    DeviceType deviceType, String locale, String androidDeviceType) {
   const androidPrefix = 'android/fastlane/metadata/android';
   const iosPrefix = 'ios/fastlane/screenshots';
   String path;
   switch (deviceType) {
     case DeviceType.android:
-      path = '$androidPrefix/$locale/images/${screenName}Screenshots';
+      path = '$androidPrefix/$locale/images/${androidDeviceType}Screenshots';
       break;
     case DeviceType.ios:
       path = '$iosPrefix/$locale';
@@ -31,8 +31,9 @@ Future clearFastlaneDir(
   const kImageSuffix = 'png';
 
   final Map screenProps = screens.screenProps(deviceName);
+  String androidDeviceType = getAndroidDeviceType(screenProps);
 
-  final dirPath = fastlaneDir(deviceType, locale, '', screenProps['destName']);
+  final dirPath = fastlaneDir(deviceType, locale, androidDeviceType);
 
   print('Clearing images in $dirPath for \'$deviceName\'...');
   // only delete images ending with .png
@@ -41,20 +42,25 @@ Future clearFastlaneDir(
   utils.clearFilesWithSuffix(dirPath, kImageSuffix);
 }
 
+String getAndroidDeviceType(Map screenProps) {
+  String androidDeviceType = null;
+  if (screenProps != null) androidDeviceType = screenProps['destName'];
+  return androidDeviceType;
+}
+
 /// clear configured fastlane directories.
 Future clearFastlaneDirs(Map config, Screens screens) async {
-  if (config['devices']['ios'] != null) {
-    for (String emulatorName in config['devices']['ios'].keys) {
+  if (config['devices']['android'] != null) {
+    for (String deviceName in config['devices']['android'].keys) {
       for (final locale in config['locales']) {
-        await clearFastlaneDir(screens, emulatorName, locale, DeviceType.ios);
+        await clearFastlaneDir(screens, deviceName, locale, DeviceType.android);
       }
     }
   }
-  if (config['devices']['android'] != null) {
-    for (String simulatorName in config['devices']['android'].keys) {
+  if (config['devices']['ios'] != null) {
+    for (String deviceName in config['devices']['ios'].keys) {
       for (final locale in config['locales']) {
-        await clearFastlaneDir(
-            screens, simulatorName, locale, DeviceType.android);
+        await clearFastlaneDir(screens, deviceName, locale, DeviceType.ios);
       }
     }
   }

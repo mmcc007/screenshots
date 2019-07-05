@@ -32,10 +32,10 @@ class ImageProcessor {
   /// After processing, screenshots are handed off for upload via fastlane.
   void process(DeviceType deviceType, String deviceName, String locale) async {
     final Map screenProps = _screens.screenProps(deviceName);
-    final Map screenResources = screenProps['resources'];
-    if (screenResources == null) {
+    if (screenProps == null) {
       print('Warning: \'$deviceName\' images will not be processed');
     } else {
+      final Map screenResources = screenProps['resources'];
       final staging = _config['staging'];
 //  print('screenResources=$screenResources');
       print('Processing screenshots from test...');
@@ -66,8 +66,8 @@ class ImageProcessor {
 
     // move to final destination for upload to stores via fastlane
     final srcDir = '${_config['staging']}/test';
-    final dstDir =
-        fastlane.fastlaneDir(deviceType, locale, '', screenProps['destName']);
+    final androidDeviceType = fastlane.getAndroidDeviceType(screenProps);
+    final dstDir = fastlane.fastlaneDir(deviceType, locale, androidDeviceType);
     // prefix screenshots with name of device before moving
     // (useful for uploading to apple via fastlane)
     await utils.prefixFilesInDir(srcDir, '$deviceName-');

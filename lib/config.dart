@@ -36,8 +36,10 @@ class Config {
   Future<void> storeEnv(
       Config config, Screens screens, emulatorName, locale, deviceType) async {
     // store env for later use by tests
+    final screenProps = screens.screenProps(emulatorName);
+    final screenSize = screenProps == null ? null : screenProps['size'];
     final currentEnv = {
-      'screen_size': screens.screenProps(emulatorName)['size'],
+      'screen_size': screenSize,
       'locale': locale,
       'device_name': emulatorName,
       'device_type': deviceType,

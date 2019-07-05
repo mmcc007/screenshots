@@ -88,7 +88,9 @@ Future<void> run([String configPath = kConfigFileName]) async {
       final simulatorInfo =
           utils.getHighestIosSimulator(utils.getIosSimulators(), simulatorName);
       for (final locale in configInfo['locales']) {
-        await simulator(simulatorName, true, simulatorInfo, stagingDir, locale);
+        if (simulatorInfo != null)
+          await simulator(
+              simulatorName, true, simulatorInfo, stagingDir, locale);
 
         // store env for later use by tests
         await config.storeEnv(config, screens, simulatorName, locale, 'ios');
@@ -96,11 +98,17 @@ Future<void> run([String configPath = kConfigFileName]) async {
         for (final testPath in configInfo['tests']) {
           print(
               'Capturing screenshots with test app $testPath on simulator \'$simulatorName\' in locale $locale ...');
-          await screenshots(simulatorInfo['udid'], testPath, stagingDir);
+          String deviceId;
+          if (simulatorInfo == null)
+            deviceId = getDevice(devices, simulatorName)['id'];
+          else
+            deviceId = simulatorInfo['udid'];
+          await screenshots(deviceId, testPath, stagingDir);
           // process screenshots
           await imageProcessor.process(DeviceType.ios, simulatorName, locale);
         }
-        await simulator(simulatorName, false, simulatorInfo);
+        if (simulatorInfo != null)
+          await simulator(simulatorName, false, simulatorInfo);
       }
     }
   }
@@ -115,6 +123,14 @@ Future<void> run([String configPath = kConfigFileName]) async {
   print('\nFor uploading and other automation options see:');
   print('  https://pub.dartlang.org/packages/fledge');
   print('\nscreenshots completed successfully.');
+}
+
+Map getDevice(List devices, String deviceName) {
+  return devices.firstWhere(
+      (device) => device['model'] == null
+          ? device['name'] == deviceName
+          : device['model'].contains(deviceName),
+      orElse: () => throw '$deviceName not found');
 }
 
 ///

@@ -142,6 +142,7 @@ Map transformIosSimulators(Map simsInfo) {
 // finds the iOS simulator with the highest available iOS version
 Map getHighestIosSimulator(Map iosSims, String simName) {
   final Map iOSVersions = iosSims[simName];
+  if (iOSVersions == null) return null; // todo: hack for real device
 
   // get highest iOS version
   var iOSVersionName = getHighestIosVersion(iOSVersions);

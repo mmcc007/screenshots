@@ -160,7 +160,8 @@ void main() {
 
   test('get highest and available version of ios device', () {
     Map iosDevices = getIosSimulators();
-    final deviceName = 'iPhone 7 Plus';
+//    final deviceName = 'iPhone 7 Plus';
+    final deviceName = 'iPhone 5c';
 //    final Map iOSVersions = iosDevices['iPhone 7 Plus'];
 //    print('iOSVersions=$iOSVersions');
 //
