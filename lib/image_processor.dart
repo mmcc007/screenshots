@@ -11,11 +11,14 @@ import 'package:path/path.dart' as p;
 import 'package:screenshots/utils.dart';
 
 class ImageProcessor {
-
   static const kDefaultIosBackground = 'xc:white';
   static const kDefaultAndroidBackground = 'xc:none'; // transparent
   static const kCrop =
       '1000x40+0+0'; // default sample size and location to test for brightness
+
+  final Screens _screens;
+  final Map _config;
+  ImageProcessor(this._screens, this._config);
 
   /// Process screenshots.
   ///
@@ -27,10 +30,9 @@ class ImageProcessor {
   /// If 'frame' in config file is true, screenshots are placed within image of device.
   ///
   /// After processing, screenshots are handed off for upload via fastlane.
-  void process(Screens screens, Map config, DeviceType deviceType,
-      String deviceName, String locale) async {
-    final Map screenProps = screens.screenProps(deviceName);
-    final staging = config['staging'];
+  void process(DeviceType deviceType, String deviceName, String locale) async {
+    final Map screenProps = _screens.screenProps(deviceName);
+    final staging = _config['staging'];
     final Map screenResources = screenProps['resources'];
 //  print('screenResources=$screenResources');
     print('Processing screenshots from test...');
@@ -43,23 +45,23 @@ class ImageProcessor {
     for (final screenshotPath in screenshots) {
       // add status bar for each screenshot
 //    print('overlaying status bar over screenshot at $screenshotPath');
-      await overlay(config, screenResources, screenshotPath.path);
+      await overlay(_config, screenResources, screenshotPath.path);
 
       if (deviceType == DeviceType.android) {
         // add nav bar for each screenshot
 //      print('appending navigation bar to screenshot at $screenshotPath');
-        await append(config, screenResources, screenshotPath.path);
+        await append(_config, screenResources, screenshotPath.path);
       }
 
       // add frame if required
-      if (isFrameRequired(config, deviceType, deviceName)) {
+      if (isFrameRequired(_config, deviceType, deviceName)) {
 //      print('placing $screenshotPath in frame');
-        await frame(config, screenProps, screenshotPath.path, deviceType);
+        await frame(_config, screenProps, screenshotPath.path, deviceType);
       }
     }
 
     // move to final destination for upload to stores via fastlane
-    final srcDir = '${config['staging']}/test';
+    final srcDir = '${_config['staging']}/test';
     final dstDir =
         fastlane.fastlaneDir(deviceType, locale, '', screenProps['destName']);
     // prefix screenshots with name of device before moving
@@ -112,7 +114,8 @@ class ImageProcessor {
   }
 
   /// Checks if frame is required for [deviceName].
-  static bool isFrameRequired(Map config, DeviceType deviceType, String deviceName) {
+  static bool isFrameRequired(
+      Map config, DeviceType deviceType, String deviceName) {
     final deviceConfig = config['devices'][enumToStr(deviceType)][deviceName];
     bool isFrameRequired = config['frame'];
     if (deviceConfig != null) {

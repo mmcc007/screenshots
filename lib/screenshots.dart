@@ -46,7 +46,7 @@ Future<void> run([String configPath = kConfigFileName]) async {
   final daemonClient = DaemonClient();
   await daemonClient.start;
 
-  final imageProcessor=ImageProcessor();
+  final imageProcessor = ImageProcessor(screens, configInfo);
 
   // run integration tests in each android device (or emulator) for each locale and
   // process screenshots
@@ -70,8 +70,7 @@ Future<void> run([String configPath = kConfigFileName]) async {
 
           await screenshots(freshDeviceId, testPath, stagingDir);
           // process screenshots
-          await imageProcessor.process(
-              screens, configInfo, DeviceType.android, deviceName, locale);
+          await imageProcessor.process(DeviceType.android, deviceName, locale);
         }
         if (!alreadyBooted) {
           await emulator(daemonClient, deviceName, false, freshDeviceId,
@@ -98,8 +97,7 @@ Future<void> run([String configPath = kConfigFileName]) async {
               'Capturing screenshots with test app $testPath on simulator \'$simulatorName\' in locale $locale ...');
           await screenshots(simulatorInfo['udid'], testPath, stagingDir);
           // process screenshots
-          await imageProcessor.process(
-              screens, configInfo, DeviceType.ios, simulatorName, locale);
+          await imageProcessor.process(DeviceType.ios, simulatorName, locale);
         }
         await simulator(simulatorName, false, simulatorInfo);
       }
