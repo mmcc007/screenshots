@@ -90,69 +90,68 @@ Future<void> streamCmd(String cmd, List<String> arguments,
   }
 }
 
-/// Creates a list of available iOS devices.
+/// Creates a list of available iOS simulators.
 /// (really just concerned with simulators for now).
 /// Provides access to their IDs and status'.
-Map getIosDevices() {
-  final deviceInfoRaw =
+Map getIosSimulators() {
+  final simulators =
       cmd('xcrun', ['simctl', 'list', 'devices', '--json'], '.', true);
-  final deviceInfo = jsonDecode(deviceInfoRaw)['devices'];
-  return transformIosDevices(deviceInfo);
+  final simulatorsInfo = jsonDecode(simulators)['devices'];
+  return transformIosSimulators(simulatorsInfo);
 }
 
-/// Transforms latest information about iOS devices into more convenient
-/// format to index into by device name.
+/// Transforms latest information about iOS simulators into more convenient
+/// format to index into by simulator name.
 /// (also useful for testing)
-Map transformIosDevices(deviceInfo) {
+Map transformIosSimulators(Map simsInfo) {
   // transform json to a Map of device name by a map of iOS versions by a list of
   // devices with a map of properties
   // ie, Map<String, Map<String, List<Map<String, String>>>>
   // In other words, just pop-out the device name for 'easier' access to
   // the device properties.
-  Map deviceInfoTransformed = {};
+  Map simsInfoTransformed = {};
 
-  deviceInfo.forEach((iOSName, devices) {
+  simsInfo.forEach((iOSName, sims) {
     //    print('iOSVersionName=$iOSVersionName');
     // note: 'isAvailable' field does not appear consistently
     //       so using 'availability' instead
-    isDeviceAvailable(device) => device['availability'] == '(available)';
-    for (var device in devices) {
-      // skip unavailable devices
-      if (!isDeviceAvailable(device)) continue;
+    isSimAvailable(sim) => sim['availability'] == '(available)';
+    for (final sim in sims) {
+      // skip if simulator unavailable
+      if (!isSimAvailable(sim)) continue;
 
-      //      print('device=$device');
       // init iOS versions map if not already present
-      if (deviceInfoTransformed[device['name']] == null) {
-        deviceInfoTransformed[device['name']] = {};
+      if (simsInfoTransformed[sim['name']] == null) {
+        simsInfoTransformed[sim['name']] = {};
       }
 
-      // init iOS version device array if not already present
-      // note: there can be multiple versions of a device with the same name
+      // init iOS version simulator array if not already present
+      // note: there can be multiple versions of a simulator with the same name
       //       for an iOS version, hence the use of an array.
-      if (deviceInfoTransformed[device['name']][iOSName] == null) {
-        deviceInfoTransformed[device['name']][iOSName] = [];
+      if (simsInfoTransformed[sim['name']][iOSName] == null) {
+        simsInfoTransformed[sim['name']][iOSName] = [];
       }
 
-      // add device to iOS version device array
-      deviceInfoTransformed[device['name']][iOSName].add(device);
+      // add simulator to iOS version simulator array
+      simsInfoTransformed[sim['name']][iOSName].add(sim);
     }
   });
-  return deviceInfoTransformed;
+  return simsInfoTransformed;
 }
 
-// finds the iOS device with the highest available iOS version
-Map getHighestIosDevice(Map iosDevices, String deviceName) {
-  final Map iOSVersions = iosDevices[deviceName];
+// finds the iOS simulator with the highest available iOS version
+Map getHighestIosSimulator(Map iosSims, String simName) {
+  final Map iOSVersions = iosSims[simName];
 
   // get highest iOS version
   var iOSVersionName = getHighestIosVersion(iOSVersions);
 
-  final iosVersionDevices = iosDevices[deviceName][iOSVersionName];
-  if (iosVersionDevices.length == 0) {
-    throw "Error: no available devices found for \'$deviceName\'";
+  final iosVersionSims = iosSims[simName][iOSVersionName];
+  if (iosVersionSims.length == 0) {
+    throw "Error: no simulators found for \'$simName\'";
   }
   // use the first device found for the iOS version
-  return iosVersionDevices[0];
+  return iosVersionSims[0];
 }
 
 // returns name of highest iOS version names
@@ -175,12 +174,11 @@ List<String> getAvdNames() {
   return cmd('emulator', ['-list-avds'], '.', true).split('\n');
 }
 
-/// Get the highest available avd version for the android device.
+/// Get the highest available avd version for the android emulator.
 String getHighestAVD(String deviceName) {
-  final deviceNameNormalized = deviceName.replaceAll(' ', '_');
-  final avds = getAvdNames()
-      .where((name) => name.contains(deviceNameNormalized))
-      .toList();
+  final emulatorName = deviceName.replaceAll(' ', '_');
+  final avds =
+      getAvdNames().where((name) => name.contains(emulatorName)).toList();
   // sort list in android API order
   avds.sort((v1, v2) {
     return v1.compareTo(v2);
@@ -220,7 +218,7 @@ String iosSimulatorLocale(String udId) {
   return locale;
 }
 
-/// Get android emulator id from a running device with id [deviceId].
+/// Get android emulator id from a running emulator with id [deviceId].
 /// Returns emulator id as [String].
 String getAndroidEmulatorId(String deviceId) {
   return cmd('adb', ['-s', deviceId, 'emu', 'avd', 'name'], '.', true)
@@ -340,16 +338,26 @@ class Poller {
   }
 }
 
-List getIosDevicesX(List devices) {
+/// Filters a list of devices to get real ios devices
+List getIosDevices(List devices) {
   final iosDevices = devices
       .where((device) => device['platform'] == 'ios' && !device['emulator'])
       .toList();
   return iosDevices;
 }
 
+/// Filters a list of devices to get real android devices
 List getAndroidDevices(List devices) {
   final iosDevices = devices
       .where((device) => device['platform'] != 'ios' && !device['emulator'])
       .toList();
   return iosDevices;
+}
+
+/// Get all android and ios devices
+List getAllDevices(Map configInfo) {
+  final androidDeviceNames = configInfo['devices']['android']?.keys ?? [];
+  final iosDeviceNames = configInfo['devices']['ios']?.keys ?? [];
+  final deviceNames = [...androidDeviceNames, ...iosDeviceNames];
+  return deviceNames;
 }

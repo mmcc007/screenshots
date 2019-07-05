@@ -77,8 +77,8 @@ class Config {
     }
 
     if (configInfo['devices']['ios'] != null) {
-      final devices = utils.getIosDevicesX(allDevices);
-      final Map simulators = utils.getIosDevices();
+      final devices = utils.getIosDevices(allDevices);
+      final Map simulators = utils.getIosSimulators();
       for (String deviceName in configInfo['devices']['ios'].keys) {
         if (ImageProcessor.isFrameRequired(
             configInfo, DeviceType.ios, deviceName))
@@ -176,11 +176,11 @@ class Config {
   void configGuide(Screens screens, List devices) {
     stdout.write('\nGuide:');
     attachedDevices([
-      ...utils.getIosDevicesX(devices),
-      ...utils.getAndroidDevices(devices)
+      ...utils.getIosDevices(devices) ?? [],
+      ...utils.getAndroidDevices(devices) ?? []
     ]);
     installedEmulators(utils.getAvdNames());
-    installedSimulators(utils.getIosDevices());
+    installedSimulators(utils.getIosSimulators());
     supportedDevices(screens);
     stdout.write(
         '\n  Each device listed in screenshots.yaml with framing required must'

@@ -86,7 +86,7 @@ Future<void> run([String configPath = kConfigFileName]) async {
   if (configInfo['devices']['ios'] != null) {
     for (final simulatorName in configInfo['devices']['ios'].keys) {
       final simulatorInfo =
-          utils.getHighestIosDevice(utils.getIosDevices(), simulatorName);
+          utils.getHighestIosSimulator(utils.getIosSimulators(), simulatorName);
       for (final locale in configInfo['locales']) {
         await simulator(simulatorName, true, simulatorInfo, stagingDir, locale);
 

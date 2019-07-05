@@ -148,7 +148,7 @@ void main() {
   });
 
   test('parse json xcrun simctl list devices', () {
-    Map iosDevices = getIosDevices();
+    Map iosDevices = getIosSimulators();
 
 //    Map _simulators = simulators2();
 //    print('simulators=$_simulators');
@@ -159,7 +159,7 @@ void main() {
   });
 
   test('get highest and available version of ios device', () {
-    Map iosDevices = getIosDevices();
+    Map iosDevices = getIosSimulators();
     final deviceName = 'iPhone 7 Plus';
 //    final Map iOSVersions = iosDevices['iPhone 7 Plus'];
 //    print('iOSVersions=$iOSVersions');
@@ -173,7 +173,7 @@ void main() {
 //    print('keys=$keys');
 //    final iOSVersionName = keys.last;
 //    final Map highestDevice = iosDevices[deviceName][iOSVersionName][0];
-    final highestDevice = getHighestIosDevice(iosDevices, deviceName);
+    final highestDevice = getHighestIosSimulator(iosDevices, deviceName);
     print('highestDevice=$highestDevice');
   });
 
@@ -274,7 +274,8 @@ void main() {
 
   test('start simulator', () async {
     final simulatorName = 'iPhone X';
-    final simulatorInfo = getHighestIosDevice(getIosDevices(), simulatorName);
+    final simulatorInfo =
+        getHighestIosSimulator(getIosSimulators(), simulatorName);
     final daemonClient = DaemonClient();
     await daemonClient.start;
     await simulator('iPhone X', true, simulatorInfo, '/tmp/screenshots');
@@ -415,7 +416,8 @@ void main() {
     await unpackScripts(stagingDir);
 
     // start simulator
-    final simulatorInfo = getHighestIosDevice(getIosDevices(), simulatorName);
+    final simulatorInfo =
+        getHighestIosSimulator(getIosSimulators(), simulatorName);
     final daemonClient = DaemonClient();
     await daemonClient.start;
     await simulator(simulatorName, start, simulatorInfo, stagingDir, locale);
@@ -475,7 +477,7 @@ void main() {
     final daemonClient = DaemonClient();
     await daemonClient.start;
     final devices = await daemonClient.devices;
-    final iosDevices = getIosDevicesX(devices);
+    final iosDevices = getIosDevices(devices);
     final androidDevices = getAndroidDevices(devices);
     print('iosDevices=$iosDevices');
     print('androidDevices=$androidDevices');

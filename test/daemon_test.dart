@@ -179,9 +179,7 @@ main() {
     final configInfo = config.configInfo;
     final androidInfo = configInfo['devices']['android'];
     print('androidInfo=$androidInfo');
-    final androidDeviceNames = configInfo['devices']['android']?.keys ?? [];
-    final iosDeviceNames = configInfo['devices']['ios']?.keys ?? [];
-    final deviceNames = [...androidDeviceNames, ...iosDeviceNames];
+    List deviceNames = getAllDevices(configInfo);
 //    final deviceNames = []..addAll(androidDeviceNames)??[]..addAll(iosDeviceNames);
     print('deviceNames=$deviceNames');
   });
@@ -221,9 +219,7 @@ main() {
 
 Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
     Map configInfo, ImageProcessor imageProcessor) async {
-  final androidDeviceNames = configInfo['devices']['android']?.keys ?? [];
-  final iosDeviceNames = configInfo['devices']['ios']?.keys ?? [];
-  final deviceNames = [...androidDeviceNames, ...iosDeviceNames];
+  List deviceNames = getAllDevices(configInfo);
   final locales = configInfo['locales'];
   final stagingDir = configInfo['staging'];
   final testPaths = configInfo['tests'];
@@ -274,7 +270,7 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
       } else {
         // if no matching android emulator, look for matching ios simulator
         deviceType = DeviceType.ios;
-        simulator = getHighestIosDevice(getIosDevices(), deviceName);
+        simulator = getHighestIosSimulator(getIosSimulators(), deviceName);
         deviceId = simulator['udid'];
         print('Starting $deviceName...');
 //        daemonClient.verbose = true;

@@ -7,7 +7,8 @@ void main() {
   // issue #25
   test('test parsing of iOS device info returned by xcrun', () {
     final deviceName = 'iPhone X';
-    print('getIosDevice=${getHighestIosDevice(getIosDevices(), deviceName)}');
+    print(
+        'getIosDevice=${getHighestIosSimulator(getIosSimulators(), deviceName)}');
 
 //    final deviceInfoRaw = '''
 //{
@@ -835,11 +836,11 @@ void main() {
 }
 ''';
     final deviceInfo = jsonDecode(deviceInfoRaw)['devices'];
-    final iosDevices = transformIosDevices(deviceInfo);
+    final iosDevices = transformIosSimulators(deviceInfo);
 //    final iosDevice = getHighestIosDevice(iosDevices, deviceName);
 //    expect(
 //        () => getHighestIosDevice(iosDevices, deviceName), throwsA(anything));
-    expect(getHighestIosDevice(iosDevices, deviceName), jsonDecode('''{
+    expect(getHighestIosSimulator(iosDevices, deviceName), jsonDecode('''{
             "availability": "(available)",
             "state": "Shutdown",
             "isAvailable": true,
