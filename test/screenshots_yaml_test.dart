@@ -76,7 +76,7 @@ void main() {
     };
 
     final Config config = Config('test/screenshots_test.yaml');
-    Map appConfig = config.config;
+    Map appConfig = config.configInfo;
     expect(appConfig, expected);
   });
 

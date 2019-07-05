@@ -11,7 +11,7 @@ main() {
     await screens.init();
     Map screen = screens.screenProps('Nexus 9');
     final Config config = Config('test/screenshots_test.yaml');
-    Map appConfig = config.config;
+    Map appConfig = config.configInfo;
 
     final Map ScreenResources = screen['resources'];
     await unpackImages(ScreenResources, '/tmp/screenshots');

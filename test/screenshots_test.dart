@@ -49,7 +49,7 @@ void main() {
     await screens.init();
     Map screen = screens.screenProps('Nexus 6P');
     final Config config = Config('test/screenshots_test.yaml');
-    Map appConfig = config.config;
+    Map appConfig = config.configInfo;
 
 //    final screenshotPath = '/tmp/screenshots/test/0.png';
 //    final statusbarResourcePath = 'resources/android/1080/statusbar.png';
@@ -82,7 +82,7 @@ void main() {
 //    Map screen = screens.screen(screensInfo, 'Nexus 5X');
     Map screen = screens.screenProps('iPhone 7 Plus');
     final Config config = Config('test/screenshots_test.yaml');
-    Map appConfig = config.config;
+    Map appConfig = config.configInfo;
 
     final staging = appConfig['staging'];
 
@@ -102,7 +102,7 @@ void main() {
     await screens.init();
     Map screen = screens.screenProps('Nexus 6P');
     final Config config = Config('test/screenshots_test.yaml');
-    Map appConfig = config.config;
+    Map appConfig = config.configInfo;
 
     final Map resources = screen['resources'];
     await unpackImages(resources, '/tmp/screenshots');
@@ -124,7 +124,7 @@ void main() {
     await screens.init();
     Map screen = screens.screenProps('Nexus 6P');
     final Config config = Config('test/screenshots_test.yaml');
-    Map appConfig = config.config;
+    Map appConfig = config.configInfo;
 
     final Map resources = screen['resources'];
     await unpackImages(resources, '/tmp/screenshots');

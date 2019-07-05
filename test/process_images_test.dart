@@ -10,7 +10,7 @@ main() {
     final Screens screens = Screens();
     await screens.init();
     final Config config = Config('test/screenshots_test.yaml');
-    Map appConfig = config.config;
+    Map appConfig = config.configInfo;
 
     final Map devices = {
       'iPhone X': 'iphone_x_1.png',
