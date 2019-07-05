@@ -1,19 +1,19 @@
 ios:
-  4.0inch:
-    devices:
-      - iPhone 5
-      - iPhone 5c
-      - iPhone 5S
-      - iPhone SE
-      - iPhone iPod Touch (5th generation)
-      - iPhone iPod Touch (6th generation)
-      - iPhone iPod Touch (7th generation)
-  4.7inch:
-    devices:
-      - iPhone 6
-      - iPhone 6S
-      - iPhone 7
-      - iPhone 8
+#  4.0inch:
+#    devices:
+#      - iPhone 5
+#      - iPhone 5c
+#      - iPhone 5S
+#      - iPhone SE
+#      - iPhone iPod Touch (5th generation)
+#      - iPhone iPod Touch (6th generation)
+#      - iPhone iPod Touch (7th generation)
+#  4.7inch:
+#    devices:
+#      - iPhone 6
+#      - iPhone 6S
+#      - iPhone 7
+#      - iPhone 8
   5.5inch:
     size: 1242x2208
     resize: 75%
@@ -41,9 +41,9 @@ ios:
       - iPhone X
       - iPhone XS
       - iPhone Xs
-  6.1inch:
-    devices:
-      - iPhone XR
+#  6.1inch:
+#    devices:
+#      - iPhone XR
   6.5inch:
     size: 1242x2688
     resize: 87%
@@ -56,27 +56,27 @@ ios:
     devices:
       - iPhone XS Max
       - iPhone Xs Max
-  7.9inches:
-    devices:
-      - iPad Mini
-      - iPad Mini 2
-      - iPad Mini 3
-      - iPad Mini 4
-      - iPad Mini 5
-  9.7inch:
-    devices:
-      - iPad (1st generation)
-      - iPad 2
-      - iPad (3rd generation)
-      - iPad (4th generation)
-      - iPad (5th generation)
-      - iPad (6th generation)
-      - iPad Air
-      - iPad Air 2
-      - iPad Pro
-  10.5inch:
-    devices:
-      - iPad Pro (10.5-inch) (1st generation)
+#  7.9inches:
+#    devices:
+#      - iPad Mini
+#      - iPad Mini 2
+#      - iPad Mini 3
+#      - iPad Mini 4
+#      - iPad Mini 5
+#  9.7inch:
+#    devices:
+#      - iPad (1st generation)
+#      - iPad 2
+#      - iPad (3rd generation)
+#      - iPad (4th generation)
+#      - iPad (5th generation)
+#      - iPad (6th generation)
+#      - iPad Air
+#      - iPad Air 2
+#      - iPad Pro
+#  10.5inch:
+#    devices:
+#      - iPad Pro (10.5-inch) (1st generation)
   12.9inch:
     size: 2048x2732
     resize: 86%
