@@ -3,11 +3,16 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:path/path.dart';
+import 'package:screenshots/config.dart';
 import 'package:screenshots/daemon_client.dart';
+import 'package:screenshots/fastlane.dart';
+import 'package:screenshots/image_processor.dart';
 import 'package:screenshots/resources.dart';
+import 'package:screenshots/screens.dart';
 import 'package:screenshots/screenshots.dart';
 import 'package:screenshots/utils.dart';
 import 'package:test/test.dart';
+import 'package:yaml/yaml.dart';
 
 main() {
   test('start shipped daemon client', () async {
@@ -168,57 +173,67 @@ main() {
     await shutdownAndroidEmulator(deviceId, name);
   });
 
-  test('firstwhere', () {
-    final expected = {'id': 2};
-    final listOfMap = [
-      {'id': 1},
-      expected,
-      {'id': 3}
-    ];
-    final findIt = (List list, int id) =>
-        list.firstWhere((map) => map['id'] == id, orElse: () => null);
-
-    // found
-    expect(findIt(listOfMap, expected['id']), expected);
-    // not found
-    expect(findIt(listOfMap, 4), null);
+  test('join devices', () {
+    final configPath = 'test/screenshots_test.yaml';
+    final config = Config(configPath);
+    final configInfo = config.configInfo;
+    final androidInfo = configInfo['devices']['android'];
+    print('androidInfo=$androidInfo');
+    final androidDeviceNames = configInfo['devices']['android']?.keys ?? [];
+    final iosDeviceNames = configInfo['devices']['ios']?.keys ?? [];
+    final deviceNames = [...androidDeviceNames, ...iosDeviceNames];
+//    final deviceNames = []..addAll(androidDeviceNames)??[]..addAll(iosDeviceNames);
+    print('deviceNames=$deviceNames');
   });
 
   test('run test on matching devices or emulators', () async {
-    final realDevice = 'iPhone 5c'; // device
-    final androidEmulator = 'Nexus 6P'; // android emulator
-    final iosSimulator = 'iPhone 7'; // ios simulator
-    final deviceNames = [realDevice, androidEmulator, iosSimulator];
-//    final locales = ['en-US', 'fr-CA'];
-    final locales = ['en-US'];
-//    final locales = ['fr-CA'];
-    final testPath = 'test_driver/main.dart';
-    final stagingDir = '/tmp/tmp';
+    final configPath = 'test/screenshots_test.yaml';
+    final screens = Screens();
+    await screens.init();
 
+    final config = Config(configPath);
+    // validate config file
+//    await config.validate(screens);
+    final configInfo = config.configInfo;
+
+    // init
+    final stagingDir = configInfo['staging'];
+    await Directory(stagingDir + '/test').create(recursive: true);
     await unpackScripts(stagingDir);
+    await clearFastlaneDirs(configInfo, screens);
+    final imageProcessor = ImageProcessor(screens, configInfo);
 
     final daemonClient = DaemonClient();
     await daemonClient.start;
     final devices = await daemonClient.devices;
     final emulators = await daemonClient.emulators;
 
-    await runTestOnAll(daemonClient, deviceNames, devices, emulators, locales,
-        stagingDir, testPath);
+    // for this test change directory
+    final origDir = Directory.current;
+    Directory.current = 'example';
+
+    await runTestsOnAll(
+        daemonClient, devices, emulators, configInfo, imageProcessor);
+    // allow other tests to continue
+    Directory.current = origDir;
   }, timeout: Timeout(Duration(minutes: 4)));
 }
 
-Future runTestOnAll(
-    DaemonClient daemonClient,
-    List<String> deviceNames,
-    List devices,
-    List emulators,
-    List locales,
-    String stagingDir,
-    String testPath) async {
+Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
+    Map configInfo, ImageProcessor imageProcessor) async {
+  final androidDeviceNames = configInfo['devices']['android']?.keys ?? [];
+  final iosDeviceNames = configInfo['devices']['ios']?.keys ?? [];
+  final deviceNames = [...androidDeviceNames, ...iosDeviceNames];
+  final locales = configInfo['locales'];
+  final stagingDir = configInfo['staging'];
+  final testPaths = configInfo['tests'];
+
   for (final deviceName in deviceNames) {
+    DeviceType deviceType;
     // look for matching device first
     final device = devices.firstWhere((device) {
       if (device['platform'] == 'ios') {
+        deviceType = DeviceType.ios;
         if (device['emulator']) {
           // running ios simulator
           return device['name'] == deviceName;
@@ -227,6 +242,7 @@ Future runTestOnAll(
           return device['model'].contains(deviceName);
         }
       } else {
+        deviceType = DeviceType.android;
         if (device['emulator']) {
           // running android emulator
           return findDeviceEmulator(emulators, device['id'])['name'] ==
@@ -247,6 +263,7 @@ Future runTestOnAll(
       // if no matching device, look for matching android emulator
       emulator = findEmulator(emulators, deviceName);
       if (emulator != null) {
+        deviceType = DeviceType.android;
         final emulatorId = emulator['id'];
         print('Starting $deviceName...');
 //        daemonClient.verbose = true;
@@ -256,6 +273,7 @@ Future runTestOnAll(
         print('... $deviceName started.');
       } else {
         // if no matching android emulator, look for matching ios simulator
+        deviceType = DeviceType.ios;
         simulator = getHighestIosDevice(getIosDevices(), deviceName);
         deviceId = simulator['udid'];
         print('Starting $deviceName...');
@@ -267,6 +285,7 @@ Future runTestOnAll(
     }
 
     for (final locale in locales) {
+      // set locale if android device or emulator
       if ((device != null && device['platform'] != 'ios') ||
           (device == null && emulator != null)) {
         // a running android device or emulator
@@ -281,6 +300,7 @@ Future runTestOnAll(
         }
       }
 
+      // set locale if ios simulator
       if ((device != null &&
               device['platform'] == 'ios' &&
               device['emulator']) ||
@@ -300,18 +320,24 @@ Future runTestOnAll(
         }
       }
 
+      // issue warning if ios device
       if ((device != null &&
           device['platform'] == 'ios' &&
           !device['emulator'])) {
         // a running ios device
-        print('Warning: the locale for an ios device cannot be changed.');
+        print('Warning: the locale of an ios device cannot be changed.');
       }
 
-      // run test
-      print('Running test on \'$deviceName\' in locale $locale...');
-      await streamCmd(
-          'flutter', ['-d', deviceId, 'drive', testPath], 'example');
+      // run tests
+      for (final testPath in testPaths) {
+        print('Running $testPath on \'$deviceName\' in locale $locale...');
+        await streamCmd('flutter', ['-d', deviceId, 'drive', testPath]);
+
+        // process screenshots
+        await imageProcessor.process(deviceType, deviceName, locale);
+      }
     }
+
     // if an emulator was started, shut it down
     if (emulator != null) {
       await shutdownAndroidEmulator(deviceId, emulator['name']);

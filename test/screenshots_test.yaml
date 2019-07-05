@@ -1,6 +1,6 @@
 # Screen capture tests
 tests:
-  - example/test_driver/main.dart
+  - test_driver/main.dart
 #  - main2.dart
 
 # Interim location of screenshots from tests before processing
@@ -15,9 +15,10 @@ locales:
 # A list of devices to emulate
 devices:
   ios:
+    iPhone 5c:
     iPhone X:
-    iPhone 7 Plus:
-      frame: false
+#    iPhone 7 Plus:
+#      frame: false
 #    - iPad Pro (12.9-inch) (2nd generation)
 #   "iPhone 6",
 #   "iPhone 6 Plus",
@@ -26,7 +27,7 @@ devices:
 #   "iPad Retina",
 #   "iPad Pro"
   android:
-    Nexus 5X: # root disabled
+#    Nexus 5X: # root disabled
     Nexus 6P:
 
 # Frame screenshots

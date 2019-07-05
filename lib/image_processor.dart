@@ -32,31 +32,35 @@ class ImageProcessor {
   /// After processing, screenshots are handed off for upload via fastlane.
   void process(DeviceType deviceType, String deviceName, String locale) async {
     final Map screenProps = _screens.screenProps(deviceName);
-    final staging = _config['staging'];
     final Map screenResources = screenProps['resources'];
+    if (screenResources == null) {
+      print('Warning: \'$deviceName\' images will not be processed');
+    } else {
+      final staging = _config['staging'];
 //  print('screenResources=$screenResources');
-    print('Processing screenshots from test...');
+      print('Processing screenshots from test...');
 
-    // unpack images for screen from package to local staging area
-    await resources.unpackImages(screenResources, staging);
+      // unpack images for screen from package to local staging area
+      await resources.unpackImages(screenResources, staging);
 
-    // add status and nav bar and frame for each screenshot
-    final screenshots = Directory('$staging/test').listSync();
-    for (final screenshotPath in screenshots) {
-      // add status bar for each screenshot
+      // add status and nav bar and frame for each screenshot
+      final screenshots = Directory('$staging/test').listSync();
+      for (final screenshotPath in screenshots) {
+        // add status bar for each screenshot
 //    print('overlaying status bar over screenshot at $screenshotPath');
-      await overlay(_config, screenResources, screenshotPath.path);
+        await overlay(_config, screenResources, screenshotPath.path);
 
-      if (deviceType == DeviceType.android) {
-        // add nav bar for each screenshot
+        if (deviceType == DeviceType.android) {
+          // add nav bar for each screenshot
 //      print('appending navigation bar to screenshot at $screenshotPath');
-        await append(_config, screenResources, screenshotPath.path);
-      }
+          await append(_config, screenResources, screenshotPath.path);
+        }
 
-      // add frame if required
-      if (isFrameRequired(_config, deviceType, deviceName)) {
+        // add frame if required
+        if (isFrameRequired(_config, deviceType, deviceName)) {
 //      print('placing $screenshotPath in frame');
-        await frame(_config, screenProps, screenshotPath.path, deviceType);
+          await frame(_config, screenProps, screenshotPath.path, deviceType);
+        }
       }
     }
 
