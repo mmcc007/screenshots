@@ -97,8 +97,13 @@ void main() {
   test('check if frame is needed', () {
     final Map config = loadYaml(screenshotsYaml);
 
-    expect(ImageProcessor.isFrameRequired(config, DeviceType.ios, 'iPhone X'), true);
-    expect(ImageProcessor.isFrameRequired(config, DeviceType.ios, 'iPhone 7 Plus'), false);
-    expect(ImageProcessor.isFrameRequired(config, DeviceType.android, 'Nexus 5X'), true);
+    expect(ImageProcessor.isFrameRequired(config, DeviceType.ios, 'iPhone X'),
+        true);
+    expect(
+        ImageProcessor.isFrameRequired(config, DeviceType.ios, 'iPhone 7 Plus'),
+        false);
+    expect(
+        ImageProcessor.isFrameRequired(config, DeviceType.android, 'Nexus 5X'),
+        true);
   });
 }
