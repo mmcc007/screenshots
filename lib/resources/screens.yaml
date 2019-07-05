@@ -56,6 +56,13 @@ ios:
     devices:
       - iPhone XS Max
       - iPhone Xs Max
+  7.9inches:
+    devices:
+      - iPad Mini
+      - iPad Mini 2
+      - iPad Mini 3
+      - iPad Mini 4
+      - iPad Mini 5
   9.7inch:
     devices:
       - iPad (1st generation)
@@ -66,6 +73,10 @@ ios:
       - iPad (6th generation)
       - iPad Air
       - iPad Air 2
+      - iPad Pro
+  10.5inch:
+    devices:
+      - iPad Pro (10.5-inch) (1st generation)
   12.9inch:
     size: 2048x2732
     resize: 86%
@@ -76,6 +87,7 @@ ios:
       frame: resources/ios/phones/iPad_Pro_Silver.png
     offset: -0-0
     devices:
+      - iPad Pro (12.9-inch) (1st generation)
       - iPad Pro (12.9-inch) (2nd generation)
   12.9inch_3rd_generation:
     size: 2048x2732
