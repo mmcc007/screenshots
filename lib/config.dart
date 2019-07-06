@@ -62,7 +62,6 @@ class Config {
 
     if (configInfo['devices']['android'] != null) {
       final devices = utils.getAndroidDevices(allDevices);
-//      final List emulators = utils.getAvdNames();
       for (String deviceName in configInfo['devices']['android'].keys) {
         if (ImageProcessor.isFrameRequired(
             configInfo, DeviceType.android, deviceName))
@@ -122,27 +121,6 @@ class Config {
 
     return true;
   }
-
-//  /// Checks if an emulator is installed, matching the device named in config file.
-//  bool isEmulatorInstalled(List emulators, String deviceName) {
-//    // check emulator installed
-//    bool isEmulatorInstalled = false;
-////    final deviceNameNormalized = deviceName.replaceAll(' ', '_');
-//    final emulator = findEmulator(emulators, deviceName);
-//    if (emulator != null)
-//      isEmulatorInstalled = true;
-////    for (String emulator in emulators) {
-////      if (emulatorName.contains(deviceNameNormalized)) {
-////        final highestEmulatorName = utils.getHighestAVD(deviceName);
-////        if (highestEmulatorName != deviceNameNormalized && !emulatorInstalled) {
-////          print('Warning: \'$deviceName\' does not have a matching emulator.');
-////          print('       : Using \'$highestEmulatorName\'.');
-////        }
-////        emulatorInstalled = true;
-////      }
-////    }
-//    return isEmulatorInstalled;
-//  }
 
   /// Checks if a simulator is installed, matching the device named in config file.
   bool isSimulatorInstalled(Map simulators, String deviceName) {
