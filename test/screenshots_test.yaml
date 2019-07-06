@@ -16,6 +16,7 @@ locales:
 devices:
   ios:
     iPhone 5c:
+      frame: false
     iPhone X:
 #    iPhone 7 Plus:
 #      frame: false

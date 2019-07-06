@@ -378,7 +378,7 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
           (device == null && emulator != null)) {
         // a running android device or emulator
         final deviceLocale = utils.androidDeviceLocale(deviceId);
-        print('android device or emulator locale=$deviceLocale');
+//        print('android device or emulator locale=$deviceLocale');
         if (locale != deviceLocale) {
           print('Changing locale from $deviceLocale to $locale...');
           daemonClient.verbose = true;
