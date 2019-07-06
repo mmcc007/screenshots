@@ -20,9 +20,9 @@ devices:
 #    iPhone X:
 #    iPhone 7 Plus:
 #      frame: true
-#    iPhone XS Max:
-#      frame: true
-#    iPad Pro (12.9-inch) (2nd generation):
+    iPhone XS Max:
+      frame: true
+    iPad Pro (12.9-inch) (2nd generation):
   android:
     Nexus 6P:
       frame: true
