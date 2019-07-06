@@ -13,4 +13,4 @@ linter:
     - unrelated_type_equality_checks
     - valid_regexps
     - unawaited_futures
-    - curly_braces_in_flow_control_structures
+#    - curly_braces_in_flow_control_structures

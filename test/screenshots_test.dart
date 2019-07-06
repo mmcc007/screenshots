@@ -1,9 +1,8 @@
-import 'dart:async';
 import 'dart:io';
 
 import 'package:screenshots/config.dart';
-import 'package:screenshots/flutter_tools/lib/src/base/utils.dart';
-import 'package:screenshots/process_images.dart';
+import 'package:screenshots/daemon_client.dart';
+import 'package:screenshots/image_processor.dart';
 import 'package:screenshots/screens.dart';
 import 'package:screenshots/image_magick.dart';
 import 'package:screenshots/resources.dart';
@@ -50,7 +49,7 @@ void main() {
     await screens.init();
     Map screen = screens.screenProps('Nexus 6P');
     final Config config = Config('test/screenshots_test.yaml');
-    Map appConfig = config.config;
+    Map appConfig = config.configInfo;
 
 //    final screenshotPath = '/tmp/screenshots/test/0.png';
 //    final statusbarResourcePath = 'resources/android/1080/statusbar.png';
@@ -83,7 +82,7 @@ void main() {
 //    Map screen = screens.screen(screensInfo, 'Nexus 5X');
     Map screen = screens.screenProps('iPhone 7 Plus');
     final Config config = Config('test/screenshots_test.yaml');
-    Map appConfig = config.config;
+    Map appConfig = config.configInfo;
 
     final staging = appConfig['staging'];
 
@@ -103,7 +102,7 @@ void main() {
     await screens.init();
     Map screen = screens.screenProps('Nexus 6P');
     final Config config = Config('test/screenshots_test.yaml');
-    Map appConfig = config.config;
+    Map appConfig = config.configInfo;
 
     final Map resources = screen['resources'];
     await unpackImages(resources, '/tmp/screenshots');
@@ -125,7 +124,7 @@ void main() {
     await screens.init();
     Map screen = screens.screenProps('Nexus 6P');
     final Config config = Config('test/screenshots_test.yaml');
-    Map appConfig = config.config;
+    Map appConfig = config.configInfo;
 
     final Map resources = screen['resources'];
     await unpackImages(resources, '/tmp/screenshots');
@@ -142,14 +141,14 @@ void main() {
       'resize': resize,
       'offset': offset,
       'screenshotPath': screenshotPath,
-      'backgroundColor': kDefaultAndroidBackground,
+      'backgroundColor': ImageProcessor.kDefaultAndroidBackground,
     };
     print('options=$options');
     await imagemagick('frame', options);
   });
 
   test('parse json xcrun simctl list devices', () {
-    Map iosDevices = getIosDevices();
+    Map iosDevices = getIosSimulators();
 
 //    Map _simulators = simulators2();
 //    print('simulators=$_simulators');
@@ -160,8 +159,9 @@ void main() {
   });
 
   test('get highest and available version of ios device', () {
-    Map iosDevices = getIosDevices();
-    final deviceName = 'iPhone 7 Plus';
+    Map iosDevices = getIosSimulators();
+//    final deviceName = 'iPhone 7 Plus';
+    final deviceName = 'iPhone 5c';
 //    final Map iOSVersions = iosDevices['iPhone 7 Plus'];
 //    print('iOSVersions=$iOSVersions');
 //
@@ -174,7 +174,7 @@ void main() {
 //    print('keys=$keys');
 //    final iOSVersionName = keys.last;
 //    final Map highestDevice = iosDevices[deviceName][iOSVersionName][0];
-    final highestDevice = getHighestIosDevice(iosDevices, deviceName);
+    final highestDevice = getHighestIosSimulator(iosDevices, deviceName);
     print('highestDevice=$highestDevice');
   });
 
@@ -216,7 +216,9 @@ void main() {
     final Screens screens = Screens();
     await screens.init();
     final Config config = Config('test/screenshots_test.yaml');
-    config.configGuide(screens);
+    final daemonClient = DaemonClient();
+    await daemonClient.start;
+    config.configGuide(screens, await daemonClient.devices);
   });
 
   test('rooted emulator', () {
@@ -240,9 +242,10 @@ void main() {
     final start = true;
     final stagingDir = '/tmp/tmp';
     final locale = 'en-US';
-//    emulator('Nexus 6P', true, '/tmp/screenshots', 'fr-CA');
-    await emulator(
-        emulatorName, start, deviceId, stagingDir, avdName, false, locale);
+    final daemonClient = DaemonClient();
+    await daemonClient.start;
+    await emulator(daemonClient, emulatorName, start, deviceId, stagingDir,
+        avdName, false, locale);
   });
 
   test('move files', () async {
@@ -264,15 +267,19 @@ void main() {
 
     final deviceId = getHighestAVD(emulatorName);
     await unpackScripts(stagingDir);
-    await emulator(
-        emulatorName, start, deviceId, stagingDir, avdName, false, locale);
+    final daemonClient = DaemonClient();
+    await daemonClient.start;
+    await emulator(daemonClient, emulatorName, start, deviceId, stagingDir,
+        avdName, false, locale);
   });
 
-  test('start simulator', () {
+  test('start simulator', () async {
     final simulatorName = 'iPhone X';
-    final simulatorInfo = getHighestIosDevice(getIosDevices(), simulatorName);
-
-    simulator('iPhone X', true, simulatorInfo, '/tmp/screenshots');
+    final simulatorInfo =
+        getHighestIosSimulator(getIosSimulators(), simulatorName);
+    final daemonClient = DaemonClient();
+    await daemonClient.start;
+    await simulator('iPhone X', true, simulatorInfo, '/tmp/screenshots');
 //    simulator('iPhone X', true, '/tmp/screenshots', 'fr-CA');
   });
 
@@ -355,15 +362,18 @@ void main() {
     // unpack resources
     await unpackScripts(stagingDir);
 
+    final daemonClient = DaemonClient();
+    await daemonClient.start;
     // start emulator
-    await emulator(
-        emulatorName, start, deviceId, stagingDir, avdName, false, locale);
+    await emulator(daemonClient, emulatorName, start, deviceId, stagingDir,
+        avdName, false, locale);
 
     // run test
     await streamCmd('flutter', ['drive', testAppSrcPath], testAppDir);
 
     // stop emulator
-    await emulator(emulatorName, false, deviceId, stagingDir, avdName);
+    await emulator(
+        daemonClient, emulatorName, false, deviceId, stagingDir, avdName);
   },
       timeout:
           Timeout(Duration(seconds: 90))); // increase time to get stacktrace
@@ -377,10 +387,13 @@ void main() {
     final locale = 'en-US';
 
     await unpackScripts(stagingDir);
-    await emulator(
-        emulatorName, start, deviceId, stagingDir, avdName, false, locale);
+    final daemonClient = DaemonClient();
+    await daemonClient.start;
+    await emulator(daemonClient, emulatorName, start, deviceId, stagingDir,
+        avdName, false, locale);
     final deviceLocale = androidDeviceLocale(deviceId);
-    await emulator(emulatorName, false, deviceId, stagingDir, avdName);
+    await emulator(
+        daemonClient, emulatorName, false, deviceId, stagingDir, avdName);
 
     expect(deviceLocale, 'en-US');
   });
@@ -404,7 +417,10 @@ void main() {
     await unpackScripts(stagingDir);
 
     // start simulator
-    final simulatorInfo = getHighestIosDevice(getIosDevices(), simulatorName);
+    final simulatorInfo =
+        getHighestIosSimulator(getIosSimulators(), simulatorName);
+    final daemonClient = DaemonClient();
+    await daemonClient.start;
     await simulator(simulatorName, start, simulatorInfo, stagingDir, locale);
 
     // run test
@@ -427,8 +443,8 @@ void main() {
   test('get avd from a running emulator', () {
     final deviceId = 'emulator-5554';
     final expected = 'Nexus_6P_API_28';
-    final avdName = getAvdName(deviceId);
-    expect(avdName, expected);
+    final emulatorId = getAndroidEmulatorId(deviceId);
+    expect(emulatorId, expected);
   });
 
   test('find running emulator with matching avd', () {
@@ -456,5 +472,34 @@ void main() {
       print('already booted');
     }
     expect(deviceId, isNotNull);
+  });
+
+  test('get real devices', () async {
+    final daemonClient = DaemonClient();
+    await daemonClient.start;
+    final devices = await daemonClient.devices;
+    final iosDevices = getIosDevices(devices);
+    final androidDevices = getAndroidDevices(devices);
+    print('iosDevices=$iosDevices');
+    print('androidDevices=$androidDevices');
+  });
+
+  test('get devices', () {
+    final expected = {
+      'id': '3b3455019e329e007e67239d9b897148244b5053',
+      'name': 'Maurice’s iPhone',
+      'platform': 'ios',
+      'emulator': false,
+      'model': 'iPhone 5c (GSM)'
+    };
+    String deviceName = 'iPhone 5c';
+    Map device = getDevice([expected], deviceName);
+    expect(device, expected);
+    final isDeviceAttached = (device) => device != null;
+    expect(isDeviceAttached(device), true);
+    deviceName = 'iPhone X';
+    device = getDevice([expected], deviceName);
+    expect(device, null);
+    expect(isDeviceAttached(device), false);
   });
 }

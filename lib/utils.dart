@@ -5,8 +5,6 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:path/path.dart';
 
-import 'flutter_tools/lib/src/base/utils.dart';
-
 /// Clear directory [dirPath].
 /// Create directory if none exists.
 void clearDirectory(String dirPath) {
@@ -56,7 +54,7 @@ String cmd(String cmd, List<String> arguments,
   if (!silent) stdout.write(result.stdout);
   if (result.exitCode != 0) {
     stderr.write(result.stderr);
-    throw 'command failed: cmd=\'$cmd ${arguments.join(" ")}\'';
+    throw 'command failed: exitcode=${result.exitCode}, cmd=\'$cmd ${arguments.join(" ")}\', workingDir=$workingDir, silent=$silent';
   }
   // return stdout
   return result.stdout;
@@ -84,79 +82,78 @@ Future<void> streamCmd(String cmd, List<String> arguments,
         .transform(LineSplitter())
         .listen(stderr.writeln)
         .asFuture();
-
     await Future.wait([stdoutFuture, stderrFuture]);
 
-    var exitCode = await process.exitCode;
+    final exitCode = await process.exitCode;
     if (exitCode != 0) {
-      throw 'command failed: cmd=\'$cmd ${arguments.join(" ")}\'';
+      throw 'command failed: exitcode=$exitCode, cmd=\'$cmd ${arguments.join(" ")}\', workingDirectory=$workingDirectory, mode=$mode';
     }
   }
 }
 
-/// Creates a list of available iOS devices.
+/// Creates a list of available iOS simulators.
 /// (really just concerned with simulators for now).
 /// Provides access to their IDs and status'.
-Map getIosDevices() {
-  final deviceInfoRaw =
+Map getIosSimulators() {
+  final simulators =
       cmd('xcrun', ['simctl', 'list', 'devices', '--json'], '.', true);
-  final deviceInfo = jsonDecode(deviceInfoRaw)['devices'];
-  return transformIosDevices(deviceInfo);
+  final simulatorsInfo = jsonDecode(simulators)['devices'];
+  return transformIosSimulators(simulatorsInfo);
 }
 
-/// Transforms latest information about iOS devices into more convenient
-/// format to index into by device name.
+/// Transforms latest information about iOS simulators into more convenient
+/// format to index into by simulator name.
 /// (also useful for testing)
-Map transformIosDevices(deviceInfo) {
+Map transformIosSimulators(Map simsInfo) {
   // transform json to a Map of device name by a map of iOS versions by a list of
   // devices with a map of properties
   // ie, Map<String, Map<String, List<Map<String, String>>>>
   // In other words, just pop-out the device name for 'easier' access to
   // the device properties.
-  Map deviceInfoTransformed = {};
+  Map simsInfoTransformed = {};
 
-  deviceInfo.forEach((iOSName, devices) {
+  simsInfo.forEach((iOSName, sims) {
     //    print('iOSVersionName=$iOSVersionName');
     // note: 'isAvailable' field does not appear consistently
     //       so using 'availability' instead
-    isDeviceAvailable(device) => device['availability'] == '(available)';
-    for (var device in devices) {
-      // skip unavailable devices
-      if (!isDeviceAvailable(device)) continue;
+    isSimAvailable(sim) => sim['availability'] == '(available)';
+    for (final sim in sims) {
+      // skip if simulator unavailable
+      if (!isSimAvailable(sim)) continue;
 
-      //      print('device=$device');
       // init iOS versions map if not already present
-      if (deviceInfoTransformed[device['name']] == null) {
-        deviceInfoTransformed[device['name']] = {};
+      if (simsInfoTransformed[sim['name']] == null) {
+        simsInfoTransformed[sim['name']] = {};
       }
 
-      // init iOS version device array if not already present
-      // note: there can be multiple versions of a device with the same name
+      // init iOS version simulator array if not already present
+      // note: there can be multiple versions of a simulator with the same name
       //       for an iOS version, hence the use of an array.
-      if (deviceInfoTransformed[device['name']][iOSName] == null) {
-        deviceInfoTransformed[device['name']][iOSName] = [];
+      if (simsInfoTransformed[sim['name']][iOSName] == null) {
+        simsInfoTransformed[sim['name']][iOSName] = [];
       }
 
-      // add device to iOS version device array
-      deviceInfoTransformed[device['name']][iOSName].add(device);
+      // add simulator to iOS version simulator array
+      simsInfoTransformed[sim['name']][iOSName].add(sim);
     }
   });
-  return deviceInfoTransformed;
+  return simsInfoTransformed;
 }
 
-// finds the iOS device with the highest available iOS version
-Map getHighestIosDevice(Map iosDevices, String deviceName) {
-  final Map iOSVersions = iosDevices[deviceName];
+// finds the iOS simulator with the highest available iOS version
+Map getHighestIosSimulator(Map iosSims, String simName) {
+  final Map iOSVersions = iosSims[simName];
+  if (iOSVersions == null) return null; // todo: hack for real device
 
   // get highest iOS version
   var iOSVersionName = getHighestIosVersion(iOSVersions);
 
-  final iosVersionDevices = iosDevices[deviceName][iOSVersionName];
-  if (iosVersionDevices.length == 0) {
-    throw "Error: no available devices found for \'$deviceName\'";
+  final iosVersionSims = iosSims[simName][iOSVersionName];
+  if (iosVersionSims.length == 0) {
+    throw "Error: no simulators found for \'$simName\'";
   }
   // use the first device found for the iOS version
-  return iosVersionDevices[0];
+  return iosVersionSims[0];
 }
 
 // returns name of highest iOS version names
@@ -179,12 +176,11 @@ List<String> getAvdNames() {
   return cmd('emulator', ['-list-avds'], '.', true).split('\n');
 }
 
-/// Get the highest available avd version for the android device.
+/// Get the highest available avd version for the android emulator.
 String getHighestAVD(String deviceName) {
-  final deviceNameNormalized = deviceName.replaceAll(' ', '_');
-  final avds = getAvdNames()
-      .where((name) => name.contains(deviceNameNormalized))
-      .toList();
+  final emulatorName = deviceName.replaceAll(' ', '_');
+  final avds =
+      getAvdNames().where((name) => name.contains(emulatorName)).toList();
   // sort list in android API order
   avds.sort((v1, v2) {
     return v1.compareTo(v2);
@@ -224,21 +220,23 @@ String iosSimulatorLocale(String udId) {
   return locale;
 }
 
-/// Get AVD name from device id [deviceId].
-/// Returns AVD name as [String].
-String getAvdName(String deviceId) {
+/// Get android emulator id from a running emulator with id [deviceId].
+/// Returns emulator id as [String].
+String getAndroidEmulatorId(String deviceId) {
   return cmd('adb', ['-s', deviceId, 'emu', 'avd', 'name'], '.', true)
       .split('\r\n')
       .map((line) => line.trim())
       .first;
 }
 
-/// Find android device id with matching [avdName].
+/// Find android device id with matching [emulatorId].
 /// Returns matching android device id as [String].
-String findAndroidDeviceId(String avdName) {
+String findAndroidDeviceId(String emulatorId) {
   final devicesIds = getAndroidDeviceIds();
   if (devicesIds.length == 0) return null;
-  return devicesIds.firstWhere((id) => avdName == getAvdName(id), orElse: null);
+  return devicesIds.firstWhere(
+      (deviceId) => emulatorId == getAndroidEmulatorId(deviceId),
+      orElse: () => null);
 }
 
 /// Get the list of running devices by id.
@@ -266,4 +264,111 @@ Future<String> getBootedAndroidDeviceId(String deviceName) async {
   }
   poller.cancel();
   return deviceId;
+}
+
+Future stopEmulator(String deviceId, String stagingDir) async {
+  cmd('adb', ['-s', deviceId, 'emu', 'kill']);
+  // wait for emulator to stop
+  await streamCmd(
+      '$stagingDir/resources/script/android-wait-for-emulator-to-stop',
+      [deviceId]);
+}
+
+/// Wait for android emulator to stop.
+Future<void> waitAndroidEmulatorShutdown(
+    String deviceId, String deviceName) async {
+  final pollingInterval = 500;
+  final notFound = 'not found';
+  String status = '';
+  final poller = Poller(() async {
+    status = cmd(
+            'sh',
+            [
+              '-c',
+              'adb -s $deviceId -e shell getprop sys.boot_completed || echo \"$notFound\"'
+            ],
+            '.',
+            true)
+        .trim();
+  }, Duration(milliseconds: pollingInterval));
+
+  while (!(status == notFound)) {
+    print('Waiting for \'$deviceName\' to shutdown...');
+    await Future.delayed(Duration(milliseconds: pollingInterval));
+//    print('status=$status');
+  }
+  poller.cancel();
+  print('... \'$deviceName\' shutdown complete.');
+}
+
+// from https://github.com/flutter/flutter/blob/master/packages/flutter_tools/lib/src/base/utils.dart#L255-L292
+typedef AsyncCallback = Future<void> Function();
+
+/// A [Timer] inspired class that:
+///   - has a different initial value for the first callback delay
+///   - waits for a callback to be complete before it starts the next timer
+class Poller {
+  Poller(this.callback, this.pollingInterval,
+      {this.initialDelay = Duration.zero}) {
+    Future<void>.delayed(initialDelay, _handleCallback);
+  }
+
+  final AsyncCallback callback;
+  final Duration initialDelay;
+  final Duration pollingInterval;
+
+  bool _canceled = false;
+  Timer _timer;
+
+  Future<void> _handleCallback() async {
+    if (_canceled) return;
+
+    try {
+      await callback();
+    } catch (error) {
+      print('Error from poller: $error');
+    }
+
+    if (!_canceled) _timer = Timer(pollingInterval, _handleCallback);
+  }
+
+  /// Cancels the poller.
+  void cancel() {
+    _canceled = true;
+    _timer?.cancel();
+    _timer = null;
+  }
+}
+
+/// Filters a list of devices to get real ios devices
+List getIosDevices(List devices) {
+  final iosDevices = devices
+      .where((device) => device['platform'] == 'ios' && !device['emulator'])
+      .toList();
+  return iosDevices;
+}
+
+/// Filters a list of devices to get real android devices
+List getAndroidDevices(List devices) {
+  final iosDevices = devices
+      .where((device) => device['platform'] != 'ios' && !device['emulator'])
+      .toList();
+  return iosDevices;
+}
+
+/// Get all android and ios devices
+List getAllDevices(Map configInfo) {
+  final androidDeviceNames = configInfo['devices']['android']?.keys ?? [];
+  final iosDeviceNames = configInfo['devices']['ios']?.keys ?? [];
+  final deviceNames = [...androidDeviceNames, ...iosDeviceNames];
+  return deviceNames;
+}
+
+/// Get device from deviceName
+Map getDevice(List devices, String deviceName) {
+  return devices.firstWhere(
+      (device) => device['model'] == null
+          ? device['name'] == deviceName
+          : device['model'].contains(deviceName),
+      orElse: () => null);
 }

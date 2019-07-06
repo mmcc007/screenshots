@@ -1,6 +1,6 @@
 import 'package:screenshots/config.dart';
 import 'package:screenshots/image_magick.dart';
-import 'package:screenshots/process_images.dart';
+import 'package:screenshots/image_processor.dart';
 import 'package:screenshots/resources.dart';
 import 'package:screenshots/screens.dart';
 import 'package:test/test.dart';
@@ -11,7 +11,7 @@ main() {
     await screens.init();
     Map screen = screens.screenProps('Nexus 9');
     final Config config = Config('test/screenshots_test.yaml');
-    Map appConfig = config.config;
+    Map appConfig = config.configInfo;
 
     final Map ScreenResources = screen['resources'];
     await unpackImages(ScreenResources, '/tmp/screenshots');
@@ -46,7 +46,7 @@ main() {
       'resize': resize,
       'offset': offset,
       'screenshotPath': screenshotPath,
-      'backgroundColor': kDefaultAndroidBackground,
+      'backgroundColor': ImageProcessor.kDefaultAndroidBackground,
     };
     print('options=$options');
     await imagemagick('frame', options);

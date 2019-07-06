@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:screenshots/config.dart';
-import 'package:screenshots/process_images.dart';
+import 'package:screenshots/daemon_client.dart';
+import 'package:screenshots/image_processor.dart';
 import 'package:screenshots/screens.dart';
 import 'package:screenshots/screenshots.dart';
 import 'package:test/test.dart';
@@ -23,6 +26,8 @@ locales:
 # A list of devices to emulate
 devices:
   ios:
+    iPhone 5c:
+      frame: false
     iPhone X:
     iPhone 7 Plus:
       frame: false
@@ -76,7 +81,7 @@ void main() {
     };
 
     final Config config = Config('test/screenshots_test.yaml');
-    Map appConfig = config.config;
+    Map appConfig = config.configInfo;
     expect(appConfig, expected);
   });
 
@@ -84,7 +89,20 @@ void main() {
     final Screens screens = Screens();
     await screens.init();
     final Config config = Config('test/screenshots_test.yaml');
-    expect(await config.validate(screens), true);
+    final daemonClient = DaemonClient();
+    await daemonClient.start;
+    // for this test change directory
+    final origDir = Directory.current;
+    Directory.current = 'example';
+    expect(
+        await config.validate(
+          screens,
+          await daemonClient.devices,
+          await daemonClient.emulators,
+        ),
+        true);
+    // allow other tests to continue
+    Directory.current = origDir;
   });
 
   test('clear all destination directories on init', () async {
@@ -97,8 +115,19 @@ void main() {
   test('check if frame is needed', () {
     final Map config = loadYaml(screenshotsYaml);
 
-    expect(isFrameRequired(config, DeviceType.ios, 'iPhone X'), true);
-    expect(isFrameRequired(config, DeviceType.ios, 'iPhone 7 Plus'), false);
-    expect(isFrameRequired(config, DeviceType.android, 'Nexus 5X'), true);
+    expect(ImageProcessor.isFrameRequired(config, DeviceType.ios, 'iPhone X'),
+        true);
+    expect(
+        ImageProcessor.isFrameRequired(config, DeviceType.ios, 'iPhone 7 Plus'),
+        false);
+    expect(
+        ImageProcessor.isFrameRequired(config, DeviceType.android, 'Nexus 5X'),
+        true);
+    expect(ImageProcessor.isFrameRequired(config, DeviceType.ios, 'iPhone 5c'),
+        false);
+    final unknownDevice = 'unknown';
+    expect(
+        () => ImageProcessor.isFrameRequired(config, DeviceType.ios, 'unknown'),
+        throwsA('Error: device \'$unknownDevice\' not found'));
   });
 }
