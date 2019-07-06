@@ -65,8 +65,8 @@ String cmd(String cmd, List<String> arguments,
 Future<void> streamCmd(String cmd, List<String> arguments,
     [String workingDirectory = '.',
     ProcessStartMode mode = ProcessStartMode.normal]) async {
-  print(
-      'streamCmd=\'$cmd ${arguments.join(" ")}\', workingDirectory=$workingDirectory, mode=$mode');
+//  print(
+//      'streamCmd=\'$cmd ${arguments.join(" ")}\', workingDirectory=$workingDirectory, mode=$mode');
 
   final process = await Process.start(cmd, arguments,
       workingDirectory: workingDirectory, mode: mode);

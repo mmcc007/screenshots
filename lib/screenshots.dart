@@ -36,7 +36,6 @@ Future<void> run([String configPath = kConfigFileName]) async {
   await daemonClient.start;
   final devices = await daemonClient.devices;
   final emulators = await daemonClient.emulators;
-  print('emulators=$emulators');
 
   final config = Config(configPath);
   // validate config file
@@ -348,7 +347,7 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
         deviceType = DeviceType.android;
         final emulatorId = emulator['id'];
         print('Starting $deviceName...');
-        daemonClient.verbose = true;
+//        daemonClient.verbose = true;
         if (Platform.environment['CI'] == 'true') {
           // testing on CI/CD requires starting emulator in a specific way
           await startAndroidEmulatorOnCI(emulatorId, stagingDir);
@@ -356,7 +355,7 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
           // testing locally, so start emulator in normal way
           await daemonClient.launchEmulator(emulatorId);
         }
-        daemonClient.verbose = false;
+//        daemonClient.verbose = false;
         print('emulator $emulatorId launched');
         deviceId = utils.findAndroidDeviceId(emulatorId);
         print('... $deviceName started.');
@@ -383,9 +382,9 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
 //        print('android device or emulator locale=$deviceLocale');
         if (locale != deviceLocale) {
           print('Changing locale from $deviceLocale to $locale...');
-          daemonClient.verbose = true;
+//          daemonClient.verbose = true;
           setAndroidLocale(deviceId, deviceName, locale);
-          daemonClient.verbose = false;
+//          daemonClient.verbose = false;
           print('... locale change complete.');
         }
       }
@@ -400,11 +399,11 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
         print('simulator locale=$deviceLocale');
         if (locale != deviceLocale) {
           print('Changing locale from $deviceLocale to $locale');
-          daemonClient.verbose = true;
+//          daemonClient.verbose = true;
           utils.cmd('xcrun', ['simctl', 'shutdown', deviceId]);
           await setIosLocale(stagingDir, deviceId, locale);
           utils.cmd('xcrun', ['simctl', 'boot', deviceId]);
-          daemonClient.verbose = true;
+//          daemonClient.verbose = true;
           print('...locale change complete.');
         }
       }
