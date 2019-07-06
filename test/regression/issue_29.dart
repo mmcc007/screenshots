@@ -1,15 +1,47 @@
-import 'package:screenshots/config.dart';
-import 'package:screenshots/utils.dart' as utils;
+import 'package:screenshots/daemon_client.dart';
+import 'package:screenshots/screenshots.dart';
 import 'package:test/test.dart';
+import 'package:yaml/yaml.dart';
 
 void main() {
   // issue #29
-  test('check full matching emulator name', () {
+  test('check full matching emulator name', () async {
     // emulator named in config must match name of installed emulator
-    final Config config = Config('test/screenshots_test.yaml');
-    final List emulators = utils.getAvdNames();
-    expect(config.isEmulatorInstalled(emulators, 'Nexus 6P'), true);
-    expect(config.isEmulatorInstalled(emulators, 'Nexus_6P_API_27'), true);
-    expect(config.isEmulatorInstalled(emulators, 'Nexus 6P API 27'), true);
+    final screenshotsYaml = '''
+devices:
+  ios:
+    iPhone X:
+  android:
+    Nexus 5X:
+    Nexus 6P:
+    Nexus 9:
+''';
+    final configInfo = loadYaml(screenshotsYaml);
+//    final List emulators = utils.getAvdNames();
+    final daemonClient = DaemonClient();
+    await daemonClient.start;
+    final emulators = await daemonClient.emulators;
+    final foundIt = (emulator) => emulator != null;
+
+    print('emulators=$emulators');
+    final deviceNames = configInfo['devices']['android'];
+    print('deviceNames=$deviceNames');
+    for (final deviceName in deviceNames.keys) {
+      Map emulator = findEmulator(emulators, deviceName);
+//      if (!foundIt(emulator)) {
+//        // find by emulatorId
+//        emulator = findEmulatorById(emulators, deviceName);
+//      }
+      expect(foundIt(emulator), true);
+    }
+//    expect(foundIt(findEmulator(emulators, 'Nexus 6P')), true);
+//    expect(foundIt(findEmulator(emulators, 'Nexus_6P_API_27')), false);
+//    expect(foundIt(findEmulator(emulators, 'Nexus 6P API 27')), false);
   });
+}
+
+Map findEmulatorById(List emulators, String emulatorName) {
+  return emulators.firstWhere(
+      (emulator) => emulator['id'].replaceAll('_', ' ').contains(emulatorName),
+      orElse: () => null);
 }
