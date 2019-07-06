@@ -213,7 +213,7 @@ Future startAndroidEmulatorOnCI(String emulatorId, String stagingDir) async {
         'swiftshader',
       ],
       '.',
-      ProcessStartMode.detachedWithStdio);
+      ProcessStartMode.detached);
   // wait for emulator to start
   await utils
       .streamCmd('$stagingDir/resources/script/android-wait-for-emulator', []);
