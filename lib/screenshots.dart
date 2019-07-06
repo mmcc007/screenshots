@@ -122,7 +122,7 @@ Future runAll(DaemonClient daemonClient, Config config, Screens screens,
               'Capturing screenshots with test app $testPath on simulator \'$simulatorName\' in locale $locale ...');
           String deviceId;
           if (simulatorInfo == null)
-            deviceId = getDevice(devices, simulatorName)['id'];
+            deviceId = utils.getDevice(devices, simulatorName)['id'];
           else
             deviceId = simulatorInfo['udid'];
           await screenshots(deviceId, testPath, stagingDir);
@@ -134,14 +134,6 @@ Future runAll(DaemonClient daemonClient, Config config, Screens screens,
       }
     }
   }
-}
-
-Map getDevice(List devices, String deviceName) {
-  return devices.firstWhere(
-      (device) => device['model'] == null
-          ? device['name'] == deviceName
-          : device['model'].contains(deviceName),
-      orElse: () => throw '$deviceName not found');
 }
 
 ///

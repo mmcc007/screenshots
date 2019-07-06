@@ -66,7 +66,7 @@ class Config {
           screenAvailable(screens, deviceName);
 
         // is device attached
-        final isDeviceAttached = getDevice(devices, deviceName) == null;
+        final isDeviceAttached = utils.getDevice(devices, deviceName) == null;
 
         // check emulator installed
         if (!isDeviceAttached && !isEmulatorInstalled(emulators, deviceName)) {
@@ -87,7 +87,7 @@ class Config {
           // check screen available for this device
           screenAvailable(screens, deviceName);
 
-        final isDeviceAttached = getDevice(devices, deviceName) == null;
+        final isDeviceAttached = utils.getDevice(devices, deviceName) == null;
 
         // check simulator installed
         if (!isDeviceAttached &&
@@ -121,14 +121,6 @@ class Config {
     }
 
     return true;
-  }
-
-  getDevice(List devices, String deviceName) {
-    // find device attached
-    final deviceAttached = devices.firstWhere(
-        (device) => device['name'] == deviceName,
-        orElse: () => null);
-    return deviceAttached;
   }
 
   /// Checks if an emulator is installed, matching the device named in config file.

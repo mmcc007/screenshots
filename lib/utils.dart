@@ -362,3 +362,12 @@ List getAllDevices(Map configInfo) {
   final deviceNames = [...androidDeviceNames, ...iosDeviceNames];
   return deviceNames;
 }
+
+/// Get device from deviceName
+Map getDevice(List devices, String deviceName) {
+  return devices.firstWhere(
+      (device) => device['model'] == null
+          ? device['name'] == deviceName
+          : device['model'].contains(deviceName),
+      orElse: () => null);
+}
