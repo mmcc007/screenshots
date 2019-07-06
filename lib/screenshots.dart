@@ -35,6 +35,7 @@ Future<void> run([String configPath = kConfigFileName]) async {
   final daemonClient = DaemonClient();
   await daemonClient.start;
   final devices = await daemonClient.devices;
+  final emulators = await daemonClient.emulators;
 
   final config = Config(configPath);
   // validate config file
@@ -51,6 +52,27 @@ Future<void> run([String configPath = kConfigFileName]) async {
 
   // run integration tests in each android device (or emulator) for each locale and
   // process screenshots
+//  await runAll(daemonClient, config, screens, imageProcessor, devices);
+  await runTestsOnAll(
+      daemonClient, devices, emulators, config, screens, imageProcessor);
+  // shutdown daemon
+  await daemonClient.stop;
+
+  print('\n\nScreen images are available in:');
+  print('  ios/fastlane/screenshots');
+  print('  android/fastlane/metadata/android');
+  print('for upload to both Apple and Google consoles.');
+  print('\nFor uploading and other automation options see:');
+  print('  https://pub.dartlang.org/packages/fledge');
+  print('\nscreenshots completed successfully.');
+}
+
+Future runAll(DaemonClient daemonClient, Config config, Screens screens,
+    ImageProcessor imageProcessor, List devices) async {
+  final configInfo = config.configInfo;
+  final stagingDir = configInfo['staging'];
+  // run integration tests in each android device (or emulator) for each locale and
+  // process screenshots
   if (configInfo['devices']['android'] != null) {
     for (final deviceName in configInfo['devices']['android'].keys) {
       final highestAvdName = utils.getHighestAVD(deviceName);
@@ -63,7 +85,7 @@ Future<void> run([String configPath = kConfigFileName]) async {
             deviceId, stagingDir, highestAvdName, alreadyBooted, locale);
 
         // store env for later use by tests
-        await config.storeEnv(config, screens, deviceName, locale, 'android');
+        await config.storeEnv(screens, deviceName, locale, 'android');
 
         for (final testPath in configInfo['tests']) {
           print(
@@ -93,7 +115,7 @@ Future<void> run([String configPath = kConfigFileName]) async {
               simulatorName, true, simulatorInfo, stagingDir, locale);
 
         // store env for later use by tests
-        await config.storeEnv(config, screens, simulatorName, locale, 'ios');
+        await config.storeEnv(screens, simulatorName, locale, 'ios');
 
         for (final testPath in configInfo['tests']) {
           print(
@@ -112,17 +134,6 @@ Future<void> run([String configPath = kConfigFileName]) async {
       }
     }
   }
-
-  // shutdown daemon
-  await daemonClient.stop;
-
-  print('\n\nScreen images are available in:');
-  print('  ios/fastlane/screenshots');
-  print('  android/fastlane/metadata/android');
-  print('for upload to both Apple and Google consoles.');
-  print('\nFor uploading and other automation options see:');
-  print('  https://pub.dartlang.org/packages/fledge');
-  print('\nscreenshots completed successfully.');
 }
 
 Map getDevice(List devices, String deviceName) {
@@ -292,4 +303,150 @@ Future<void> simulator(String name, bool start, Map simulatorInfo,
 void flutterDriverBugWarning() {
   stdout.write(
       '\nWarning: running tests in a non-default locale will cause test to hang due to a bug in Flutter Driver (not related to \'screenshots\'). Modify your screenshots.yaml to use only the default locale for your location. For details of bug see comment at https://github.com/flutter/flutter/issues/27785#issue-408955077. Give comment a thumbs-up to get it fixed!\n\n');
+}
+
+Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
+    Config config, Screens screens, ImageProcessor imageProcessor) async {
+  final configInfo = config.configInfo;
+  final locales = configInfo['locales'];
+  final stagingDir = configInfo['staging'];
+  final testPaths = configInfo['tests'];
+  final deviceNames = utils.getAllDevices(configInfo);
+
+  for (final deviceName in deviceNames) {
+    DeviceType deviceType;
+    // look for matching device first
+    final device = devices.firstWhere((device) {
+      if (device['platform'] == 'ios') {
+        deviceType = DeviceType.ios;
+        if (device['emulator']) {
+          // running ios simulator
+          return device['name'] == deviceName;
+        } else {
+          // real ios device
+          return device['model'].contains(deviceName);
+        }
+      } else {
+        deviceType = DeviceType.android;
+        if (device['emulator']) {
+          // running android emulator
+          return findDeviceEmulator(emulators, device['id'])['name'] ==
+              deviceName;
+        } else {
+          // real android device
+          return device['name'] == deviceName;
+        }
+      }
+    }, orElse: () => null);
+
+    String deviceId;
+    Map emulator = null;
+    Map simulator = null;
+    if (device != null) {
+      deviceId = device['id'];
+    } else {
+      // if no matching device, look for matching android emulator
+      emulator = findEmulator(emulators, deviceName);
+      if (emulator != null) {
+        deviceType = DeviceType.android;
+        final emulatorId = emulator['id'];
+        print('Starting $deviceName...');
+//        daemonClient.verbose = true;
+        await daemonClient.launchEmulator(emulatorId);
+//        daemonClient.verbose = false;
+        deviceId = utils.findAndroidDeviceId(emulatorId);
+        print('... $deviceName started.');
+      } else {
+        // if no matching android emulator, look for matching ios simulator
+        deviceType = DeviceType.ios;
+        simulator =
+            utils.getHighestIosSimulator(utils.getIosSimulators(), deviceName);
+        deviceId = simulator['udid'];
+        print('Starting $deviceName...');
+//        daemonClient.verbose = true;
+        utils.cmd('xcrun', ['simctl', 'boot', deviceId]);
+//        daemonClient.verbose = false;
+        print('... $deviceName started.');
+      }
+    }
+
+    for (final locale in locales) {
+      // set locale if android device or emulator
+      if ((device != null && device['platform'] != 'ios') ||
+          (device == null && emulator != null)) {
+        // a running android device or emulator
+        final deviceLocale = utils.androidDeviceLocale(deviceId);
+        print('android device or emulator locale=$deviceLocale');
+        if (locale != deviceLocale) {
+          print('Changing locale from $deviceLocale to $locale...');
+          daemonClient.verbose = true;
+          setAndroidLocale(deviceId, deviceName, locale);
+          daemonClient.verbose = false;
+          print('... locale change complete.');
+        }
+      }
+
+      // set locale if ios simulator
+      if ((device != null &&
+              device['platform'] == 'ios' &&
+              device['emulator']) ||
+          (device == null && simulator != null)) {
+        // a running simulator
+        final deviceLocale = utils.iosSimulatorLocale(deviceId);
+        print('simulator locale=$deviceLocale');
+        if (locale != deviceLocale) {
+          print('Changing locale from $deviceLocale to $locale');
+          daemonClient.verbose = true;
+          utils.cmd('xcrun', ['simctl', 'shutdown', deviceId]);
+          await utils.streamCmd(
+              '$stagingDir/resources/script/simulator-controller',
+              [deviceId, 'locale', locale]);
+          utils.cmd('xcrun', ['simctl', 'boot', deviceId]);
+          daemonClient.verbose = true;
+          print('...locale change complete.');
+        }
+      }
+
+      // issue warning if ios device
+      if ((device != null &&
+          device['platform'] == 'ios' &&
+          !device['emulator'])) {
+        // a running ios device
+        print('Warning: the locale of an ios device cannot be changed.');
+      }
+
+      // store env for later use by tests
+      await config.storeEnv(screens, deviceName, locale, 'android');
+
+      // run tests
+      for (final testPath in testPaths) {
+        print('Running $testPath on \'$deviceName\' in locale $locale...');
+        await utils.streamCmd('flutter', ['-d', deviceId, 'drive', testPath]);
+
+        // process screenshots
+        await imageProcessor.process(deviceType, deviceName, locale);
+      }
+    }
+
+    // if an emulator was started, shut it down
+    if (emulator != null) {
+      await shutdownAndroidEmulator(deviceId, emulator['name']);
+    }
+    if (simulator != null) {
+      print('Waiting for \'$deviceName\' to shutdown...');
+      utils.cmd('xcrun', ['simctl', 'shutdown', deviceId]);
+      print('... \'$deviceName\' shutdown complete.');
+    }
+  }
+}
+
+Map findEmulator(List emulators, String emulatorName) {
+  return emulators.firstWhere((emulator) => emulator['name'] == emulatorName,
+      orElse: () => null);
+}
+
+Map findDeviceEmulator(List emulators, String deviceId) {
+  return emulators.firstWhere(
+      (emulator) => emulator['id'] == utils.getAndroidEmulatorId(deviceId),
+      orElse: () => null);
 }
