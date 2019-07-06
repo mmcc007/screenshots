@@ -36,10 +36,11 @@ Future<void> run([String configPath = kConfigFileName]) async {
   await daemonClient.start;
   final devices = await daemonClient.devices;
   final emulators = await daemonClient.emulators;
+  print('emulators=$emulators');
 
   final config = Config(configPath);
   // validate config file
-  await config.validate(screens, devices);
+  await config.validate(screens, devices, emulators);
   final Map configInfo = config.configInfo;
 
   // init
@@ -278,10 +279,7 @@ Future<void> simulator(String name, bool start, Map simulatorInfo,
     if (simulatorLocale != testLocale) {
       print(
           'Changing locale from $simulatorLocale to $testLocale on \'$name\'...');
-      flutterDriverBugWarning();
-
-      await utils.streamCmd('$stagingDir/resources/script/simulator-controller',
-          [name, 'locale', testLocale]);
+      await setIosLocale(stagingDir, name, testLocale);
     }
     utils.cmd('xcrun', ['simctl', 'boot', udId]);
   } else {
@@ -290,6 +288,13 @@ Future<void> simulator(String name, bool start, Map simulatorInfo,
       utils.cmd('xcrun', ['simctl', 'shutdown', udId]);
     }
   }
+}
+
+Future setIosLocale(String stagingDir, String name, String testLocale) async {
+  flutterDriverBugWarning();
+
+  await utils.streamCmd('$stagingDir/resources/script/simulator-controller',
+      [name, 'locale', testLocale]);
 }
 
 void flutterDriverBugWarning() {
@@ -395,9 +400,7 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
           print('Changing locale from $deviceLocale to $locale');
           daemonClient.verbose = true;
           utils.cmd('xcrun', ['simctl', 'shutdown', deviceId]);
-          await utils.streamCmd(
-              '$stagingDir/resources/script/simulator-controller',
-              [deviceId, 'locale', locale]);
+          await setIosLocale(stagingDir, deviceId, locale);
           utils.cmd('xcrun', ['simctl', 'boot', deviceId]);
           daemonClient.verbose = true;
           print('...locale change complete.');

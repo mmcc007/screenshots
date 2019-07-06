@@ -98,6 +98,7 @@ void main() {
         await config.validate(
           screens,
           await daemonClient.devices,
+          await daemonClient.emulators,
         ),
         true);
     // allow other tests to continue
