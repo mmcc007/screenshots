@@ -32,7 +32,8 @@ class DaemonClient {
       _connected = await _waitForConnection.future;
 
       // enable device discovery
-      await _sendCommand(<String, dynamic>{'method': 'device.enable'});
+      await _sendCommandWaitResponse(
+          <String, dynamic>{'method': 'device.enable'});
       _iosDevices = iosDevices();
       // wait for device discovery
       await Future.delayed(Duration(milliseconds: 500));
@@ -40,19 +41,24 @@ class DaemonClient {
   }
 
   Future<List> get emulators async {
-    return _sendCommand(<String, dynamic>{'method': 'emulator.getEmulators'});
+    return _sendCommandWaitResponse(
+        <String, dynamic>{'method': 'emulator.getEmulators'});
   }
 
   Future<void> launchEmulator(String id) async {
-    await _sendCommand(<String, dynamic>{
+    final command = <String, dynamic>{
       'method': 'emulator.launch',
       'params': <String, dynamic>{
         'emulatorId': id,
       },
-    });
+    };
+    await _sendCommand(command);
 
     // wait for expected device-added-emulator event
-    final event = await _waitForEvent.future;
+    final results = await Future.wait(
+        <Future>[_waitForResponse.future, _waitForEvent.future]);
+    _processResponse(results[0], command);
+    final event = results[1];
     if (!(event.contains('device.added') &&
         event.contains('"emulator":true'))) {
       throw 'Error: emulator $id not started: $event';
@@ -62,8 +68,8 @@ class DaemonClient {
   }
 
   Future<List> get devices async {
-    final devices =
-        await _sendCommand(<String, dynamic>{'method': 'device.getDevices'});
+    final devices = await _sendCommandWaitResponse(
+        <String, dynamic>{'method': 'device.getDevices'});
     return Future.value(devices.map((device) {
       // add model name if real ios device present
       if (device['platform'] == 'ios' && device['emulator'] == false) {
@@ -80,7 +86,8 @@ class DaemonClient {
   int _exitCode = 0;
   Future<int> get stop async {
     if (!_connected) return _exitCode;
-    await _sendCommand(<String, dynamic>{'method': 'daemon.shutdown'});
+    await _sendCommandWaitResponse(
+        <String, dynamic>{'method': 'daemon.shutdown'});
     _connected = false;
     _exitCode = await _process.exitCode;
     return _exitCode;
@@ -94,40 +101,53 @@ class DaemonClient {
       if (verbose) print('<== $line');
       if (line.contains('daemon.connected')) {
         _waitForConnection.complete(true);
-      }
-      // get response
-      if (line.contains('"result":') ||
-          line.contains('"error":') ||
-          line == '[{"id":${_messageId - 1}}]') {
-        _waitForResponse.complete(line);
-      }
-      // get event
-      if (line.contains('[{"event":')) {
-        _waitForEvent.complete(line);
-        _waitForEvent = Completer<String>(); // enable wait for next event
+      } else {
+        // get response
+        if (line.contains('"result":') ||
+            line.contains('"error":') ||
+            line == '[{"id":${_messageId - 1}}]') {
+          _waitForResponse.complete(line);
+        } else {
+          // get event
+          if (line.contains('[{"event":')) {
+            _waitForEvent.complete(line);
+            _waitForEvent = Completer<String>(); // enable wait for next event
+          } else if (line != 'Starting device daemon...') {
+            throw 'Error: unexpected response from daemon: $line';
+          }
+        }
       }
     });
     _process.stderr.listen((dynamic data) => stderr.add(data));
   }
 
-  Future<List> _sendCommand(Map<String, dynamic> command) async {
+  void _sendCommand(Map<String, dynamic> command) {
+    _waitForResponse = Completer<String>();
+    command['id'] = _messageId++;
+    final String str = '[${json.encode(command)}]';
+    _process.stdin.writeln(str);
+    if (verbose) print('==> $str');
+  }
+
+  Future<List> _sendCommandWaitResponse(Map<String, dynamic> command) async {
     if (_connected) {
-      _waitForResponse = Completer<String>();
-      command['id'] = _messageId++;
-      final String str = '[${json.encode(command)}]';
-      _process.stdin.writeln(str);
-      if (verbose) print('==> $str');
+      _sendCommand(command);
       final String response = await _waitForResponse.future;
-      if (response.contains('result')) {
-        final respExp = RegExp(r'result":(.*)}\]');
-        return jsonDecode(respExp.firstMatch(response).group(1));
-      } else if (response.contains('error')) {
-        throw 'Error: command $command failed:\n ${jsonDecode(response)[0]['error']}';
-      } else {
-        return jsonDecode(response);
-      }
+      return _processResponse(response, command);
     }
     throw 'Error: not connected to daemon.';
+  }
+
+  List _processResponse(String response, Map<String, dynamic> command) {
+    if (response.contains('result')) {
+      final respExp = RegExp(r'result":(.*)}\]');
+      return jsonDecode(respExp.firstMatch(response).group(1));
+    } else if (response.contains('error')) {
+      // todo: handle errors separately
+      throw 'Error: command $command failed:\n ${jsonDecode(response)[0]['error']}';
+    } else {
+      return jsonDecode(response);
+    }
   }
 }
 
