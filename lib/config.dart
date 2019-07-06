@@ -179,7 +179,7 @@ class Config {
     stdout.write(
         '\n  Each device listed in screenshots.yaml with framing required must'
         '\n    1. have a supported screen'
-        '\n    2. an attached device or an installed emulator/simulator.\n\n');
+        '\n    2. have an attached device or an installed emulator/simulator.\n\n');
   }
 
   // check screen is available for device
