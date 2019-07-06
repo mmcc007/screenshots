@@ -344,8 +344,13 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
         final emulatorId = emulator['id'];
         print('Starting $deviceName...');
 //        daemonClient.verbose = true;
-        await daemonClient.launchEmulator(emulatorId);
-//        daemonClient.verbose = false;
+        if (Platform.environment['CI'] == 'true') {
+          // testing on CI/CD requires starting emulator in a specific way
+          await startAndroidEmulatorOnCI(emulatorId, stagingDir);
+        } else {
+          // testing locally, so start emulator in normal way
+          await daemonClient.launchEmulator(emulatorId);
+        } //        daemonClient.verbose = false;
         deviceId = utils.findAndroidDeviceId(emulatorId);
         print('... $deviceName started.');
       } else {
