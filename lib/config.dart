@@ -58,6 +58,7 @@ class Config {
   Future<bool> validate(
       Screens screens, List allDevices, List allEmulators) async {
     final isDeviceAttached = (device) => device != null;
+    final isEmulatorInstalled = (emulator) => emulator != null;
 
     if (configInfo['devices']['android'] != null) {
       final devices = utils.getAndroidDevices(allDevices);
@@ -70,7 +71,7 @@ class Config {
 
         // check emulator installed
         if (!isDeviceAttached(utils.getDevice(devices, deviceName)) &&
-            !isEmulatorInstalled(allEmulators, deviceName)) {
+            !isEmulatorInstalled(findEmulator(allEmulators, deviceName))) {
           stderr.write('Error: no device attached or emulator installed for '
               'device \'$deviceName\' in $configPath.\n');
           configGuide(screens, allDevices);
@@ -122,35 +123,31 @@ class Config {
     return true;
   }
 
-  /// Checks if an emulator is installed, matching the device named in config file.
-  bool isEmulatorInstalled(List emulators, String deviceName) {
-    // check emulator installed
-    bool emulatorInstalled = false;
-//    final deviceNameNormalized = deviceName.replaceAll(' ', '_');
-    final emulator = emulators.firstWhere(
-        (emulator) => emulator['name'] == deviceName,
-        orElse: () => null);
-    if (emulator == null)
-      print('Error: \'$deviceName\' does not have a matching emulator.');
-    else
-      emulatorInstalled = true;
-//    for (String emulator in emulators) {
-//      if (emulatorName.contains(deviceNameNormalized)) {
-//        final highestEmulatorName = utils.getHighestAVD(deviceName);
-//        if (highestEmulatorName != deviceNameNormalized && !emulatorInstalled) {
-//          print('Warning: \'$deviceName\' does not have a matching emulator.');
-//          print('       : Using \'$highestEmulatorName\'.');
-//        }
-//        emulatorInstalled = true;
-//      }
-//    }
-    return emulatorInstalled;
-  }
+//  /// Checks if an emulator is installed, matching the device named in config file.
+//  bool isEmulatorInstalled(List emulators, String deviceName) {
+//    // check emulator installed
+//    bool isEmulatorInstalled = false;
+////    final deviceNameNormalized = deviceName.replaceAll(' ', '_');
+//    final emulator = findEmulator(emulators, deviceName);
+//    if (emulator != null)
+//      isEmulatorInstalled = true;
+////    for (String emulator in emulators) {
+////      if (emulatorName.contains(deviceNameNormalized)) {
+////        final highestEmulatorName = utils.getHighestAVD(deviceName);
+////        if (highestEmulatorName != deviceNameNormalized && !emulatorInstalled) {
+////          print('Warning: \'$deviceName\' does not have a matching emulator.');
+////          print('       : Using \'$highestEmulatorName\'.');
+////        }
+////        emulatorInstalled = true;
+////      }
+////    }
+//    return isEmulatorInstalled;
+//  }
 
   /// Checks if a simulator is installed, matching the device named in config file.
   bool isSimulatorInstalled(Map simulators, String deviceName) {
     // check simulator installed
-    bool simulatorInstalled = false;
+    bool isSimulatorInstalled = false;
     simulators.forEach((simulatorName, iOSVersions) {
       //          print('device=$device, simulator=$simulator');
       if (simulatorName == deviceName) {
@@ -167,10 +164,10 @@ class Config {
               '       : Using \'$deviceName\' with iOS version $iOSVersionName (ID: $udid).');
         }
 
-        simulatorInstalled = true;
+        isSimulatorInstalled = true;
       }
     });
-    return simulatorInstalled;
+    return isSimulatorInstalled;
   }
 
   void configGuide(Screens screens, List devices) {
