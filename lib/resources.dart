@@ -8,8 +8,6 @@ import 'package:screenshots/utils.dart';
 /// Copy resource images for a screen from package to files.
 ///
 Future unpackImages(Map screenResources, String dstDir) async {
-//  print('unpacking resources=$screenResources');
-
   for (String resourcePath in screenResources.values) {
     List<int> resourceImage = await readResourceImage(resourcePath);
 

@@ -24,6 +24,7 @@ class DaemonClient {
   Completer _waitForEvent = Completer<String>();
   List _iosDevices; // contains model of device, used by screenshots
 
+  /// Start flutter tools daemon.
   Future<void> get start async {
     if (!_connected) {
       _process = await Process.start('flutter', ['daemon']);
@@ -40,16 +41,18 @@ class DaemonClient {
     }
   }
 
+  /// List installed emulators (not including iOS simulators).
   Future<List> get emulators async {
     return _sendCommandWaitResponse(
         <String, dynamic>{'method': 'emulator.getEmulators'});
   }
 
-  Future<void> launchEmulator(String id) async {
+  /// Launch a simulator.
+  Future<void> launchEmulator(String emulatorId) async {
     final command = <String, dynamic>{
       'method': 'emulator.launch',
       'params': <String, dynamic>{
-        'emulatorId': id,
+        'emulatorId': emulatorId,
       },
     };
     await _sendCommand(command);
@@ -61,12 +64,13 @@ class DaemonClient {
     final event = results[1];
     if (!(event.contains('device.added') &&
         event.contains('"emulator":true'))) {
-      throw 'Error: emulator $id not started: $event';
+      throw 'Error: emulator $emulatorId not started: $event';
     }
 
     return Future.value();
   }
 
+  /// List running real devices and booted emulators/simulators.
   Future<List> get devices async {
     final devices = await _sendCommandWaitResponse(
         <String, dynamic>{'method': 'device.getDevices'});
@@ -84,6 +88,8 @@ class DaemonClient {
   }
 
   int _exitCode = 0;
+
+  /// Stop daemon.
   Future<int> get stop async {
     if (!_connected) return _exitCode;
     await _sendCommandWaitResponse(
@@ -151,6 +157,7 @@ class DaemonClient {
   }
 }
 
+/// Shutdown an android emulator.
 Future shutdownAndroidEmulator(String deviceId, String emulatorName) async {
   cmd('adb', ['-s', deviceId, 'emu', 'kill'], '.', true);
   await waitAndroidEmulatorShutdown(deviceId, emulatorName);
