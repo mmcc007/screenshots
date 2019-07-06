@@ -54,7 +54,7 @@ String cmd(String cmd, List<String> arguments,
   if (!silent) stdout.write(result.stdout);
   if (result.exitCode != 0) {
     stderr.write(result.stderr);
-    throw 'command failed: cmd=\'$cmd ${arguments.join(" ")}\'';
+    throw 'command failed: exitcode=${result.exitCode}, cmd=\'$cmd ${arguments.join(" ")}\', workingDir=$workingDir, silent=$silent';
   }
   // return stdout
   return result.stdout;
@@ -71,22 +71,23 @@ Future<void> streamCmd(String cmd, List<String> arguments,
   final process = await Process.start(cmd, arguments,
       workingDirectory: workingDirectory, mode: mode);
 
-  final stdoutFuture = process.stdout
-      .transform(utf8.decoder)
-      .transform(LineSplitter())
-      .listen(stdout.writeln)
-      .asFuture();
-  final stderrFuture = process.stderr
-      .transform(utf8.decoder)
-      .transform(LineSplitter())
-      .listen(stderr.writeln)
-      .asFuture();
+  if (mode == ProcessStartMode.normal) {
+    final stdoutFuture = process.stdout
+        .transform(utf8.decoder)
+        .transform(LineSplitter())
+        .listen(stdout.writeln)
+        .asFuture();
+    final stderrFuture = process.stderr
+        .transform(utf8.decoder)
+        .transform(LineSplitter())
+        .listen(stderr.writeln)
+        .asFuture();
+    await Future.wait([stdoutFuture, stderrFuture]);
 
-  await Future.wait([stdoutFuture, stderrFuture]);
-
-  var exitCode = await process.exitCode;
-  if (exitCode != 0) {
-    throw 'command failed: cmd=\'$cmd ${arguments.join(" ")}\'';
+    final exitCode = await process.exitCode;
+    if (exitCode != 0) {
+      throw 'command failed: exitcode=$exitCode, cmd=\'$cmd ${arguments.join(" ")}\', workingDirectory=$workingDirectory, mode=$mode';
+    }
   }
 }
 
