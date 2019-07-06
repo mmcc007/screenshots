@@ -483,4 +483,23 @@ void main() {
     print('iosDevices=$iosDevices');
     print('androidDevices=$androidDevices');
   });
+
+  test('get devices', () {
+    final expected = {
+      'id': '3b3455019e329e007e67239d9b897148244b5053',
+      'name': 'Maurice’s iPhone',
+      'platform': 'ios',
+      'emulator': false,
+      'model': 'iPhone 5c (GSM)'
+    };
+    String deviceName = 'iPhone 5c';
+    Map device = getDevice([expected], deviceName);
+    expect(device, expected);
+    final isDeviceAttached = (device) => device != null;
+    expect(isDeviceAttached(device), true);
+    deviceName = 'iPhone X';
+    device = getDevice([expected], deviceName);
+    expect(device, null);
+    expect(isDeviceAttached(device), false);
+  });
 }

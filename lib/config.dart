@@ -56,6 +56,8 @@ class Config {
   /// Check emulators and simulators are installed, devices attached,
   /// matching screen is available and tests exist.
   Future<bool> validate(Screens screens, List allDevices) async {
+    final isDeviceAttached = (device) => device != null;
+
     if (configInfo['devices']['android'] != null) {
       final devices = utils.getAndroidDevices(allDevices);
       final List emulators = utils.getAvdNames();
@@ -65,11 +67,9 @@ class Config {
           // check screen available for this device
           screenAvailable(screens, deviceName);
 
-        // is device attached
-        final isDeviceAttached = utils.getDevice(devices, deviceName) == null;
-
         // check emulator installed
-        if (!isDeviceAttached && !isEmulatorInstalled(emulators, deviceName)) {
+        if (!isDeviceAttached(utils.getDevice(devices, deviceName)) &&
+            !isEmulatorInstalled(emulators, deviceName)) {
           stderr.write('Error: no device attached or emulator installed for '
               'device \'$deviceName\' in $configPath.\n');
           configGuide(screens, allDevices);
@@ -87,10 +87,8 @@ class Config {
           // check screen available for this device
           screenAvailable(screens, deviceName);
 
-        final isDeviceAttached = utils.getDevice(devices, deviceName) == null;
-
         // check simulator installed
-        if (!isDeviceAttached &&
+        if (!isDeviceAttached(utils.getDevice(devices, deviceName)) &&
             !isSimulatorInstalled(simulators, deviceName)) {
           stderr.write('Error: no device attached or simulator installed for '
               'device \'$deviceName\' in $configPath.\n');
