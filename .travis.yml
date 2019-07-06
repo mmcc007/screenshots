@@ -55,8 +55,8 @@ jobs:
       - sdkmanager "system-images;android-$EMULATOR_API_LEVEL;$ABI" > /dev/null
       - sdkmanager --list | head -15
       - echo no | avdmanager create avd -n $EMULATOR_NAME -k "system-images;android-$EMULATOR_API_LEVEL;$ABI"
-      - cat ~/.android/avd/$EMULATOR_NAME.ini
-      - cat ~/.android/avd/$EMULATOR_NAME.avd/config.ini
+#      - cat ~/.android/avd/$EMULATOR_NAME.ini
+#      - cat ~/.android/avd/$EMULATOR_NAME.avd/config.ini
       - echo "hw.lcd.width=1440" >> ~/.android/avd/$EMULATOR_NAME.avd/config.ini
       - echo "hw.lcd.height=2560" >> ~/.android/avd/$EMULATOR_NAME.avd/config.ini
       - echo "hw.device.name=Nexus 6P" >> ~/.android/avd/$EMULATOR_NAME.avd/config.ini
