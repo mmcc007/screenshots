@@ -17,7 +17,7 @@ void main() {
 
     // called by screenshots before test
     await config.storeEnv(
-        config, screens, env['device_name'], env['locale'], env['device_type']);
+        screens, env['device_name'], env['locale'], env['device_type']);
 
     // called by test
     final Config testConfig = Config('test/screenshots_test.yaml');
