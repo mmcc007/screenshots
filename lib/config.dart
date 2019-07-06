@@ -34,7 +34,7 @@ class Config {
   /// Records screenshots environment before start of each test
   /// (called by screenshots)
   Future<void> storeEnv(
-      Config config, Screens screens, emulatorName, locale, deviceType) async {
+      Screens screens, emulatorName, locale, deviceType) async {
     // store env for later use by tests
     final screenProps = screens.screenProps(emulatorName);
     final screenSize = screenProps == null ? null : screenProps['size'];
