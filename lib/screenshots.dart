@@ -213,7 +213,7 @@ Future startAndroidEmulatorOnCI(String emulatorId, String stagingDir) async {
         'swiftshader',
       ],
       '.',
-      ProcessStartMode.detached);
+      ProcessStartMode.detachedWithStdio);
   // wait for emulator to start
   await utils
       .streamCmd('$stagingDir/resources/script/android-wait-for-emulator', []);
@@ -348,14 +348,16 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
         deviceType = DeviceType.android;
         final emulatorId = emulator['id'];
         print('Starting $deviceName...');
-//        daemonClient.verbose = true;
+        daemonClient.verbose = true;
         if (Platform.environment['CI'] == 'true') {
           // testing on CI/CD requires starting emulator in a specific way
           await startAndroidEmulatorOnCI(emulatorId, stagingDir);
         } else {
           // testing locally, so start emulator in normal way
           await daemonClient.launchEmulator(emulatorId);
-        } //        daemonClient.verbose = false;
+        }
+        daemonClient.verbose = false;
+        print('emulator $emulatorId launched');
         deviceId = utils.findAndroidDeviceId(emulatorId);
         print('... $deviceName started.');
       } else {
