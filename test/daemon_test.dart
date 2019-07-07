@@ -134,7 +134,6 @@ main() {
 
   test('wait for start of android emulator', () async {
     final id = 'Nexus_6P_API_28';
-    final name = 'Nexus 6P';
     final deviceId = 'emulator-5554';
     final daemonClient = DaemonClient();
     daemonClient.verbose = true;
