@@ -281,8 +281,7 @@ Future stopAndroidEmulator(String deviceId, String stagingDir) async {
 }
 
 /// Wait for android emulator to stop.
-Future<void> waitAndroidEmulatorShutdown(
-    String deviceId, String deviceName) async {
+Future<void> waitAndroidEmulatorShutdown(String deviceId) async {
   int timeout = 100;
   final pollingInterval = 500;
   final notFound = 'not found';
@@ -306,7 +305,7 @@ Future<void> waitAndroidEmulatorShutdown(
     await Future.delayed(Duration(milliseconds: pollingInterval));
     timeout -= 1;
   }
-  if (timeout == 0) throw 'Error: shutdown of \'$deviceName\' timed-out.';
+  if (timeout == 0) throw 'Error: shutdown timed-out.';
   poller.cancel();
 }
 
