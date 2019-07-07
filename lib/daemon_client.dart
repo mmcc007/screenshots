@@ -4,6 +4,8 @@ import 'dart:io';
 
 import 'utils.dart';
 
+enum Event { deviceRemoved }
+
 /// Creates and communicates with flutter daemon.
 class DaemonClient {
   static final DaemonClient _daemonClient = new DaemonClient._internal();
@@ -84,6 +86,19 @@ class DaemonClient {
       }
       return device;
     }).toList());
+  }
+
+  Future<void> waitForEvent(Event event) async {
+    final eventInfo = await _waitForEvent.future;
+    switch (event) {
+      case Event.deviceRemoved:
+        if (!eventInfo.contains('"event":"device.removed"'))
+          throw 'Error: exected: $event, received: $eventInfo';
+        break;
+      default:
+        throw 'Error: unexpected event: $eventInfo';
+    }
+    return Future.value();
   }
 
   int _exitCode = 0;
