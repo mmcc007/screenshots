@@ -31,13 +31,12 @@ class DaemonClient {
       _listen();
       _waitForConnection = Completer<bool>();
       _connected = await _waitForConnection.future;
-
       // enable device discovery
       await _sendCommandWaitResponse(
           <String, dynamic>{'method': 'device.enable'});
       _iosDevices = iosDevices();
       // wait for device discovery
-      await Future.delayed(Duration(milliseconds: 500));
+      await Future.delayed(Duration(milliseconds: 100));
     }
   }
 
@@ -47,7 +46,7 @@ class DaemonClient {
         <String, dynamic>{'method': 'emulator.getEmulators'});
   }
 
-  /// Launch a simulator.
+  /// Launch an emulator.
   Future<void> launchEmulator(String emulatorId) async {
     final command = <String, dynamic>{
       'method': 'emulator.launch',
@@ -128,20 +127,20 @@ class DaemonClient {
   }
 
   void _sendCommand(Map<String, dynamic> command) {
-    _waitForResponse = Completer<String>();
-    command['id'] = _messageId++;
-    final String str = '[${json.encode(command)}]';
-    _process.stdin.writeln(str);
-    if (verbose) print('==> $str');
+    if (_connected) {
+      _waitForResponse = Completer<String>();
+      command['id'] = _messageId++;
+      final String str = '[${json.encode(command)}]';
+      _process.stdin.writeln(str);
+      if (verbose) print('==> $str');
+    } else
+      throw 'Error: not connected to daemon.';
   }
 
   Future<List> _sendCommandWaitResponse(Map<String, dynamic> command) async {
-    if (_connected) {
-      _sendCommand(command);
-      final String response = await _waitForResponse.future;
-      return _processResponse(response, command);
-    }
-    throw 'Error: not connected to daemon.';
+    _sendCommand(command);
+    final String response = await _waitForResponse.future;
+    return _processResponse(response, command);
   }
 
   List _processResponse(String response, Map<String, dynamic> command) {
@@ -172,7 +171,6 @@ List iosDevices() {
           .trim()
           .split('\n')
           .sublist(1);
-//  print('iosDeployDevices=$iosDeployDevices');
   if (iosDeployDevices[0] == noAttachedDevices) return [];
   return iosDeployDevices.map((line) {
     final matches = regExp.firstMatch(line);

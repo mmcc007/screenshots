@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:screenshots/screens.dart';
 import 'package:screenshots/screenshots.dart';
 import 'package:screenshots/utils.dart' as utils;
-
 // ios/fastlane/screenshots/en-US/*[iPad|iPhone]*
 // android/fastlane/metadata/android/en-US/images/phoneScreenshots
 // android/fastlane/metadata/android/en-US/images/tenInchScreenshots
@@ -26,7 +25,7 @@ String fastlaneDir(
 }
 
 /// Clear image destination.
-Future clearFastlaneDir(
+Future _clearFastlaneDir(
     Screens screens, deviceName, locale, DeviceType deviceType) async {
   const kImageSuffix = 'png';
 
@@ -53,14 +52,15 @@ Future clearFastlaneDirs(Map config, Screens screens) async {
   if (config['devices']['android'] != null) {
     for (String deviceName in config['devices']['android'].keys) {
       for (final locale in config['locales']) {
-        await clearFastlaneDir(screens, deviceName, locale, DeviceType.android);
+        await _clearFastlaneDir(
+            screens, deviceName, locale, DeviceType.android);
       }
     }
   }
   if (config['devices']['ios'] != null) {
     for (String deviceName in config['devices']['ios'].keys) {
       for (final locale in config['locales']) {
-        await clearFastlaneDir(screens, deviceName, locale, DeviceType.ios);
+        await _clearFastlaneDir(screens, deviceName, locale, DeviceType.ios);
       }
     }
   }

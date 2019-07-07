@@ -199,7 +199,12 @@ Future prefixFilesInDir(String dirPath, String prefix) async {
 }
 
 /// Converts [enum] value to [String].
-String enumToStr(dynamic _enum) => _enum.toString().split('.').last;
+String getStringFromEnum(dynamic _enum) => _enum.toString().split('.').last;
+
+T getEnumFromString<T>(Iterable<T> values, String value) {
+  return values.firstWhere((type) => type.toString().split(".").last == value,
+      orElse: () => null);
+}
 
 /// Returns locale of currently attached android device.
 String androidDeviceLocale(String deviceId) {
@@ -239,7 +244,7 @@ String findAndroidDeviceId(String emulatorId) {
       orElse: () => null);
 }
 
-/// Get the list of running devices by id.
+/// Get the list of running android devices by id.
 List<String> getAndroidDeviceIds() {
   return cmd('adb', ['devices'], '.', true)
       .trim()
@@ -249,7 +254,7 @@ List<String> getAndroidDeviceIds() {
       .toList();
 }
 
-/// Get deviceId for a booting emulator
+/// Get deviceId for a newly booted emulator.
 Future<String> getBootedAndroidDeviceId(String deviceName) async {
   final avdName = getHighestAVD(deviceName);
   final pollingInterval = 500;
@@ -266,7 +271,8 @@ Future<String> getBootedAndroidDeviceId(String deviceName) async {
   return deviceId;
 }
 
-Future stopEmulator(String deviceId, String stagingDir) async {
+/// Stop an android emulator.
+Future stopAndroidEmulator(String deviceId, String stagingDir) async {
   cmd('adb', ['-s', deviceId, 'emu', 'kill']);
   // wait for emulator to stop
   await streamCmd(
@@ -340,7 +346,7 @@ class Poller {
   }
 }
 
-/// Filters a list of devices to get real ios devices
+/// Filters a list of devices to get real ios devices.
 List getIosDevices(List devices) {
   final iosDevices = devices
       .where((device) => device['platform'] == 'ios' && !device['emulator'])
@@ -348,7 +354,7 @@ List getIosDevices(List devices) {
   return iosDevices;
 }
 
-/// Filters a list of devices to get real android devices
+/// Filters a list of devices to get real android devices.
 List getAndroidDevices(List devices) {
   final iosDevices = devices
       .where((device) => device['platform'] != 'ios' && !device['emulator'])
@@ -356,15 +362,15 @@ List getAndroidDevices(List devices) {
   return iosDevices;
 }
 
-/// Get all android and ios devices
-List getAllDevices(Map configInfo) {
+/// Get all configured android and ios device names for this test run.
+List getAllConfiguredDeviceNames(Map configInfo) {
   final androidDeviceNames = configInfo['devices']['android']?.keys ?? [];
   final iosDeviceNames = configInfo['devices']['ios']?.keys ?? [];
   final deviceNames = [...androidDeviceNames, ...iosDeviceNames];
   return deviceNames;
 }
 
-/// Get device from deviceName
+/// Get device from deviceName.
 Map getDevice(List devices, String deviceName) {
   return devices.firstWhere(
       (device) => device['model'] == null

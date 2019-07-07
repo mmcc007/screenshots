@@ -12,16 +12,16 @@ import 'package:screenshots/utils.dart' as utils;
 /// Config info used to process screenshots for android and ios.
 ///
 class Config {
-  final String configPath;
-  YamlNode docYaml;
+  final String _configPath;
+  YamlNode _docYaml;
   Map _screenshotsEnv; // current screenshots env
 
-  Config([this.configPath = kConfigFileName]) {
-    docYaml = loadYaml(File(configPath).readAsStringSync());
+  Config([this._configPath = kConfigFileName]) {
+    _docYaml = loadYaml(File(_configPath).readAsStringSync());
   }
 
   /// Get configuration information for supported devices
-  Map get configInfo => docYaml.value;
+  Map get configInfo => _docYaml.value;
 
   /// Current screenshots runtime environment
   /// (updated before start of each test)
@@ -66,14 +66,14 @@ class Config {
         if (ImageProcessor.isFrameRequired(
             configInfo, DeviceType.android, deviceName))
           // check screen available for this device
-          screenAvailable(screens, deviceName);
+          _checkScreenAvailable(screens, deviceName);
 
         // check emulator installed
         if (!isDeviceAttached(utils.getDevice(devices, deviceName)) &&
             !isEmulatorInstalled(findEmulator(allEmulators, deviceName))) {
           stderr.write('Error: no device attached or emulator installed for '
-              'device \'$deviceName\' in $configPath.\n');
-          configGuide(screens, allDevices);
+              'device \'$deviceName\' in $_configPath.\n');
+          generateConfigGuide(screens, allDevices);
           exit(1);
         }
       }
@@ -86,14 +86,14 @@ class Config {
         if (ImageProcessor.isFrameRequired(
             configInfo, DeviceType.ios, deviceName))
           // check screen available for this device
-          screenAvailable(screens, deviceName);
+          _checkScreenAvailable(screens, deviceName);
 
         // check simulator installed
         if (!isDeviceAttached(utils.getDevice(devices, deviceName)) &&
-            !isSimulatorInstalled(simulators, deviceName)) {
+            !_isSimulatorInstalled(simulators, deviceName)) {
           stderr.write('Error: no device attached or simulator installed for '
-              'device \'$deviceName\' in $configPath.\n');
-          configGuide(screens, allDevices);
+              'device \'$deviceName\' in $_configPath.\n');
+          generateConfigGuide(screens, allDevices);
           exit(1);
         }
       }
@@ -101,7 +101,7 @@ class Config {
 
     for (String test in configInfo['tests']) {
       if (!await File(test).exists()) {
-        stderr.write('Missing test: $test from $configPath not found.\n');
+        stderr.write('Missing test: $test from $_configPath not found.\n');
         exit(1);
       }
     }
@@ -123,7 +123,7 @@ class Config {
   }
 
   /// Checks if a simulator is installed, matching the device named in config file.
-  bool isSimulatorInstalled(Map simulators, String deviceName) {
+  bool _isSimulatorInstalled(Map simulators, String deviceName) {
     // check simulator installed
     bool isSimulatorInstalled = false;
     simulators.forEach((simulatorName, iOSVersions) {
@@ -148,15 +148,13 @@ class Config {
     return isSimulatorInstalled;
   }
 
-  void configGuide(Screens screens, List devices) {
+  /// Generate a guide for configuring Screenshots in current environment.
+  void generateConfigGuide(Screens screens, List devices) {
     stdout.write('\nGuide:');
-    attachedDevices([
-      ...utils.getIosDevices(devices) ?? [],
-      ...utils.getAndroidDevices(devices) ?? []
-    ]);
-    installedEmulators(utils.getAvdNames());
-    installedSimulators(utils.getIosSimulators());
-    supportedDevices(screens);
+    _reportAttachedDevices(devices);
+    _reportInstalledEmulators(utils.getAvdNames());
+    _reportInstalledSimulators(utils.getIosSimulators());
+    _reportSupportedDevices(screens);
     stdout.write(
         '\n  Each device listed in screenshots.yaml with framing required must'
         '\n    1. have a supported screen'
@@ -164,22 +162,22 @@ class Config {
   }
 
   // check screen is available for device
-  void screenAvailable(Screens screens, String deviceName) {
+  void _checkScreenAvailable(Screens screens, String deviceName) {
     if (screens.screenProps(deviceName) == null) {
       stderr.write(
-          'Error: screen not available for device \'$deviceName\' in $configPath.\n');
+          'Error: screen not available for device \'$deviceName\' in $_configPath.\n');
       stderr.flush();
       stdout.write(
-          '\n  Use a supported device or set \'frame: false\' for device in $configPath.\n\n'
+          '\n  Use a supported device or set \'frame: false\' for device in $_configPath.\n\n'
           '  If framing for device is required, request screen support by\n'
           '  creating an issue in:\n'
           '  https://github.com/mmcc007/screenshots/issues.\n\n');
-      supportedDevices(screens);
+      _reportSupportedDevices(screens);
       exit(1);
     }
   }
 
-  void supportedDevices(Screens screens) {
+  void _reportSupportedDevices(Screens screens) {
     stdout.write('\n  Devices with supported screens:\n');
     screens.screens.forEach((os, v) {
       stdout.write('    $os:\n');
@@ -191,23 +189,24 @@ class Config {
     });
   }
 
-  void attachedDevices(List devices) {
+  void _reportAttachedDevices(List devices) {
     stdout.write('\n  Attached devices:\n');
     for (final device in devices) {
-      device['platform'] == 'ios'
-          ? stdout.write('    ${device['model']}\n')
-          : stdout.write('    ${device['name']}\n');
+      if (device['emulator'] == false)
+        device['platform'] == 'ios'
+            ? stdout.write('    ${device['model']}\n')
+            : stdout.write('    ${device['name']}\n');
     }
   }
 
-  void installedEmulators(List emulators) {
+  void _reportInstalledEmulators(List emulators) {
     stdout.write('\n  Installed emulators:\n');
     for (final emulator in emulators) {
       stdout.write('    $emulator\n');
     }
   }
 
-  void installedSimulators(Map simulators) {
+  void _reportInstalledSimulators(Map simulators) {
     stdout.write('  Installed simulators:\n');
     simulators.forEach((simulator, _) => stdout.write('    $simulator\n'));
   }
