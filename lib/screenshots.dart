@@ -3,11 +3,11 @@ import 'dart:io';
 
 import 'config.dart';
 import 'daemon_client.dart';
-import 'screens.dart';
+import 'fastlane.dart' as fastlane;
 import 'image_processor.dart';
 import 'resources.dart' as resources;
+import 'screens.dart';
 import 'utils.dart' as utils;
-import 'fastlane.dart' as fastlane;
 
 /// default config file name
 const String kConfigFileName = 'screenshots.yaml';
@@ -102,8 +102,7 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
       if (emulator != null) {
         print('Starting $configDeviceName...');
         deviceId =
-            await _startEmulator(emulator, stagingDir, daemonClient, deviceId);
-        print('... $configDeviceName started.');
+            await _startEmulator(daemonClient, emulator['id'], stagingDir);
       } else {
         // if no matching android emulator, look for matching ios simulator
         // and start it
@@ -111,10 +110,7 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
             utils.getIosSimulators(), configDeviceName);
         deviceId = simulator['udid'];
         print('Starting $configDeviceName...');
-//        daemonClient.verbose = true;
-        utils.cmd('xcrun', ['simctl', 'boot', deviceId]);
-//        daemonClient.verbose = false;
-        print('... $configDeviceName started.');
+        startSimulator(deviceId);
       }
     }
 
@@ -160,20 +156,25 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
 
     // if an emulator was started, shut it down
     if (emulator != null) {
-      await shutdownAndroidEmulator(deviceId, emulator['name']);
+      await shutdownAndroidEmulator(deviceId);
     }
     if (simulator != null) {
-      print('Waiting for \'$configDeviceName\' to shutdown...');
-      utils.cmd('xcrun', ['simctl', 'shutdown', deviceId]);
-      print('... \'$configDeviceName\' shutdown complete.');
+      shutdownSimulator(deviceId);
     }
   }
 }
 
-Future<String> _startEmulator(Map emulator, stagingDir,
-    DaemonClient daemonClient, String deviceId) async {
-  final emulatorId = emulator['id'];
-  //        daemonClient.verbose = true;
+void shutdownSimulator(String deviceId) {
+  utils.cmd('xcrun', ['simctl', 'shutdown', deviceId]);
+}
+
+void startSimulator(String deviceId) {
+  utils.cmd('xcrun', ['simctl', 'boot', deviceId]);
+}
+
+/// Start android emulator.
+Future<String> _startEmulator(
+    DaemonClient daemonClient, String emulatorId, stagingDir) async {
   if (Platform.environment['CI'] == 'true') {
     // testing on CI/CD requires starting emulator in a specific way
     await _startAndroidEmulatorOnCI(emulatorId, stagingDir);
@@ -181,10 +182,7 @@ Future<String> _startEmulator(Map emulator, stagingDir,
     // testing locally, so start emulator in normal way
     await daemonClient.launchEmulator(emulatorId);
   }
-  //        daemonClient.verbose = false;
-  //        print('emulator $emulatorId launched');
-  deviceId = utils.findAndroidDeviceId(emulatorId);
-  return deviceId;
+  return utils.findAndroidDeviceId(emulatorId);
 }
 
 /// Find a real device or running emulator/simulator for [deviceName].
@@ -219,11 +217,9 @@ Future _setSimulatorLocale(String deviceId, locale, stagingDir) async {
   print('simulator locale=$deviceLocale');
   if (locale != deviceLocale) {
     print('Changing locale from $deviceLocale to $locale');
-    //          daemonClient.verbose = true;
     utils.cmd('xcrun', ['simctl', 'shutdown', deviceId]);
     await _changeSimulatorLocale(stagingDir, deviceId, locale);
-    utils.cmd('xcrun', ['simctl', 'boot', deviceId]);
-    //          daemonClient.verbose = true;
+    startSimulator(deviceId);
     print('...locale change complete.');
   }
 }
