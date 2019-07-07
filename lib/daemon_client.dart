@@ -172,9 +172,9 @@ class DaemonClient {
 }
 
 /// Shutdown an android emulator.
-Future shutdownAndroidEmulator(String deviceId, String emulatorName) async {
+Future shutdownAndroidEmulator(String deviceId) async {
   cmd('adb', ['-s', deviceId, 'emu', 'kill'], '.', true);
-  await waitAndroidEmulatorShutdown(deviceId, emulatorName);
+  await waitAndroidEmulatorShutdown(deviceId);
 }
 
 /// Get attached ios devices with id and model.
