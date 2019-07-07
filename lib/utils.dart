@@ -283,10 +283,12 @@ Future stopAndroidEmulator(String deviceId, String stagingDir) async {
 /// Wait for android emulator to stop.
 Future<void> waitAndroidEmulatorShutdown(
     String deviceId, String deviceName) async {
+  int timeout = 100;
   final pollingInterval = 500;
   final notFound = 'not found';
   String status = '';
-  final poller = Poller(() async {
+  AsyncCallback getEmulatorStatus = () async {
+    // expects a local status var
     status = cmd(
             'sh',
             [
@@ -296,15 +298,16 @@ Future<void> waitAndroidEmulatorShutdown(
             '.',
             true)
         .trim();
-  }, Duration(milliseconds: pollingInterval));
+  };
+  final poller =
+      Poller(getEmulatorStatus, Duration(milliseconds: pollingInterval));
 
-  while (!(status == notFound)) {
-    print('Waiting for \'$deviceName\' to shutdown...');
+  while (!(status == notFound && timeout > 0)) {
+    print('Waiting for \'$deviceName\' to shutdown: timeout=$timeout ...');
     await Future.delayed(Duration(milliseconds: pollingInterval));
-//    print('status=$status');
+    timeout -= 1;
   }
   poller.cancel();
-  print('... \'$deviceName\' shutdown complete.');
 }
 
 // from https://github.com/flutter/flutter/blob/master/packages/flutter_tools/lib/src/base/utils.dart#L255-L292
