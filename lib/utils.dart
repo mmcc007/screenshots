@@ -302,11 +302,11 @@ Future<void> waitAndroidEmulatorShutdown(
   final poller =
       Poller(getEmulatorStatus, Duration(milliseconds: pollingInterval));
 
-  while (!(status == notFound && timeout > 0)) {
-    print('Waiting for \'$deviceName\' to shutdown: timeout=$timeout ...');
+  while (!(status == notFound) && timeout > 0) {
     await Future.delayed(Duration(milliseconds: pollingInterval));
     timeout -= 1;
   }
+  if (timeout == 0) throw 'Error: shutdown of \'$deviceName\' timed-out.';
   poller.cancel();
 }
 
