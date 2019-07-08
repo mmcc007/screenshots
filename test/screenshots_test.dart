@@ -265,9 +265,9 @@ void main() {
     print('emulator started');
     changeAndroidLocale(deviceId, deviceName, newLocale);
     // wait for locale to change
-    await waitAndroidLocaleChange(deviceId, origLocale, newLocale);
+    await waitAndroidLocaleChange(deviceId, newLocale);
     changeAndroidLocale(deviceId, deviceName, origLocale);
-    await waitAndroidLocaleChange(deviceId, newLocale, origLocale);
+    await waitAndroidLocaleChange(deviceId, origLocale);
     await shutdownAndroidEmulator(deviceId);
     await daemonClient.waitForEvent(Event.deviceRemoved);
   }, timeout: Timeout(Duration(seconds: 180)));
