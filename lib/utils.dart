@@ -280,35 +280,35 @@ Future stopAndroidEmulator(String deviceId, String stagingDir) async {
       [deviceId]);
 }
 
-/// Wait for android emulator to stop.
-Future<void> waitAndroidEmulatorShutdown(String deviceId) async {
-  int timeout = 100;
-  final pollingInterval = 500;
-  final notFound = 'not found';
-  String bootCompleted =
-      ''; // possible values 1/0 ignored, depending on failed adb command
-  AsyncCallback getEmulatorStatus = () async {
-    // expects a local status var
-    bootCompleted = cmd(
-            'sh',
-            [
-              '-c',
-              'adb -s $deviceId -e shell getprop sys.boot_completed || echo \"$notFound\"'
-            ],
-            '.',
-            true)
-        .trim();
-  };
-  final poller =
-      Poller(getEmulatorStatus, Duration(milliseconds: pollingInterval));
-
-  while (bootCompleted != notFound && timeout > 0) {
-    await Future.delayed(Duration(milliseconds: pollingInterval));
-    timeout -= 1;
-  }
-  if (timeout == 0) throw 'Error: shutdown timed-out.';
-  poller.cancel();
-}
+///// Wait for android emulator to stop.
+//Future<void> waitAndroidEmulatorShutdown(String deviceId) async {
+//  int timeout = 100;
+//  final pollingInterval = 500;
+//  final notFound = 'not found';
+//  String bootCompleted =
+//      ''; // possible values 1/0 ignored, depending on failed adb command
+//  AsyncCallback getEmulatorStatus = () async {
+//    // expects a local status var
+//    bootCompleted = cmd(
+//            'sh',
+//            [
+//              '-c',
+//              'adb -s $deviceId -e shell getprop sys.boot_completed || echo \"$notFound\"'
+//            ],
+//            '.',
+//            true)
+//        .trim();
+//  };
+//  final poller =
+//      Poller(getEmulatorStatus, Duration(milliseconds: pollingInterval));
+//
+//  while (bootCompleted != notFound && timeout > 0) {
+//    await Future.delayed(Duration(milliseconds: pollingInterval));
+//    timeout -= 1;
+//  }
+//  if (timeout == 0) throw 'Error: shutdown timed-out.';
+//  poller.cancel();
+//}
 
 /// Wait for android device/emulator locale to change.
 Future<String> waitAndroidLocaleChange(String deviceId, String toLocale) async {

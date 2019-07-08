@@ -64,8 +64,8 @@ class DaemonClient {
     _processResponse(results[0], command);
     final event = results[1];
     final eventInfo = jsonDecode(event);
-    if (eventInfo.length != 1 &&
-        eventInfo[0]['event'] != 'device.added' &&
+    if (eventInfo.length != 1 ||
+        eventInfo[0]['event'] != 'device.added' ||
         eventInfo[0]['params']['emulator'] != true) {
       throw 'Error: emulator $emulatorId not started: $event';
     }
@@ -90,17 +90,17 @@ class DaemonClient {
     }).toList());
   }
 
-  Future<void> waitForEvent(Event event) async {
-    final eventInfo = await _waitForEvent.future;
+  Future<Map> waitForEvent(Event event) async {
+    final eventInfo = jsonDecode(await _waitForEvent.future);
     switch (event) {
       case Event.deviceRemoved:
-        if (!eventInfo.contains('"event":"device.removed"'))
+        if (eventInfo.length != 1 || eventInfo[0]['event'] != 'device.removed')
           throw 'Error: expected: $event, received: $eventInfo';
         break;
       default:
         throw 'Error: unexpected event: $eventInfo';
     }
-    return Future.value();
+    return Future.value(eventInfo[0]['params']);
   }
 
   int _exitCode = 0;
@@ -178,9 +178,14 @@ class DaemonClient {
 }
 
 /// Shutdown an android emulator.
-Future shutdownAndroidEmulator(String deviceId) async {
+Future<String> shutdownAndroidEmulator(
+    DaemonClient daemonClient, String deviceId) async {
   cmd('adb', ['-s', deviceId, 'emu', 'kill'], '.', true);
-  await waitAndroidEmulatorShutdown(deviceId);
+//  await waitAndroidEmulatorShutdown(deviceId);
+  final device = await daemonClient.waitForEvent(Event.deviceRemoved);
+  if (device['id'] != deviceId)
+    throw 'Error: device id \'$deviceId\' not shutdown';
+  return device['id'];
 }
 
 /// Get attached ios devices with id and model.

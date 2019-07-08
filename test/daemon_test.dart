@@ -108,7 +108,7 @@ main() {
     await daemonClient.start;
     final deviceId = await daemonClient.launchEmulator(emulatorId);
     expect(deviceId, expected);
-    await shutdownAndroidEmulator(deviceId);
+    await shutdownAndroidEmulator(daemonClient, deviceId);
   });
 
   test('parse ios-deploy response', () {
@@ -166,7 +166,7 @@ main() {
     expect(findAndroidDeviceId(id), deviceId);
 
     // shutdown
-    await shutdownAndroidEmulator(deviceId);
+    await shutdownAndroidEmulator(daemonClient, deviceId);
   });
 
   test('join devices', () {

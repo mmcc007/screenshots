@@ -210,7 +210,7 @@ void main() {
     final deviceId = await daemonClient.launchEmulator(emulatorId);
     final result = cmd('adb', ['root'], '.', true);
     expect(result, 'adbd cannot run as root in production builds\n');
-    await shutdownAndroidEmulator(deviceId);
+    expect(await shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
   });
 
   test('get emulator id from device name', () {
@@ -248,8 +248,7 @@ void main() {
     final startedDevice = (devices, emulatorName) => devices
         .firstWhere((device) => device['emulator'] == true, orElse: () => null);
     expect(startedDevice(devices, emulatorName), expected);
-    await shutdownAndroidEmulator(deviceId);
-    await daemonClient.waitForEvent(Event.deviceRemoved);
+    expect(await shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
     expect(startedDevice(await daemonClient.devices, emulatorName), null);
   });
 
@@ -268,8 +267,7 @@ void main() {
     await waitAndroidLocaleChange(deviceId, newLocale);
     changeAndroidLocale(deviceId, deviceName, origLocale);
     await waitAndroidLocaleChange(deviceId, origLocale);
-    await shutdownAndroidEmulator(deviceId);
-    await daemonClient.waitForEvent(Event.deviceRemoved);
+    expect(await shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
   }, timeout: Timeout(Duration(seconds: 180)));
 
   test('start/stop simulator', () async {
@@ -362,7 +360,7 @@ void main() {
 
     // stop emulator
     await setAndroidLocale(deviceId, origLocale, deviceName);
-    await shutdownAndroidEmulator(deviceId);
+    expect(await shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
   },
       timeout:
           Timeout(Duration(seconds: 90))); // increase time to get stacktrace
@@ -377,7 +375,7 @@ void main() {
     await daemonClient.start;
     final deviceId = await daemonClient.launchEmulator(emulatorId);
     final deviceLocale = androidDeviceLocale(deviceId);
-    await shutdownAndroidEmulator(deviceId);
+    expect(await shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
 
     expect(deviceLocale, locale);
   });
@@ -403,7 +401,8 @@ void main() {
     final simulatorInfo =
         getHighestIosSimulator(getIosSimulators(), simulatorName);
     final deviceId = simulatorInfo['udid'];
-    await setSimulatorLocale(deviceId, locale, stagingDir, running: false);
+    await setSimulatorLocale(deviceId, simulatorName, locale, stagingDir,
+        running: false);
 
     // start simulator
 //    final daemonClient = DaemonClient();
@@ -434,7 +433,7 @@ void main() {
     final deviceId = await daemonClient.launchEmulator(expectedId);
     final emulatorId = getAndroidEmulatorId(deviceId);
     expect(emulatorId, expectedId);
-    await shutdownAndroidEmulator(deviceId);
+    expect(await shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
   });
 
 //  test('find running emulator with matching avd', () {
@@ -542,7 +541,7 @@ devices:
 
     final Map diffs = diffMaps(props, newProps);
     expect(diffs, expected);
-    await shutdownAndroidEmulator(deviceId);
+    expect(await shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
   });
 
   group('ProcessWrapper', () {
@@ -558,7 +557,7 @@ devices:
     });
 
     test('scan syslog for string', () async {
-      final toLocale = 'en-US';
+//      final toLocale = 'en-US';
 //      final expected =
 //          'ContactsProvider: Locale has changed from [fr_CA] to [en_US]';
 //      final expected = RegExp('Locale has changed from');
@@ -569,7 +568,7 @@ devices:
       final deviceId = await daemonClient.launchEmulator(emulatorId);
       String actual = await waitSysLogMsg(deviceId, expected);
       expect(actual.contains(expected), isTrue);
-      await shutdownAndroidEmulator(deviceId);
+      expect(await shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
     });
 
     test('reg exp', () {
