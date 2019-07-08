@@ -311,8 +311,7 @@ Future<void> waitAndroidEmulatorShutdown(String deviceId) async {
 }
 
 /// Wait for android device/emulator locale to change.
-Future<String> waitAndroidLocaleChange(
-    String deviceId, String fromLocale, String toLocale) async {
+Future<String> waitAndroidLocaleChange(String deviceId, String toLocale) async {
   final regExp = RegExp(
       'ContactsProvider: Locale has changed from .* to \\[${toLocale.replaceFirst('-', '_')}\\]|ContactsDatabaseHelper: Switching to locale \\[${toLocale.replaceFirst('-', '_')}\\]');
   final line = await waitSysLogMsg(deviceId, regExp);
