@@ -48,8 +48,8 @@ class DaemonClient {
         <String, dynamic>{'method': 'emulator.getEmulators'});
   }
 
-  /// Launch an emulator.
-  Future<void> launchEmulator(String emulatorId) async {
+  /// Launch an emulator and return device id.
+  Future<String> launchEmulator(String emulatorId) async {
     final command = <String, dynamic>{
       'method': 'emulator.launch',
       'params': <String, dynamic>{
@@ -63,12 +63,14 @@ class DaemonClient {
         <Future>[_waitForResponse.future, _waitForEvent.future]);
     _processResponse(results[0], command);
     final event = results[1];
-    if (!(event.contains('device.added') &&
-        event.contains('"emulator":true'))) {
+    final eventInfo = jsonDecode(event);
+    if (eventInfo.length != 1 &&
+        eventInfo[0]['event'] != 'device.added' &&
+        eventInfo[0]['params']['emulator'] != true) {
       throw 'Error: emulator $emulatorId not started: $event';
     }
 
-    return Future.value();
+    return Future.value(eventInfo[0]['params']['id']);
   }
 
   /// List running real devices and booted emulators/simulators.
@@ -93,7 +95,7 @@ class DaemonClient {
     switch (event) {
       case Event.deviceRemoved:
         if (!eventInfo.contains('"event":"device.removed"'))
-          throw 'Error: exected: $event, received: $eventInfo';
+          throw 'Error: expected: $event, received: $eventInfo';
         break;
       default:
         throw 'Error: unexpected event: $eventInfo';
@@ -130,8 +132,12 @@ class DaemonClient {
         } else {
           // get event
           if (line.contains('[{"event":')) {
-            _waitForEvent.complete(line);
-            _waitForEvent = Completer<String>(); // enable wait for next event
+            if (line.contains('"event":"daemon.logMessage"'))
+              print('Warning: ignoring log message: $line');
+            else {
+              _waitForEvent.complete(line);
+              _waitForEvent = Completer<String>(); // enable wait for next event
+            }
           } else if (line != 'Starting device daemon...') {
             throw 'Error: unexpected response from daemon: $line';
           }
