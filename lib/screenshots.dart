@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:screenshots/utils.dart';
+
 import 'config.dart';
 import 'daemon_client.dart';
 import 'fastlane.dart' as fastlane;
@@ -113,6 +115,7 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
       }
     }
 
+    final origLocale = utils.androidDeviceLocale(deviceId);
     for (final locale in locales) {
       // set locale if android device or emulator
       if ((device != null && device['platform'] != 'ios') ||
@@ -153,11 +156,13 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
       }
     }
 
-    // if an emulator was started, shut it down
+    // if an emulator was started, revert locale and shut it down
     if (emulator != null) {
+      await setAndroidLocale(deviceId, configDeviceName, origLocale);
       await shutdownAndroidEmulator(deviceId);
     }
     if (simulator != null) {
+      // todo: revert locale
       shutdownSimulator(deviceId);
     }
   }
@@ -214,25 +219,24 @@ Future _setSimulatorLocale(String deviceId, locale, stagingDir) async {
   // a running simulator
   final deviceLocale = utils.iosSimulatorLocale(deviceId);
   if (locale != deviceLocale) {
-    print('Changing locale from $deviceLocale to $locale');
+    print('Changing locale from $deviceLocale to $locale ...');
     utils.cmd('xcrun', ['simctl', 'shutdown', deviceId]);
     await _changeSimulatorLocale(stagingDir, deviceId, locale);
     startSimulator(deviceId);
-    print('...locale change complete.');
   }
 }
 
 /// Set the locale for a real android device or a running emulator.
-void setAndroidLocale(String deviceId, locale, deviceName) {
+Future<void> setAndroidLocale(String deviceId, locale, deviceName) async {
   // a running android device or emulator
   final deviceLocale = utils.androidDeviceLocale(deviceId);
   //        print('android device or emulator locale=$deviceLocale');
   if (locale != deviceLocale) {
-    print('Changing locale from $deviceLocale to $locale...');
+    print('Changing locale from $deviceLocale to $locale ...');
     //          daemonClient.verbose = true;
     changeAndroidLocale(deviceId, deviceName, locale);
     //          daemonClient.verbose = false;
-    print('... locale change complete.');
+    await waitAndroidLocaleChange(deviceId, locale);
   }
 }
 
