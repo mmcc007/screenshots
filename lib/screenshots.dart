@@ -239,7 +239,7 @@ Future<void> setAndroidLocale(String deviceId, locale, deviceName) async {
   // a running android device or emulator
   final deviceLocale = utils.androidDeviceLocale(deviceId);
   print('android device or emulator locale=$deviceLocale');
-  if (locale != deviceLocale) {
+  if (deviceLocale!=null && deviceLocale!= '' && deviceLocale!= locale) {
     //          daemonClient.verbose = true;
     changeAndroidLocale(deviceId, deviceName, locale);
     //          daemonClient.verbose = false;
