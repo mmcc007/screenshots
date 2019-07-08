@@ -94,6 +94,7 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
     String deviceId;
     Map emulator;
     Map simulator;
+    bool pendingLocaleChange = false;
     if (device != null) {
       deviceId = device['id'];
     } else {
@@ -110,11 +111,17 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
         simulator = utils.getHighestIosSimulator(
             utils.getIosSimulators(), configDeviceName);
         deviceId = simulator['udid'];
-        print('Starting $configDeviceName...');
-        // todo: bypass startup if changing locale
-        startSimulator(deviceId);
+        // check if current device is pending a locale change
+        if (locales[0] == utils.iosSimulatorLocale(deviceId)) {
+          print('Starting $configDeviceName...');
+          startSimulator(deviceId);
+        } else {
+          pendingLocaleChange = true;
+          print('Not starting $configDeviceName due to pending locale change');
+        }
       }
     }
+    assert(deviceId != null);
 
     // Check for a running android device or emulator
     bool isAndroidDeviceOrEmulatorRunning(Map device, Map emulator) {
@@ -137,10 +144,14 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
       if ((device != null &&
               device['platform'] == 'ios' &&
               device['emulator']) ||
-          (device == null && simulator != null)) {
+          (simulator != null && !pendingLocaleChange)) {
         // a running simulator
         await setSimulatorLocale(
             deviceId, configDeviceName, locale, stagingDir);
+      } else {
+        // a non-running simulator
+        await setSimulatorLocale(deviceId, configDeviceName, locale, stagingDir,
+            running: false);
       }
 
       // issue locale warning if ios device
@@ -236,7 +247,7 @@ Future setSimulatorLocale(
     print(
         'Changing locale from $deviceLocale to $testLocale on \'$deviceName\'...');
     await _changeSimulatorLocale(stagingDir, deviceId, testLocale);
-    if (running) startSimulator(deviceId);
+    startSimulator(deviceId);
   }
 }
 
