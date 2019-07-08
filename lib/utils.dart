@@ -501,5 +501,5 @@ Future<String> waitSysLogMsg(String deviceId, RegExp regExp) async {
       .firstWhere((line) {
     print(line);
     return regExp.hasMatch(line);
-  });
+  }, orElse: () => null);
 }
