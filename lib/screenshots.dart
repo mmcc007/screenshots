@@ -114,14 +114,21 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
         startSimulator(deviceId);
       }
     }
+    bool isAndroidDeviceOrEmulator(Map device, Map emulator) {
+      return (device != null && device['platform'] != 'ios') ||
+          (device == null && emulator != null);
+    }
 
-    final origLocale = utils.androidDeviceLocale(deviceId);
+    // save original locale
+    String origLocale;
+    if (isAndroidDeviceOrEmulator(device, emulator))
+      origLocale = utils.androidDeviceLocale(deviceId);
+
     for (final locale in locales) {
       // set locale if android device or emulator
-      if ((device != null && device['platform'] != 'ios') ||
-          (device == null && emulator != null)) {
+      if (isAndroidDeviceOrEmulator(device, emulator)) {
         // a running android device or emulator
-        setAndroidLocale(deviceId, locale, configDeviceName);
+        await setAndroidLocale(deviceId, locale, configDeviceName);
       }
 
       // set locale if ios simulator
@@ -130,7 +137,7 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
               device['emulator']) ||
           (device == null && simulator != null)) {
         // a running simulator
-        await _setSimulatorLocale(deviceId, locale, stagingDir);
+        await setSimulatorLocale(deviceId, locale, stagingDir);
       }
 
       // issue warning if ios device
@@ -156,9 +163,9 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
       }
     }
 
-    // if an emulator was started, revert locale and shut it down
+    // if an emulator was started, revert locale if necessary and shut it down
     if (emulator != null) {
-      await setAndroidLocale(deviceId, configDeviceName, origLocale);
+      await setAndroidLocale(deviceId, origLocale, configDeviceName);
       await shutdownAndroidEmulator(deviceId);
     }
     if (simulator != null) {
@@ -214,15 +221,16 @@ Map _findDevice(List devices, List emulators, String deviceName) {
   return device;
 }
 
-/// Set the locale for a non-running simulator.
-Future _setSimulatorLocale(String deviceId, locale, stagingDir) async {
+/// Set the locale for a running simulator.
+Future setSimulatorLocale(String deviceId, locale, stagingDir,
+    {bool running = true}) async {
   // a running simulator
   final deviceLocale = utils.iosSimulatorLocale(deviceId);
   if (locale != deviceLocale) {
     print('Changing locale from $deviceLocale to $locale ...');
-    utils.cmd('xcrun', ['simctl', 'shutdown', deviceId]);
+    if (running) shutdownSimulator(deviceId);
     await _changeSimulatorLocale(stagingDir, deviceId, locale);
-    startSimulator(deviceId);
+    if (running) startSimulator(deviceId);
   }
 }
 
@@ -230,9 +238,8 @@ Future _setSimulatorLocale(String deviceId, locale, stagingDir) async {
 Future<void> setAndroidLocale(String deviceId, locale, deviceName) async {
   // a running android device or emulator
   final deviceLocale = utils.androidDeviceLocale(deviceId);
-  //        print('android device or emulator locale=$deviceLocale');
+  print('android device or emulator locale=$deviceLocale');
   if (locale != deviceLocale) {
-    print('Changing locale from $deviceLocale to $locale ...');
     //          daemonClient.verbose = true;
     changeAndroidLocale(deviceId, deviceName, locale);
     //          daemonClient.verbose = false;
