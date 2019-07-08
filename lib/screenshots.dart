@@ -35,7 +35,6 @@ Future<void> run([String configPath = kConfigFileName]) async {
   print('Starting flutter daemon...');
   final daemonClient = DaemonClient();
   await daemonClient.start;
-  print('... daemon started');
   // get all attached devices and running emulators/simulators
   final devices = await daemonClient.devices;
   // get all available unstarted android emulators
@@ -172,17 +171,17 @@ void startSimulator(String deviceId) {
   utils.cmd('xcrun', ['simctl', 'boot', deviceId]);
 }
 
-/// Start android emulator.
+/// Start android emulator and return device id.
 Future<String> _startEmulator(
     DaemonClient daemonClient, String emulatorId, stagingDir) async {
   if (Platform.environment['CI'] == 'true') {
     // testing on CI/CD requires starting emulator in a specific way
     await _startAndroidEmulatorOnCI(emulatorId, stagingDir);
+    return utils.findAndroidDeviceId(emulatorId);
   } else {
     // testing locally, so start emulator in normal way
-    await daemonClient.launchEmulator(emulatorId);
+    return await daemonClient.launchEmulator(emulatorId);
   }
-  return utils.findAndroidDeviceId(emulatorId);
 }
 
 /// Find a real device or running emulator/simulator for [deviceName].
@@ -214,7 +213,6 @@ Map _findDevice(List devices, List emulators, String deviceName) {
 Future _setSimulatorLocale(String deviceId, locale, stagingDir) async {
   // a running simulator
   final deviceLocale = utils.iosSimulatorLocale(deviceId);
-  print('simulator locale=$deviceLocale');
   if (locale != deviceLocale) {
     print('Changing locale from $deviceLocale to $locale');
     utils.cmd('xcrun', ['simctl', 'shutdown', deviceId]);
@@ -232,14 +230,14 @@ void setAndroidLocale(String deviceId, locale, deviceName) {
   if (locale != deviceLocale) {
     print('Changing locale from $deviceLocale to $locale...');
     //          daemonClient.verbose = true;
-    _changeAndroidLocale(deviceId, deviceName, locale);
+    changeAndroidLocale(deviceId, deviceName, locale);
     //          daemonClient.verbose = false;
     print('... locale change complete.');
   }
 }
 
 /// Change local of real android device or running emulator.
-void _changeAndroidLocale(
+void changeAndroidLocale(
     String deviceId, String deviceName, String testLocale) {
   String deviceLocale = utils.androidDeviceLocale(deviceId);
   if (deviceLocale != testLocale) {
