@@ -124,36 +124,40 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
     assert(deviceId != null);
 
     // Check for a running android device or emulator
-    bool isAndroidDeviceOrEmulatorRunning(Map device, Map emulator) {
+    bool isRunningAndroidDeviceOrEmulator(Map device, Map emulator) {
       return (device != null && device['platform'] != 'ios') ||
           (device == null && emulator != null);
     }
 
     // save original locale for reverting later if necessary
     String origLocale;
-    if (isAndroidDeviceOrEmulatorRunning(device, emulator))
+    if (isRunningAndroidDeviceOrEmulator(device, emulator))
       origLocale = utils.androidDeviceLocale(deviceId);
 
     for (final locale in locales) {
       // set locale if android device or emulator
-      if (isAndroidDeviceOrEmulatorRunning(device, emulator)) {
+      if (isRunningAndroidDeviceOrEmulator(device, emulator)) {
         await setAndroidLocale(deviceId, locale, configDeviceName);
       }
 
       // set locale if ios simulator
-      if ((device != null &&
-              device['platform'] == 'ios' &&
-              device['emulator']) ||
-          (simulator != null && !pendingLocaleChange)) {
-        // a running simulator
+      if ((device != null && device['platform'] == 'ios' && device['emulator']))
+        // an already running simulator
         await setSimulatorLocale(
             deviceId, configDeviceName, locale, stagingDir);
-      } else {
-        // a non-running simulator
-        await setSimulatorLocale(deviceId, configDeviceName, locale, stagingDir,
-            running: false);
+      else {
+        if (device == null && simulator != null) {
+          if (pendingLocaleChange)
+            // a non-running simulator
+            await setSimulatorLocale(
+                deviceId, configDeviceName, locale, stagingDir,
+                running: false);
+          else
+            // a running simulator
+            await setSimulatorLocale(
+                deviceId, configDeviceName, locale, stagingDir);
+        }
       }
-
       // issue locale warning if ios device
       if ((device != null &&
           device['platform'] == 'ios' &&
