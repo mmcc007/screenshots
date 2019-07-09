@@ -320,3 +320,9 @@ Future<String> waitSysLogMsg(String deviceId, RegExp regExp) async {
     return regExp.hasMatch(line);
   }, orElse: () => null);
 }
+
+/// Find the emulator info of an named emulator available to boot.
+Map findEmulator(List emulators, String emulatorName) {
+  return emulators.firstWhere((emulator) => emulator['name'] == emulatorName,
+      orElse: () => null);
+}

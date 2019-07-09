@@ -1,12 +1,12 @@
 import 'dart:io';
 
-import 'package:screenshots/config.dart';
-import 'package:screenshots/daemon_client.dart';
-import 'package:screenshots/image_processor.dart';
-import 'package:screenshots/screens.dart';
-import 'package:screenshots/screenshots.dart';
+import 'package:screenshots/src/config.dart';
+import 'package:screenshots/src/daemon_client.dart';
+import 'package:screenshots/src/globals.dart';
+import 'package:screenshots/src/image_processor.dart';
+import 'package:screenshots/src/screens.dart';
 import 'package:test/test.dart';
-import 'package:screenshots/fastlane.dart' as fastlane;
+import 'package:screenshots/src/fastlane.dart' as fastlane;
 import 'package:yaml/yaml.dart';
 
 final screenshotsYaml = '''

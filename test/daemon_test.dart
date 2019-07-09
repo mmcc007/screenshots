@@ -2,20 +2,20 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:path/path.dart';
-import 'package:screenshots/config.dart';
-import 'package:screenshots/daemon_client.dart';
-import 'package:screenshots/fastlane.dart';
-import 'package:screenshots/image_processor.dart';
-import 'package:screenshots/resources.dart';
-import 'package:screenshots/screens.dart';
-import 'package:screenshots/screenshots.dart';
-import 'package:screenshots/utils.dart';
+import 'package:screenshots/src/daemon_client.dart';
+import 'package:screenshots/src/fastlane.dart' as fastlane;
+import 'package:screenshots/src/image_processor.dart';
+import 'package:screenshots/src/resources.dart' as resources;
+import 'package:screenshots/src/run.dart' as run;
+import 'package:screenshots/src/screens.dart';
+import 'package:screenshots/src/config.dart';
+import 'package:screenshots/src/utils.dart' as utils;
 import 'package:test/test.dart';
 
 main() {
   test('start shipped daemon client', () async {
     final flutterHome =
-        dirname(dirname((cmd('which', ['flutter'], '.', true))));
+        dirname(dirname((utils.cmd('which', ['flutter'], '.', true))));
     final flutterToolsHome = '$flutterHome/packages/flutter_tools';
     print('flutterToolsHome=$flutterToolsHome');
     final daemonClient = await Process.start(
@@ -151,7 +151,7 @@ main() {
     // clear existing screenshots from staging area
 //    clearDirectory('$stagingDir/test');
     // run the test
-    await streamCmd(
+    await utils.streamCmd(
         'flutter', ['-d', device['id'], 'drive', testPath], 'example');
   }, timeout: Timeout(Duration(minutes: 2)));
 
@@ -163,7 +163,7 @@ main() {
     daemonClient.verbose;
     final deviceId = await daemonClient.launchEmulator(id);
 
-    expect(findAndroidDeviceId(id), deviceId);
+    expect(utils.findAndroidDeviceId(id), deviceId);
 
     // shutdown
     await shutdownAndroidEmulator(daemonClient, deviceId);
@@ -175,7 +175,7 @@ main() {
     final configInfo = config.configInfo;
     final androidInfo = configInfo['devices']['android'];
     print('androidInfo=$androidInfo');
-    List deviceNames = getAllConfiguredDeviceNames(configInfo);
+    List deviceNames = utils.getAllConfiguredDeviceNames(configInfo);
 //    final deviceNames = []..addAll(androidDeviceNames)??[]..addAll(iosDeviceNames);
     print('deviceNames=$deviceNames');
   });
@@ -193,8 +193,8 @@ main() {
     // init
     final stagingDir = configInfo['staging'];
     await Directory(stagingDir + '/test').create(recursive: true);
-    await unpackScripts(stagingDir);
-    await clearFastlaneDirs(configInfo, screens);
+    await resources.unpackScripts(stagingDir);
+    await fastlane.clearFastlaneDirs(configInfo, screens);
     final imageProcessor = ImageProcessor(screens, configInfo);
 
     final daemonClient = DaemonClient();
@@ -206,7 +206,7 @@ main() {
     final origDir = Directory.current;
     Directory.current = 'example';
 
-    await runTestsOnAll(
+    await run.runTestsOnAll(
         daemonClient, devices, emulators, config, screens, imageProcessor);
     // allow other tests to continue
     Directory.current = origDir;

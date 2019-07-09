@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:screenshots/utils.dart';
+import 'utils.dart';
 
 const kThreshold = 0.76;
 //const kThreshold = 0.5;

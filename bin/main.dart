@@ -1,8 +1,7 @@
 import 'dart:io';
 
-import 'package:screenshots/screenshots.dart' as screenshots;
 import 'package:args/args.dart';
-import 'package:screenshots/utils.dart' as utils;
+import 'package:screenshots/screenshots.dart';
 
 const usage = 'usage: screenshots [--help] [--config <config file>]';
 const sampleUsage = 'sample usage: screenshots';
@@ -41,8 +40,7 @@ void main(List<String> arguments) async {
   }
 
   // check imagemagick is installed
-  if (!utils
-      .cmd('sh', ['-c', 'which convert && echo convert || echo not installed'],
+  if (!cmd('sh', ['-c', 'which convert && echo convert || echo not installed'],
           '.', true)
       .toString()
       .contains('convert')) {
@@ -58,8 +56,7 @@ void main(List<String> arguments) async {
   }
 
   // check adb is in path
-  if (!utils
-      .cmd('sh', ['-c', 'which adb && echo adb || echo not installed'], '.',
+  if (!cmd('sh', ['-c', 'which adb && echo adb || echo not installed'], '.',
           true)
       .toString()
       .contains('adb')) {
@@ -79,7 +76,7 @@ void main(List<String> arguments) async {
     _handleError(argParser, "File not found: ${argResults[configArg]}");
   }
 
-  await screenshots.run(argResults[configArg]);
+  await run(argResults[configArg]);
 }
 
 void _handleError(ArgParser argParser, String msg) {

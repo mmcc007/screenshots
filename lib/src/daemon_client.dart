@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'utils.dart';
+import 'utils.dart' as utils;
 
 enum Event { deviceRemoved }
 
@@ -180,7 +180,7 @@ class DaemonClient {
 /// Shutdown an android emulator.
 Future<String> shutdownAndroidEmulator(
     DaemonClient daemonClient, String deviceId) async {
-  cmd('adb', ['-s', deviceId, 'emu', 'kill'], '.', true);
+  utils.cmd('adb', ['-s', deviceId, 'emu', 'kill'], '.', true);
 //  await waitAndroidEmulatorShutdown(deviceId);
   final device = await daemonClient.waitForEvent(Event.deviceRemoved);
   if (device['id'] != deviceId)
@@ -192,11 +192,12 @@ Future<String> shutdownAndroidEmulator(
 List iosDevices() {
   final regExp = RegExp(r'Found (\w+) \(\w+, (.*), \w+, \w+\)');
   final noAttachedDevices = 'no attached devices';
-  final iosDeployDevices =
-      cmd('sh', ['-c', 'ios-deploy -c || echo "$noAttachedDevices"'], '.', true)
-          .trim()
-          .split('\n')
-          .sublist(1);
+  final iosDeployDevices = utils
+      .cmd(
+          'sh', ['-c', 'ios-deploy -c || echo "$noAttachedDevices"'], '.', true)
+      .trim()
+      .split('\n')
+      .sublist(1);
   if (iosDeployDevices[0] == noAttachedDevices) return [];
   return iosDeployDevices.map((line) {
     final matches = regExp.firstMatch(line);

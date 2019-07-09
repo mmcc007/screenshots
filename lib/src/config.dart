@@ -2,11 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:screenshots/image_processor.dart';
-import 'package:screenshots/screens.dart';
-import 'package:screenshots/screenshots.dart';
+import 'image_processor.dart';
+import 'screens.dart';
 import 'package:yaml/yaml.dart';
-import 'package:screenshots/utils.dart' as utils;
+import 'utils.dart' as utils;
+
+import 'globals.dart';
 
 ///
 /// Config info used to process screenshots for android and ios.
@@ -71,7 +72,8 @@ class Config {
 
         // check emulator installed
         if (!isDeviceAttached(utils.getDevice(devices, deviceName)) &&
-            !isEmulatorInstalled(findEmulator(allEmulators, deviceName))) {
+            !isEmulatorInstalled(
+                utils.findEmulator(allEmulators, deviceName))) {
           stderr.write('Error: no device attached or emulator installed for '
               'device \'$deviceName\' in $_configPath.\n');
           generateConfigGuide(screens, allDevices);

@@ -5,9 +5,8 @@
 // this is simply Flutter's version of that.
 
 import 'package:flutter_driver/flutter_driver.dart';
+import 'package:screenshots/screenshots.dart';
 import 'package:test/test.dart';
-import 'package:screenshots/config.dart';
-import 'package:screenshots/capture_screen.dart';
 
 void main() {
   group('end-to-end test', () {

@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:screenshots/utils.dart';
+import 'package:screenshots/src/utils.dart' as utils;
 import 'package:test/test.dart';
 
 void main() {
@@ -8,7 +8,7 @@ void main() {
   test('test parsing of iOS device info returned by xcrun', () {
     final deviceName = 'iPhone X';
     print(
-        'getIosDevice=${getHighestIosSimulator(getIosSimulators(), deviceName)}');
+        'getIosDevice=${utils.getHighestIosSimulator(utils.getIosSimulators(), deviceName)}');
 
 //    final deviceInfoRaw = '''
 //{
@@ -836,11 +836,11 @@ void main() {
 }
 ''';
     final deviceInfo = jsonDecode(deviceInfoRaw)['devices'];
-    final iosDevices = transformIosSimulators(deviceInfo);
+    final iosDevices = utils.transformIosSimulators(deviceInfo);
 //    final iosDevice = getHighestIosDevice(iosDevices, deviceName);
 //    expect(
 //        () => getHighestIosDevice(iosDevices, deviceName), throwsA(anything));
-    expect(getHighestIosSimulator(iosDevices, deviceName), jsonDecode('''{
+    expect(utils.getHighestIosSimulator(iosDevices, deviceName), jsonDecode('''{
             "availability": "(available)",
             "state": "Shutdown",
             "isAvailable": true,

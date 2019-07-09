@@ -1,5 +1,5 @@
-import 'package:screenshots/config.dart';
-import 'package:screenshots/screens.dart';
+import 'package:screenshots/src/config.dart';
+import 'package:screenshots/src/screens.dart';
 import 'package:test/test.dart';
 
 void main() {
