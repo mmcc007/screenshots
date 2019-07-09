@@ -8,7 +8,7 @@ enum Event { deviceRemoved }
 
 /// Creates and communicates with flutter daemon.
 class DaemonClient {
-  static final DaemonClient _daemonClient = new DaemonClient._internal();
+  static final DaemonClient _daemonClient = DaemonClient._internal();
 
   factory DaemonClient() {
     return _daemonClient;

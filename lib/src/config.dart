@@ -19,7 +19,7 @@ class Config {
   final YamlNode _docYaml;
   Map _screenshotsEnv; // current screenshots env
 
-  Config({String this.configPath = kConfigFileName})
+  Config({this.configPath = kConfigFileName})
       : _docYaml = loadYaml(File(configPath).readAsStringSync());
 
   /// Get configuration information for supported devices
