@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'utils.dart' as utils;
+import 'run.dart' as run;
 
 enum Event { deviceRemoved }
 
@@ -177,22 +177,11 @@ class DaemonClient {
   }
 }
 
-/// Shutdown an android emulator.
-Future<String> shutdownAndroidEmulator(
-    DaemonClient daemonClient, String deviceId) async {
-  utils.cmd('adb', ['-s', deviceId, 'emu', 'kill'], '.', true);
-//  await waitAndroidEmulatorShutdown(deviceId);
-  final device = await daemonClient.waitForEvent(Event.deviceRemoved);
-  if (device['id'] != deviceId)
-    throw 'Error: device id \'$deviceId\' not shutdown';
-  return device['id'];
-}
-
 /// Get attached ios devices with id and model.
 List iosDevices() {
   final regExp = RegExp(r'Found (\w+) \(\w+, (.*), \w+, \w+\)');
   final noAttachedDevices = 'no attached devices';
-  final iosDeployDevices = utils
+  final iosDeployDevices = run
       .cmd(
           'sh', ['-c', 'ios-deploy -c || echo "$noAttachedDevices"'], '.', true)
       .trim()
@@ -207,14 +196,3 @@ List iosDevices() {
     return device;
   }).toList();
 }
-
-/// Indicates to the linter that the given future is intentionally not `await`-ed.
-///
-/// Has the same functionality as `unawaited` from `package:pedantic`.
-///
-/// In an async context, it is normally expected than all Futures are awaited,
-/// and that is the basis of the lint unawaited_futures which is turned on for
-/// the flutter_tools package. However, there are times where one or more
-/// futures are intentionally not awaited. This function may be used to ignore a
-/// particular future. It silences the unawaited_futures lint.
-void unawaited(Future<void> future) {}

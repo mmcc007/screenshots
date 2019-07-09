@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:resource/resource.dart';
-import 'utils.dart';
 
 ///
 /// Copy resource images for a screen from package to files.
@@ -39,8 +38,6 @@ Future unpackScript(String srcPath, String dstDir) async {
   final String script = await resource.readAsString();
   final file = await File('$dstDir/$srcPath').create(recursive: true);
   await file.writeAsString(script, flush: true);
-  // make executable
-  cmd('chmod', ['u+x', '$dstDir/$srcPath']);
 }
 
 /// Read an image from resources.

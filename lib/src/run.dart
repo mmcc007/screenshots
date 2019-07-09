@@ -185,11 +185,11 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
 }
 
 void shutdownSimulator(String deviceId) {
-  utils.cmd('xcrun', ['simctl', 'shutdown', deviceId]);
+  cmd('xcrun', ['simctl', 'shutdown', deviceId]);
 }
 
 void startSimulator(String deviceId) {
-  utils.cmd('xcrun', ['simctl', 'boot', deviceId]);
+  cmd('xcrun', ['simctl', 'boot', deviceId]);
 }
 
 /// Start android emulator and return device id.
@@ -266,7 +266,7 @@ Future<void> setAndroidLocale(String deviceId, testLocale, deviceName) async {
 /// Change local of real android device or running emulator.
 void changeAndroidLocale(
     String deviceId, String deviceLocale, String testLocale) {
-  if (utils.cmd('adb', ['root'], '.', true) ==
+  if (cmd('adb', ['root'], '.', true) ==
       'adbd cannot run as root in production builds\n') {
     stdout.write(
         'Warning: locale will not be changed. Running in locale \'$deviceLocale\'.\n');
@@ -277,7 +277,7 @@ void changeAndroidLocale(
   }
   _flutterDriverBugWarning();
   // adb shell "setprop persist.sys.locale fr-CA; setprop ctl.restart zygote"
-  utils.cmd('adb', [
+  cmd('adb', [
     '-s',
     deviceId,
     'shell',
@@ -297,6 +297,17 @@ Future _changeSimulatorLocale(
   _flutterDriverBugWarning();
   await utils.streamCmd('$stagingDir/resources/script/simulator-controller',
       [name, 'locale', testLocale]);
+}
+
+/// Shutdown an android emulator.
+Future<String> shutdownAndroidEmulator(
+    DaemonClient daemonClient, String deviceId) async {
+  cmd('adb', ['-s', deviceId, 'emu', 'kill'], '.', true);
+//  await waitAndroidEmulatorShutdown(deviceId);
+  final device = await daemonClient.waitForEvent(Event.deviceRemoved);
+  if (device['id'] != deviceId)
+    throw 'Error: device id \'$deviceId\' not shutdown';
+  return device['id'];
 }
 
 void _flutterDriverBugWarning() {
@@ -344,4 +355,22 @@ DeviceType getDeviceType(Map configInfo, String deviceName) {
       ? iosDeviceNames.contains(deviceName) ? DeviceType.ios : null
       : deviceType;
   return deviceType;
+}
+
+/// Execute command [cmd] with arguments [arguments] in a separate process
+/// and return stdout as string.
+///
+/// If [silent] is false, output to stdout.
+String cmd(String cmd, List<String> arguments,
+    [String workingDir = '.', bool silent = false]) {
+//  print(
+//      'cmd=\'$cmd ${arguments.join(" ")}\', workingDir=$workingDir, silent=$silent');
+  final result = Process.runSync(cmd, arguments, workingDirectory: workingDir);
+  if (!silent) stdout.write(result.stdout);
+  if (result.exitCode != 0) {
+    stderr.write(result.stderr);
+    throw 'command failed: exitcode=${result.exitCode}, cmd=\'$cmd ${arguments.join(" ")}\', workingDir=$workingDir, silent=$silent';
+  }
+  // return stdout
+  return result.stdout;
 }

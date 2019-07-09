@@ -214,9 +214,9 @@ void main() {
     final daemonClient = DaemonClient();
     await daemonClient.start;
     final deviceId = await daemonClient.launchEmulator(emulatorId);
-    final result = utils.cmd('adb', ['root'], '.', true);
+    final result = run.cmd('adb', ['root'], '.', true);
     expect(result, 'adbd cannot run as root in production builds\n');
-    expect(await shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
+    expect(await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
   });
 
   test('get emulator id from device name', () {
@@ -254,7 +254,7 @@ void main() {
     final startedDevice = (devices, emulatorName) => devices
         .firstWhere((device) => device['emulator'] == true, orElse: () => null);
     expect(startedDevice(devices, emulatorName), expected);
-    expect(await shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
+    expect(await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
     expect(startedDevice(await daemonClient.devices, emulatorName), null);
   });
 
@@ -273,7 +273,7 @@ void main() {
     await utils.waitAndroidLocaleChange(deviceId, newLocale);
     run.changeAndroidLocale(deviceId, deviceName, origLocale);
     await utils.waitAndroidLocaleChange(deviceId, origLocale);
-    expect(await shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
+    expect(await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
   }, timeout: Timeout(Duration(seconds: 180)));
 
   test('start/stop simulator', () async {
@@ -366,7 +366,7 @@ void main() {
 
     // stop emulator
     await run.setAndroidLocale(deviceId, origLocale, deviceName);
-    expect(await shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
+    expect(await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
   },
       timeout:
           Timeout(Duration(seconds: 90))); // increase time to get stacktrace
@@ -381,7 +381,7 @@ void main() {
     await daemonClient.start;
     final deviceId = await daemonClient.launchEmulator(emulatorId);
     final deviceLocale = utils.androidDeviceLocale(deviceId);
-    expect(await shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
+    expect(await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
 
     expect(deviceLocale, locale);
   });
@@ -439,7 +439,7 @@ void main() {
     final deviceId = await daemonClient.launchEmulator(expectedId);
     final emulatorId = utils.getAndroidEmulatorId(deviceId);
     expect(emulatorId, expectedId);
-    expect(await shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
+    expect(await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
   });
 
   test('get real devices', () async {
@@ -520,7 +520,7 @@ devices:
 
     final Map diffs = diffMaps(props, newProps);
     expect(diffs, expected);
-    expect(await shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
+    expect(await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
   });
 
   group('ProcessWrapper', () {
@@ -547,7 +547,8 @@ devices:
       final deviceId = await daemonClient.launchEmulator(emulatorId);
       String actual = await utils.waitSysLogMsg(deviceId, expected);
       expect(actual.contains(expected), isTrue);
-      expect(await shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
+      expect(
+          await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
     });
 
     test('reg exp', () {

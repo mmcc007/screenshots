@@ -15,7 +15,7 @@ import 'package:test/test.dart';
 main() {
   test('start shipped daemon client', () async {
     final flutterHome =
-        dirname(dirname((utils.cmd('which', ['flutter'], '.', true))));
+        dirname(dirname((run.cmd('which', ['flutter'], '.', true))));
     final flutterToolsHome = '$flutterHome/packages/flutter_tools';
     print('flutterToolsHome=$flutterToolsHome');
     final daemonClient = await Process.start(
@@ -108,7 +108,7 @@ main() {
     await daemonClient.start;
     final deviceId = await daemonClient.launchEmulator(emulatorId);
     expect(deviceId, expected);
-    await shutdownAndroidEmulator(daemonClient, deviceId);
+    await run.shutdownAndroidEmulator(daemonClient, deviceId);
   });
 
   test('parse ios-deploy response', () {
@@ -166,7 +166,7 @@ main() {
     expect(utils.findAndroidDeviceId(id), deviceId);
 
     // shutdown
-    await shutdownAndroidEmulator(daemonClient, deviceId);
+    await run.shutdownAndroidEmulator(daemonClient, deviceId);
   });
 
   test('join devices', () {

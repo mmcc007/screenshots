@@ -1,11 +1,11 @@
 import 'dart:async';
 
-import 'package:screenshots/src/utils.dart' as utils;
+import 'package:screenshots/src/run.dart' as run;
 
 /// Get device properties
 Map getDeviceProps(String deviceId) {
   final props = {};
-  utils
+  run
       .cmd('adb', ['-s', deviceId, 'shell', 'getprop'], '.', true)
       .trim()
       .split('\n')
