@@ -13,6 +13,8 @@ import 'package:screenshots/utils.dart';
 import 'package:test/test.dart';
 import 'package:yaml/yaml.dart';
 
+import 'common.dart';
+
 void main() {
   test('screen info for device: Nexus 5X', () async {
     final expected = {

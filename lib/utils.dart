@@ -201,11 +201,6 @@ Future prefixFilesInDir(String dirPath, String prefix) async {
 /// Converts [enum] value to [String].
 String getStringFromEnum(dynamic _enum) => _enum.toString().split('.').last;
 
-T getEnumFromString<T>(Iterable<T> values, String value) {
-  return values.firstWhere((type) => type.toString().split(".").last == value,
-      orElse: () => null);
-}
-
 /// Returns locale of currently attached android device.
 String androidDeviceLocale(String deviceId) {
   final deviceLocale = cmd('adb',
@@ -254,23 +249,6 @@ List<String> getAndroidDeviceIds() {
       .toList();
 }
 
-///// Get deviceId for a newly booted emulator.
-//Future<String> getBootedAndroidDeviceId(String deviceName) async {
-//  final avdName = getHighestAVD(deviceName);
-//  final pollingInterval = 500;
-//  String deviceId = null;
-//  final poller = Poller(() async {
-//    deviceId = findAndroidDeviceId(avdName);
-//  }, Duration(milliseconds: pollingInterval),
-//      initialDelay: Duration(milliseconds: pollingInterval));
-//  while (deviceId == null) {
-//    print('Waiting for $deviceName to boot...');
-//    await Future.delayed(Duration(milliseconds: pollingInterval));
-//  }
-//  poller.cancel();
-//  return deviceId;
-//}
-
 /// Stop an android emulator.
 Future stopAndroidEmulator(String deviceId, String stagingDir) async {
   cmd('adb', ['-s', deviceId, 'emu', 'kill']);
@@ -280,129 +258,12 @@ Future stopAndroidEmulator(String deviceId, String stagingDir) async {
       [deviceId]);
 }
 
-///// Wait for android emulator to stop.
-//Future<void> waitAndroidEmulatorShutdown(String deviceId) async {
-//  int timeout = 100;
-//  final pollingInterval = 500;
-//  final notFound = 'not found';
-//  String bootCompleted =
-//      ''; // possible values 1/0 ignored, depending on failed adb command
-//  AsyncCallback getEmulatorStatus = () async {
-//    // expects a local status var
-//    bootCompleted = cmd(
-//            'sh',
-//            [
-//              '-c',
-//              'adb -s $deviceId -e shell getprop sys.boot_completed || echo \"$notFound\"'
-//            ],
-//            '.',
-//            true)
-//        .trim();
-//  };
-//  final poller =
-//      Poller(getEmulatorStatus, Duration(milliseconds: pollingInterval));
-//
-//  while (bootCompleted != notFound && timeout > 0) {
-//    await Future.delayed(Duration(milliseconds: pollingInterval));
-//    timeout -= 1;
-//  }
-//  if (timeout == 0) throw 'Error: shutdown timed-out.';
-//  poller.cancel();
-//}
-
 /// Wait for android device/emulator locale to change.
 Future<String> waitAndroidLocaleChange(String deviceId, String toLocale) async {
   final regExp = RegExp(
       'ContactsProvider: Locale has changed from .* to \\[${toLocale.replaceFirst('-', '_')}\\]|ContactsDatabaseHelper: Switching to locale \\[${toLocale.replaceFirst('-', '_')}\\]');
   final line = await waitSysLogMsg(deviceId, regExp);
   return line;
-}
-
-//Future<void> waitAndroidLocaleChange(String deviceId) async {
-//  //ro.product.locale ==> DEFAULT LOCALE??
-//  int timeout = 100;
-//  final pollingInterval = 500;
-//  Map previousAdbProps = getDeviceProps(deviceId);
-//
-//  AsyncCallback reportProps = () async {
-//    print('Checking for prop changes...');
-//    Map newAdbProps = getDeviceProps(deviceId);
-//    diffMaps(previousAdbProps, newAdbProps, verbose: true);
-//    previousAdbProps = newAdbProps;
-//  };
-//  final propsPoller =
-//      Poller(reportProps, Duration(milliseconds: pollingInterval));
-//
-//  String bootAnimStatus = '';
-//  AsyncCallback getBootAnimStatus = () async {
-//    // expects a local status var
-//    bootAnimStatus = cmd(
-//            'sh',
-//            ['-c', 'adb -s $deviceId shell getprop init.svc.zygote'],
-////            ['-c', 'adb -s $deviceId shell getprop sys.boot_completed'],
-//            '.',
-//            true)
-//        .trim();
-//  };
-//  await getBootAnimStatus();
-//  final origBootAnimStatus = bootAnimStatus;
-//  print('origBootAnimStatus=$origBootAnimStatus');
-//  await Future.delayed(Duration(milliseconds: 40000));
-//  print('Starting poller');
-//  final poller =
-//      Poller(getBootAnimStatus, Duration(milliseconds: pollingInterval));
-//
-//  while ((bootAnimStatus == 'stopping' || bootAnimStatus == 'restarting') &&
-//      timeout > 0) {
-//    print(
-//        'Waiting for locale change to complete: status: $bootAnimStatus, timeout=$timeout');
-//    await Future.delayed(Duration(milliseconds: pollingInterval));
-//    timeout -= 1;
-//  }
-//  if (timeout == 0) throw 'Error: locale change timed-out.';
-//  poller.cancel();
-//  propsPoller.cancel();
-//  print(
-//      'locale changed during bootAnim change from $origBootAnimStatus to $bootAnimStatus');
-//}
-
-// from https://github.com/flutter/flutter/blob/master/packages/flutter_tools/lib/src/base/utils.dart#L255-L292
-typedef AsyncCallback = Future<void> Function();
-
-/// A [Timer] inspired class that:
-///   - has a different initial value for the first callback delay
-///   - waits for a callback to be complete before it starts the next timer
-class Poller {
-  Poller(this.callback, this.pollingInterval,
-      {this.initialDelay = Duration.zero}) {
-    Future<void>.delayed(initialDelay, _handleCallback);
-  }
-
-  final AsyncCallback callback;
-  final Duration initialDelay;
-  final Duration pollingInterval;
-
-  bool _canceled = false;
-  Timer _timer;
-
-  Future<void> _handleCallback() async {
-    if (_canceled) return;
-
-    try {
-      await callback();
-    } catch (error) {
-      print('Error from poller: $error');
-    }
-
-    if (!_canceled) _timer = Timer(pollingInterval, _handleCallback);
-  }
-
-  /// Cancels the poller.
-  void cancel() {
-    _canceled = true;
-    _timer?.cancel();
-    _timer = null;
-  }
 }
 
 /// Filters a list of devices to get real ios devices.
@@ -436,50 +297,6 @@ Map getDevice(List devices, String deviceName) {
           ? device['name'] == deviceName
           : device['model'].contains(deviceName),
       orElse: () => null);
-}
-
-/// Show differences between maps
-Map diffMaps(Map orig, Map diff, {bool verbose = false}) {
-  Map diffs = {
-    'added': {},
-    'removed': {},
-    'changed': {'orig': {}, 'new': {}}
-  };
-  diff.forEach((k, v) {
-    if (orig[k] == null) {
-      if (verbose) print('$k : \'$v\' added');
-      diffs['added'][k] = v;
-    }
-  });
-  orig.forEach((k, v) {
-    if (diff[k] == null) {
-      if (verbose) print('$k : \'$v\' removed');
-      diffs['removed'][k] = v;
-    }
-  });
-  orig.forEach((k, v) {
-    if (diff[k] != null && diff[k] != v) {
-      if (verbose) print('$k : \'$v\'=>\'${diff[k]}\'');
-      diffs['changed']['orig'][k] = v;
-      diffs['changed']['new'][k] = diff[k];
-    }
-  });
-  return diffs;
-}
-
-/// Get device properties
-Map getDeviceProps(String deviceId) {
-  final props = {};
-  cmd('adb', ['-s', deviceId, 'shell', 'getprop'], '.', true)
-      .trim()
-      .split('\n')
-      .forEach((line) {
-    final regExp = RegExp(r'\[(.*)\]: \[(.*)\]');
-    final key = regExp.firstMatch(line).group(1);
-    final val = regExp.firstMatch(line).group(2);
-    props[key] = val;
-  });
-  return props;
 }
 
 /// Wait for message to appear in sys log and return first matching line
