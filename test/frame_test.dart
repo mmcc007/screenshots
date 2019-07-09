@@ -1,8 +1,8 @@
-import 'package:screenshots/config.dart';
-import 'package:screenshots/image_magick.dart';
-import 'package:screenshots/image_processor.dart';
-import 'package:screenshots/resources.dart';
-import 'package:screenshots/screens.dart';
+import 'package:screenshots/src/config.dart';
+import 'package:screenshots/src/image_magick.dart' as im;
+import 'package:screenshots/src/image_processor.dart';
+import 'package:screenshots/src/resources.dart' as resources;
+import 'package:screenshots/src/screens.dart';
 import 'package:test/test.dart';
 
 main() {
@@ -10,11 +10,11 @@ main() {
     final Screens screens = Screens();
     await screens.init();
     Map screen = screens.screenProps('Nexus 9');
-    final Config config = Config('test/screenshots_test.yaml');
+    final Config config = Config(configPath: 'test/screenshots_test.yaml');
     Map appConfig = config.configInfo;
 
     final Map ScreenResources = screen['resources'];
-    await unpackImages(ScreenResources, '/tmp/screenshots');
+    await resources.unpackImages(ScreenResources, '/tmp/screenshots');
 
     final screenshotPath = './test/resources/nexus_9_0.png';
     final statusbarPath =
@@ -25,7 +25,7 @@ main() {
       'statusbarPath': statusbarPath,
     };
     print('options=$options');
-    await imagemagick('overlay', options);
+    await im.imagemagick('overlay', options);
 
     final screenshotNavbarPath =
         '${appConfig['staging']}/${ScreenResources['navbar']}';
@@ -34,7 +34,7 @@ main() {
       'screenshotNavbarPath': screenshotNavbarPath,
     };
     print('options=$options');
-    await imagemagick('append', options);
+    await im.imagemagick('append', options);
 
     final framePath = appConfig['staging'] + '/' + ScreenResources['frame'];
     final size = screen['size'];
@@ -49,6 +49,6 @@ main() {
       'backgroundColor': ImageProcessor.kDefaultAndroidBackground,
     };
     print('options=$options');
-    await imagemagick('frame', options);
+    await im.imagemagick('frame', options);
   });
 }

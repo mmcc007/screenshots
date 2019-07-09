@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:screenshots/utils.dart';
+import 'run.dart' as run;
 
 const kThreshold = 0.76;
 //const kThreshold = 0.5;
@@ -64,14 +64,14 @@ Future imagemagick(String command, Map options) async {
     default:
       throw 'unknown command: $command';
   }
-  cmd('convert', cmdOptions);
+  run.cmd('convert', cmdOptions);
 }
 
 /// Checks if brightness of section of image exceeds a threshold
 bool thresholdExceeded(String imagePath, String crop,
     [double threshold = kThreshold]) {
   //convert logo.png -crop $crop_size$offset +repage -colorspace gray -format "%[fx:(mean>$threshold)?1:0]" info:
-  final result = cmd(
+  final result = run.cmd(
       'convert',
       [
         imagePath,

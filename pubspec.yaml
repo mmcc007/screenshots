@@ -16,6 +16,7 @@ dependencies:
   archive: ^2.0.9
   platform: ^2.2.0
   process: ^3.0.9
+  meta: ^1.1.6
 
 dev_dependencies:
   test: ^1.5.1+1

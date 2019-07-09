@@ -2,14 +2,15 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:process/process.dart';
-import 'package:screenshots/config.dart';
-import 'package:screenshots/daemon_client.dart';
-import 'package:screenshots/image_processor.dart';
-import 'package:screenshots/screens.dart';
-import 'package:screenshots/image_magick.dart';
-import 'package:screenshots/resources.dart';
-import 'package:screenshots/screenshots.dart';
-import 'package:screenshots/utils.dart';
+import 'package:screenshots/src/config.dart';
+import 'package:screenshots/src/daemon_client.dart';
+import 'package:screenshots/src/globals.dart';
+import 'package:screenshots/src/image_processor.dart';
+import 'package:screenshots/src/screens.dart';
+import 'package:screenshots/src/image_magick.dart' as im;
+import 'package:screenshots/src/resources.dart' as resources;
+import 'package:screenshots/src/run.dart' as run;
+import 'package:screenshots/src/utils.dart' as utils;
 import 'package:test/test.dart';
 import 'package:yaml/yaml.dart';
 
@@ -60,57 +61,58 @@ void main() {
     final Screens screens = Screens();
     await screens.init();
     final screen = screens.screenProps('Nexus 6P');
-    final Config config = Config('test/screenshots_test.yaml');
+    final Config config = Config(configPath: 'test/screenshots_test.yaml');
     final configInfo = config.configInfo;
-    final Map resources = screen['resources'];
-    await unpackImages(resources, '/tmp/screenshots');
-    final statusbarPath = '${configInfo['staging']}/${resources['statusbar']}';
+    final Map scrnResources = screen['resources'];
+    await resources.unpackImages(scrnResources, '/tmp/screenshots');
+    final statusbarPath =
+        '${configInfo['staging']}/${scrnResources['statusbar']}';
     final screenshotPath = 'test/resources/0.png';
     final options = {
       'screenshotPath': screenshotPath,
       'statusbarPath': statusbarPath,
     };
-    await imagemagick('overlay', options);
+    await im.imagemagick('overlay', options);
   });
 
   test('unpack screen resource images', () async {
     final Screens screens = Screens();
     await screens.init();
     final screen = screens.screenProps('iPhone 7 Plus');
-    final Config config = Config('test/screenshots_test.yaml');
+    final Config config = Config(configPath: 'test/screenshots_test.yaml');
     final configInfo = config.configInfo;
     final staging = configInfo['staging'];
     final Map screenResources = screen['resources'];
-    await unpackImages(screenResources, staging);
+    await resources.unpackImages(screenResources, staging);
   });
 
   test('append navbar', () async {
     final Screens screens = Screens();
     await screens.init();
     final screen = screens.screenProps('Nexus 9');
-    final Config config = Config('test/screenshots_test.yaml');
+    final Config config = Config(configPath: 'test/screenshots_test.yaml');
     final configInfo = config.configInfo;
-    final Map resources = screen['resources'];
-    await unpackImages(resources, '/tmp/screenshots');
+    final Map scrnResources = screen['resources'];
+    await resources.unpackImages(scrnResources, '/tmp/screenshots');
     final screenshotNavbarPath =
-        '${configInfo['staging']}/${resources['navbar']}';
+        '${configInfo['staging']}/${scrnResources['navbar']}';
     final screenshotPath = 'test/resources/nexus_9_0.png';
     final options = {
       'screenshotPath': screenshotPath,
       'screenshotNavbarPath': screenshotNavbarPath,
     };
-    await imagemagick('append', options);
+    await im.imagemagick('append', options);
   });
 
   test('frame screenshot', () async {
     final Screens screens = Screens();
     await screens.init();
     final screen = screens.screenProps('Nexus 9');
-    final Config config = Config('test/screenshots_test.yaml');
+    final Config config = Config(configPath: 'test/screenshots_test.yaml');
     final configInfo = config.configInfo;
-    final Map resources = screen['resources'];
-    await unpackImages(resources, '/tmp/screenshots');
-    final framePath = configInfo['staging'] + '/' + resources['frame'];
+    final Map scrnResources = screen['resources'];
+    await resources.unpackImages(scrnResources, '/tmp/screenshots');
+    final framePath = configInfo['staging'] + '/' + scrnResources['frame'];
     final size = screen['size'];
     final resize = screen['resize'];
     final offset = screen['offset'];
@@ -123,7 +125,7 @@ void main() {
       'screenshotPath': screenshotPath,
       'backgroundColor': ImageProcessor.kDefaultAndroidBackground,
     };
-    await imagemagick('frame', options);
+    await im.imagemagick('frame', options);
   });
 
   test('parse json xcrun simctl list devices', () {
@@ -145,7 +147,7 @@ void main() {
         }
       ]
     };
-    final iosDevices = getIosSimulators();
+    final iosDevices = utils.getIosSimulators();
     final iPhone7Plus = iosDevices['iPhone 7 Plus'];
     expect(iPhone7Plus, expected);
   });
@@ -157,47 +159,49 @@ void main() {
       'name': 'iPhone 7 Plus',
       'udid': '1DD6DBF1-846F-4644-8E97-76175788B9A5'
     };
-    final iosDevices = getIosSimulators();
+    final iosDevices = utils.getIosSimulators();
     final deviceName = 'iPhone 7 Plus';
 //    final deviceName = 'iPhone 5c';
-    final highestDevice = getHighestIosSimulator(iosDevices, deviceName);
+    final highestDevice = utils.getHighestIosSimulator(iosDevices, deviceName);
     expect(highestDevice, expected);
   });
 
   test('read resource and write to path', () async {
-    final resources = [
+    final scrnResources = [
       'resources/android/1080/statusbar.png',
       'resources/android/1080/navbar.png',
       'resources/android/phones/Nexus_5X.png'
     ];
     final dest = '/tmp';
-    for (String resource in resources) {
-      await writeImage(await readResourceImage(resource), '$dest/$resource');
+    for (String resource in scrnResources) {
+      await resources.writeImage(
+          await resources.readResourceImage(resource), '$dest/$resource');
     }
   });
 
   test('unpack images', () async {
-    final resources = {
+    final scrnResources = {
       'A': 'resources/android/1080/statusbar.png',
       'B': 'resources/android/1080/navbar.png',
       'C': 'resources/android/phones/Nexus_5X.png'
     };
     final dest = '/tmp';
-    await unpackImages(resources, dest);
+    await resources.unpackImages(scrnResources, dest);
   });
 
   test('unpack script', () async {
-    await unpackScript('resources/script/android-wait-for-emulator', '/tmp');
+    await resources.unpackScript(
+        'resources/script/android-wait-for-emulator', '/tmp');
   });
 
   test('add prefix to files in directory', () async {
-    await prefixFilesInDir('/tmp/screenshots/test', 'my_prefix');
+    await utils.prefixFilesInDir('/tmp/screenshots/test', 'my_prefix');
   });
 
   test('config guide', () async {
     final Screens screens = Screens();
     await screens.init();
-    final Config config = Config('test/screenshots_test.yaml');
+    final Config config = Config(configPath: 'test/screenshots_test.yaml');
     final daemonClient = DaemonClient();
     await daemonClient.start;
     config.generateConfigGuide(screens, await daemonClient.devices);
@@ -206,17 +210,17 @@ void main() {
   test('rooted emulator', () async {
     final emulatorId = 'Nexus_5X_API_27';
     final stagingDir = '/tmp/tmp';
-    await unpackScripts(stagingDir);
+    await resources.unpackScripts(stagingDir);
     final daemonClient = DaemonClient();
     await daemonClient.start;
     final deviceId = await daemonClient.launchEmulator(emulatorId);
-    final result = cmd('adb', ['root'], '.', true);
+    final result = run.cmd('adb', ['root'], '.', true);
     expect(result, 'adbd cannot run as root in production builds\n');
-    expect(await shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
+    expect(await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
   });
 
   test('get emulator id from device name', () {
-    final _emulators = getAvdNames();
+    final _emulators = utils.getAvdNames();
     print(_emulators);
     final emulator =
         _emulators.firstWhere((emulator) => emulator.contains('Nexus_5X'));
@@ -229,7 +233,7 @@ void main() {
     final dstDir = '/tmp/tmp2/more/levels/deep';
 
     await File('$srcDir/$fileName').create(recursive: true);
-    moveFiles(srcDir, dstDir);
+    utils.moveFiles(srcDir, dstDir);
     expect(await File(dstDir + '/' + fileName).exists(), true);
   });
 
@@ -250,7 +254,7 @@ void main() {
     final startedDevice = (devices, emulatorName) => devices
         .firstWhere((device) => device['emulator'] == true, orElse: () => null);
     expect(startedDevice(devices, emulatorName), expected);
-    expect(await shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
+    expect(await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
     expect(startedDevice(await daemonClient.devices, emulatorName), null);
   });
 
@@ -264,28 +268,28 @@ void main() {
     daemonClient.verbose = true;
     final deviceId = await daemonClient.launchEmulator(emulatorId);
     print('emulator started');
-    changeAndroidLocale(deviceId, deviceName, newLocale);
+    run.changeAndroidLocale(deviceId, deviceName, newLocale);
     // wait for locale to change
-    await waitAndroidLocaleChange(deviceId, newLocale);
-    changeAndroidLocale(deviceId, deviceName, origLocale);
-    await waitAndroidLocaleChange(deviceId, origLocale);
-    expect(await shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
+    await utils.waitAndroidLocaleChange(deviceId, newLocale);
+    run.changeAndroidLocale(deviceId, deviceName, origLocale);
+    await utils.waitAndroidLocaleChange(deviceId, origLocale);
+    expect(await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
   }, timeout: Timeout(Duration(seconds: 180)));
 
   test('start/stop simulator', () async {
     final simulatorName = 'iPhone X';
     final simulatorInfo =
-        getHighestIosSimulator(getIosSimulators(), simulatorName);
+        utils.getHighestIosSimulator(utils.getIosSimulators(), simulatorName);
     // note: daemonClient should get an 'add.device' event after simulator startup
     final deviceId = simulatorInfo['udid'];
-    startSimulator(deviceId);
-    shutdownSimulator(deviceId);
+    run.startSimulator(deviceId);
+    run.shutdownSimulator(deviceId);
   });
 
   test('start emulator on travis', () async {
     final androidHome = Platform.environment['ANDROID_HOME'];
     final emulatorName = 'Nexus_6P_API_27';
-    await streamCmd(
+    await utils.streamCmd(
         '$androidHome/emulator/emulator',
         [
           '-avd',
@@ -305,7 +309,7 @@ void main() {
     final files = ['image1.png', 'image2.png'];
     final suffix = 'png';
 
-    clearDirectory(dirPath); // creates empty directory
+    utils.clearDirectory(dirPath); // creates empty directory
 
     // create files
     files
@@ -316,7 +320,7 @@ void main() {
         expect(await File('$dirPath/$fileName').exists(), true));
 
     // delete files with suffix
-    clearFilesWithSuffix(dirPath, suffix);
+    utils.clearFilesWithSuffix(dirPath, suffix);
 
     // check deleted
     files.forEach((fileName) async =>
@@ -347,7 +351,7 @@ void main() {
     final testAppSrcPath = 'test_driver/main.dart';
 
     // unpack resources
-    await unpackScripts(stagingDir);
+    await resources.unpackScripts(stagingDir);
 
     final daemonClient = DaemonClient();
     await daemonClient.start;
@@ -355,14 +359,14 @@ void main() {
     final deviceId = await daemonClient.launchEmulator(emulatorId);
 
     // change locale
-    await setAndroidLocale(deviceId, newLocale, deviceName);
+    await run.setAndroidLocale(deviceId, newLocale, deviceName);
 
     // run test
-    await streamCmd('flutter', ['drive', testAppSrcPath], testAppDir);
+    await utils.streamCmd('flutter', ['drive', testAppSrcPath], testAppDir);
 
     // stop emulator
-    await setAndroidLocale(deviceId, origLocale, deviceName);
-    expect(await shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
+    await run.setAndroidLocale(deviceId, origLocale, deviceName);
+    expect(await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
   },
       timeout:
           Timeout(Duration(seconds: 90))); // increase time to get stacktrace
@@ -372,12 +376,12 @@ void main() {
     final stagingDir = '/tmp/tmp';
     final locale = 'en-US';
 
-    await unpackScripts(stagingDir);
+    await resources.unpackScripts(stagingDir);
     final daemonClient = DaemonClient();
     await daemonClient.start;
     final deviceId = await daemonClient.launchEmulator(emulatorId);
-    final deviceLocale = androidDeviceLocale(deviceId);
-    expect(await shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
+    final deviceLocale = utils.androidDeviceLocale(deviceId);
+    expect(await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
 
     expect(deviceLocale, locale);
   });
@@ -397,33 +401,33 @@ void main() {
     final testAppSrcPath = 'test_driver/main.dart';
 
     // unpack resources
-    await unpackScripts(stagingDir);
+    await resources.unpackScripts(stagingDir);
 
     // change locale
     final simulatorInfo =
-        getHighestIosSimulator(getIosSimulators(), simulatorName);
+        utils.getHighestIosSimulator(utils.getIosSimulators(), simulatorName);
     final deviceId = simulatorInfo['udid'];
-    await setSimulatorLocale(deviceId, simulatorName, locale, stagingDir,
+    await run.setSimulatorLocale(deviceId, simulatorName, locale, stagingDir,
         running: false);
 
     // start simulator
 //    final daemonClient = DaemonClient();
 //    await daemonClient.start;
-    startSimulator(deviceId);
+    run.startSimulator(deviceId);
 
     // run test
-    await streamCmd(
+    await utils.streamCmd(
         'flutter', ['-d', deviceId, 'drive', testAppSrcPath], testAppDir);
 
     // stop simulator
-    shutdownSimulator(deviceId);
+    run.shutdownSimulator(deviceId);
   },
       // increase time to get stacktrace
       timeout: Timeout(Duration(minutes: 2)));
 
   test('get ios simulator locale', () async {
     final udId = '03D4FC12-3927-4C8B-A226-17DE34AE9C18';
-    var locale = iosSimulatorLocale(udId);
+    var locale = utils.iosSimulatorLocale(udId);
     expect(locale, 'en-US');
   });
 
@@ -433,37 +437,10 @@ void main() {
     await daemonClient.start;
     // start emulator
     final deviceId = await daemonClient.launchEmulator(expectedId);
-    final emulatorId = getAndroidEmulatorId(deviceId);
+    final emulatorId = utils.getAndroidEmulatorId(deviceId);
     expect(emulatorId, expectedId);
-    expect(await shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
+    expect(await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
   });
-
-//  test('find running emulator with matching avd', () {
-//    final avdName = 'Nexus_6P_API_28';
-//    final expected = 'emulator-5554';
-//    String deviceId = findAndroidDeviceId(avdName);
-//    print('device=$deviceId');
-//    expect(deviceId, expected);
-//  });
-
-//  test('boot android device if not booted', () async {
-//    final deviceName = 'Nexus 6P';
-//    final avdName = getHighestAVD(deviceName);
-//    String deviceId = findAndroidDeviceId(avdName);
-//    if (deviceId == null) {
-//      // boot emulator
-//      print('booting $deviceName...');
-//      await streamCmd('flutter', ['emulator', '--launch', avdName]);
-//      deviceId = await getBootedAndroidDeviceId(deviceName);
-//      print('booted $deviceName on $deviceId');
-//      // shutdown
-//      print('shutting down $deviceName...');
-//      cmd('adb', ['-s', deviceId, 'emu', 'kill']);
-//    } else {
-//      print('already booted');
-//    }
-//    expect(deviceId, isNotNull);
-//  });
 
   test('get real devices', () async {
     final expected = [
@@ -478,8 +455,8 @@ void main() {
     final daemonClient = DaemonClient();
     await daemonClient.start;
     final devices = await daemonClient.devices;
-    final iosDevices = getIosDevices(devices);
-    final androidDevices = getAndroidDevices(devices);
+    final iosDevices = utils.getIosDevices(devices);
+    final androidDevices = utils.getAndroidDevices(devices);
     expect(androidDevices, []);
     expect(iosDevices, expected);
   });
@@ -493,12 +470,12 @@ void main() {
       'model': 'iPhone 5c (GSM)'
     };
     String deviceName = 'iPhone 5c';
-    Map device = getDevice([expected], deviceName);
+    Map device = utils.getDevice([expected], deviceName);
     expect(device, expected);
     final isDeviceAttached = (device) => device != null;
     expect(isDeviceAttached(device), true);
     deviceName = 'iPhone X';
-    device = getDevice([expected], deviceName);
+    device = utils.getDevice([expected], deviceName);
     expect(device, null);
     expect(isDeviceAttached(device), false);
   });
@@ -515,7 +492,7 @@ devices:
 ''';
 
     final configInfo = loadYaml(config);
-    DeviceType deviceType = getDeviceType(configInfo, deviceName);
+    DeviceType deviceType = run.getDeviceType(configInfo, deviceName);
     expect(deviceType, expected);
   });
 
@@ -543,7 +520,7 @@ devices:
 
     final Map diffs = diffMaps(props, newProps);
     expect(diffs, expected);
-    expect(await shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
+    expect(await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
   });
 
   group('ProcessWrapper', () {
@@ -568,9 +545,10 @@ devices:
       await daemonClient.start;
       final emulatorId = 'Nexus_6P_API_28';
       final deviceId = await daemonClient.launchEmulator(emulatorId);
-      String actual = await waitSysLogMsg(deviceId, expected);
+      String actual = await utils.waitSysLogMsg(deviceId, expected);
       expect(actual.contains(expected), isTrue);
-      expect(await shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
+      expect(
+          await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
     });
 
     test('reg exp', () {

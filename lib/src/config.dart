@@ -2,23 +2,25 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:screenshots/image_processor.dart';
-import 'package:screenshots/screens.dart';
-import 'package:screenshots/screenshots.dart';
+import 'package:meta/meta.dart';
+
+import 'image_processor.dart';
+import 'screens.dart';
 import 'package:yaml/yaml.dart';
-import 'package:screenshots/utils.dart' as utils;
+import 'utils.dart' as utils;
+
+import 'globals.dart';
 
 ///
 /// Config info used to process screenshots for android and ios.
 ///
 class Config {
-  final String _configPath;
-  YamlNode _docYaml;
+  final String configPath;
+  final YamlNode _docYaml;
   Map _screenshotsEnv; // current screenshots env
 
-  Config([this._configPath = kConfigFileName]) {
-    _docYaml = loadYaml(File(_configPath).readAsStringSync());
-  }
+  Config({String this.configPath = kConfigFileName})
+      : _docYaml = loadYaml(File(configPath).readAsStringSync());
 
   /// Get configuration information for supported devices
   Map get configInfo => _docYaml.value;
@@ -36,6 +38,7 @@ class Config {
 
   /// Records screenshots environment before start of each test
   /// (called by screenshots)
+  @visibleForTesting
   Future<void> storeEnv(Screens screens, String emulatorName, String locale,
       String deviceType) async {
     // store env for later use by tests
@@ -56,6 +59,7 @@ class Config {
 
   /// Check emulators and simulators are installed, devices attached,
   /// matching screen is available and tests exist.
+  @visibleForTesting
   Future<bool> validate(
       Screens screens, List allDevices, List allEmulators) async {
     final isDeviceAttached = (device) => device != null;
@@ -65,15 +69,17 @@ class Config {
       final devices = utils.getAndroidDevices(allDevices);
       for (String deviceName in configInfo['devices']['android'].keys) {
         if (ImageProcessor.isFrameRequired(
-            configInfo, DeviceType.android, deviceName))
+            configInfo, DeviceType.android, deviceName)) {
           // check screen available for this device
           _checkScreenAvailable(screens, deviceName);
+        }
 
         // check emulator installed
         if (!isDeviceAttached(utils.getDevice(devices, deviceName)) &&
-            !isEmulatorInstalled(findEmulator(allEmulators, deviceName))) {
+            !isEmulatorInstalled(
+                utils.findEmulator(allEmulators, deviceName))) {
           stderr.write('Error: no device attached or emulator installed for '
-              'device \'$deviceName\' in $_configPath.\n');
+              'device \'$deviceName\' in $configPath.\n');
           generateConfigGuide(screens, allDevices);
           exit(1);
         }
@@ -85,15 +91,16 @@ class Config {
       final Map simulators = utils.getIosSimulators();
       for (String deviceName in configInfo['devices']['ios'].keys) {
         if (ImageProcessor.isFrameRequired(
-            configInfo, DeviceType.ios, deviceName))
+            configInfo, DeviceType.ios, deviceName)) {
           // check screen available for this device
           _checkScreenAvailable(screens, deviceName);
+        }
 
         // check simulator installed
         if (!isDeviceAttached(utils.getDevice(devices, deviceName)) &&
             !_isSimulatorInstalled(simulators, deviceName)) {
           stderr.write('Error: no device attached or simulator installed for '
-              'device \'$deviceName\' in $_configPath.\n');
+              'device \'$deviceName\' in $configPath.\n');
           generateConfigGuide(screens, allDevices);
           exit(1);
         }
@@ -102,7 +109,7 @@ class Config {
 
     for (String test in configInfo['tests']) {
       if (!await File(test).exists()) {
-        stderr.write('Missing test: $test from $_configPath not found.\n');
+        stderr.write('Missing test: $test from $configPath not found.\n');
         exit(1);
       }
     }
@@ -150,6 +157,7 @@ class Config {
   }
 
   /// Generate a guide for configuring Screenshots in current environment.
+  @visibleForTesting
   void generateConfigGuide(Screens screens, List devices) {
     stdout.write('\nGuide:');
     _reportAttachedDevices(devices);
@@ -166,10 +174,10 @@ class Config {
   void _checkScreenAvailable(Screens screens, String deviceName) {
     if (screens.screenProps(deviceName) == null) {
       stderr.write(
-          'Error: screen not available for device \'$deviceName\' in $_configPath.\n');
+          'Error: screen not available for device \'$deviceName\' in $configPath.\n');
       stderr.flush();
       stdout.write(
-          '\n  Use a supported device or set \'frame: false\' for device in $_configPath.\n\n'
+          '\n  Use a supported device or set \'frame: false\' for device in $configPath.\n\n'
           '  If framing for device is required, request screen support by\n'
           '  creating an issue in:\n'
           '  https://github.com/mmcc007/screenshots/issues.\n\n');
@@ -193,10 +201,11 @@ class Config {
   void _reportAttachedDevices(List devices) {
     stdout.write('\n  Attached devices:\n');
     for (final device in devices) {
-      if (device['emulator'] == false)
+      if (device['emulator'] == false) {
         device['platform'] == 'ios'
             ? stdout.write('    ${device['model']}\n')
             : stdout.write('    ${device['name']}\n');
+      }
     }
   }
 

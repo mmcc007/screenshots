@@ -1,14 +1,14 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:screenshots/screens.dart';
-import 'package:screenshots/fastlane.dart' as fastlane;
-import 'package:screenshots/image_magick.dart' as im;
-import 'package:screenshots/resources.dart' as resources;
-import 'package:screenshots/screenshots.dart';
-import 'package:screenshots/utils.dart' as utils;
+import 'screens.dart';
+import 'fastlane.dart' as fastlane;
+import 'image_magick.dart' as im;
+import 'resources.dart' as resources;
+import 'utils.dart' as utils;
 import 'package:path/path.dart' as p;
-import 'package:screenshots/utils.dart';
+
+import 'globals.dart';
 
 class ImageProcessor {
   static const kDefaultIosBackground = 'xc:white';
@@ -120,7 +120,7 @@ class ImageProcessor {
   /// Checks if frame is required for [deviceName].
   static bool isFrameRequired(
       Map config, DeviceType deviceType, String deviceName) {
-    final devices = config['devices'][getStringFromEnum(deviceType)];
+    final devices = config['devices'][utils.getStringFromEnum(deviceType)];
     final deviceKey =
         devices.keys.firstWhere((key) => key == deviceName, orElse: () => null);
     if (deviceKey == null) throw 'Error: device \'$deviceName\' not found';
@@ -128,8 +128,9 @@ class ImageProcessor {
     bool isFrameRequired = config['frame'];
     if (device != null) {
       final isDeviceFrameRequired = device['frame'];
-      if (isDeviceFrameRequired != null)
+      if (isDeviceFrameRequired != null) {
         isFrameRequired = isDeviceFrameRequired;
+      }
     }
     return isFrameRequired;
   }

@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'utils.dart';
+import 'run.dart' as run;
 
 enum Event { deviceRemoved }
 
@@ -94,8 +94,10 @@ class DaemonClient {
     final eventInfo = jsonDecode(await _waitForEvent.future);
     switch (event) {
       case Event.deviceRemoved:
-        if (eventInfo.length != 1 || eventInfo[0]['event'] != 'device.removed')
+        if (eventInfo.length != 1 ||
+            eventInfo[0]['event'] != 'device.removed') {
           throw 'Error: expected: $event, received: $eventInfo';
+        }
         break;
       default:
         throw 'Error: unexpected event: $eventInfo';
@@ -132,9 +134,9 @@ class DaemonClient {
         } else {
           // get event
           if (line.contains('[{"event":')) {
-            if (line.contains('"event":"daemon.logMessage"'))
+            if (line.contains('"event":"daemon.logMessage"')) {
               print('Warning: ignoring log message: $line');
-            else {
+            } else {
               _waitForEvent.complete(line);
               _waitForEvent = Completer<String>(); // enable wait for next event
             }
@@ -154,8 +156,9 @@ class DaemonClient {
       final String str = '[${json.encode(command)}]';
       _process.stdin.writeln(str);
       if (verbose) print('==> $str');
-    } else
+    } else {
       throw 'Error: not connected to daemon.';
+    }
   }
 
   Future<List> _sendCommandWaitResponse(Map<String, dynamic> command) async {
@@ -177,26 +180,16 @@ class DaemonClient {
   }
 }
 
-/// Shutdown an android emulator.
-Future<String> shutdownAndroidEmulator(
-    DaemonClient daemonClient, String deviceId) async {
-  cmd('adb', ['-s', deviceId, 'emu', 'kill'], '.', true);
-//  await waitAndroidEmulatorShutdown(deviceId);
-  final device = await daemonClient.waitForEvent(Event.deviceRemoved);
-  if (device['id'] != deviceId)
-    throw 'Error: device id \'$deviceId\' not shutdown';
-  return device['id'];
-}
-
 /// Get attached ios devices with id and model.
 List iosDevices() {
   final regExp = RegExp(r'Found (\w+) \(\w+, (.*), \w+, \w+\)');
   final noAttachedDevices = 'no attached devices';
-  final iosDeployDevices =
-      cmd('sh', ['-c', 'ios-deploy -c || echo "$noAttachedDevices"'], '.', true)
-          .trim()
-          .split('\n')
-          .sublist(1);
+  final iosDeployDevices = run
+      .cmd(
+          'sh', ['-c', 'ios-deploy -c || echo "$noAttachedDevices"'], '.', true)
+      .trim()
+      .split('\n')
+      .sublist(1);
   if (iosDeployDevices[0] == noAttachedDevices) return [];
   return iosDeployDevices.map((line) {
     final matches = regExp.firstMatch(line);
@@ -206,14 +199,3 @@ List iosDevices() {
     return device;
   }).toList();
 }
-
-/// Indicates to the linter that the given future is intentionally not `await`-ed.
-///
-/// Has the same functionality as `unawaited` from `package:pedantic`.
-///
-/// In an async context, it is normally expected than all Futures are awaited,
-/// and that is the basis of the lint unawaited_futures which is turned on for
-/// the flutter_tools package. However, there are times where one or more
-/// futures are intentionally not awaited. This function may be used to ignore a
-/// particular future. It silences the unawaited_futures lint.
-void unawaited(Future<void> future) {}

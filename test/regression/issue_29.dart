@@ -1,5 +1,5 @@
-import 'package:screenshots/daemon_client.dart';
-import 'package:screenshots/screenshots.dart';
+import 'package:screenshots/src/daemon_client.dart';
+import 'package:screenshots/src/utils.dart' as utils;
 import 'package:test/test.dart';
 import 'package:yaml/yaml.dart';
 
@@ -27,7 +27,7 @@ devices:
     final deviceNames = configInfo['devices']['android'];
     print('deviceNames=$deviceNames');
     for (final deviceName in deviceNames.keys) {
-      Map emulator = findEmulator(emulators, deviceName);
+      Map emulator = utils.findEmulator(emulators, deviceName);
 //      if (!foundIt(emulator)) {
 //        // find by emulatorId
 //        emulator = findEmulatorById(emulators, deviceName);

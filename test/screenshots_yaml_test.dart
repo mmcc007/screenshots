@@ -1,12 +1,12 @@
 import 'dart:io';
 
-import 'package:screenshots/config.dart';
-import 'package:screenshots/daemon_client.dart';
-import 'package:screenshots/image_processor.dart';
-import 'package:screenshots/screens.dart';
-import 'package:screenshots/screenshots.dart';
+import 'package:screenshots/src/config.dart';
+import 'package:screenshots/src/daemon_client.dart';
+import 'package:screenshots/src/globals.dart';
+import 'package:screenshots/src/image_processor.dart';
+import 'package:screenshots/src/screens.dart';
 import 'package:test/test.dart';
-import 'package:screenshots/fastlane.dart' as fastlane;
+import 'package:screenshots/src/fastlane.dart' as fastlane;
 import 'package:yaml/yaml.dart';
 
 final screenshotsYaml = '''
@@ -80,7 +80,7 @@ void main() {
       'staging': '/tmp/screenshots'
     };
 
-    final Config config = Config('test/screenshots_test.yaml');
+    final Config config = Config(configPath: 'test/screenshots_test.yaml');
     Map appConfig = config.configInfo;
     expect(appConfig, expected);
   });
@@ -88,7 +88,7 @@ void main() {
   test('validate config file', () async {
     final Screens screens = Screens();
     await screens.init();
-    final Config config = Config('test/screenshots_test.yaml');
+    final Config config = Config(configPath: 'test/screenshots_test.yaml');
     final daemonClient = DaemonClient();
     await daemonClient.start;
     // for this test change directory

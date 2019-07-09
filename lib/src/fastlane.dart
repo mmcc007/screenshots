@@ -1,8 +1,9 @@
 import 'dart:async';
 
-import 'package:screenshots/screens.dart';
-import 'package:screenshots/screenshots.dart';
-import 'package:screenshots/utils.dart' as utils;
+import 'screens.dart';
+import 'utils.dart' as utils;
+
+import 'globals.dart';
 // ios/fastlane/screenshots/en-US/*[iPad|iPhone]*
 // android/fastlane/metadata/android/en-US/images/phoneScreenshots
 // android/fastlane/metadata/android/en-US/images/tenInchScreenshots

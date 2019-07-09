@@ -1,15 +1,15 @@
-import 'package:screenshots/config.dart';
-import 'package:screenshots/image_magick.dart';
-import 'package:screenshots/image_processor.dart';
-import 'package:screenshots/resources.dart';
-import 'package:screenshots/screens.dart';
+import 'package:screenshots/src/config.dart';
+import 'package:screenshots/src/image_magick.dart' as im;
+import 'package:screenshots/src/image_processor.dart';
+import 'package:screenshots/src/resources.dart' as resources;
+import 'package:screenshots/src/screens.dart';
 import 'package:test/test.dart';
 
 main() {
   test('process screenshots for iPhone X and iPhone XS Max', () async {
     final Screens screens = Screens();
     await screens.init();
-    final Config config = Config('test/screenshots_test.yaml');
+    final Config config = Config(configPath: 'test/screenshots_test.yaml');
     Map appConfig = config.configInfo;
 
     final Map devices = {
@@ -25,7 +25,7 @@ main() {
       Map screen = screens.screenProps(deviceName);
 
       final Map screenResources = screen['resources'];
-      await unpackImages(screenResources, '/tmp/screenshots');
+      await resources.unpackImages(screenResources, '/tmp/screenshots');
 
       final screenshotPath = './test/resources/$screenshotName';
       final statusbarPath =
@@ -36,7 +36,7 @@ main() {
         'statusbarPath': statusbarPath,
       };
 //      print('options=$options');
-      await imagemagick('overlay', options);
+      await im.imagemagick('overlay', options);
 
       final framePath = appConfig['staging'] + '/' + screenResources['frame'];
       final size = screen['size'];
@@ -51,7 +51,7 @@ main() {
         'backgroundColor': ImageProcessor.kDefaultAndroidBackground,
       };
 //      print('options=$options');
-      await imagemagick('frame', options);
+      await im.imagemagick('frame', options);
     }
   });
 }
