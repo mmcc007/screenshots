@@ -1,3 +1,18 @@
+## 1.0.1
+- Fixed pedantic lint errors
+
+## 1.0.0
+- Added support for running on any device (real, emulator or simulator), whether booted or not, even if there are no supported screens (this requires marking unsupported devices with 'frame: false').
+- Added support for FrameIt 'text and background' feature #61
+- Removed requirement that no devices/emulators be running at startup #63
+- Allow screenshots to be configured with multiple locales and deliberately run into flutter driver bug (with warning) #20
+- Added feature to use running emulators/simulators or boot required ones #56
+- Added flutter tools daemon to manage real devices, android emulators, and manage boot state of emulators and ios simulators
+- Added wait-for-event to daemon client (for use in waiting for emulator to shutdown)
+- Added wait-for-locale-change using syslog
+- Re-organized as library
+- Changed from using positional optional params to named optional params in public API (breaking change)
+
 ## 0.2.1
 - Added support for iPhone Xs and iPhone Xs Max
 
