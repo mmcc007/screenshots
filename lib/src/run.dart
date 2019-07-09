@@ -36,6 +36,7 @@ Future<void> run([String configPath = kConfigFileName]) async {
 
   final config = Config(configPath: configPath);
   // validate config file
+  // ignore: invalid_use_of_visible_for_testing_member
   await config.validate(screens, devices, emulators);
   final configInfo = config.configInfo;
 
@@ -162,6 +163,7 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
       final deviceType = getDeviceType(configInfo, configDeviceName);
 
       // store env for later use by tests
+      // ignore: invalid_use_of_visible_for_testing_member
       await config.storeEnv(screens, configDeviceName, locale,
           utils.getStringFromEnum(deviceType));
 

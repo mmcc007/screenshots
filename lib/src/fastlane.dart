@@ -43,7 +43,7 @@ Future _clearFastlaneDir(
 }
 
 String getAndroidDeviceType(Map screenProps) {
-  String androidDeviceType = null;
+  String androidDeviceType;
   if (screenProps != null) androidDeviceType = screenProps['destName'];
   return androidDeviceType;
 }
