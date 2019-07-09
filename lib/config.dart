@@ -25,7 +25,10 @@ class Config {
 
   /// Current screenshots runtime environment
   /// (updated before start of each test)
-  Map get screenshotsEnv => _screenshotsEnv;
+  Future<Map> get screenshotsEnv async {
+    if (_screenshotsEnv == null) await _retrieveEnv();
+    return _screenshotsEnv;
+  }
 
   File get _envStore {
     return File(configInfo['staging'] + '/' + kEnvFileName);
@@ -33,8 +36,8 @@ class Config {
 
   /// Records screenshots environment before start of each test
   /// (called by screenshots)
-  Future<void> storeEnv(
-      Screens screens, emulatorName, locale, deviceType) async {
+  Future<void> storeEnv(Screens screens, String emulatorName, String locale,
+      String deviceType) async {
     // store env for later use by tests
     final screenProps = screens.screenProps(emulatorName);
     final screenSize = screenProps == null ? null : screenProps['size'];
@@ -47,9 +50,7 @@ class Config {
     await _envStore.writeAsString(json.encode(currentEnv));
   }
 
-  /// Retrieves screenshots environment at start of each test
-  /// (called by test)
-  Future<void> retrieveEnv() async {
+  Future<void> _retrieveEnv() async {
     _screenshotsEnv = json.decode(await _envStore.readAsString());
   }
 

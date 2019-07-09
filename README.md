@@ -119,9 +119,8 @@ Note: to turn off the debug banner on your screens, in your integration test's m
 ````
 
 ## Modifying tests based on screenshots environment
-In some cases it is useful to know what screen size and locale you are currently testing with. To obtain this information in your test use:
+In some cases it is useful to know what device, device type, screen size and locale you are currently testing with. To obtain this information in your test use:
 ```
-await config.retrieveEnv();
 final screenshotsEnv = config.screenshotsEnv;
 ```
 See https://github.com/flutter/flutter/issues/31609 for related `flutter driver` issue.

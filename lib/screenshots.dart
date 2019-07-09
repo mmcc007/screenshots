@@ -165,9 +165,11 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
         // a running ios device
         print('Warning: the locale of an ios device cannot be changed.');
       }
+      final deviceType = getDeviceType(configInfo, configDeviceName);
 
       // store env for later use by tests
-      await config.storeEnv(screens, configDeviceName, locale, 'android');
+      await config.storeEnv(
+          screens, configDeviceName, locale, getStringFromEnum(deviceType));
 
       // run tests
       for (final testPath in testPaths) {
@@ -176,7 +178,6 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
         await utils.streamCmd('flutter', ['-d', deviceId, 'drive', testPath]);
 
         // process screenshots
-        final deviceType = getDeviceType(configInfo, configDeviceName);
         await imageProcessor.process(deviceType, configDeviceName, locale);
       }
     }
