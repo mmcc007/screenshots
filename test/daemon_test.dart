@@ -171,7 +171,7 @@ main() {
 
   test('join devices', () {
     final configPath = 'test/screenshots_test.yaml';
-    final config = Config(configPath);
+    final config = Config(configPath: configPath);
     final configInfo = config.configInfo;
     final androidInfo = configInfo['devices']['android'];
     print('androidInfo=$androidInfo');
@@ -185,7 +185,7 @@ main() {
     final screens = Screens();
     await screens.init();
 
-    final config = Config(configPath);
+    final config = Config(configPath: configPath);
     // validate config file
 //    await config.validate(screens);
     final configInfo = config.configInfo;

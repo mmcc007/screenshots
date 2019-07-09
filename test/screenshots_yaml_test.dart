@@ -80,7 +80,7 @@ void main() {
       'staging': '/tmp/screenshots'
     };
 
-    final Config config = Config('test/screenshots_test.yaml');
+    final Config config = Config(configPath: 'test/screenshots_test.yaml');
     Map appConfig = config.configInfo;
     expect(appConfig, expected);
   });
@@ -88,7 +88,7 @@ void main() {
   test('validate config file', () async {
     final Screens screens = Screens();
     await screens.init();
-    final Config config = Config('test/screenshots_test.yaml');
+    final Config config = Config(configPath: 'test/screenshots_test.yaml');
     final daemonClient = DaemonClient();
     await daemonClient.start;
     // for this test change directory

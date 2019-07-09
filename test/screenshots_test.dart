@@ -61,7 +61,7 @@ void main() {
     final Screens screens = Screens();
     await screens.init();
     final screen = screens.screenProps('Nexus 6P');
-    final Config config = Config('test/screenshots_test.yaml');
+    final Config config = Config(configPath: 'test/screenshots_test.yaml');
     final configInfo = config.configInfo;
     final Map scrnResources = screen['resources'];
     await resources.unpackImages(scrnResources, '/tmp/screenshots');
@@ -79,7 +79,7 @@ void main() {
     final Screens screens = Screens();
     await screens.init();
     final screen = screens.screenProps('iPhone 7 Plus');
-    final Config config = Config('test/screenshots_test.yaml');
+    final Config config = Config(configPath: 'test/screenshots_test.yaml');
     final configInfo = config.configInfo;
     final staging = configInfo['staging'];
     final Map screenResources = screen['resources'];
@@ -90,7 +90,7 @@ void main() {
     final Screens screens = Screens();
     await screens.init();
     final screen = screens.screenProps('Nexus 9');
-    final Config config = Config('test/screenshots_test.yaml');
+    final Config config = Config(configPath: 'test/screenshots_test.yaml');
     final configInfo = config.configInfo;
     final Map scrnResources = screen['resources'];
     await resources.unpackImages(scrnResources, '/tmp/screenshots');
@@ -108,7 +108,7 @@ void main() {
     final Screens screens = Screens();
     await screens.init();
     final screen = screens.screenProps('Nexus 9');
-    final Config config = Config('test/screenshots_test.yaml');
+    final Config config = Config(configPath: 'test/screenshots_test.yaml');
     final configInfo = config.configInfo;
     final Map scrnResources = screen['resources'];
     await resources.unpackImages(scrnResources, '/tmp/screenshots');
@@ -201,7 +201,7 @@ void main() {
   test('config guide', () async {
     final Screens screens = Screens();
     await screens.init();
-    final Config config = Config('test/screenshots_test.yaml');
+    final Config config = Config(configPath: 'test/screenshots_test.yaml');
     final daemonClient = DaemonClient();
     await daemonClient.start;
     config.generateConfigGuide(screens, await daemonClient.devices);

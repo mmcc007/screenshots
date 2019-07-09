@@ -34,7 +34,7 @@ Future<void> run([String configPath = kConfigFileName]) async {
   //       so have to be handled separately
   final emulators = await daemonClient.emulators;
 
-  final config = Config(configPath);
+  final config = Config(configPath: configPath);
   // validate config file
   await config.validate(screens, devices, emulators);
   final configInfo = config.configInfo;
