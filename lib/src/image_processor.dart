@@ -128,8 +128,9 @@ class ImageProcessor {
     bool isFrameRequired = config['frame'];
     if (device != null) {
       final isDeviceFrameRequired = device['frame'];
-      if (isDeviceFrameRequired != null)
+      if (isDeviceFrameRequired != null) {
         isFrameRequired = isDeviceFrameRequired;
+      }
     }
     return isFrameRequired;
   }

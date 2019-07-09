@@ -94,8 +94,10 @@ class DaemonClient {
     final eventInfo = jsonDecode(await _waitForEvent.future);
     switch (event) {
       case Event.deviceRemoved:
-        if (eventInfo.length != 1 || eventInfo[0]['event'] != 'device.removed')
+        if (eventInfo.length != 1 ||
+            eventInfo[0]['event'] != 'device.removed') {
           throw 'Error: expected: $event, received: $eventInfo';
+        }
         break;
       default:
         throw 'Error: unexpected event: $eventInfo';
@@ -132,9 +134,9 @@ class DaemonClient {
         } else {
           // get event
           if (line.contains('[{"event":')) {
-            if (line.contains('"event":"daemon.logMessage"'))
+            if (line.contains('"event":"daemon.logMessage"')) {
               print('Warning: ignoring log message: $line');
-            else {
+            } else {
               _waitForEvent.complete(line);
               _waitForEvent = Completer<String>(); // enable wait for next event
             }
@@ -154,8 +156,9 @@ class DaemonClient {
       final String str = '[${json.encode(command)}]';
       _process.stdin.writeln(str);
       if (verbose) print('==> $str');
-    } else
+    } else {
       throw 'Error: not connected to daemon.';
+    }
   }
 
   Future<List> _sendCommandWaitResponse(Map<String, dynamic> command) async {

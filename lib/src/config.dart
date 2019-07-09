@@ -69,9 +69,10 @@ class Config {
       final devices = utils.getAndroidDevices(allDevices);
       for (String deviceName in configInfo['devices']['android'].keys) {
         if (ImageProcessor.isFrameRequired(
-            configInfo, DeviceType.android, deviceName))
+            configInfo, DeviceType.android, deviceName)) {
           // check screen available for this device
           _checkScreenAvailable(screens, deviceName);
+        }
 
         // check emulator installed
         if (!isDeviceAttached(utils.getDevice(devices, deviceName)) &&
@@ -90,9 +91,10 @@ class Config {
       final Map simulators = utils.getIosSimulators();
       for (String deviceName in configInfo['devices']['ios'].keys) {
         if (ImageProcessor.isFrameRequired(
-            configInfo, DeviceType.ios, deviceName))
+            configInfo, DeviceType.ios, deviceName)) {
           // check screen available for this device
           _checkScreenAvailable(screens, deviceName);
+        }
 
         // check simulator installed
         if (!isDeviceAttached(utils.getDevice(devices, deviceName)) &&
@@ -199,10 +201,11 @@ class Config {
   void _reportAttachedDevices(List devices) {
     stdout.write('\n  Attached devices:\n');
     for (final device in devices) {
-      if (device['emulator'] == false)
+      if (device['emulator'] == false) {
         device['platform'] == 'ios'
             ? stdout.write('    ${device['model']}\n')
             : stdout.write('    ${device['name']}\n');
+      }
     }
   }
 

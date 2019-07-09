@@ -121,8 +121,9 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
 
     // save original locale for reverting later if necessary
     String origLocale;
-    if (isRunningAndroidDeviceOrEmulator(device, emulator))
+    if (isRunningAndroidDeviceOrEmulator(device, emulator)) {
       origLocale = utils.androidDeviceLocale(deviceId);
+    }
 
     for (final locale in locales) {
       // set locale if android device or emulator
@@ -131,21 +132,24 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
       }
 
       // set locale if ios simulator
-      if ((device != null && device['platform'] == 'ios' && device['emulator']))
+      if ((device != null &&
+          device['platform'] == 'ios' &&
+          device['emulator'])) {
         // an already running simulator
         await setSimulatorLocale(
             deviceId, configDeviceName, locale, stagingDir);
-      else {
+      } else {
         if (device == null && simulator != null) {
-          if (pendingLocaleChange)
+          if (pendingLocaleChange) {
             // a non-running simulator
             await setSimulatorLocale(
                 deviceId, configDeviceName, locale, stagingDir,
                 running: false);
-          else
+          } else {
             // a running simulator
             await setSimulatorLocale(
                 deviceId, configDeviceName, locale, stagingDir);
+          }
         }
       }
       // issue locale warning if ios device
@@ -305,8 +309,9 @@ Future<String> shutdownAndroidEmulator(
   cmd('adb', ['-s', deviceId, 'emu', 'kill'], '.', true);
 //  await waitAndroidEmulatorShutdown(deviceId);
   final device = await daemonClient.waitForEvent(Event.deviceRemoved);
-  if (device['id'] != deviceId)
+  if (device['id'] != deviceId) {
     throw 'Error: device id \'$deviceId\' not shutdown';
+  }
   return device['id'];
 }
 
