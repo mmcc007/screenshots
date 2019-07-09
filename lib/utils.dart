@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'dart:convert';
+import 'dart:convert' as cnv;
 import 'dart:io';
 
 import 'package:path/path.dart' as p;
-import 'package:path/path.dart';
+import 'package:process/process.dart';
 
 /// Clear directory [dirPath].
 /// Create directory if none exists.
@@ -21,7 +21,7 @@ void clearFilesWithSuffix(String dirPath, String suffix) {
   // delete files with suffix
   if (Directory(dirPath).existsSync()) {
     Directory(dirPath).listSync().toList().forEach((e) {
-      if (extension(e.path) == suffix) {
+      if (p.extension(e.path) == suffix) {
         File(e.path).delete();
       }
     });
@@ -73,13 +73,13 @@ Future<void> streamCmd(String cmd, List<String> arguments,
 
   if (mode == ProcessStartMode.normal) {
     final stdoutFuture = process.stdout
-        .transform(utf8.decoder)
-        .transform(LineSplitter())
+        .transform(cnv.utf8.decoder)
+        .transform(cnv.LineSplitter())
         .listen(stdout.writeln)
         .asFuture();
     final stderrFuture = process.stderr
-        .transform(utf8.decoder)
-        .transform(LineSplitter())
+        .transform(cnv.utf8.decoder)
+        .transform(cnv.LineSplitter())
         .listen(stderr.writeln)
         .asFuture();
     await Future.wait([stdoutFuture, stderrFuture]);
@@ -97,7 +97,7 @@ Future<void> streamCmd(String cmd, List<String> arguments,
 Map getIosSimulators() {
   final simulators =
       cmd('xcrun', ['simctl', 'list', 'devices', '--json'], '.', true);
-  final simulatorsInfo = jsonDecode(simulators)['devices'];
+  final simulatorsInfo = cnv.jsonDecode(simulators)['devices'];
   return transformIosSimulators(simulatorsInfo);
 }
 
@@ -199,7 +199,7 @@ Future prefixFilesInDir(String dirPath, String prefix) async {
 }
 
 /// Converts [enum] value to [String].
-String enumToStr(dynamic _enum) => _enum.toString().split('.').last;
+String getStringFromEnum(dynamic _enum) => _enum.toString().split('.').last;
 
 /// Returns locale of currently attached android device.
 String androidDeviceLocale(String deviceId) {
@@ -214,7 +214,7 @@ String iosSimulatorLocale(String udId) {
   final env = Platform.environment;
   final settingsPath =
       '${env['HOME']}/Library/Developer/CoreSimulator/Devices/$udId/data/Library/Preferences/.GlobalPreferences.plist';
-  final localeInfo = jsonDecode(
+  final localeInfo = cnv.jsonDecode(
       cmd('plutil', ['-convert', 'json', '-o', '-', settingsPath], '.', true));
   final locale = localeInfo['AppleLocale'];
   return locale;
@@ -239,7 +239,7 @@ String findAndroidDeviceId(String emulatorId) {
       orElse: () => null);
 }
 
-/// Get the list of running devices by id.
+/// Get the list of running android devices by id.
 List<String> getAndroidDeviceIds() {
   return cmd('adb', ['devices'], '.', true)
       .trim()
@@ -249,24 +249,8 @@ List<String> getAndroidDeviceIds() {
       .toList();
 }
 
-/// Get deviceId for a booting emulator
-Future<String> getBootedAndroidDeviceId(String deviceName) async {
-  final avdName = getHighestAVD(deviceName);
-  final pollingInterval = 500;
-  String deviceId = null;
-  final poller = Poller(() async {
-    deviceId = findAndroidDeviceId(avdName);
-  }, Duration(milliseconds: pollingInterval),
-      initialDelay: Duration(milliseconds: pollingInterval));
-  while (deviceId == null) {
-    print('Waiting for $deviceName to boot...');
-    await Future.delayed(Duration(milliseconds: pollingInterval));
-  }
-  poller.cancel();
-  return deviceId;
-}
-
-Future stopEmulator(String deviceId, String stagingDir) async {
+/// Stop an android emulator.
+Future stopAndroidEmulator(String deviceId, String stagingDir) async {
   cmd('adb', ['-s', deviceId, 'emu', 'kill']);
   // wait for emulator to stop
   await streamCmd(
@@ -274,73 +258,15 @@ Future stopEmulator(String deviceId, String stagingDir) async {
       [deviceId]);
 }
 
-/// Wait for android emulator to stop.
-Future<void> waitAndroidEmulatorShutdown(
-    String deviceId, String deviceName) async {
-  final pollingInterval = 500;
-  final notFound = 'not found';
-  String status = '';
-  final poller = Poller(() async {
-    status = cmd(
-            'sh',
-            [
-              '-c',
-              'adb -s $deviceId -e shell getprop sys.boot_completed || echo \"$notFound\"'
-            ],
-            '.',
-            true)
-        .trim();
-  }, Duration(milliseconds: pollingInterval));
-
-  while (!(status == notFound)) {
-    print('Waiting for \'$deviceName\' to shutdown...');
-    await Future.delayed(Duration(milliseconds: pollingInterval));
-//    print('status=$status');
-  }
-  poller.cancel();
-  print('... \'$deviceName\' shutdown complete.');
+/// Wait for android device/emulator locale to change.
+Future<String> waitAndroidLocaleChange(String deviceId, String toLocale) async {
+  final regExp = RegExp(
+      'ContactsProvider: Locale has changed from .* to \\[${toLocale.replaceFirst('-', '_')}\\]|ContactsDatabaseHelper: Switching to locale \\[${toLocale.replaceFirst('-', '_')}\\]');
+  final line = await waitSysLogMsg(deviceId, regExp);
+  return line;
 }
 
-// from https://github.com/flutter/flutter/blob/master/packages/flutter_tools/lib/src/base/utils.dart#L255-L292
-typedef AsyncCallback = Future<void> Function();
-
-/// A [Timer] inspired class that:
-///   - has a different initial value for the first callback delay
-///   - waits for a callback to be complete before it starts the next timer
-class Poller {
-  Poller(this.callback, this.pollingInterval,
-      {this.initialDelay = Duration.zero}) {
-    Future<void>.delayed(initialDelay, _handleCallback);
-  }
-
-  final AsyncCallback callback;
-  final Duration initialDelay;
-  final Duration pollingInterval;
-
-  bool _canceled = false;
-  Timer _timer;
-
-  Future<void> _handleCallback() async {
-    if (_canceled) return;
-
-    try {
-      await callback();
-    } catch (error) {
-      print('Error from poller: $error');
-    }
-
-    if (!_canceled) _timer = Timer(pollingInterval, _handleCallback);
-  }
-
-  /// Cancels the poller.
-  void cancel() {
-    _canceled = true;
-    _timer?.cancel();
-    _timer = null;
-  }
-}
-
-/// Filters a list of devices to get real ios devices
+/// Filters a list of devices to get real ios devices.
 List getIosDevices(List devices) {
   final iosDevices = devices
       .where((device) => device['platform'] == 'ios' && !device['emulator'])
@@ -348,7 +274,7 @@ List getIosDevices(List devices) {
   return iosDevices;
 }
 
-/// Filters a list of devices to get real android devices
+/// Filters a list of devices to get real android devices.
 List getAndroidDevices(List devices) {
   final iosDevices = devices
       .where((device) => device['platform'] != 'ios' && !device['emulator'])
@@ -356,19 +282,41 @@ List getAndroidDevices(List devices) {
   return iosDevices;
 }
 
-/// Get all android and ios devices
-List getAllDevices(Map configInfo) {
+/// Get all configured android and ios device names for this test run.
+List getAllConfiguredDeviceNames(Map configInfo) {
   final androidDeviceNames = configInfo['devices']['android']?.keys ?? [];
   final iosDeviceNames = configInfo['devices']['ios']?.keys ?? [];
   final deviceNames = [...androidDeviceNames, ...iosDeviceNames];
   return deviceNames;
 }
 
-/// Get device from deviceName
+/// Get device from deviceName.
 Map getDevice(List devices, String deviceName) {
   return devices.firstWhere(
       (device) => device['model'] == null
           ? device['name'] == deviceName
           : device['model'].contains(deviceName),
       orElse: () => null);
+}
+
+/// Wait for message to appear in sys log and return first matching line
+Future<String> waitSysLogMsg(String deviceId, RegExp regExp) async {
+  cmd('adb', ['logcat', '-c']);
+  final delegate = await Process.start('adb', [
+    '-s',
+    deviceId,
+    'logcat',
+    '*:F',
+    'ContactsProvider:I',
+    'ContactsDatabaseHelper:I'
+  ]);
+  final process = ProcessWrapper(delegate);
+  return await process.stdout
+//      .transform<String>(cnv.Utf8Decoder(reportErrors: false)) // from flutter tools
+      .transform<String>(cnv.Utf8Decoder(allowMalformed: true))
+      .transform<String>(const cnv.LineSplitter())
+      .firstWhere((line) {
+    print(line);
+    return regExp.hasMatch(line);
+  }, orElse: () => null);
 }

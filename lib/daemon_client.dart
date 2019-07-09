@@ -4,6 +4,8 @@ import 'dart:io';
 
 import 'utils.dart';
 
+enum Event { deviceRemoved }
+
 /// Creates and communicates with flutter daemon.
 class DaemonClient {
   static final DaemonClient _daemonClient = new DaemonClient._internal();
@@ -31,13 +33,12 @@ class DaemonClient {
       _listen();
       _waitForConnection = Completer<bool>();
       _connected = await _waitForConnection.future;
-
       // enable device discovery
       await _sendCommandWaitResponse(
           <String, dynamic>{'method': 'device.enable'});
       _iosDevices = iosDevices();
       // wait for device discovery
-      await Future.delayed(Duration(milliseconds: 500));
+      await Future.delayed(Duration(milliseconds: 100));
     }
   }
 
@@ -47,8 +48,8 @@ class DaemonClient {
         <String, dynamic>{'method': 'emulator.getEmulators'});
   }
 
-  /// Launch a simulator.
-  Future<void> launchEmulator(String emulatorId) async {
+  /// Launch an emulator and return device id.
+  Future<String> launchEmulator(String emulatorId) async {
     final command = <String, dynamic>{
       'method': 'emulator.launch',
       'params': <String, dynamic>{
@@ -62,12 +63,14 @@ class DaemonClient {
         <Future>[_waitForResponse.future, _waitForEvent.future]);
     _processResponse(results[0], command);
     final event = results[1];
-    if (!(event.contains('device.added') &&
-        event.contains('"emulator":true'))) {
+    final eventInfo = jsonDecode(event);
+    if (eventInfo.length != 1 ||
+        eventInfo[0]['event'] != 'device.added' ||
+        eventInfo[0]['params']['emulator'] != true) {
       throw 'Error: emulator $emulatorId not started: $event';
     }
 
-    return Future.value();
+    return Future.value(eventInfo[0]['params']['id']);
   }
 
   /// List running real devices and booted emulators/simulators.
@@ -85,6 +88,19 @@ class DaemonClient {
       }
       return device;
     }).toList());
+  }
+
+  Future<Map> waitForEvent(Event event) async {
+    final eventInfo = jsonDecode(await _waitForEvent.future);
+    switch (event) {
+      case Event.deviceRemoved:
+        if (eventInfo.length != 1 || eventInfo[0]['event'] != 'device.removed')
+          throw 'Error: expected: $event, received: $eventInfo';
+        break;
+      default:
+        throw 'Error: unexpected event: $eventInfo';
+    }
+    return Future.value(eventInfo[0]['params']);
   }
 
   int _exitCode = 0;
@@ -116,8 +132,12 @@ class DaemonClient {
         } else {
           // get event
           if (line.contains('[{"event":')) {
-            _waitForEvent.complete(line);
-            _waitForEvent = Completer<String>(); // enable wait for next event
+            if (line.contains('"event":"daemon.logMessage"'))
+              print('Warning: ignoring log message: $line');
+            else {
+              _waitForEvent.complete(line);
+              _waitForEvent = Completer<String>(); // enable wait for next event
+            }
           } else if (line != 'Starting device daemon...') {
             throw 'Error: unexpected response from daemon: $line';
           }
@@ -128,20 +148,20 @@ class DaemonClient {
   }
 
   void _sendCommand(Map<String, dynamic> command) {
-    _waitForResponse = Completer<String>();
-    command['id'] = _messageId++;
-    final String str = '[${json.encode(command)}]';
-    _process.stdin.writeln(str);
-    if (verbose) print('==> $str');
+    if (_connected) {
+      _waitForResponse = Completer<String>();
+      command['id'] = _messageId++;
+      final String str = '[${json.encode(command)}]';
+      _process.stdin.writeln(str);
+      if (verbose) print('==> $str');
+    } else
+      throw 'Error: not connected to daemon.';
   }
 
   Future<List> _sendCommandWaitResponse(Map<String, dynamic> command) async {
-    if (_connected) {
-      _sendCommand(command);
-      final String response = await _waitForResponse.future;
-      return _processResponse(response, command);
-    }
-    throw 'Error: not connected to daemon.';
+    _sendCommand(command);
+    final String response = await _waitForResponse.future;
+    return _processResponse(response, command);
   }
 
   List _processResponse(String response, Map<String, dynamic> command) {
@@ -158,9 +178,14 @@ class DaemonClient {
 }
 
 /// Shutdown an android emulator.
-Future shutdownAndroidEmulator(String deviceId, String emulatorName) async {
+Future<String> shutdownAndroidEmulator(
+    DaemonClient daemonClient, String deviceId) async {
   cmd('adb', ['-s', deviceId, 'emu', 'kill'], '.', true);
-  await waitAndroidEmulatorShutdown(deviceId, emulatorName);
+//  await waitAndroidEmulatorShutdown(deviceId);
+  final device = await daemonClient.waitForEvent(Event.deviceRemoved);
+  if (device['id'] != deviceId)
+    throw 'Error: device id \'$deviceId\' not shutdown';
+  return device['id'];
 }
 
 /// Get attached ios devices with id and model.
@@ -172,7 +197,6 @@ List iosDevices() {
           .trim()
           .split('\n')
           .sublist(1);
-//  print('iosDeployDevices=$iosDeployDevices');
   if (iosDeployDevices[0] == noAttachedDevices) return [];
   return iosDeployDevices.map((line) {
     final matches = regExp.firstMatch(line);

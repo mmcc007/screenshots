@@ -21,8 +21,6 @@ void main() {
 
     // called by test
     final Config testConfig = Config('test/screenshots_test.yaml');
-    await testConfig.retrieveEnv();
-
-    expect(testConfig.screenshotsEnv, env);
+    expect(await testConfig.screenshotsEnv, env);
   });
 }

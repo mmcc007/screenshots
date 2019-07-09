@@ -6,18 +6,19 @@ The default counter app with internationalization support.
 
 This is an app that demonstrates `screenshots`.
 
-First confirm emulators/simulators are installed for the following devices:
+First confirm devices are attached or emulators/simulators are installed for the following devices:
 ````yaml
-# A list of devices to emulate
+# A list of devices to run tests on
 devices:
   ios:
-    - iPhone X
-    - iPad Pro (12.9-inch) (2nd generation)
+    iPhone XS Max:
+    iPad Pro (12.9-inch) (2nd generation):
+      frame: false
   android:
-    - Nexus 6P
+    Nexus 6P:
 ````
 
-The run with:
+Then run with:
 ````
 $ screenshots
 ````

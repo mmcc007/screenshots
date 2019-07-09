@@ -120,7 +120,7 @@ class ImageProcessor {
   /// Checks if frame is required for [deviceName].
   static bool isFrameRequired(
       Map config, DeviceType deviceType, String deviceName) {
-    final devices = config['devices'][enumToStr(deviceType)];
+    final devices = config['devices'][getStringFromEnum(deviceType)];
     final deviceKey =
         devices.keys.firstWhere((key) => key == deviceName, orElse: () => null);
     if (deviceKey == null) throw 'Error: device \'$deviceName\' not found';

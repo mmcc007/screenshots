@@ -58,7 +58,7 @@ main() {
     print('exit code:${await daemonClient.exitCode}');
   });
 
-  test('parse daemon response', () {
+  test('parse daemon result response', () {
     final expected =
         '[{"id":"Nexus_5X_API_27","name":"Nexus 5X"},{"id":"Nexus_6P_API_28","name":"Nexus 6P"},{"id":"Nexus_9_API_28","name":"Nexus 9"},{"id":"apple_ios_simulator","name":"iOS Simulator"}]';
     final response = '[{"id":0,"result":$expected}]';
@@ -66,6 +66,29 @@ main() {
     final match = respExp.firstMatch(response).group(1);
     print('match=${jsonDecode(match)}');
     expect(match, expected);
+  });
+
+  test('parse daemon event response', () {
+    final expected = [
+      {
+        'event': 'device.added',
+        'params': {
+          'id': 'emulator-5554',
+          'name': 'Android SDK built for x86',
+          'platform': 'android-x86',
+          'emulator': true
+        }
+      }
+    ];
+    final eventType = 'device.added';
+    final deviceId = 'emulator-5554';
+    final params =
+        '{"id":"$deviceId","name":"Android SDK built for x86","platform":"android-x86","emulator":true}';
+    final response = '[{"event":"$eventType","params":$params}]';
+    final responseInfo = jsonDecode(response);
+    expect(responseInfo, expected);
+    expect(responseInfo[0]['event'], eventType);
+    expect(responseInfo[0]['params']['id'], deviceId);
   });
 
   test('start daemon client', () async {
@@ -78,38 +101,14 @@ main() {
     expect(exitCode, 0);
   });
 
-  test('launch android emulator via daemon', () async {
+  test('launch android emulator via daemon and shutdown', () async {
+    final expected = 'emulator-5554';
     final emulatorId = 'Nexus_6P_API_28';
-    final name = 'Nexus 6P';
-    final deviceId = 'emulator-5554';
     final daemonClient = DaemonClient();
     await daemonClient.start;
-    print('starting $emulatorId...');
-    daemonClient.verbose = true;
-    await daemonClient.launchEmulator(emulatorId);
-    daemonClient.verbose = false;
-    print('$emulatorId started up');
-    expect(findAndroidDeviceId(emulatorId), deviceId);
-    print('emulator startup confirmed');
-
-    // shutdown
-    await shutdownAndroidEmulator(deviceId, name);
-  });
-
-  test('wait for android emulator to shutdown', () async {
-    final deviceId = 'emulator-5554';
-    final deviceName = 'my device';
-    await waitAndroidEmulatorShutdown(deviceId, deviceName);
-  });
-
-  test('launch ios simulator', () async {
-    final emulatorId = 'apple_ios_simulator';
-    final daemonClient = DaemonClient();
-//    daemonClient.verbose = true;
-    await daemonClient.start;
-    await daemonClient.launchEmulator(emulatorId);
-
-    // shutdown
+    final deviceId = await daemonClient.launchEmulator(emulatorId);
+    expect(deviceId, expected);
+    await shutdownAndroidEmulator(daemonClient, deviceId);
   });
 
   test('parse ios-deploy response', () {
@@ -158,18 +157,16 @@ main() {
 
   test('wait for start of android emulator', () async {
     final id = 'Nexus_6P_API_28';
-    final name = 'Nexus 6P';
-    final deviceId = 'emulator-5554';
     final daemonClient = DaemonClient();
     daemonClient.verbose = true;
     await daemonClient.start;
     daemonClient.verbose;
-    await daemonClient.launchEmulator(id);
+    final deviceId = await daemonClient.launchEmulator(id);
 
     expect(findAndroidDeviceId(id), deviceId);
 
     // shutdown
-    await shutdownAndroidEmulator(deviceId, name);
+    await shutdownAndroidEmulator(daemonClient, deviceId);
   });
 
   test('join devices', () {
@@ -178,7 +175,7 @@ main() {
     final configInfo = config.configInfo;
     final androidInfo = configInfo['devices']['android'];
     print('androidInfo=$androidInfo');
-    List deviceNames = getAllDevices(configInfo);
+    List deviceNames = getAllConfiguredDeviceNames(configInfo);
 //    final deviceNames = []..addAll(androidDeviceNames)??[]..addAll(iosDeviceNames);
     print('deviceNames=$deviceNames');
   });
