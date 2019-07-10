@@ -22,3 +22,6 @@ doc/api/
 # screenshots
 example/ios/fastlane
 example/android/fastlane
+
+# mac
+.DS_Store
