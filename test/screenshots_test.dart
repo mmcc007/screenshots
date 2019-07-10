@@ -564,4 +564,38 @@ devices:
       expect(regExp.hasMatch(line), true);
     });
   });
+
+  group('recording, comparison', () {
+    test('recording mode', () async {
+      final origDir = Directory.current;
+      Directory.current = 'example';
+      final configPath = 'screenshots.yaml';
+      await run.run(configPath, utils.getStringFromEnum(RunMode.recording));
+      final configInfo = Config(configPath: configPath).configInfo;
+      final recordingDir = configInfo['recording'];
+      expect(await utils.isRecorded(recordingDir), isTrue);
+      Directory.current = origDir;
+    }, timeout: Timeout(Duration(seconds: 180)));
+
+    test('compare images in directories', () async {
+      final comparisonDir = 'test/resources/comparison';
+      final recordingDir = 'test/resources/recording';
+      final deviceName = 'iPhone 1';
+
+      final imageProcessor = ImageProcessor(null, null);
+      await imageProcessor.compareImages(
+          deviceName, recordingDir, comparisonDir);
+    });
+
+    test('comparison mode', () async {
+      final origDir = Directory.current;
+      Directory.current = 'example';
+      final configPath = 'screenshots.yaml';
+      final configInfo = Config(configPath: configPath).configInfo;
+      final recordingDir = configInfo['recording'];
+      expect(await utils.isRecorded(recordingDir), isTrue);
+      await run.run(configPath, utils.getStringFromEnum(RunMode.comparison));
+      Directory.current = origDir;
+    }, timeout: Timeout(Duration(seconds: 180)));
+  });
 }

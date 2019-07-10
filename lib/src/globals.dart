@@ -6,3 +6,6 @@ const String kEnvFileName = 'env.json';
 
 /// Distinguish device OS.
 enum DeviceType { android, ios }
+
+/// Run mode
+enum RunMode { normal, recording, comparison }

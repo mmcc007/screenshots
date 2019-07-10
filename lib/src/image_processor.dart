@@ -1,6 +1,9 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:collection/collection.dart' as coll;
+import 'package:meta/meta.dart';
+
 import 'screens.dart';
 import 'fastlane.dart' as fastlane;
 import 'image_magick.dart' as im;
@@ -30,7 +33,8 @@ class ImageProcessor {
   /// If 'frame' in config file is true, screenshots are placed within image of device.
   ///
   /// After processing, screenshots are handed off for upload via fastlane.
-  void process(DeviceType deviceType, String deviceName, String locale) async {
+  void process(DeviceType deviceType, String deviceName, String locale,
+      RunMode runMode) async {
     final Map screenProps = _screens.screenProps(deviceName);
     if (screenProps == null) {
       print('Warning: \'$deviceName\' images will not be processed');
@@ -67,13 +71,46 @@ class ImageProcessor {
     // move to final destination for upload to stores via fastlane
     final srcDir = '${_config['staging']}/test';
     final androidDeviceType = fastlane.getAndroidDeviceType(screenProps);
-    final dstDir = fastlane.fastlaneDir(deviceType, locale, androidDeviceType);
+    String dstDir = fastlane.fastlaneDir(deviceType, locale, androidDeviceType);
+    runMode == RunMode.recording
+        ? dstDir = '${_config['recording']}/$dstDir'
+        : null;
     // prefix screenshots with name of device before moving
     // (useful for uploading to apple via fastlane)
     await utils.prefixFilesInDir(srcDir, '$deviceName-');
 
     print('Moving screenshots to $dstDir');
     utils.moveFiles(srcDir, dstDir);
+
+    if (runMode == RunMode.comparison) {
+      final recordingDir = '${_config['recording']}/$dstDir';
+      print(
+          'Running comparison with recorded screenshots in $recordingDir ...');
+      await compareImages(deviceName, recordingDir, dstDir);
+    }
+  }
+
+  @visibleForTesting
+  Future compareImages(
+      String deviceName, String recordingDir, String comparisonDir) async {
+    Function eq = const coll.ListEquality().equals;
+    final recordedImages = await Directory(recordingDir).listSync();
+    await Directory(comparisonDir)
+        .listSync()
+        .where((screenshot) => p.basename(screenshot.path).contains(deviceName))
+        .forEach((screenshot) {
+      final screenshotName = p.basename(screenshot.path);
+      final recordedImageEntity = recordedImages.firstWhere(
+          (image) => p.basename(image.path) == screenshotName,
+          orElse: () =>
+              throw 'Error: screenshot $screenshotName not found in $recordingDir');
+      // read images into list
+      final recordedImage = File(recordedImageEntity.path).readAsBytesSync();
+      final image = File(screenshot.path).readAsBytesSync();
+      !eq(image, recordedImage)
+          ? throw 'Error: ${screenshot.path} is not equal to ${recordedImageEntity.path}'
+          : null;
+    });
   }
 
   /// Overlay status bar over screenshot.
