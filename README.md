@@ -103,7 +103,7 @@ To capture screenshots in your tests:
        ````
     2. Create the config map at start of test  
        ````dart
-            final Map config = Config().config;
+            final Map config = Config().configInfo;
        ````  
     3. Throughout the test make calls to capture screenshots  
        ````dart
