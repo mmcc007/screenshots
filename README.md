@@ -101,9 +101,9 @@ To capture screenshots in your tests:
        ````dart
        import 'package:screenshots/screenshots.dart';
        ````
-    2. Create the config map at start of test  
+    2. Create the config at start of test  
        ````dart
-            final Map config = Config().config;
+            final config = Config().configInfo;
        ````  
     3. Throughout the test make calls to capture screenshots  
        ````dart
