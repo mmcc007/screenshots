@@ -86,11 +86,6 @@ Map diffMaps(Map orig, Map diff, {bool verbose = false}) {
   return diffs;
 }
 
-T getEnumFromString<T>(Iterable<T> values, String value) {
-  return values.firstWhere((type) => type.toString().split(".").last == value,
-      orElse: () => null);
-}
-
 ///// Wait for android emulator to stop.
 //Future<void> waitAndroidEmulatorShutdown(String deviceId) async {
 //  int timeout = 100;

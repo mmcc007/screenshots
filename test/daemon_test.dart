@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:path/path.dart';
 import 'package:screenshots/src/daemon_client.dart';
 import 'package:screenshots/src/fastlane.dart' as fastlane;
-import 'package:screenshots/src/image_processor.dart';
 import 'package:screenshots/src/resources.dart' as resources;
 import 'package:screenshots/src/run.dart' as run;
 import 'package:screenshots/src/screens.dart';
@@ -195,7 +194,6 @@ main() {
     await Directory(stagingDir + '/test').create(recursive: true);
     await resources.unpackScripts(stagingDir);
     await fastlane.clearFastlaneDirs(configInfo, screens);
-    final imageProcessor = ImageProcessor(screens, configInfo);
 
     final daemonClient = DaemonClient();
     await daemonClient.start;
@@ -207,7 +205,7 @@ main() {
     Directory.current = 'example';
 
     await run.runTestsOnAll(
-        daemonClient, devices, emulators, config, screens, imageProcessor);
+        daemonClient, devices, emulators, config, screens, 'normal');
     // allow other tests to continue
     Directory.current = origDir;
   }, timeout: Timeout(Duration(minutes: 4)));
