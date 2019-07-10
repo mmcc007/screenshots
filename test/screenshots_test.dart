@@ -7,7 +7,6 @@ import 'package:screenshots/src/daemon_client.dart';
 import 'package:screenshots/src/globals.dart';
 import 'package:screenshots/src/image_processor.dart';
 import 'package:screenshots/src/screens.dart';
-import 'package:screenshots/src/image_magick.dart' as im;
 import 'package:screenshots/src/resources.dart' as resources;
 import 'package:screenshots/src/run.dart' as run;
 import 'package:screenshots/src/utils.dart' as utils;
@@ -72,7 +71,7 @@ void main() {
       'screenshotPath': screenshotPath,
       'statusbarPath': statusbarPath,
     };
-    await im.imagemagick('overlay', options);
+    await im.convert('overlay', options);
   });
 
   test('unpack screen resource images', () async {
@@ -101,7 +100,7 @@ void main() {
       'screenshotPath': screenshotPath,
       'screenshotNavbarPath': screenshotNavbarPath,
     };
-    await im.imagemagick('append', options);
+    await im.convert('append', options);
   });
 
   test('frame screenshot', () async {
@@ -125,7 +124,7 @@ void main() {
       'screenshotPath': screenshotPath,
       'backgroundColor': ImageProcessor.kDefaultAndroidBackground,
     };
-    await im.imagemagick('frame', options);
+    await im.convert('frame', options);
   });
 
   test('parse json xcrun simctl list devices', () {
@@ -580,11 +579,17 @@ devices:
     test('compare images in directories', () async {
       final comparisonDir = 'test/resources/comparison';
       final recordingDir = 'test/resources/recording';
-      final deviceName = 'iPhone 1';
+      final deviceName = 'Nexus 6P';
 
       final imageProcessor = ImageProcessor(null, null);
-      await imageProcessor.compareImages(
+      final failedCompare = await imageProcessor.compareImages(
           deviceName, recordingDir, comparisonDir);
+      // show diffs
+      failedCompare.forEach((screenName, images) {
+        print('comparing $screenName');
+        expect(images['comparison'], images['recording']);
+      });
+//      expect(failedCompare, isEmpty);
     });
 
     test('comparison mode', () async {

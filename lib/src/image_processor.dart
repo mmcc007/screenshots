@@ -6,7 +6,6 @@ import 'package:meta/meta.dart';
 
 import 'screens.dart';
 import 'fastlane.dart' as fastlane;
-import 'image_magick.dart' as im;
 import 'resources.dart' as resources;
 import 'utils.dart' as utils;
 import 'package:path/path.dart' as p;
@@ -86,14 +85,18 @@ class ImageProcessor {
       final recordingDir = '${_config['recording']}/$dstDir';
       print(
           'Running comparison with recorded screenshots in $recordingDir ...');
-      await compareImages(deviceName, recordingDir, dstDir);
+      final failedCompare =
+          await compareImages(deviceName, recordingDir, dstDir);
+      if (failedCompare.isNotEmpty) throw 'Error: comparison failed.';
     }
   }
 
   @visibleForTesting
-  Future compareImages(
+  Future<Map> compareImages(
       String deviceName, String recordingDir, String comparisonDir) async {
+    Map failedCompare = {};
     Function eq = const coll.ListEquality().equals;
+    Function deepEq = const coll.DeepCollectionEquality().equals;
     final recordedImages = await Directory(recordingDir).listSync();
     await Directory(comparisonDir)
         .listSync()
@@ -107,10 +110,16 @@ class ImageProcessor {
       // read images into list
       final recordedImage = File(recordedImageEntity.path).readAsBytesSync();
       final image = File(screenshot.path).readAsBytesSync();
-      !eq(image, recordedImage)
-          ? throw 'Error: ${screenshot.path} is not equal to ${recordedImageEntity.path}'
-          : null;
+      if (!deepEq(image, recordedImage)) {
+        failedCompare[screenshotName] = {
+          'recording': recordedImage,
+          'comparison': image
+        };
+        print(
+            'Error: ${screenshot.path} is not equal to ${recordedImageEntity.path}');
+      }
     });
+    return failedCompare;
   }
 
   /// Overlay status bar over screenshot.
@@ -140,7 +149,7 @@ class ImageProcessor {
       'screenshotPath': screenshotPath,
       'statusbarPath': statusbarPath,
     };
-    await im.imagemagick('overlay', options);
+    await im.convert('overlay', options);
   }
 
   /// Append android navigation bar to screenshot.
@@ -151,7 +160,7 @@ class ImageProcessor {
       'screenshotPath': screenshotPath,
       'screenshotNavbarPath': screenshotNavbarPath,
     };
-    await im.imagemagick('append', options);
+    await im.convert('append', options);
   }
 
   /// Checks if frame is required for [deviceName].
@@ -198,6 +207,6 @@ class ImageProcessor {
       'screenshotPath': screenshotPath,
       'backgroundColor': backgroundColor,
     };
-    await im.imagemagick('frame', options);
+    await im.convert('frame', options);
   }
 }
