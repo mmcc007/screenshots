@@ -191,7 +191,7 @@ To change the devices to run your tests on, just change the list of devices in s
 
 Make sure each device you select has a supported screen and a
 corresponding attached device or installed emulator/simulator. To bypass
-this requirement use `frame: false` for each related device in your
+the supported screen requirement use `frame: false` for each related device in your
 screenshots.yaml.
 
 For each selected device:
