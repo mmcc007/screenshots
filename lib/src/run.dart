@@ -57,11 +57,17 @@ Future<void> run(
   await daemonClient.stop;
 
   print('\n\nScreen images are available in:');
-  print('  ios/fastlane/screenshots');
-  print('  android/fastlane/metadata/android');
-  print('for upload to both Apple and Google consoles.');
-  print('\nFor uploading and other automation options see:');
-  print('  https://pub.dartlang.org/packages/fledge');
+  if (runMode == RunMode.recording) {
+    final recordingDir = configInfo['recording'];
+    print('  $recordingDir/ios/fastlane/screenshots');
+    print('  $recordingDir/android/fastlane/metadata/android');
+  } else {
+    print('  ios/fastlane/screenshots');
+    print('  android/fastlane/metadata/android');
+    print('for upload to both Apple and Google consoles.');
+    print('\nFor uploading and other automation options see:');
+    print('  https://pub.dartlang.org/packages/fledge');
+  }
   print('\nscreenshots completed successfully.');
 }
 
