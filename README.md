@@ -169,6 +169,24 @@ Individual devices can be configured in `screenshots.yaml` by specifying per dev
 
 Note: images generated for those devices where framing is disabled are probably not suitable for upload, but can be used for local review.
 
+# Record/Compare Mode
+_Screenshots_ can be used to monitor any unexpected changes to the UI by comparing the new screenshots to previously recorded screenshots. Any differences will be highlighted in a 'diff' image for review.  
+
+To use this feature:
+1. Add the location of your recording directory to a `screenshots.yaml`
+    ```yaml
+    recording: /tmp/screenshots_record
+    ```
+1. Run a recording to capture your screenshots:
+    ```
+    screenshots -m recording
+    ```
+1. Run subsequent _Screenshots_ with:
+    ```
+    screenshots -m comparison
+    ```
+    _Screenshots_ will compare the new screenshots with the recorded screenshots and generate a 'diff' image for each screenshot that does not compare. The diff image highlights the differences in red.
+    
 # Integration with Fastlane
 Since _Screenshots_ is intended to be used with Fastlane, after _Screenshots_ completes, the images can be found in your project at:
 ````
