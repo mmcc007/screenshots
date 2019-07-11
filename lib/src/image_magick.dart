@@ -103,8 +103,6 @@ class ImageMagick {
 
   bool compare(String comparisonImage, String recordedImage) {
     final diffImage = getDiffName(comparisonImage);
-
-    bool doCompare = true;
     try {
       run.cmd(
           'compare',
@@ -112,9 +110,11 @@ class ImageMagick {
           '.',
           true);
     } catch (e) {
-      doCompare = false;
+      return false;
     }
-    return doCompare;
+    // delete no-diff diff
+    File(diffImage).deleteSync();
+    return true;
   }
 
   String getDiffName(String comparisonImage) {
