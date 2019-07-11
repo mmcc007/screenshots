@@ -163,3 +163,13 @@ Map diffMaps(Map orig, Map diff, {bool verbose = false}) {
 //  print(
 //      'locale changed during bootAnim change from $origBootAnimStatus to $bootAnimStatus');
 //}
+
+///// Clear directory [dirPath].
+///// Create directory if none exists.
+//void clearDirectory(String dirPath) {
+//  if (Directory(dirPath).existsSync()) {
+//    Directory(dirPath).deleteSync(recursive: true);
+//  } else {
+//    Directory(dirPath).createSync(recursive: true);
+//  }
+//}

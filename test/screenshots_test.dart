@@ -12,6 +12,8 @@ import 'package:screenshots/src/run.dart' as run;
 import 'package:screenshots/src/utils.dart' as utils;
 import 'package:test/test.dart';
 import 'package:yaml/yaml.dart';
+import 'package:screenshots/src/fastlane.dart' as fastlane;
+import 'package:path/path.dart' as p;
 
 import 'common.dart';
 
@@ -308,8 +310,6 @@ void main() {
     final files = ['image1.png', 'image2.png'];
     final suffix = 'png';
 
-    utils.clearDirectory(dirPath); // creates empty directory
-
     // create files
     files
         .forEach((fileName) async => await File('$dirPath/$fileName').create());
@@ -319,7 +319,7 @@ void main() {
         expect(await File('$dirPath/$fileName').exists(), true));
 
     // delete files with suffix
-    utils.clearFilesWithExt(dirPath, suffix);
+    fastlane.clearFilesWithExt(dirPath, suffix);
 
     // check deleted
     files.forEach((fileName) async =>
@@ -631,5 +631,10 @@ devices:
       await run.run(configPath, utils.getStringFromEnum(RunMode.comparison));
       Directory.current = origDir;
     }, timeout: Timeout(Duration(seconds: 180)));
+
+    test('cleanup diffs at start of normal run', () {
+      final fastlaneDir = 'test/resources/comparison';
+      im.deleteDiffs(fastlaneDir);
+    });
   });
 }
