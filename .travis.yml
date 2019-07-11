@@ -90,7 +90,7 @@ jobs:
       - pub global activate --source path .
 
       script:
-      - cd example; screenshots
+      - cd example; screenshots -c screenshots_CI.yaml
       # copy artifacts to cache for later deploy
       - tar cvzf $HOME/screenshots/screenshots.tar.gz ios/fastlane/screenshots android/fastlane/metadata/android/*/images
       - zip -r $HOME/screenshots/screenshots.zip ios/fastlane/screenshots android/fastlane/metadata/android/*/images
