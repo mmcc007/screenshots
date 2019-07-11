@@ -4,29 +4,18 @@ import 'package:screenshots/src/utils.dart' as utils;
 import 'package:test/test.dart';
 
 void main() {
-  // issue #25
-  test('test parsing of iOS device info returned by xcrun', () {
+  test('issue #25: test parsing of iOS device info returned by xcrun', () {
+    final expected = '''
+    {
+      "availability": "(available)",
+      "state": "Shutdown",
+      "isAvailable": true,
+      "name": "iPhone X",
+      "udid": "5A15DEB4-24BB-49F4-BD9A-FAF0B761FB27",
+      "availabilityError": ""
+    }
+    ''';
     final deviceName = 'iPhone X';
-    print(
-        'getIosDevice=${utils.getHighestIosSimulator(utils.getIosSimulators(), deviceName)}');
-
-//    final deviceInfoRaw = '''
-//{
-//  "devices" : {
-//    "com.apple.CoreSimulator.SimRuntime.tvOS-12-0" : [
-//      {
-//        "availability" : "(unavailable, runtime profile not found)",
-//        "state" : "Shutdown",
-//        "isAvailable" : false,
-//        "name" : "iPhone X",
-//        "udid" : "9FF60BB2-D95F-4CC9-9333-7F0B51572AF3",
-//        "availabilityError" : "runtime profile not found"
-//      }
-//    ]
-//  }
-//}
-//  ''';
-
     final deviceInfoRaw = '''
 {
   "devices" : {
@@ -417,14 +406,7 @@ void main() {
         "udid" : "02802094-72CA-4F27-9214-0E0E9118F0C1",
         "availabilityError" : ""
       },
-      {
-        "availability" : "(available)",
-        "state" : "Shutdown",
-        "isAvailable" : true,
-        "name" : "iPhone X",
-        "udid" : "5A15DEB4-24BB-49F4-BD9A-FAF0B761FB27",
-        "availabilityError" : ""
-      },
+      $expected,
       {
         "availability" : "(available)",
         "state" : "Shutdown",
@@ -835,18 +817,57 @@ void main() {
   }
 }
 ''';
+    print(
+        'getIosDevice=${utils.getHighestIosSimulator(utils.getIosSimulators(), deviceName)}');
     final deviceInfo = jsonDecode(deviceInfoRaw)['devices'];
     final iosDevices = utils.transformIosSimulators(deviceInfo);
 //    final iosDevice = getHighestIosDevice(iosDevices, deviceName);
 //    expect(
 //        () => getHighestIosDevice(iosDevices, deviceName), throwsA(anything));
-    expect(utils.getHighestIosSimulator(iosDevices, deviceName), jsonDecode('''{
-            "availability": "(available)",
-            "state": "Shutdown",
-            "isAvailable": true,
-            "name": "iPhone X",
-            "udid": "5A15DEB4-24BB-49F4-BD9A-FAF0B761FB27",
-            "availabilityError": ""
-          }'''));
+    expect(utils.getHighestIosSimulator(iosDevices, deviceName),
+        jsonDecode(expected));
+  });
+
+  test('issue #73: parse without availability', () {
+    final expected = '''
+      {
+        "state" : "Shutdown",
+        "isAvailable" : true,
+        "name" : "iPhone Xs Max",
+        "udid" : "3AD11D72-B3FA-4E4C-94B3-E4E51C67250A"
+      }
+    ''';
+    final deviceName = 'iPhone Xs Max';
+    final deviceInfoRaw = '''
+{
+  "devices" : {
+    "com.apple.CoreSimulator.SimRuntime.iOS-12-0" : [
+
+    ],
+    "com.apple.CoreSimulator.SimRuntime.tvOS-12-2" : [
+
+    ],
+    "com.apple.CoreSimulator.SimRuntime.iOS-12-2" : [
+      $expected
+    ],
+    "com.apple.CoreSimulator.SimRuntime.watchOS-5-2" : [
+
+    ],
+    "com.apple.CoreSimulator.SimRuntime.iOS-9-3" : [
+
+    ],
+    "com.apple.CoreSimulator.SimRuntime.iOS-12-1" : [
+
+    ],
+    "com.apple.CoreSimulator.SimRuntime.iOS-9-0" : [
+
+    ]
+  }
+}    
+    ''';
+    final deviceInfo = jsonDecode(deviceInfoRaw)['devices'];
+    final iosDevices = utils.transformIosSimulators(deviceInfo);
+    expect(utils.getHighestIosSimulator(iosDevices, deviceName),
+        jsonDecode(expected));
   });
 }
