@@ -20,7 +20,9 @@ import 'utils.dart' as utils;
 /// 4. Move processed screenshots to fastlane destination for upload to stores.
 /// 5. If not a real device, stop emulator/simulator.
 Future<void> run(
-    [String configPath = kConfigFileName, String runMode = 'normal']) async {
+    [String configPath = kConfigFileName, String _runMode = 'normal']) async {
+  final runMode = utils.getRunModeEnum(_runMode);
+
   final screens = Screens();
   await screens.init();
 
@@ -45,7 +47,7 @@ Future<void> run(
   final stagingDir = configInfo['staging'];
   await Directory(stagingDir + '/test').create(recursive: true);
   await resources.unpackScripts(stagingDir);
-  await fastlane.clearFastlaneDirs(configInfo, screens);
+  await fastlane.clearFastlaneDirs(configInfo, screens, runMode);
 
   // run integration tests in each real device (or emulator/simulator) for
   // each locale and process screenshots
@@ -71,14 +73,14 @@ Future<void> run(
 /// Assumes the integration tests capture the screen shots into a known directory using
 /// provided [capture_screen.screenshot()].
 Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
-    Config config, Screens screens, String _runMode) async {
+    Config config, Screens screens, RunMode runMode) async {
   final configInfo = config.configInfo;
   final locales = configInfo['locales'];
   final stagingDir = configInfo['staging'];
   final testPaths = configInfo['tests'];
   final configDeviceNames = utils.getAllConfiguredDeviceNames(configInfo);
   final imageProcessor = ImageProcessor(screens, configInfo);
-  final runMode = utils.getRunModeEnum(_runMode);
+
   if (runMode != RunMode.normal) {
     final recordingDir = configInfo['recording'];
     recordingDir == null
