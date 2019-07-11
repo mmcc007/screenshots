@@ -7,31 +7,6 @@ import 'package:process/process.dart';
 import 'globals.dart';
 import 'run.dart' as run;
 
-/// Clear directory [dirPath].
-/// Create directory if none exists.
-void clearDirectory(String dirPath) {
-  if (Directory(dirPath).existsSync()) {
-    Directory(dirPath).deleteSync(recursive: true);
-  } else {
-    Directory(dirPath).createSync(recursive: true);
-  }
-}
-
-/// Clear files in a directory [dirPath] ending in [ext]
-/// Create directory if none exists.
-void clearFilesWithExt(String dirPath, String ext) {
-  // delete files with ext
-  if (Directory(dirPath).existsSync()) {
-    Directory(dirPath).listSync().toList().forEach((e) {
-      if (p.extension(e.path) == ext) {
-        File(e.path).delete();
-      }
-    });
-  } else {
-    Directory(dirPath).createSync(recursive: true);
-  }
-}
-
 /// Move files from [srcDir] to [dstDir].
 ///
 /// If dstDir does not exist, it is created.
