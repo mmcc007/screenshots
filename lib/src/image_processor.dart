@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:collection/collection.dart' as coll;
 import 'package:meta/meta.dart';
 
 import 'screens.dart';
@@ -20,7 +19,9 @@ class ImageProcessor {
 
   final Screens _screens;
   final Map _config;
-  ImageProcessor(this._screens, this._config);
+  ImageProcessor(Screens screens, Map config)
+      : _screens = screens,
+        _config = config;
 
   /// Process screenshots.
   ///
@@ -32,7 +33,7 @@ class ImageProcessor {
   /// If 'frame' in config file is true, screenshots are placed within image of device.
   ///
   /// After processing, screenshots are handed off for upload via fastlane.
-  void process(DeviceType deviceType, String deviceName, String locale,
+  Future<void> process(DeviceType deviceType, String deviceName, String locale,
       RunMode runMode) async {
     final Map screenProps = _screens.screenProps(deviceName);
     if (screenProps == null) {
@@ -87,36 +88,47 @@ class ImageProcessor {
           'Running comparison with recorded screenshots in $recordingDir ...');
       final failedCompare =
           await compareImages(deviceName, recordingDir, dstDir);
-      if (failedCompare.isNotEmpty) throw 'Error: comparison failed.';
+      if (failedCompare.isNotEmpty) {
+        showFailedCompare(failedCompare);
+        throw 'Error: comparison failed.';
+      }
     }
+  }
+
+  @visibleForTesting
+  void showFailedCompare(Map failedCompare) {
+    stderr.writeln('Error: comparison failed:');
+
+    failedCompare.forEach((screenshotName, result) {
+      stderr.writeln(
+          'Error: ${result['comparison']} is not equal to ${result['recording']}');
+      stderr.writeln('       Differences can be found in ${result['diff']}');
+    });
   }
 
   @visibleForTesting
   Future<Map> compareImages(
       String deviceName, String recordingDir, String comparisonDir) async {
     Map failedCompare = {};
-    Function eq = const coll.ListEquality().equals;
-    Function deepEq = const coll.DeepCollectionEquality().equals;
     final recordedImages = await Directory(recordingDir).listSync();
     await Directory(comparisonDir)
         .listSync()
-        .where((screenshot) => p.basename(screenshot.path).contains(deviceName))
+        .where((screenshot) =>
+            p.basename(screenshot.path).contains(deviceName) &&
+            !p.basename(screenshot.path).contains(im.diffSuffix))
         .forEach((screenshot) {
       final screenshotName = p.basename(screenshot.path);
       final recordedImageEntity = recordedImages.firstWhere(
           (image) => p.basename(image.path) == screenshotName,
           orElse: () =>
               throw 'Error: screenshot $screenshotName not found in $recordingDir');
-      // read images into list
-      final recordedImage = File(recordedImageEntity.path).readAsBytesSync();
-      final image = File(screenshot.path).readAsBytesSync();
-      if (!deepEq(image, recordedImage)) {
+
+      if (!im.compare(screenshot.path, recordedImageEntity.path)) {
         failedCompare[screenshotName] = {
-          'recording': recordedImage,
-          'comparison': image
+          'recording': recordedImageEntity.path,
+          'comparison': screenshot.path,
+          'diff': im.getDiffName(screenshot.path)
         };
-        print(
-            'Error: ${screenshot.path} is not equal to ${recordedImageEntity.path}');
       }
     });
     return failedCompare;

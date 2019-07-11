@@ -1,23 +1,24 @@
 import 'dart:async';
 
 import 'run.dart' as run;
+import 'package:path/path.dart' as p;
 
 class ImageMagick {
-  static const kThreshold = 0.76;
+  static const _kThreshold = 0.76;
+  final diffSuffix = '-diff';
 //const kThreshold = 0.5;
 
+  // singleton
   static final ImageMagick _imageMagick = ImageMagick._internal();
-
   factory ImageMagick() {
     return _imageMagick;
   }
-
   ImageMagick._internal();
 
   ///
   /// ImageMagick calls.
   ///
-   Future convert(String command, Map options) async {
+  Future convert(String command, Map options) async {
     List<String> cmdOptions;
     switch (command) {
       case 'overlay':
@@ -77,8 +78,8 @@ class ImageMagick {
   }
 
   /// Checks if brightness of section of image exceeds a threshold
-   bool thresholdExceeded(String imagePath, String crop,
-      [double threshold = kThreshold]) {
+  bool thresholdExceeded(String imagePath, String crop,
+      [double threshold = _kThreshold]) {
     //convert logo.png -crop $crop_size$offset +repage -colorspace gray -format "%[fx:(mean>$threshold)?1:0]" info:
     final result = run.cmd(
         'convert',
@@ -97,5 +98,30 @@ class ImageMagick {
         true);
 //  print('result=$result');
     return result.contains('1'); // looks like there is some junk in string
+  }
+
+  bool compare(String comparisonImage, String recordedImage) {
+    final diffImage = getDiffName(comparisonImage);
+
+    bool doCompare = true;
+    try {
+      run.cmd(
+          'compare',
+          ['-metric', 'mae', recordedImage, comparisonImage, diffImage],
+          '.',
+          true);
+    } catch (e) {
+      doCompare = false;
+    }
+    return doCompare;
+  }
+
+  String getDiffName(String comparisonImage) {
+    final diffImage = p.dirname(comparisonImage) +
+        '/' +
+        p.basenameWithoutExtension(comparisonImage) +
+        diffSuffix +
+        p.extension(comparisonImage);
+    return diffImage;
   }
 }

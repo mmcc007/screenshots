@@ -319,7 +319,7 @@ void main() {
         expect(await File('$dirPath/$fileName').exists(), true));
 
     // delete files with suffix
-    utils.clearFilesWithSuffix(dirPath, suffix);
+    utils.clearFilesWithExt(dirPath, suffix);
 
     // check deleted
     files.forEach((fileName) async =>
@@ -576,20 +576,49 @@ devices:
       Directory.current = origDir;
     }, timeout: Timeout(Duration(seconds: 180)));
 
+    test('imagemagick compare', () {
+      final recordedImage0 = 'test/resources/recording/Nexus 6P-0.png';
+      final comparisonImage0 = 'test/resources/comparison/Nexus 6P-0.png';
+      final comparisonImage1 = 'test/resources/comparison/Nexus 6P-1.png';
+      final goodPair = {
+        'recorded': recordedImage0,
+        'comparison': comparisonImage0
+      };
+      final badPair = {
+        'recorded': recordedImage0,
+        'comparison': comparisonImage1
+      };
+      final pairs = {'good': goodPair, 'bad': badPair};
+
+      pairs.forEach((behave, pair) {
+        final recordedImage = pair['recorded'];
+        final comparisonImage = pair['comparison'];
+        bool doCompare = im.compare(comparisonImage, recordedImage);
+        behave == 'good' ? expect(doCompare, true) : expect(doCompare, false);
+        File(im.getDiffName(comparisonImage)).deleteSync();
+      });
+    });
+
     test('compare images in directories', () async {
       final comparisonDir = 'test/resources/comparison';
       final recordingDir = 'test/resources/recording';
       final deviceName = 'Nexus 6P';
+      final expected = {
+        'Nexus 6P-1.png': {
+          'recording': 'test/resources/recording/Nexus 6P-1.png',
+          'comparison': 'test/resources/comparison/Nexus 6P-1.png',
+          'diff': 'test/resources/comparison/Nexus 6P-1-diff.png'
+        }
+      };
 
       final imageProcessor = ImageProcessor(null, null);
       final failedCompare = await imageProcessor.compareImages(
           deviceName, recordingDir, comparisonDir);
+      expect(failedCompare, expected);
       // show diffs
-      failedCompare.forEach((screenName, images) {
-        print('comparing $screenName');
-        expect(images['comparison'], images['recording']);
-      });
-//      expect(failedCompare, isEmpty);
+      if (failedCompare.isNotEmpty) {
+        imageProcessor.showFailedCompare(failedCompare);
+      }
     });
 
     test('comparison mode', () async {
