@@ -118,12 +118,12 @@ class ImageMagick {
   }
 
   String getDiffName(String comparisonImage) {
-    final diffImage = p.dirname(comparisonImage) +
+    final diffName = p.dirname(comparisonImage) +
         '/' +
         p.basenameWithoutExtension(comparisonImage) +
         diffSuffix +
         p.extension(comparisonImage);
-    return diffImage;
+    return diffName;
   }
 
   void deleteDiffs(String dirPath) {
