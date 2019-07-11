@@ -13,4 +13,6 @@ enum DeviceType { android, ios }
 enum RunMode { normal, recording, comparison }
 
 // singleton
-ImageMagick get im  => ImageMagick();
+ImageMagick get im => ImageMagick();
+
+const kImageExtension = 'png';

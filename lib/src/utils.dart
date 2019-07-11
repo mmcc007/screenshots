@@ -17,13 +17,13 @@ void clearDirectory(String dirPath) {
   }
 }
 
-/// Clear files in a directory [dirPath] ending in [suffix]
+/// Clear files in a directory [dirPath] ending in [ext]
 /// Create directory if none exists.
-void clearFilesWithSuffix(String dirPath, String suffix) {
-  // delete files with suffix
+void clearFilesWithExt(String dirPath, String ext) {
+  // delete files with ext
   if (Directory(dirPath).existsSync()) {
     Directory(dirPath).listSync().toList().forEach((e) {
-      if (p.extension(e.path) == suffix) {
+      if (p.extension(e.path) == ext) {
         File(e.path).delete();
       }
     });

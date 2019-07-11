@@ -28,18 +28,16 @@ String fastlaneDir(
 /// Clear image destination.
 Future _clearFastlaneDir(
     Screens screens, deviceName, locale, DeviceType deviceType) async {
-  const kImageSuffix = 'png';
-
   final Map screenProps = screens.screenProps(deviceName);
   String androidDeviceType = getAndroidDeviceType(screenProps);
 
   final dirPath = fastlaneDir(deviceType, locale, androidDeviceType);
 
   print('Clearing images in $dirPath for \'$deviceName\'...');
-  // only delete images ending with .png
+  // only delete images ending with .kImageExtension
   // for compatability with FrameIt
   // (see https://github.com/mmcc007/screenshots/issues/61)
-  utils.clearFilesWithSuffix(dirPath, kImageSuffix);
+  utils.clearFilesWithExt(dirPath, kImageExtension);
 }
 
 String getAndroidDeviceType(Map screenProps) {
