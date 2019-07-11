@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'run.dart' as run;
 import 'package:path/path.dart' as p;
@@ -123,5 +124,13 @@ class ImageMagick {
         diffSuffix +
         p.extension(comparisonImage);
     return diffImage;
+  }
+
+  void deleteDiffs(String dirPath) {
+    Directory(dirPath)
+        .listSync()
+        .where((fileSysEntity) =>
+            p.basename(fileSysEntity.path).contains(diffSuffix))
+        .forEach((diffImage) => File(diffImage.path).deleteSync());
   }
 }
