@@ -70,8 +70,8 @@ class ImageProcessor {
 
     // move to final destination for upload to stores via fastlane
     final srcDir = '${_config['staging']}/test';
-    final androidDeviceType = fastlane.getAndroidDeviceType(screenProps);
-    String dstDir = fastlane.fastlaneDir(deviceType, locale, androidDeviceType);
+    final androidModelType = fastlane.getAndroidModelType(screenProps);
+    String dstDir = fastlane.getDirPath(deviceType, locale, androidModelType);
     runMode == RunMode.recording
         ? dstDir = '${_config['recording']}/$dstDir'
         : null;
