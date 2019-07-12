@@ -96,10 +96,10 @@ Map transformIosSimulators(Map simsInfo) {
   Map simsInfoTransformed = {};
 
   simsInfo.forEach((iOSName, sims) {
-    //    print('iOSVersionName=$iOSVersionName');
     // note: 'isAvailable' field does not appear consistently
-    //       so using 'availability' instead
-    isSimAvailable(sim) => sim['availability'] == '(available)';
+    //       so using 'availability' as well
+    isSimAvailable(sim) =>
+        sim['availability'] == '(available)' || sim['isAvailable'] == true;
     for (final sim in sims) {
       // skip if simulator unavailable
       if (!isSimAvailable(sim)) continue;
