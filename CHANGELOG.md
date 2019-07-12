@@ -1,3 +1,6 @@
+## 1.0.2
+- Fixed bug with parsing ios simulator info #73
+
 ## 1.0.1
 - Fixed pedantic lint errors
 
