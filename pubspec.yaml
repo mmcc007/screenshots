@@ -1,6 +1,6 @@
 name: screenshots
 description: Auto-generation of screenshots for Apple and Play Stores using emulators and simulators with support for locales. Compatible with fastlane for upload to both stores.
-version: 1.0.2
+version: 1.1.0
 homepage: https://github.com/mmcc007/screenshots
 author: Maurice McCabe <mmcc007@gmail.com>
 

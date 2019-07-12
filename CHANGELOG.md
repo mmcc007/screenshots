@@ -1,3 +1,6 @@
+## 1.1.0
+- Added record/compare feature to compare screenshots with previously recorded screenshots during a run. #65
+
 ## 1.0.2
 - Fixed bug with parsing ios simulator info #73
 
