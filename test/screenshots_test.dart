@@ -563,5 +563,53 @@ devices:
       expect(regExp.stringMatch(line), line);
       expect(regExp.hasMatch(line), true);
     });
+
+    group('manage device orientation', () {
+      test('find ios simulator orientation', () async {
+        final udId = '03D4FC12-3927-4C8B-A226-17DE34AE9C18';
+        final env = Platform.environment;
+        final preferencesDir =
+            '${env['HOME']}/Library/Developer/CoreSimulator/Devices/$udId/data/Library/Preferences';
+        await Directory(preferencesDir).listSync().forEach((fsEntity) {
+          // print contents
+          final filePath = fsEntity.path;
+          print('filePath=$filePath');
+          try {
+            final contents = run.cmd('plutil',
+                ['-convert', 'xml1', '-r', '-o', '-', filePath], '.', true);
+            print('contents=$contents');
+          } catch (e) {
+            print('error: $e');
+          }
+        });
+      });
+
+      test('set android emulator orientation', () async {
+        final emulatorId = 'Nexus_6P_API_28';
+        final daemonClient = DaemonClient();
+        await daemonClient.start;
+        final deviceId = await daemonClient.launchEmulator(emulatorId);
+        // change orientation to landscape
+        final landscape = '1';
+        final portrait = '0';
+        final changeOrientation = (orientation) async {
+          run.cmd('adb', [
+            '-s',
+            deviceId,
+            'shell',
+            'settings',
+            'put',
+            'system',
+            'user_rotation',
+            orientation
+          ]);
+          await Future.delayed(Duration(milliseconds: 5000));
+        };
+        await changeOrientation(landscape);
+        await changeOrientation(portrait);
+        expect(await run.shutdownAndroidEmulator(daemonClient, deviceId),
+            deviceId);
+      });
+    });
   });
 }
