@@ -10,6 +10,7 @@ void main(List<String> arguments) async {
   ArgResults argResults;
 
   final configArg = 'config';
+  final modeArg = 'mode';
   final helpArg = 'help';
   final ArgParser argParser = ArgParser(allowTrailingOptions: false)
     ..addOption(configArg,
@@ -17,8 +18,13 @@ void main(List<String> arguments) async {
         defaultsTo: 'screenshots.yaml',
         help: 'Path to config file.',
         valueHelp: 'screenshots.yaml')
-    ..addFlag(helpArg,
-        help: 'Display this help information.', negatable: false);
+    ..addFlag(helpArg, help: 'Display this help information.', negatable: false)
+    ..addOption(modeArg,
+        abbr: 'm',
+        defaultsTo: 'normal',
+        help:
+            'If mode is recording, screenshots will be saved for later comparison.',
+        allowed: ['normal', 'recording', 'comparison']);
   try {
     argResults = argParser.parse(arguments);
   } on ArgParserException catch (e) {
@@ -76,7 +82,7 @@ void main(List<String> arguments) async {
     _handleError(argParser, "File not found: ${argResults[configArg]}");
   }
 
-  await run(argResults[configArg]);
+  await run(argResults[configArg], argResults[modeArg]);
 }
 
 void _handleError(ArgParser argParser, String msg) {

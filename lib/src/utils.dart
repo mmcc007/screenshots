@@ -4,32 +4,8 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 import 'package:process/process.dart';
+import 'globals.dart';
 import 'run.dart' as run;
-
-/// Clear directory [dirPath].
-/// Create directory if none exists.
-void clearDirectory(String dirPath) {
-  if (Directory(dirPath).existsSync()) {
-    Directory(dirPath).deleteSync(recursive: true);
-  } else {
-    Directory(dirPath).createSync(recursive: true);
-  }
-}
-
-/// Clear files in a directory [dirPath] ending in [suffix]
-/// Create directory if none exists.
-void clearFilesWithSuffix(String dirPath, String suffix) {
-  // delete files with suffix
-  if (Directory(dirPath).existsSync()) {
-    Directory(dirPath).listSync().toList().forEach((e) {
-      if (p.extension(e.path) == suffix) {
-        File(e.path).delete();
-      }
-    });
-  } else {
-    Directory(dirPath).createSync(recursive: true);
-  }
-}
 
 /// Move files from [srcDir] to [dstDir].
 ///
@@ -184,6 +160,12 @@ Future prefixFilesInDir(String dirPath, String prefix) async {
 /// Converts [enum] value to [String].
 String getStringFromEnum(dynamic _enum) => _enum.toString().split('.').last;
 
+/// Converts [String] to [enum].
+T getEnumFromString<T>(List<T> values, String value) {
+  return values.firstWhere((type) => getStringFromEnum(type) == value,
+      orElse: () => null);
+}
+
 /// Returns locale of currently attached android device.
 String androidDeviceLocale(String deviceId) {
   final deviceLocale = run
@@ -312,3 +294,10 @@ Map findEmulator(List emulators, String emulatorName) {
   return emulators.firstWhere((emulator) => emulator['name'] == emulatorName,
       orElse: () => null);
 }
+
+RunMode getRunModeEnum(String runMode) {
+  return getEnumFromString<RunMode>(RunMode.values, runMode);
+}
+
+Future<bool> isRecorded(recordDir) async =>
+    !(await Directory(recordDir).list().isEmpty);

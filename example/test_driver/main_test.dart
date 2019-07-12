@@ -11,7 +11,7 @@ import 'package:test/test.dart';
 void main() {
   group('end-to-end test', () {
     FlutterDriver driver;
-    final Map config = Config().configInfo;
+    final config = Config().configInfo;
 
     setUpAll(() async {
       // Connect to a running Flutter application instance.

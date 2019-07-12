@@ -7,12 +7,13 @@ import 'package:screenshots/src/daemon_client.dart';
 import 'package:screenshots/src/globals.dart';
 import 'package:screenshots/src/image_processor.dart';
 import 'package:screenshots/src/screens.dart';
-import 'package:screenshots/src/image_magick.dart' as im;
 import 'package:screenshots/src/resources.dart' as resources;
 import 'package:screenshots/src/run.dart' as run;
 import 'package:screenshots/src/utils.dart' as utils;
 import 'package:test/test.dart';
 import 'package:yaml/yaml.dart';
+import 'package:screenshots/src/fastlane.dart' as fastlane;
+import 'package:path/path.dart' as p;
 
 import 'common.dart';
 
@@ -72,7 +73,7 @@ void main() {
       'screenshotPath': screenshotPath,
       'statusbarPath': statusbarPath,
     };
-    await im.imagemagick('overlay', options);
+    await im.convert('overlay', options);
   });
 
   test('unpack screen resource images', () async {
@@ -101,7 +102,7 @@ void main() {
       'screenshotPath': screenshotPath,
       'screenshotNavbarPath': screenshotNavbarPath,
     };
-    await im.imagemagick('append', options);
+    await im.convert('append', options);
   });
 
   test('frame screenshot', () async {
@@ -125,7 +126,7 @@ void main() {
       'screenshotPath': screenshotPath,
       'backgroundColor': ImageProcessor.kDefaultAndroidBackground,
     };
-    await im.imagemagick('frame', options);
+    await im.convert('frame', options);
   });
 
   test('parse json xcrun simctl list devices', () {
@@ -309,8 +310,6 @@ void main() {
     final files = ['image1.png', 'image2.png'];
     final suffix = 'png';
 
-    utils.clearDirectory(dirPath); // creates empty directory
-
     // create files
     files
         .forEach((fileName) async => await File('$dirPath/$fileName').create());
@@ -320,7 +319,7 @@ void main() {
         expect(await File('$dirPath/$fileName').exists(), true));
 
     // delete files with suffix
-    utils.clearFilesWithSuffix(dirPath, suffix);
+    fastlane.clearFilesWithExt(dirPath, suffix);
 
     // check deleted
     files.forEach((fileName) async =>
@@ -562,6 +561,80 @@ devices:
           'ContactsProvider: Locale has changed from .* to \\[${locale.replaceFirst('-', '_')}\\]');
       expect(regExp.stringMatch(line), line);
       expect(regExp.hasMatch(line), true);
+    });
+  });
+
+  group('recording, comparison', () {
+    test('recording mode', () async {
+      final origDir = Directory.current;
+      Directory.current = 'example';
+      final configPath = 'screenshots.yaml';
+      await run.run(configPath, utils.getStringFromEnum(RunMode.recording));
+      final configInfo = Config(configPath: configPath).configInfo;
+      final recordingDir = configInfo['recording'];
+      expect(await utils.isRecorded(recordingDir), isTrue);
+      Directory.current = origDir;
+    }, timeout: Timeout(Duration(seconds: 180)));
+
+    test('imagemagick compare', () {
+      final recordedImage0 = 'test/resources/recording/Nexus 6P-0.png';
+      final comparisonImage0 = 'test/resources/comparison/Nexus 6P-0.png';
+      final comparisonImage1 = 'test/resources/comparison/Nexus 6P-1.png';
+      final goodPair = {
+        'recorded': recordedImage0,
+        'comparison': comparisonImage0
+      };
+      final badPair = {
+        'recorded': recordedImage0,
+        'comparison': comparisonImage1
+      };
+      final pairs = {'good': goodPair, 'bad': badPair};
+
+      pairs.forEach((behave, pair) {
+        final recordedImage = pair['recorded'];
+        final comparisonImage = pair['comparison'];
+        bool doCompare = im.compare(comparisonImage, recordedImage);
+        behave == 'good' ? expect(doCompare, true) : expect(doCompare, false);
+        File(im.getDiffName(comparisonImage)).deleteSync();
+      });
+    });
+
+    test('compare images in directories', () async {
+      final comparisonDir = 'test/resources/comparison';
+      final recordingDir = 'test/resources/recording';
+      final deviceName = 'Nexus 6P';
+      final expected = {
+        'Nexus 6P-1.png': {
+          'recording': 'test/resources/recording/Nexus 6P-1.png',
+          'comparison': 'test/resources/comparison/Nexus 6P-1.png',
+          'diff': 'test/resources/comparison/Nexus 6P-1-diff.png'
+        }
+      };
+
+      final imageProcessor = ImageProcessor(null, null);
+      final failedCompare = await imageProcessor.compareImages(
+          deviceName, recordingDir, comparisonDir);
+      expect(failedCompare, expected);
+      // show diffs
+      if (failedCompare.isNotEmpty) {
+        imageProcessor.showFailedCompare(failedCompare);
+      }
+    });
+
+    test('comparison mode', () async {
+      final origDir = Directory.current;
+      Directory.current = 'example';
+      final configPath = 'screenshots.yaml';
+      final configInfo = Config(configPath: configPath).configInfo;
+      final recordingDir = configInfo['recording'];
+      expect(await utils.isRecorded(recordingDir), isTrue);
+      await run.run(configPath, utils.getStringFromEnum(RunMode.comparison));
+      Directory.current = origDir;
+    }, timeout: Timeout(Duration(seconds: 180)));
+
+    test('cleanup diffs at start of normal run', () {
+      final fastlaneDir = 'test/resources/comparison';
+      im.deleteDiffs(fastlaneDir);
     });
   });
 }

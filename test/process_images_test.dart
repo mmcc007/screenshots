@@ -1,5 +1,5 @@
 import 'package:screenshots/src/config.dart';
-import 'package:screenshots/src/image_magick.dart' as im;
+import 'package:screenshots/src/globals.dart';
 import 'package:screenshots/src/image_processor.dart';
 import 'package:screenshots/src/resources.dart' as resources;
 import 'package:screenshots/src/screens.dart';
@@ -36,7 +36,7 @@ main() {
         'statusbarPath': statusbarPath,
       };
 //      print('options=$options');
-      await im.imagemagick('overlay', options);
+      await im.convert('overlay', options);
 
       final framePath = appConfig['staging'] + '/' + screenResources['frame'];
       final size = screen['size'];
@@ -51,7 +51,7 @@ main() {
         'backgroundColor': ImageProcessor.kDefaultAndroidBackground,
       };
 //      print('options=$options');
-      await im.imagemagick('frame', options);
+      await im.convert('frame', options);
     }
   });
 }

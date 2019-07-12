@@ -86,11 +86,6 @@ Map diffMaps(Map orig, Map diff, {bool verbose = false}) {
   return diffs;
 }
 
-T getEnumFromString<T>(Iterable<T> values, String value) {
-  return values.firstWhere((type) => type.toString().split(".").last == value,
-      orElse: () => null);
-}
-
 ///// Wait for android emulator to stop.
 //Future<void> waitAndroidEmulatorShutdown(String deviceId) async {
 //  int timeout = 100;
@@ -167,4 +162,14 @@ T getEnumFromString<T>(Iterable<T> values, String value) {
 //  propsPoller.cancel();
 //  print(
 //      'locale changed during bootAnim change from $origBootAnimStatus to $bootAnimStatus');
+//}
+
+///// Clear directory [dirPath].
+///// Create directory if none exists.
+//void clearDirectory(String dirPath) {
+//  if (Directory(dirPath).existsSync()) {
+//    Directory(dirPath).deleteSync(recursive: true);
+//  } else {
+//    Directory(dirPath).createSync(recursive: true);
+//  }
 //}

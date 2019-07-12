@@ -19,7 +19,10 @@ import 'utils.dart' as utils;
 /// 3. Process the screenshots including adding a frame if required.
 /// 4. Move processed screenshots to fastlane destination for upload to stores.
 /// 5. If not a real device, stop emulator/simulator.
-Future<void> run([String configPath = kConfigFileName]) async {
+Future<void> run(
+    [String configPath = kConfigFileName, String _runMode = 'normal']) async {
+  final runMode = utils.getRunModeEnum(_runMode);
+
   final screens = Screens();
   await screens.init();
 
@@ -44,22 +47,27 @@ Future<void> run([String configPath = kConfigFileName]) async {
   final stagingDir = configInfo['staging'];
   await Directory(stagingDir + '/test').create(recursive: true);
   await resources.unpackScripts(stagingDir);
-  await fastlane.clearFastlaneDirs(configInfo, screens);
-  final imageProcessor = ImageProcessor(screens, configInfo);
+  await fastlane.clearFastlaneDirs(configInfo, screens, runMode);
 
   // run integration tests in each real device (or emulator/simulator) for
   // each locale and process screenshots
   await runTestsOnAll(
-      daemonClient, devices, emulators, config, screens, imageProcessor);
+      daemonClient, devices, emulators, config, screens, runMode);
   // shutdown daemon
   await daemonClient.stop;
 
   print('\n\nScreen images are available in:');
-  print('  ios/fastlane/screenshots');
-  print('  android/fastlane/metadata/android');
-  print('for upload to both Apple and Google consoles.');
-  print('\nFor uploading and other automation options see:');
-  print('  https://pub.dartlang.org/packages/fledge');
+  if (runMode == RunMode.recording) {
+    final recordingDir = configInfo['recording'];
+    print('  $recordingDir/ios/fastlane/screenshots');
+    print('  $recordingDir/android/fastlane/metadata/android');
+  } else {
+    print('  ios/fastlane/screenshots');
+    print('  android/fastlane/metadata/android');
+    print('for upload to both Apple and Google consoles.');
+    print('\nFor uploading and other automation options see:');
+    print('  https://pub.dartlang.org/packages/fledge');
+  }
   print('\nscreenshots completed successfully.');
 }
 
@@ -71,12 +79,23 @@ Future<void> run([String configPath = kConfigFileName]) async {
 /// Assumes the integration tests capture the screen shots into a known directory using
 /// provided [capture_screen.screenshot()].
 Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
-    Config config, Screens screens, ImageProcessor imageProcessor) async {
+    Config config, Screens screens, RunMode runMode) async {
   final configInfo = config.configInfo;
   final locales = configInfo['locales'];
   final stagingDir = configInfo['staging'];
   final testPaths = configInfo['tests'];
   final configDeviceNames = utils.getAllConfiguredDeviceNames(configInfo);
+  final imageProcessor = ImageProcessor(screens, configInfo);
+
+  if (runMode != RunMode.normal) {
+    final recordingDir = configInfo['recording'];
+    recordingDir == null
+        ? throw 'Error: \'recording\' dir is not specified in screenshots.yaml'
+        : null;
+    runMode == RunMode.comparison && (!(await utils.isRecorded(recordingDir)))
+        ? throw 'Error: a recording must be run before a comparison'
+        : null;
+  }
 
   for (final configDeviceName in configDeviceNames) {
     // look for matching device first
@@ -131,7 +150,6 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
       if (isRunningAndroidDeviceOrEmulator(device, emulator)) {
         await setAndroidLocale(deviceId, locale, configDeviceName);
       }
-
       // set locale if ios simulator
       if ((device != null &&
           device['platform'] == 'ios' &&
@@ -174,7 +192,8 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
         await utils.streamCmd('flutter', ['-d', deviceId, 'drive', testPath]);
 
         // process screenshots
-        await imageProcessor.process(deviceType, configDeviceName, locale);
+        await imageProcessor.process(
+            deviceType, configDeviceName, locale, runMode);
       }
     }
 

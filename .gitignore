@@ -22,3 +22,7 @@ doc/api/
 # screenshots
 example/ios/fastlane
 example/android/fastlane
+**/**/*-diff.png
+
+# mac
+.DS_Store

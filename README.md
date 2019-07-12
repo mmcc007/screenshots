@@ -101,9 +101,9 @@ To capture screenshots in your tests:
        ````dart
        import 'package:screenshots/screenshots.dart';
        ````
-    2. Create the config map at start of test  
+    2. Create the config at start of test  
        ````dart
-            final Map config = Config().configInfo;
+            final config = Config().configInfo;
        ````  
     3. Throughout the test make calls to capture screenshots  
        ````dart
@@ -169,6 +169,24 @@ Individual devices can be configured in `screenshots.yaml` by specifying per dev
 
 Note: images generated for those devices where framing is disabled are probably not suitable for upload, but can be used for local review.
 
+# Record/Compare Mode
+_Screenshots_ can be used to monitor any unexpected changes to the UI by comparing the new screenshots to previously recorded screenshots. Any differences will be highlighted in a 'diff' image for review.  
+
+To use this feature:
+1. Add the location of your recording directory to a `screenshots.yaml`
+    ```yaml
+    recording: /tmp/screenshots_record
+    ```
+1. Run a recording to capture your screenshots:
+    ```
+    screenshots -m recording
+    ```
+1. Run subsequent _Screenshots_ with:
+    ```
+    screenshots -m comparison
+    ```
+    _Screenshots_ will compare the new screenshots with the recorded screenshots and generate a 'diff' image for each screenshot that does not compare. The diff image highlights the differences in red.
+    
 # Integration with Fastlane
 Since _Screenshots_ is intended to be used with Fastlane, after _Screenshots_ completes, the images can be found in your project at:
 ````
@@ -191,7 +209,7 @@ To change the devices to run your tests on, just change the list of devices in s
 
 Make sure each device you select has a supported screen and a
 corresponding attached device or installed emulator/simulator. To bypass
-this requirement use `frame: false` for each related device in your
+the supported screen requirement use `frame: false` for each related device in your
 screenshots.yaml.
 
 For each selected device:
