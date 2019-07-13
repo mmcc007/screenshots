@@ -33,7 +33,7 @@ Future _clearFastlaneDir(Screens screens, String deviceName, String locale,
 
   final dirPath = getDirPath(deviceType, locale, androidModelType);
 
-  print('Clearing images in $dirPath for \'$deviceName\'...');
+  print('Clearing images in $dirPath ...');
   // delete images ending with .kImageExtension
   // for compatibility with FrameIt
   // (see https://github.com/mmcc007/screenshots/issues/61)

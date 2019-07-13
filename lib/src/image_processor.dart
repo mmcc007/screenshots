@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:meta/meta.dart';
 
+import 'archive.dart';
 import 'screens.dart';
 import 'fastlane.dart' as fastlane;
 import 'resources.dart' as resources;
@@ -34,7 +35,7 @@ class ImageProcessor {
   ///
   /// After processing, screenshots are handed off for upload via fastlane.
   Future<void> process(DeviceType deviceType, String deviceName, String locale,
-      RunMode runMode) async {
+      RunMode runMode, Archive archive) async {
     final Map screenProps = _screens.screenProps(deviceName);
     if (screenProps == null) {
       print('Warning: \'$deviceName\' images will not be processed');
@@ -75,6 +76,9 @@ class ImageProcessor {
     runMode == RunMode.recording
         ? dstDir = '${_config['recording']}/$dstDir'
         : null;
+    runMode == RunMode.archive
+        ? dstDir = archive.dstDir(deviceType, locale)
+        : null;
     // prefix screenshots with name of device before moving
     // (useful for uploading to apple via fastlane)
     await utils.prefixFilesInDir(srcDir, '$deviceName-');
@@ -110,8 +114,8 @@ class ImageProcessor {
   Future<Map> compareImages(
       String deviceName, String recordingDir, String comparisonDir) async {
     Map failedCompare = {};
-    final recordedImages = await Directory(recordingDir).listSync();
-    await Directory(comparisonDir)
+    final recordedImages = Directory(recordingDir).listSync();
+    Directory(comparisonDir)
         .listSync()
         .where((screenshot) =>
             p.basename(screenshot.path).contains(deviceName) &&

@@ -1,6 +1,22 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:screenshots/src/run.dart' as run;
+import 'package:path/path.dart' as p;
+
+
+/// Copy files from [srcDir] to [dstDir].
+/// If dstDir does not exist, it is created.
+void copyFiles(String srcDir, String dstDir) {
+  if (!Directory(dstDir).existsSync()) {
+    Directory(dstDir).createSync(recursive: true);
+  }
+  Directory(srcDir).listSync().forEach((file) {
+    file.statSync().type == FileSystemEntityType.file
+        ? File(file.path).copy('$dstDir/${p.basename(file.path)}')
+        : throw 'Error: ${file.path} is not a file';
+  });
+}
 
 /// Get device properties
 Map getDeviceProps(String deviceId) {

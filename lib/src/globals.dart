@@ -10,7 +10,7 @@ const String kEnvFileName = 'env.json';
 enum DeviceType { android, ios }
 
 /// Run mode
-enum RunMode { normal, recording, comparison }
+enum RunMode { normal, recording, comparison, archive }
 
 // singleton
 ImageMagick get im => ImageMagick();

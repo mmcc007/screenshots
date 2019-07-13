@@ -29,3 +29,7 @@ frame: true
 # Run mode can be one of 'normal' (default), 'recording' or 'comparison'
 # If not 'normal' mode, a directory is required for recorded images
 recording: /tmp/screenshots_record
+
+# If not intending to upload screenshots, images are stored in an archive dir.
+# This over-rides output to fastlane dirs.
+archive: /tmp/screenshots_archive

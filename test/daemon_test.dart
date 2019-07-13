@@ -205,8 +205,8 @@ main() {
     final origDir = Directory.current;
     Directory.current = 'example';
 
-    await run.runTestsOnAll(
-        daemonClient, devices, emulators, config, screens, RunMode.normal);
+    await run.runTestsOnAll(daemonClient, devices, emulators, config, screens,
+        RunMode.normal, null);
     // allow other tests to continue
     Directory.current = origDir;
   }, timeout: Timeout(Duration(minutes: 4)));

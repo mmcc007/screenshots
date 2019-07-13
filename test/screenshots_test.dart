@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:process/process.dart';
+import 'package:screenshots/src/archive.dart';
 import 'package:screenshots/src/config.dart';
 import 'package:screenshots/src/daemon_client.dart';
 import 'package:screenshots/src/globals.dart';
@@ -634,7 +635,43 @@ devices:
 
     test('cleanup diffs at start of normal run', () {
       final fastlaneDir = 'test/resources/comparison';
+      Directory(fastlaneDir).listSync().forEach(
+          (fsEntity) => File(im.getDiffName(fsEntity.path)).createSync());
+      expect(
+          Directory(fastlaneDir).listSync().where((fileSysEntity) =>
+              p.basename(fileSysEntity.path).contains(im.diffSuffix)),
+          isNotEmpty);
       im.deleteDiffs(fastlaneDir);
+      expect(
+          Directory(fastlaneDir).listSync().where((fileSysEntity) =>
+              p.basename(fileSysEntity.path).contains(im.diffSuffix)),
+          isEmpty);
     });
   });
+
+  group('archiving', () {
+    test('move images to archive dir', () {
+      final stagingDir = 'test/resources';
+      final archiveDir = '/tmp/screenshots_archive';
+      final archive = Archive(stagingDir, archiveDir);
+      final locale = 'en-US';
+      final deviceType = DeviceType.android;
+      final dstDir = archive.moveTestScreenshots(deviceType, locale);
+      expect(Directory(dstDir).listSync(), isNotEmpty);
+      // copy back to repeat test
+      copyFiles(dstDir, '$stagingDir/test');
+    });
+
+    test('run with archiving enabled', () async {
+      final origDir = Directory.current;
+      Directory.current = 'example';
+      final configPath = 'screenshots.yaml';
+      final configInfo = Config(configPath: configPath).configInfo;
+      final archiveDir = configInfo['archive'];
+      expect(archiveDir, isNotNull);
+      await run.run(configPath, utils.getStringFromEnum(RunMode.archive));
+      Directory.current = origDir;
+    }, timeout: Timeout(Duration(seconds: 180)));
+  });
 }
+

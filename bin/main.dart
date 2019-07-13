@@ -3,7 +3,8 @@ import 'dart:io';
 import 'package:args/args.dart';
 import 'package:screenshots/screenshots.dart';
 
-const usage = 'usage: screenshots [--help] [--config <config file>]';
+const usage =
+    'usage: screenshots [-h] [-c <config file>] [-m <normal|recording|comparison|archive>]';
 const sampleUsage = 'sample usage: screenshots';
 
 void main(List<String> arguments) async {
@@ -18,13 +19,15 @@ void main(List<String> arguments) async {
         defaultsTo: 'screenshots.yaml',
         help: 'Path to config file.',
         valueHelp: 'screenshots.yaml')
-    ..addFlag(helpArg, help: 'Display this help information.', negatable: false)
     ..addOption(modeArg,
         abbr: 'm',
         defaultsTo: 'normal',
         help:
-            'If mode is recording, screenshots will be saved for later comparison.',
-        allowed: ['normal', 'recording', 'comparison']);
+            'If mode is recording, screenshots will be saved for later comparison. \nIf mode is archive, screenshots will be archived and cannot be uploaded via fastlane.',
+        allowed: ['normal', 'recording', 'comparison', 'archive'],
+        valueHelp: 'normal|recording|comparison|archive')
+    ..addFlag(helpArg,
+        abbr: 'h', help: 'Display this help information.', negatable: false);
   try {
     argResults = argParser.parse(arguments);
   } on ArgParserException catch (e) {
@@ -74,6 +77,12 @@ void main(List<String> arguments) async {
     stderr.write(
         '#############################################################\n');
     exit(1);
+  }
+
+  // show help
+  if (argResults[helpArg]) {
+    _showUsage(argParser);
+    exit(0);
   }
 
   // validate args
