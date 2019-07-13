@@ -666,12 +666,8 @@ devices:
       final origDir = Directory.current;
       Directory.current = 'example';
       final configPath = 'screenshots.yaml';
-      final configInfo = Config(configPath: configPath).configInfo;
-      final archiveDir = configInfo['archive'];
-      expect(archiveDir, isNotNull);
       await run.run(configPath, utils.getStringFromEnum(RunMode.archive));
       Directory.current = origDir;
     }, timeout: Timeout(Duration(seconds: 180)));
   });
 }
-
