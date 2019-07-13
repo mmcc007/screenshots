@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:screenshots/src/run.dart' as run;
 import 'package:path/path.dart' as p;
 
-
 /// Copy files from [srcDir] to [dstDir].
 /// If dstDir does not exist, it is created.
 void copyFiles(String srcDir, String dstDir) {
