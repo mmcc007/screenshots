@@ -197,7 +197,7 @@ void main() {
   });
 
   test('add prefix to files in directory', () async {
-    await utils.prefixFilesInDir('/tmp/screenshots/test', 'my_prefix');
+    await utils.prefixFilesInDir('/tmp/screenshots/$kTestScreenshotsDir', 'my_prefix');
   });
 
   test('config guide', () async {
@@ -659,7 +659,7 @@ devices:
       final dstDir = archive.moveTestScreenshots(deviceType, locale);
       expect(Directory(dstDir).listSync(), isNotEmpty);
       // copy back to repeat test
-      copyFiles(dstDir, '$stagingDir/test');
+      copyFiles(dstDir, '$stagingDir/$kTestScreenshotsDir');
     });
 
     test('run with archiving enabled', () async {

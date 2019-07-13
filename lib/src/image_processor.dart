@@ -49,7 +49,7 @@ class ImageProcessor {
       await resources.unpackImages(screenResources, staging);
 
       // add status and nav bar and frame for each screenshot
-      final screenshots = Directory('$staging/test').listSync();
+      final screenshots = Directory('$staging/$kTestScreenshotsDir').listSync();
       for (final screenshotPath in screenshots) {
         // add status bar for each screenshot
 //    print('overlaying status bar over screenshot at $screenshotPath');
@@ -70,7 +70,7 @@ class ImageProcessor {
     }
 
     // move to final destination for upload to stores via fastlane
-    final srcDir = '${_config['staging']}/test';
+    final srcDir = '${_config['staging']}/$kTestScreenshotsDir';
     final androidModelType = fastlane.getAndroidModelType(screenProps);
     String dstDir = fastlane.getDirPath(deviceType, locale, androidModelType);
     runMode == RunMode.recording
