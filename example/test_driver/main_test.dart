@@ -7,15 +7,20 @@
 import 'package:flutter_driver/flutter_driver.dart';
 import 'package:screenshots/screenshots.dart';
 import 'package:test/test.dart';
+import 'dart:convert' as c;
 
 void main() {
   group('end-to-end test', () {
     FlutterDriver driver;
+    Map localizations;
     final config = Config().configInfo;
 
     setUpAll(() async {
       // Connect to a running Flutter application instance.
       driver = await FlutterDriver.connect();
+      // get the localizations for the current locale
+      localizations = c.jsonDecode(await driver.requestData(null));
+      print('localizations=$localizations');
     });
 
     tearDownAll(() async {
@@ -24,7 +29,8 @@ void main() {
 
     test('tap on the floating action button; verify counter', () async {
       // Finds the floating action button (fab) to tap on
-      SerializableFinder fab = find.byTooltip('Increment');
+      SerializableFinder fab =
+          find.byTooltip(localizations['counterIncrementButtonTooltip']);
 
       // Wait for the floating action button to appear
       await driver.waitFor(fab);
