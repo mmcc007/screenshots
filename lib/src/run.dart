@@ -104,7 +104,7 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
     String deviceId;
     Map emulator;
     Map simulator;
-    bool pendingLocaleChange = false;
+    bool pendingIosLocaleChangeAtStart = false;
     if (device != null) {
       deviceId = device['id'];
     } else {
@@ -126,7 +126,7 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
           print('Starting $configDeviceName...');
           startSimulator(deviceId);
         } else {
-          pendingLocaleChange = true;
+          pendingIosLocaleChangeAtStart = true;
           print('Not starting $configDeviceName due to pending locale change');
         }
       }
@@ -159,11 +159,12 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
             deviceId, configDeviceName, locale, stagingDir);
       } else {
         if (device == null && simulator != null) {
-          if (pendingLocaleChange) {
+          if (pendingIosLocaleChangeAtStart) {
             // a non-running simulator
             await setSimulatorLocale(
                 deviceId, configDeviceName, locale, stagingDir,
                 running: false);
+            pendingIosLocaleChangeAtStart = false;
           } else {
             // a running simulator
             await setSimulatorLocale(
@@ -291,7 +292,7 @@ Future<void> setAndroidLocale(String deviceId, testLocale, deviceName) async {
 /// Change local of real android device or running emulator.
 void changeAndroidLocale(
     String deviceId, String deviceLocale, String testLocale) {
-  if (cmd('adb', ['root'], '.', true) ==
+  if (cmd('adb', ['-s', deviceId, 'root'], '.', true) ==
       'adbd cannot run as root in production builds\n') {
     stdout.write(
         'Warning: locale will not be changed. Running in locale \'$deviceLocale\'.\n');
@@ -300,7 +301,6 @@ void changeAndroidLocale(
     stdout.write(
         '    https://stackoverflow.com/questions/43923996/adb-root-is-not-working-on-emulator/45668555#45668555 for details.\n');
   }
-  _flutterDriverBugWarning();
   // adb shell "setprop persist.sys.locale fr-CA; setprop ctl.restart zygote"
   cmd('adb', [
     '-s',
@@ -319,7 +319,6 @@ void changeAndroidLocale(
 /// Change locale of non-running simulator.
 Future _changeSimulatorLocale(
     String stagingDir, String name, String testLocale) async {
-  _flutterDriverBugWarning();
   await utils.streamCmd('$stagingDir/resources/script/simulator-controller',
       [name, 'locale', testLocale]);
 }
@@ -334,11 +333,6 @@ Future<String> shutdownAndroidEmulator(
     throw 'Error: device id \'$deviceId\' not shutdown';
   }
   return device['id'];
-}
-
-void _flutterDriverBugWarning() {
-  stdout.write(
-      '\nWarning: running tests in a non-default locale will cause test to hang due to a bug in Flutter Driver (not related to \'screenshots\'). Modify your screenshots.yaml to use only the default locale for your location. For details of bug see comment at https://github.com/flutter/flutter/issues/27785#issue-408955077. Give comment a thumbs-up to get it fixed!\n\n');
 }
 
 /// Start android emulator in a CI environment.

@@ -116,16 +116,16 @@ class Config {
 
     //  Due to issue with locales, issue warning for multiple locales.
     //  https://github.com/flutter/flutter/issues/27785
-    if (configInfo['locales'].length > 1) {
-      stdout.write('Warning: Flutter integration tests do not work in '
-          'multiple locals.\n');
-      stdout.write('  See comment on issue:\n'
-          '  https://github.com/flutter/flutter/issues/27785#issue-408955077\n'
-          '  for details.\n'
-          '  and provide a thumbs-up on the comment to prioritize a fix for this issue!\n\n'
-          '  In the meantime, while waiting for a fix, only use the default locale\n'
-          '  for your location in screenshots.yaml\n\n');
-    }
+//    if (configInfo['locales'].length > 1) {
+//      stdout.write('Warning: Flutter integration tests do not work in '
+//          'multiple locals.\n');
+//      stdout.write('  See comment on issue:\n'
+//          '  https://github.com/flutter/flutter/issues/27785#issue-408955077\n'
+//          '  for details.\n'
+//          '  and provide a thumbs-up on the comment to prioritize a fix for this issue!\n\n'
+//          '  In the meantime, while waiting for a fix, only use the default locale\n'
+//          '  for your location in screenshots.yaml\n\n');
+//    }
 
     return true;
   }

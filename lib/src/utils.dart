@@ -230,7 +230,12 @@ Future stopAndroidEmulator(String deviceId, String stagingDir) async {
 Future<String> waitAndroidLocaleChange(String deviceId, String toLocale) async {
   final regExp = RegExp(
       'ContactsProvider: Locale has changed from .* to \\[${toLocale.replaceFirst('-', '_')}\\]|ContactsDatabaseHelper: Switching to locale \\[${toLocale.replaceFirst('-', '_')}\\]');
-  final line = await waitSysLogMsg(deviceId, regExp);
+//  final regExp = RegExp(
+//      'ContactsProvider: Locale has changed from .* to \\[${toLocale.replaceFirst('-', '_')}\\]');
+//  final regExp = RegExp(
+//      'ContactsProvider: Locale has changed from .* to \\[${toLocale.replaceFirst('-', '_')}\\]|ContactsDatabaseHelper: Locale change completed');
+  final line =
+      await waitSysLogMsg(deviceId, regExp, toLocale.replaceFirst('-', '_'));
   return line;
 }
 
@@ -268,15 +273,22 @@ Map getDevice(List devices, String deviceName) {
 }
 
 /// Wait for message to appear in sys log and return first matching line
-Future<String> waitSysLogMsg(String deviceId, RegExp regExp) async {
-  run.cmd('adb', ['logcat', '-c']);
+Future<String> waitSysLogMsg(
+    String deviceId, RegExp regExp, String locale) async {
+  run.cmd('adb', ['-s', deviceId, 'logcat', '-c']);
+  await Future.delayed(Duration(milliseconds: 1000)); // wait for log to clear
+  // -b main ContactsDatabaseHelper:I '*:S'
   final delegate = await Process.start('adb', [
     '-s',
     deviceId,
     'logcat',
-    '*:F',
+    '-b',
+    'main',
+    '*:S',
+    'ContactsDatabaseHelper:I',
     'ContactsProvider:I',
-    'ContactsDatabaseHelper:I'
+    '-e',
+    locale
   ]);
   final process = ProcessWrapper(delegate);
   return await process.stdout

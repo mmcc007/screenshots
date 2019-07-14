@@ -268,10 +268,12 @@ void main() {
     await daemonClient.start;
     daemonClient.verbose = true;
     final deviceId = await daemonClient.launchEmulator(emulatorId);
-    print('emulator started');
+    print('switching to $newLocale locale');
     run.changeAndroidLocale(deviceId, deviceName, newLocale);
     // wait for locale to change
     await utils.waitAndroidLocaleChange(deviceId, newLocale);
+    // change back for repeated testing
+    print('switching to $origLocale locale');
     run.changeAndroidLocale(deviceId, deviceName, origLocale);
     await utils.waitAndroidLocaleChange(deviceId, origLocale);
     expect(await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
@@ -535,7 +537,7 @@ devices:
     });
 
     test('scan syslog for string', () async {
-//      final toLocale = 'en-US';
+      final toLocale = 'en-US';
 //      final expected =
 //          'ContactsProvider: Locale has changed from [fr_CA] to [en_US]';
 //      final expected = RegExp('Locale has changed from');
@@ -544,7 +546,8 @@ devices:
       await daemonClient.start;
       final emulatorId = 'Nexus_6P_API_28';
       final deviceId = await daemonClient.launchEmulator(emulatorId);
-      String actual = await utils.waitSysLogMsg(deviceId, expected);
+      String actual = await utils.waitSysLogMsg(deviceId, expected, toLocale);
+      print('actual=$actual');
       expect(actual.contains(expected), isTrue);
       expect(
           await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
