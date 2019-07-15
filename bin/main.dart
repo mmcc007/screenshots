@@ -18,7 +18,8 @@ void main(List<String> arguments) async {
         defaultsTo: 'screenshots.yaml',
         help: 'Path to config file.',
         valueHelp: 'screenshots.yaml')
-    ..addFlag(helpArg, help: 'Display this help information.', negatable: false)
+    ..addFlag(helpArg,
+        abbr: 'h', help: 'Display this help information.', negatable: false)
     ..addOption(modeArg,
         abbr: 'm',
         defaultsTo: 'normal',
