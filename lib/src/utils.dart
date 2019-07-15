@@ -168,10 +168,18 @@ T getEnumFromString<T>(List<T> values, String value) {
 
 /// Returns locale of currently attached android device.
 String getAndroidDeviceLocale(String deviceId) {
-  final deviceLocale = run
+// ro.product.locale is available on first boot but does not update,
+// persist.sys.locale is empty on first boot but updates with locale changes
+  String deviceLocale = run
       .cmd('adb', ['-s', deviceId, 'shell', 'getprop persist.sys.locale'], '.',
           true)
       .trim();
+  if (deviceLocale.isEmpty) {
+    deviceLocale = run
+        .cmd('adb', ['-s', deviceId, 'shell', 'getprop ro.product.locale'], '.',
+            true)
+        .trim();
+  }
   return deviceLocale;
 }
 
