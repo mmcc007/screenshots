@@ -161,7 +161,7 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
       final defaultLocale = 'en-US'; // todo: need actual local
       print('Warning: the locale of a real device cannot be changed.');
       await runProcessTests(config, screens, configDeviceName, defaultLocale,
-          deviceType, testPaths, deviceId, imageProcessor, runMode);
+          deviceType, testPaths, deviceId, imageProcessor, runMode, archive);
     } else {
       // Check for a running android device or emulator
       bool isRunningAndroidDeviceOrEmulator(Map device, Map emulator) {
@@ -204,7 +204,7 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
         }
         // run tests and process images
         await runProcessTests(config, screens, configDeviceName, locale,
-            deviceType, testPaths, deviceId, imageProcessor, runMode);
+            deviceType, testPaths, deviceId, imageProcessor, runMode, archive);
       }
       // if an emulator was started, revert locale if necessary and shut it down
       if (emulator != null) {
@@ -228,7 +228,8 @@ Future runProcessTests(
     testPaths,
     String deviceId,
     ImageProcessor imageProcessor,
-    RunMode runMode) async {
+    RunMode runMode,
+    Archive archive) async {
   // store env for later use by tests
   // ignore: invalid_use_of_visible_for_testing_member
   await config.storeEnv(
@@ -237,7 +238,8 @@ Future runProcessTests(
     print('Running $testPath on \'$configDeviceName\' in locale $locale...');
     await utils.streamCmd('flutter', ['-d', deviceId, 'drive', testPath]);
     // process screenshots
-    await imageProcessor.process(deviceType, configDeviceName, locale, runMode);
+    await imageProcessor.process(
+        deviceType, configDeviceName, locale, runMode, archive);
   }
 }
 
