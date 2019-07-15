@@ -633,17 +633,6 @@ devices:
   });
 
   group('archiving', () {
-    test('move images to archive dir', () {
-      final stagingDir = 'test/resources';
-      final archiveDir = '/tmp/screenshots_archive';
-      final archive = Archive(stagingDir, archiveDir);
-      final locale = 'en-US';
-      final deviceType = DeviceType.android;
-      final dstDir = archive.moveTestScreenshots(deviceType, locale);
-      expect(Directory(dstDir).listSync(), isNotEmpty);
-      // copy back to repeat test
-      copyFiles(dstDir, '$stagingDir/$kTestScreenshotsDir');
-    });
 
     test('run with archiving enabled', () async {
       final origDir = Directory.current;
