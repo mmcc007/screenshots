@@ -360,13 +360,13 @@ void main() {
     final deviceId = await daemonClient.launchEmulator(emulatorId);
 
     // change locale
-    await run.setAndroidLocale(deviceId, newLocale, deviceName);
+    await run.setEmulatorLocale(deviceId, newLocale, deviceName);
 
     // run test
     await utils.streamCmd('flutter', ['drive', testAppSrcPath], testAppDir);
 
     // stop emulator
-    await run.setAndroidLocale(deviceId, origLocale, deviceName);
+    await run.setEmulatorLocale(deviceId, origLocale, deviceName);
     expect(await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
   },
       timeout:
@@ -381,7 +381,7 @@ void main() {
     final daemonClient = DaemonClient();
     await daemonClient.start;
     final deviceId = await daemonClient.launchEmulator(emulatorId);
-    final deviceLocale = utils.androidDeviceLocale(deviceId);
+    final deviceLocale = utils.getAndroidDeviceLocale(deviceId);
     expect(await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
 
     expect(deviceLocale, locale);
@@ -428,7 +428,7 @@ void main() {
 
   test('get ios simulator locale', () async {
     final udId = '03D4FC12-3927-4C8B-A226-17DE34AE9C18';
-    var locale = utils.iosSimulatorLocale(udId);
+    var locale = utils.getIosSimulatorLocale(udId);
     expect(locale, 'en-US');
   });
 

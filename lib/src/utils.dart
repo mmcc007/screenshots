@@ -167,7 +167,7 @@ T getEnumFromString<T>(List<T> values, String value) {
 }
 
 /// Returns locale of currently attached android device.
-String androidDeviceLocale(String deviceId) {
+String getAndroidDeviceLocale(String deviceId) {
   final deviceLocale = run
       .cmd('adb', ['-s', deviceId, 'shell', 'getprop persist.sys.locale'], '.',
           true)
@@ -176,7 +176,7 @@ String androidDeviceLocale(String deviceId) {
 }
 
 /// Returns locale of simulator with udid [udId].
-String iosSimulatorLocale(String udId) {
+String getIosSimulatorLocale(String udId) {
   final env = Platform.environment;
   final settingsPath =
       '${env['HOME']}/Library/Developer/CoreSimulator/Devices/$udId/data/Library/Preferences/.GlobalPreferences.plist';
