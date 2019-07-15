@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'archive.dart';
 import 'config.dart';
 import 'daemon_client.dart';
 import 'fastlane.dart' as fastlane;
@@ -45,14 +46,19 @@ Future<void> run(
 
   // init
   final stagingDir = configInfo['staging'];
-  await Directory(stagingDir + '/test').create(recursive: true);
+  await Directory(stagingDir + '/$kTestScreenshotsDir').create(recursive: true);
   await resources.unpackScripts(stagingDir);
-  await fastlane.clearFastlaneDirs(configInfo, screens, runMode);
-
+  final archiveDir = configInfo['archive'];
+  Archive archive = Archive(stagingDir, archiveDir);
+  if (archiveDir == null) {
+    await fastlane.clearFastlaneDirs(configInfo, screens, runMode);
+  } else {
+    print('Archiving screenshots to ${archive.archiveDirPrefix}...');
+  }
   // run integration tests in each real device (or emulator/simulator) for
   // each locale and process screenshots
   await runTestsOnAll(
-      daemonClient, devices, emulators, config, screens, runMode);
+      daemonClient, devices, emulators, config, screens, runMode, archive);
   // shutdown daemon
   await daemonClient.stop;
 
@@ -62,11 +68,15 @@ Future<void> run(
     print('  $recordingDir/ios/fastlane/screenshots');
     print('  $recordingDir/android/fastlane/metadata/android');
   } else {
-    print('  ios/fastlane/screenshots');
-    print('  android/fastlane/metadata/android');
-    print('for upload to both Apple and Google consoles.');
-    print('\nFor uploading and other automation options see:');
-    print('  https://pub.dartlang.org/packages/fledge');
+    if (archiveDir == null) {
+      print('  ios/fastlane/screenshots');
+      print('  android/fastlane/metadata/android');
+      print('for upload to both Apple and Google consoles.');
+      print('\nFor uploading and other automation options see:');
+      print('  https://pub.dartlang.org/packages/fledge');
+    } else {
+      print('  ${archive.archiveDirPrefix}');
+    }
   }
   print('\nscreenshots completed successfully.');
 }
@@ -79,7 +89,7 @@ Future<void> run(
 /// Assumes the integration tests capture the screen shots into a known directory using
 /// provided [capture_screen.screenshot()].
 Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
-    Config config, Screens screens, RunMode runMode) async {
+    Config config, Screens screens, RunMode runMode, Archive archive) async {
   final configInfo = config.configInfo;
   final locales = configInfo['locales'];
   final stagingDir = configInfo['staging'];
@@ -87,14 +97,26 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
   final configDeviceNames = utils.getAllConfiguredDeviceNames(configInfo);
   final imageProcessor = ImageProcessor(screens, configInfo);
 
-  if (runMode != RunMode.normal) {
-    final recordingDir = configInfo['recording'];
-    recordingDir == null
-        ? throw 'Error: \'recording\' dir is not specified in screenshots.yaml'
-        : null;
-    runMode == RunMode.comparison && (!(await utils.isRecorded(recordingDir)))
-        ? throw 'Error: a recording must be run before a comparison'
-        : null;
+  final recordingDir = configInfo['recording'];
+  final archiveDir = configInfo['archive'];
+  switch (runMode) {
+    case RunMode.normal:
+      break;
+    case RunMode.recording:
+      recordingDir == null
+          ? throw 'Error: \'recording\' dir is not specified in screenshots.yaml'
+          : null;
+      break;
+    case RunMode.comparison:
+      runMode == RunMode.comparison && (!(await utils.isRecorded(recordingDir)))
+          ? throw 'Error: a recording must be run before a comparison'
+          : null;
+      break;
+    case RunMode.archive:
+      archiveDir == null
+          ? throw 'Error: \'archive\' dir is not specified in screenshots.yaml'
+          : null;
+      break;
   }
 
   for (final configDeviceName in configDeviceNames) {
@@ -139,7 +161,7 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
       final defaultLocale = 'en-US'; // todo: need actual local
       print('Warning: the locale of a real device cannot be changed.');
       await runProcessTests(config, screens, configDeviceName, defaultLocale,
-          deviceType, testPaths, deviceId, imageProcessor, runMode);
+          deviceType, testPaths, deviceId, imageProcessor, runMode, archive);
     } else {
       // Check for a running android device or emulator
       bool isRunningAndroidDeviceOrEmulator(Map device, Map emulator) {
@@ -182,7 +204,7 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
         }
         // run tests and process images
         await runProcessTests(config, screens, configDeviceName, locale,
-            deviceType, testPaths, deviceId, imageProcessor, runMode);
+            deviceType, testPaths, deviceId, imageProcessor, runMode, archive);
       }
       // if an emulator was started, revert locale if necessary and shut it down
       if (emulator != null) {
@@ -206,7 +228,8 @@ Future runProcessTests(
     testPaths,
     String deviceId,
     ImageProcessor imageProcessor,
-    RunMode runMode) async {
+    RunMode runMode,
+    Archive archive) async {
   // store env for later use by tests
   // ignore: invalid_use_of_visible_for_testing_member
   await config.storeEnv(
@@ -215,7 +238,8 @@ Future runProcessTests(
     print('Running $testPath on \'$configDeviceName\' in locale $locale...');
     await utils.streamCmd('flutter', ['-d', deviceId, 'drive', testPath]);
     // process screenshots
-    await imageProcessor.process(deviceType, configDeviceName, locale, runMode);
+    await imageProcessor.process(
+        deviceType, configDeviceName, locale, runMode, archive);
   }
 }
 

@@ -37,7 +37,7 @@ Future _clearFastlaneDir(Screens screens, String deviceName, String locale,
   // delete images ending with .kImageExtension
   // for compatibility with FrameIt
   // (see https://github.com/mmcc007/screenshots/issues/61)
-  clearFilesWithExt(dirPath, kImageExtension);
+  deleteMatchingFiles(dirPath, RegExp('$deviceName.*.$kImageExtension'));
   if (runMode == RunMode.normal) {
     im.deleteDiffs(dirPath);
   }
@@ -70,13 +70,12 @@ String getAndroidModelType(Map screenProps) {
   return androidDeviceType;
 }
 
-/// Clear files in a directory [dirPath] ending in [ext]
-/// Create directory if none exists.
-void clearFilesWithExt(String dirPath, String ext) {
-  // delete files with ext
+/// Clears files matching a pattern in a directory.
+/// Creates directory if none exists.
+void deleteMatchingFiles(String dirPath, RegExp pattern) {
   if (Directory(dirPath).existsSync()) {
     Directory(dirPath).listSync().toList().forEach((e) {
-      if (p.extension(e.path) == ext) {
+      if (pattern.hasMatch(p.basename(e.path))) {
         File(e.path).delete();
       }
     });

@@ -192,7 +192,7 @@ main() {
 
     // init
     final stagingDir = configInfo['staging'];
-    await Directory(stagingDir + '/test').create(recursive: true);
+    await Directory(stagingDir + '/$kTestScreenshotsDir').create(recursive: true);
     await resources.unpackScripts(stagingDir);
     await fastlane.clearFastlaneDirs(configInfo, screens, RunMode.normal);
 
@@ -205,8 +205,8 @@ main() {
     final origDir = Directory.current;
     Directory.current = 'example';
 
-    await run.runTestsOnAll(
-        daemonClient, devices, emulators, config, screens, RunMode.normal);
+    await run.runTestsOnAll(daemonClient, devices, emulators, config, screens,
+        RunMode.normal, null);
     // allow other tests to continue
     Directory.current = origDir;
   }, timeout: Timeout(Duration(minutes: 4)));

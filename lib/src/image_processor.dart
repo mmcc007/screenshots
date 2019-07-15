@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:meta/meta.dart';
 
+import 'archive.dart';
 import 'screens.dart';
 import 'fastlane.dart' as fastlane;
 import 'resources.dart' as resources;
@@ -34,7 +35,7 @@ class ImageProcessor {
   ///
   /// After processing, screenshots are handed off for upload via fastlane.
   Future<void> process(DeviceType deviceType, String deviceName, String locale,
-      RunMode runMode) async {
+      RunMode runMode, Archive archive) async {
     final Map screenProps = _screens.screenProps(deviceName);
     if (screenProps == null) {
       print('Warning: \'$deviceName\' images will not be processed');
@@ -48,7 +49,7 @@ class ImageProcessor {
       await resources.unpackImages(screenResources, staging);
 
       // add status and nav bar and frame for each screenshot
-      final screenshots = Directory('$staging/test').listSync();
+      final screenshots = Directory('$staging/$kTestScreenshotsDir').listSync();
       for (final screenshotPath in screenshots) {
         // add status bar for each screenshot
 //    print('overlaying status bar over screenshot at $screenshotPath');
@@ -63,17 +64,20 @@ class ImageProcessor {
         // add frame if required
         if (isFrameRequired(_config, deviceType, deviceName)) {
 //      print('placing $screenshotPath in frame');
-          await frame(_config, screenProps, screenshotPath.path, deviceType);
+          await frame(_config, screenProps, screenshotPath.path, deviceType, runMode);
         }
       }
     }
 
     // move to final destination for upload to stores via fastlane
-    final srcDir = '${_config['staging']}/test';
+    final srcDir = '${_config['staging']}/$kTestScreenshotsDir';
     final androidModelType = fastlane.getAndroidModelType(screenProps);
     String dstDir = fastlane.getDirPath(deviceType, locale, androidModelType);
     runMode == RunMode.recording
         ? dstDir = '${_config['recording']}/$dstDir'
+        : null;
+    runMode == RunMode.archive
+        ? dstDir = archive.dstDir(deviceType, locale)
         : null;
     // prefix screenshots with name of device before moving
     // (useful for uploading to apple via fastlane)
@@ -110,8 +114,8 @@ class ImageProcessor {
   Future<Map> compareImages(
       String deviceName, String recordingDir, String comparisonDir) async {
     Map failedCompare = {};
-    final recordedImages = await Directory(recordingDir).listSync();
-    await Directory(comparisonDir)
+    final recordedImages = Directory(recordingDir).listSync();
+    Directory(comparisonDir)
         .listSync()
         .where((screenshot) =>
             p.basename(screenshot.path).contains(deviceName) &&
@@ -197,7 +201,7 @@ class ImageProcessor {
   ///
   /// Resulting image is scaled to fit dimensions required by stores.
   void frame(Map config, Map screen, String screenshotPath,
-      DeviceType deviceType) async {
+      DeviceType deviceType, RunMode runMode) async {
     final Map resources = screen['resources'];
 
     final framePath = config['staging'] + '/' + resources['frame'];
@@ -207,7 +211,7 @@ class ImageProcessor {
 
     // set the default background color
     String backgroundColor;
-    (deviceType == DeviceType.ios)
+    (deviceType == DeviceType.ios && runMode!=RunMode.archive)
         ? backgroundColor = kDefaultIosBackground
         : backgroundColor = kDefaultAndroidBackground;
 
