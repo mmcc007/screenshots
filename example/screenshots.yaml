@@ -23,10 +23,12 @@ devices:
 # Frame screenshots
 frame: true
 
-# Run mode can be one of 'normal' (default), 'recording' or 'comparison'
-# If not 'normal' mode, a directory is required for recorded images
+# Run mode can be one of 'normal' (default), 'recording', 'comparison' or 'archive'.
+
+# If run mode is 'recording' or 'comparison', a directory is required for recorded images.
 recording: /tmp/screenshots_record
 
-# If not intending to upload screenshots, images are stored in an archive dir.
+# If not intending to upload screenshots, images can be stored in an archive dir.
 # This over-rides output to fastlane dirs.
+# If run mode is 'archive', a directory is required for archived images.
 archive: /tmp/screenshots_archive
