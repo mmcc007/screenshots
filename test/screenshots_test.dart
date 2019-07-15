@@ -197,7 +197,8 @@ void main() {
   });
 
   test('add prefix to files in directory', () async {
-    await utils.prefixFilesInDir('/tmp/screenshots/$kTestScreenshotsDir', 'my_prefix');
+    await utils.prefixFilesInDir(
+        '/tmp/screenshots/$kTestScreenshotsDir', 'my_prefix');
   });
 
   test('config guide', () async {
@@ -304,27 +305,6 @@ void main() {
         ],
         '.',
         ProcessStartMode.detached);
-  });
-
-  test('delete all files with suffix', () async {
-    final dirPath = '/tmp/tmp';
-    final files = ['image1.png', 'image2.png'];
-    final suffix = 'png';
-
-    // create files
-    files
-        .forEach((fileName) async => await File('$dirPath/$fileName').create());
-
-    // check created
-    files.forEach((fileName) async =>
-        expect(await File('$dirPath/$fileName').exists(), true));
-
-    // delete files with suffix
-    fastlane.clearFilesWithExt(dirPath, suffix);
-
-    // check deleted
-    files.forEach((fileName) async =>
-        expect(await File('$dirPath/$fileName').exists(), false));
   });
 
   // reproduce https://github.com/flutter/flutter/issues/27785
@@ -669,5 +649,22 @@ devices:
       await run.run(configPath, utils.getStringFromEnum(RunMode.archive));
       Directory.current = origDir;
     }, timeout: Timeout(Duration(seconds: 180)));
+  });
+
+  group('fastlane dirs', () {
+    test('delete files matching a pattern', () {
+      final dirPath = 'test/resources/test';
+      final deviceId = 'Nexus 6P';
+      final pattern = RegExp('$deviceId.*.$kImageExtension');
+      final filesPresent = (dirPath, pattern) => Directory(dirPath)
+          .listSync()
+          .toList()
+          .where((e) => pattern.hasMatch(p.basename(e.path)));
+      expect(filesPresent(dirPath, pattern).length, 2);
+      fastlane.deleteMatchingFiles(dirPath, pattern);
+      expect(filesPresent(dirPath, pattern), isEmpty);
+      // restore deleted files
+      run.cmd('git', ['checkout', dirPath]);
+    });
   });
 }
