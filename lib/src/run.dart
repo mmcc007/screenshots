@@ -133,80 +133,94 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
     }
     assert(deviceId != null);
 
-    // Check for a running android device or emulator
-    bool isRunningAndroidDeviceOrEmulator(Map device, Map emulator) {
-      return (device != null && device['platform'] != 'ios') ||
-          (device == null && emulator != null);
-    }
-
-    // save original locale for reverting later if necessary
-    String origLocale;
-    if (isRunningAndroidDeviceOrEmulator(device, emulator)) {
-      origLocale = utils.androidDeviceLocale(deviceId);
-    }
-
-    for (final locale in locales) {
-      // set locale if android device or emulator
-      if (isRunningAndroidDeviceOrEmulator(device, emulator)) {
-        await setAndroidLocale(deviceId, locale, configDeviceName);
-      }
-      // set locale if ios simulator
-      if ((device != null &&
-          device['platform'] == 'ios' &&
-          device['emulator'])) {
-        // an already running simulator
-        await setSimulatorLocale(
-            deviceId, configDeviceName, locale, stagingDir);
-      } else {
-        if (device == null && simulator != null) {
-          if (pendingIosLocaleChangeAtStart) {
-            // a non-running simulator
-            await setSimulatorLocale(
-                deviceId, configDeviceName, locale, stagingDir,
-                running: false);
-            pendingIosLocaleChangeAtStart = false;
-          } else {
-            // a running simulator
-            await setSimulatorLocale(
-                deviceId, configDeviceName, locale, stagingDir);
-          }
-        }
-      }
-      // issue locale warning if ios device
-      if ((device != null &&
-          device['platform'] == 'ios' &&
-          !device['emulator'])) {
-        // a running ios device
-        print('Warning: the locale of an ios device cannot be changed.');
-      }
-      final deviceType = getDeviceType(configInfo, configDeviceName);
-
+    final deviceType = getDeviceType(configInfo, configDeviceName);
+    // if device is real ios or android, cannot change locale
+    if (!device['emulator']) {
+      final defaultLocale = 'en-US'; // todo: need actual local
+      print('Warning: the locale of a real device cannot be changed.');
       // store env for later use by tests
       // ignore: invalid_use_of_visible_for_testing_member
-      await config.storeEnv(screens, configDeviceName, locale,
+      await config.storeEnv(screens, configDeviceName, defaultLocale,
           utils.getStringFromEnum(deviceType));
+      await runProcessTests(testPaths, configDeviceName, defaultLocale,
+          deviceId, imageProcessor, deviceType, runMode);
+    } else {
+      // Check for a running android device or emulator
+      bool isRunningAndroidDeviceOrEmulator(Map device, Map emulator) {
+        return (device != null && device['platform'] != 'ios') ||
+            (device == null && emulator != null);
+      }
 
-      // run tests
-      for (final testPath in testPaths) {
-        print(
-            'Running $testPath on \'$configDeviceName\' in locale $locale...');
-        await utils.streamCmd('flutter', ['-d', deviceId, 'drive', testPath]);
+      // save original locale for reverting later if necessary
+      String origAndroidLocale;
+      if (isRunningAndroidDeviceOrEmulator(device, emulator)) {
+        origAndroidLocale = utils.androidDeviceLocale(deviceId);
+      }
 
-        // process screenshots
-        await imageProcessor.process(
-            deviceType, configDeviceName, locale, runMode);
+      for (final locale in locales) {
+        // set locale if android device or emulator
+        if (isRunningAndroidDeviceOrEmulator(device, emulator)) {
+          await setAndroidLocale(deviceId, locale, configDeviceName);
+        }
+        // set locale if ios simulator
+        if ((device != null &&
+            device['platform'] == 'ios' &&
+            device['emulator'])) {
+          // an already running simulator
+          await setSimulatorLocale(
+              deviceId, configDeviceName, locale, stagingDir);
+        } else {
+          if (device == null && simulator != null) {
+            if (pendingIosLocaleChangeAtStart) {
+              // a non-running simulator
+              await setSimulatorLocale(
+                  deviceId, configDeviceName, locale, stagingDir,
+                  running: false);
+              pendingIosLocaleChangeAtStart = false;
+            } else {
+              // a running simulator
+              await setSimulatorLocale(
+                  deviceId, configDeviceName, locale, stagingDir);
+            }
+          }
+        }
+
+        // store env for later use by tests
+        // ignore: invalid_use_of_visible_for_testing_member
+        await config.storeEnv(screens, configDeviceName, locale,
+            utils.getStringFromEnum(deviceType));
+
+        // run tests
+        await runProcessTests(testPaths, configDeviceName, locale, deviceId,
+            imageProcessor, deviceType, runMode);
+      }
+      // if an emulator was started, revert locale if necessary and shut it down
+      if (emulator != null) {
+        await setAndroidLocale(deviceId, origAndroidLocale, configDeviceName);
+        await shutdownAndroidEmulator(daemonClient, deviceId);
+      }
+      if (simulator != null) {
+        // todo: revert locale
+        shutdownSimulator(deviceId);
       }
     }
+  }
+}
 
-    // if an emulator was started, revert locale if necessary and shut it down
-    if (emulator != null) {
-      await setAndroidLocale(deviceId, origLocale, configDeviceName);
-      await shutdownAndroidEmulator(daemonClient, deviceId);
-    }
-    if (simulator != null) {
-      // todo: revert locale
-      shutdownSimulator(deviceId);
-    }
+Future runProcessTests(
+    testPaths,
+    configDeviceName,
+    locale,
+    String deviceId,
+    ImageProcessor imageProcessor,
+    DeviceType deviceType,
+    RunMode runMode) async {
+  for (final testPath in testPaths) {
+    print('Running $testPath on \'$configDeviceName\' in locale $locale...');
+    await utils.streamCmd('flutter', ['-d', deviceId, 'drive', testPath]);
+
+    // process screenshots
+    await imageProcessor.process(deviceType, configDeviceName, locale, runMode);
   }
 }
 
