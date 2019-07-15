@@ -64,7 +64,7 @@ class ImageProcessor {
         // add frame if required
         if (isFrameRequired(_config, deviceType, deviceName)) {
 //      print('placing $screenshotPath in frame');
-          await frame(_config, screenProps, screenshotPath.path, deviceType);
+          await frame(_config, screenProps, screenshotPath.path, deviceType, runMode);
         }
       }
     }
@@ -201,7 +201,7 @@ class ImageProcessor {
   ///
   /// Resulting image is scaled to fit dimensions required by stores.
   void frame(Map config, Map screen, String screenshotPath,
-      DeviceType deviceType) async {
+      DeviceType deviceType, RunMode runMode) async {
     final Map resources = screen['resources'];
 
     final framePath = config['staging'] + '/' + resources['frame'];
@@ -211,7 +211,7 @@ class ImageProcessor {
 
     // set the default background color
     String backgroundColor;
-    (deviceType == DeviceType.ios)
+    (deviceType == DeviceType.ios && runMode!=RunMode.archive)
         ? backgroundColor = kDefaultIosBackground
         : backgroundColor = kDefaultAndroidBackground;
 
