@@ -89,16 +89,18 @@ $ screenshots -c <path to config file>
 Other options:
 ```
 $ screenshots -h
-usage: screenshots [--help] [--config <config file>] [--mode <normal|recording|comparison>]
+usage: screenshots [-h] [-c <config file>] [-m <normal|recording|comparison|archive>]
 
 sample usage: screenshots
 
--c, --config=<screenshots.yaml>    Path to config file.
-                                   (defaults to "screenshots.yaml")
+-c, --config=<screenshots.yaml>                     Path to config file.
+                                                    (defaults to "screenshots.yaml")
 
--h, --help                         Display this help information.
--m, --mode                         If mode is recording, screenshots will be saved for later comparison.
-                                   [normal (default), recording, comparison]
+-m, --mode=<normal|recording|comparison|archive>    If mode is recording, screenshots will be saved for later comparison.
+                                                    If mode is archive, screenshots will be archived and cannot be uploaded via fastlane.
+                                                    [normal (default), recording, comparison, archive]
+
+-h, --help                                          Display this help information.
 ```
 
 # Modifying your tests for _Screenshots_
@@ -200,7 +202,20 @@ To use this feature:
     screenshots -m comparison
     ```
     _Screenshots_ will compare the new screenshots with the recorded screenshots and generate a 'diff' image for each screenshot that does not compare. The diff image highlights the differences in red.
-    
+
+# Archive Mode
+To generate screenshots for local use, such as generating reports of changes to UI over time, etc... use 'archive' mode. 
+
+To enable this mode:
+1. Add the location of your archive directory to screenshots.yaml:
+    ```yaml
+    archive: /tmp/screenshots_archive
+    ```
+1. Run _Screenshots_ with:
+    ````
+    $ screenshots -m archive
+    ````
+
 # Integration with Fastlane
 Since _Screenshots_ is intended to be used with Fastlane, after _Screenshots_ completes, the images can be found in your project at:
 ````
