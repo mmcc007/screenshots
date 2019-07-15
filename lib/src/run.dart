@@ -135,7 +135,7 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
 
     final deviceType = getDeviceType(configInfo, configDeviceName);
     // if device is real ios or android, cannot change locale
-    if (!device['emulator']) {
+    if (device != null && !device['emulator']) {
       final defaultLocale = 'en-US'; // todo: need actual local
       print('Warning: the locale of a real device cannot be changed.');
       await runProcessTests(config, screens, configDeviceName, defaultLocale,
