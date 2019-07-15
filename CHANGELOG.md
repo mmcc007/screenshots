@@ -1,3 +1,7 @@
+## 1.1.1
+- Fixed localization issue in test #19, #20
+- Improved handling of locale for emulators and real devices
+
 ## 1.1.0
 - Added record/compare feature to compare screenshots with previously recorded screenshots during a run. #65
 
@@ -52,7 +56,7 @@
 
 - Bypasses changing locales if running in only one locale
 - Issues warning about running flutter driver in multiple locales  
-  See issue: https://github.com/flutter/flutter/issues/27785 for details.
+  See issue: <https://github.com/flutter/flutter/issues/27785> for details.
 
 ## 0.1.3
 
