@@ -46,7 +46,7 @@ Select the devices you want to run on, using a convenient config file. _Screensh
 _Screenshots_ runs your tests on both iOS and Android in one run.  
 (as opposed to making separate Snapshots and Screengrab runs)
 1. One run for multiple locales  
-If your app supports multiple locales, _Screenshots_ will optionally set the locales listed in the config file before running each test (see Limitations below).
+If your app supports multiple locales, _Screenshots_ will optionally set the locales listed in the config file before running each test.
 1. One run for frames  
 Optionally places images in device frames in same run.  
 (as opposed to making separate FrameIt runs... which supports iOS only)
@@ -86,6 +86,20 @@ Or, if using a config file other than the default 'screenshots.yaml':
 ````
 $ screenshots -c <path to config file>
 ````
+Other options:
+```
+$ screenshots -h
+usage: screenshots [--help] [--config <config file>] [--mode <normal|recording|comparison>]
+
+sample usage: screenshots
+
+-c, --config=<screenshots.yaml>    Path to config file.
+                                   (defaults to "screenshots.yaml")
+
+-h, --help                         Display this help information.
+-m, --mode                         If mode is recording, screenshots will be saved for later comparison.
+                                   [normal (default), recording, comparison]
+```
 
 # Modifying your tests for _Screenshots_
 A special function is provided in the _Screenshots_ package that is called by the test each time you want to capture a screenshot. 
@@ -103,11 +117,11 @@ To capture screenshots in your tests:
        ````
     2. Create the config at start of test  
        ````dart
-            final config = Config().configInfo;
+            final configInfo = Config().configInfo;
        ````  
     3. Throughout the test make calls to capture screenshots  
        ````dart
-           await screenshot(driver, config, 'myscreenshot1');
+           await screenshot(driver, configInfo, 'myscreenshot1');
        ````
        
 Note: make sure your screenshot names are unique across all your tests.
@@ -244,22 +258,6 @@ https://github.com/mmcc007/screenshots/releases/
 
 * Running _Screenshots_ in the cloud is  useful for automating the generation of your screenshots in a CI/CD environment.  
 * Running _Screenshots_ on macOS in the cloud can be used to generate your screenshots when developing on Linux and/or Windows (if not using locally attached iOS devices).
-
-# Limitations
-
-Due to a Flutter issue ([flutter/issues/27785](https://github.com/flutter/flutter/issues/27785)), running _Screenshots_ in multiple locales has limitations. 
-
-To raise priority of this Flutter issue, so it will be fixed sooner rather than later, please give a thumbs-up on [flutter/issues/27785](https://github.com/flutter/flutter/issues/27785).
-
-Priority of this limitation in Flutter project:
-
-| Date | `flutter driver` | `internationalization` | `test` |
-| --- | --- | --- | ---  |
-| 4/26/2019 | [#1](https://github.com/flutter/flutter/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc+label%3A%22t%3A+flutter+driver%22+) | [#5](https://github.com/flutter/flutter/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc+label%3A%22a%3A+internationalization%22+) | [#7](https://github.com/flutter/flutter/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc+label%3A%22a%3A+tests%22+) |
-| 5/25/2019 | [#1](https://github.com/flutter/flutter/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc+label%3A%22t%3A+flutter+driver%22+) | [#3](https://github.com/flutter/flutter/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc+label%3A%22a%3A+internationalization%22+) | [#6](https://github.com/flutter/flutter/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc+label%3A%22a%3A+tests%22+) |
-| 6/29/2019 | [#1](https://github.com/flutter/flutter/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc+label%3A%22t%3A+flutter+driver%22+) | [#1](https://github.com/flutter/flutter/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc+label%3A%22a%3A+internationalization%22+) | [#3](https://github.com/flutter/flutter/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc+label%3A%22a%3A+tests%22+) |
-
-(This limitation is being tracked by _screenshots_ in [screenshots/issues/20](https://github.com/mmcc007/screenshots/issues/20)).
 
 # Issues and Pull Requests
 [Issues](https://github.com/mmcc007/screenshots/issues) and 

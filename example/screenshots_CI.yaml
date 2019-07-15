@@ -7,11 +7,8 @@ tests:
 staging: /tmp/screenshots
 
 # A list of locales supported in app
-# Note: while support for multiple locales has been implemented in `screenshots`,
-#   non-default locales currently do not work due to flutter bug.
-#   See open issue: https://github.com/flutter/flutter/issues/27785 for details.
 locales:
-#  - fr-CA
+  - fr-CA
   - en-US
 
 # A list of devices to run tests on
