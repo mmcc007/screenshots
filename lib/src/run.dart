@@ -126,7 +126,7 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
     String deviceId;
     Map emulator;
     Map simulator;
-    bool pendingLocaleChange = false;
+    bool pendingIosLocaleChangeAtStart = false;
     if (device != null) {
       deviceId = device['id'];
     } else {
@@ -144,90 +144,100 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
             utils.getIosSimulators(), configDeviceName);
         deviceId = simulator['udid'];
         // check if current device is pending a locale change
-        if (locales[0] == utils.iosSimulatorLocale(deviceId)) {
+        if (locales[0] == utils.getIosSimulatorLocale(deviceId)) {
           print('Starting $configDeviceName...');
           startSimulator(deviceId);
         } else {
-          pendingLocaleChange = true;
+          pendingIosLocaleChangeAtStart = true;
           print('Not starting $configDeviceName due to pending locale change');
         }
       }
     }
     assert(deviceId != null);
 
-    // Check for a running android device or emulator
-    bool isRunningAndroidDeviceOrEmulator(Map device, Map emulator) {
-      return (device != null && device['platform'] != 'ios') ||
-          (device == null && emulator != null);
-    }
-
-    // save original locale for reverting later if necessary
-    String origLocale;
-    if (isRunningAndroidDeviceOrEmulator(device, emulator)) {
-      origLocale = utils.androidDeviceLocale(deviceId);
-    }
-
-    for (final locale in locales) {
-      // set locale if android device or emulator
-      if (isRunningAndroidDeviceOrEmulator(device, emulator)) {
-        await setAndroidLocale(deviceId, locale, configDeviceName);
+    final deviceType = getDeviceType(configInfo, configDeviceName);
+    // if device is real ios or android, cannot change locale
+    if (device != null && !device['emulator']) {
+      final defaultLocale = 'en-US'; // todo: need actual local
+      print('Warning: the locale of a real device cannot be changed.');
+      await runProcessTests(config, screens, configDeviceName, defaultLocale,
+          deviceType, testPaths, deviceId, imageProcessor, runMode);
+    } else {
+      // Check for a running android device or emulator
+      bool isRunningAndroidDeviceOrEmulator(Map device, Map emulator) {
+        return (device != null && device['platform'] != 'ios') ||
+            (device == null && emulator != null);
       }
-      // set locale if ios simulator
-      if ((device != null &&
-          device['platform'] == 'ios' &&
-          device['emulator'])) {
-        // an already running simulator
-        await setSimulatorLocale(
-            deviceId, configDeviceName, locale, stagingDir);
-      } else {
-        if (device == null && simulator != null) {
-          if (pendingLocaleChange) {
-            // a non-running simulator
-            await setSimulatorLocale(
-                deviceId, configDeviceName, locale, stagingDir,
-                running: false);
-          } else {
-            // a running simulator
-            await setSimulatorLocale(
-                deviceId, configDeviceName, locale, stagingDir);
+
+      // save original locale for reverting later if necessary
+      String origAndroidLocale;
+      if (isRunningAndroidDeviceOrEmulator(device, emulator)) {
+        origAndroidLocale = utils.getAndroidDeviceLocale(deviceId);
+      }
+
+      for (final locale in locales) {
+        // set locale if android device or emulator
+        if (isRunningAndroidDeviceOrEmulator(device, emulator)) {
+          await setEmulatorLocale(deviceId, locale, configDeviceName);
+        }
+        // set locale if ios simulator
+        if ((device != null &&
+            device['platform'] == 'ios' &&
+            device['emulator'])) {
+          // an already running simulator
+          await setSimulatorLocale(
+              deviceId, configDeviceName, locale, stagingDir);
+        } else {
+          if (device == null && simulator != null) {
+            if (pendingIosLocaleChangeAtStart) {
+              // a non-running simulator
+              await setSimulatorLocale(
+                  deviceId, configDeviceName, locale, stagingDir,
+                  running: false);
+              pendingIosLocaleChangeAtStart = false;
+            } else {
+              // a running simulator
+              await setSimulatorLocale(
+                  deviceId, configDeviceName, locale, stagingDir);
+            }
           }
         }
+        // run tests and process images
+        await runProcessTests(config, screens, configDeviceName, locale,
+            deviceType, testPaths, deviceId, imageProcessor, runMode);
       }
-      // issue locale warning if ios device
-      if ((device != null &&
-          device['platform'] == 'ios' &&
-          !device['emulator'])) {
-        // a running ios device
-        print('Warning: the locale of an ios device cannot be changed.');
+      // if an emulator was started, revert locale if necessary and shut it down
+      if (emulator != null) {
+        await setEmulatorLocale(deviceId, origAndroidLocale, configDeviceName);
+        await shutdownAndroidEmulator(daemonClient, deviceId);
       }
-      final deviceType = getDeviceType(configInfo, configDeviceName);
-
-      // store env for later use by tests
-      // ignore: invalid_use_of_visible_for_testing_member
-      await config.storeEnv(screens, configDeviceName, locale,
-          utils.getStringFromEnum(deviceType));
-
-      // run tests
-      for (final testPath in testPaths) {
-        print(
-            'Running $testPath on \'$configDeviceName\' in locale $locale...');
-        await utils.streamCmd('flutter', ['-d', deviceId, 'drive', testPath]);
-
-        // process screenshots
-        await imageProcessor.process(
-            deviceType, configDeviceName, locale, runMode, archive);
+      if (simulator != null) {
+        // todo: revert locale
+        shutdownSimulator(deviceId);
       }
     }
+  }
+}
 
-    // if an emulator was started, revert locale if necessary and shut it down
-    if (emulator != null) {
-      await setAndroidLocale(deviceId, origLocale, configDeviceName);
-      await shutdownAndroidEmulator(daemonClient, deviceId);
-    }
-    if (simulator != null) {
-      // todo: revert locale
-      shutdownSimulator(deviceId);
-    }
+Future runProcessTests(
+    Config config,
+    Screens screens,
+    configDeviceName,
+    String locale,
+    DeviceType deviceType,
+    testPaths,
+    String deviceId,
+    ImageProcessor imageProcessor,
+    RunMode runMode) async {
+  // store env for later use by tests
+  // ignore: invalid_use_of_visible_for_testing_member
+  await config.storeEnv(
+      screens, configDeviceName, locale, utils.getStringFromEnum(deviceType));
+  for (final testPath in testPaths) {
+    print('Running $testPath on \'$configDeviceName\' in locale $locale...');
+    await utils.streamCmd('flutter', ['-d', deviceId, 'drive', testPath]);
+    // process screenshots
+    await imageProcessor.process(deviceType, configDeviceName, locale, runMode);
   }
 }
 
@@ -282,22 +292,22 @@ Future setSimulatorLocale(
     String deviceId, String deviceName, String testLocale, stagingDir,
     {bool running = true}) async {
   // a running simulator
-  final deviceLocale = utils.iosSimulatorLocale(deviceId);
+  final deviceLocale = utils.getIosSimulatorLocale(deviceId);
 //  print('simulator locale=$deviceLocale');
   if (testLocale != deviceLocale) {
     if (running) shutdownSimulator(deviceId);
     print(
         'Changing locale from $deviceLocale to $testLocale on \'$deviceName\'...');
     await _changeSimulatorLocale(stagingDir, deviceId, testLocale);
+    print('Starting $deviceName...');
     startSimulator(deviceId);
   }
 }
 
-/// Set the locale for a real android device or a running emulator.
-Future<void> setAndroidLocale(String deviceId, testLocale, deviceName) async {
-  // a running android device or emulator
-  final deviceLocale = utils.androidDeviceLocale(deviceId);
-//  print('android device or emulator locale=$deviceLocale');
+/// Set the locale of a running emulator.
+Future<void> setEmulatorLocale(String deviceId, testLocale, deviceName) async {
+  final deviceLocale = utils.getAndroidDeviceLocale(deviceId);
+  print('emulator locale=$deviceLocale');
   if (deviceLocale != null &&
       deviceLocale != '' &&
       deviceLocale != testLocale) {
@@ -313,7 +323,7 @@ Future<void> setAndroidLocale(String deviceId, testLocale, deviceName) async {
 /// Change local of real android device or running emulator.
 void changeAndroidLocale(
     String deviceId, String deviceLocale, String testLocale) {
-  if (cmd('adb', ['root'], '.', true) ==
+  if (cmd('adb', ['-s', deviceId, 'root'], '.', true) ==
       'adbd cannot run as root in production builds\n') {
     stdout.write(
         'Warning: locale will not be changed. Running in locale \'$deviceLocale\'.\n');
@@ -322,7 +332,6 @@ void changeAndroidLocale(
     stdout.write(
         '    https://stackoverflow.com/questions/43923996/adb-root-is-not-working-on-emulator/45668555#45668555 for details.\n');
   }
-  _flutterDriverBugWarning();
   // adb shell "setprop persist.sys.locale fr-CA; setprop ctl.restart zygote"
   cmd('adb', [
     '-s',
@@ -341,7 +350,6 @@ void changeAndroidLocale(
 /// Change locale of non-running simulator.
 Future _changeSimulatorLocale(
     String stagingDir, String name, String testLocale) async {
-  _flutterDriverBugWarning();
   await utils.streamCmd('$stagingDir/resources/script/simulator-controller',
       [name, 'locale', testLocale]);
 }
@@ -356,11 +364,6 @@ Future<String> shutdownAndroidEmulator(
     throw 'Error: device id \'$deviceId\' not shutdown';
   }
   return device['id'];
-}
-
-void _flutterDriverBugWarning() {
-  stdout.write(
-      '\nWarning: running tests in a non-default locale will cause test to hang due to a bug in Flutter Driver (not related to \'screenshots\'). Modify your screenshots.yaml to use only the default locale for your location. For details of bug see comment at https://github.com/flutter/flutter/issues/27785#issue-408955077. Give comment a thumbs-up to get it fixed!\n\n');
 }
 
 /// Start android emulator in a CI environment.
