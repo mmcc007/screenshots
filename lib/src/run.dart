@@ -138,12 +138,8 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
     if (!device['emulator']) {
       final defaultLocale = 'en-US'; // todo: need actual local
       print('Warning: the locale of a real device cannot be changed.');
-      // store env for later use by tests
-      // ignore: invalid_use_of_visible_for_testing_member
-      await config.storeEnv(screens, configDeviceName, defaultLocale,
-          utils.getStringFromEnum(deviceType));
-      await runProcessTests(testPaths, configDeviceName, defaultLocale,
-          deviceId, imageProcessor, deviceType, runMode);
+      await runProcessTests(config, screens, configDeviceName, defaultLocale,
+          deviceType, testPaths, deviceId, imageProcessor, runMode);
     } else {
       // Check for a running android device or emulator
       bool isRunningAndroidDeviceOrEmulator(Map device, Map emulator) {
@@ -184,15 +180,9 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
             }
           }
         }
-
-        // store env for later use by tests
-        // ignore: invalid_use_of_visible_for_testing_member
-        await config.storeEnv(screens, configDeviceName, locale,
-            utils.getStringFromEnum(deviceType));
-
-        // run tests
-        await runProcessTests(testPaths, configDeviceName, locale, deviceId,
-            imageProcessor, deviceType, runMode);
+        // run tests and process images
+        await runProcessTests(config, screens, configDeviceName, locale,
+            deviceType, testPaths, deviceId, imageProcessor, runMode);
       }
       // if an emulator was started, revert locale if necessary and shut it down
       if (emulator != null) {
@@ -208,17 +198,22 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
 }
 
 Future runProcessTests(
-    testPaths,
+    Config config,
+    Screens screens,
     configDeviceName,
-    locale,
+    String locale,
+    DeviceType deviceType,
+    testPaths,
     String deviceId,
     ImageProcessor imageProcessor,
-    DeviceType deviceType,
     RunMode runMode) async {
+  // store env for later use by tests
+  // ignore: invalid_use_of_visible_for_testing_member
+  await config.storeEnv(
+      screens, configDeviceName, locale, utils.getStringFromEnum(deviceType));
   for (final testPath in testPaths) {
     print('Running $testPath on \'$configDeviceName\' in locale $locale...');
     await utils.streamCmd('flutter', ['-d', deviceId, 'drive', testPath]);
-
     // process screenshots
     await imageProcessor.process(deviceType, configDeviceName, locale, runMode);
   }
@@ -282,6 +277,7 @@ Future setSimulatorLocale(
     print(
         'Changing locale from $deviceLocale to $testLocale on \'$deviceName\'...');
     await _changeSimulatorLocale(stagingDir, deviceId, testLocale);
+    print('Starting $deviceName...');
     startSimulator(deviceId);
   }
 }
