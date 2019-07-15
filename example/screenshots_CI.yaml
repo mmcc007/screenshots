@@ -18,7 +18,7 @@ devices:
     iPad Pro (12.9-inch) (2nd generation):
       frame: false
   android:
-    Nexus 6P:
+#    Nexus 6P:
 
 # Frame screenshots
 frame: true
