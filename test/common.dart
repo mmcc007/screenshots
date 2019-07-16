@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:meta/meta.dart';
 import 'package:screenshots/src/run.dart' as run;
 import 'package:path/path.dart' as p;
 
@@ -99,6 +100,24 @@ Map diffMaps(Map orig, Map diff, {bool verbose = false}) {
     }
   });
   return diffs;
+}
+
+/// Returns a future that completes with a path suitable for ANDROID_HOME
+/// or with null, if ANDROID_HOME cannot be found.
+Future<String> findAndroidHome() async {
+  final Iterable<String> hits = grep(
+    'ANDROID_HOME = ',
+    from: await run.cmd('flutter', <String>['doctor', '-v'], '.', true),
+  );
+  if (hits.isEmpty) return null;
+  return hits.first.split('= ').last;
+}
+
+/// Splits [from] into lines and selects those that contain [pattern].
+Iterable<String> grep(Pattern pattern, {@required String from}) {
+  return from.split('\n').where((String line) {
+    return line.contains(pattern);
+  });
 }
 
 ///// Wait for android emulator to stop.
