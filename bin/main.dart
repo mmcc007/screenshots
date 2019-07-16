@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:args/args.dart';
 import 'package:screenshots/screenshots.dart';
+import 'package:path/path.dart' as path;
 
 const usage =
     'usage: screenshots [-h] [-c <config file>] [-m <normal|recording|comparison|archive>]';
@@ -34,6 +35,12 @@ void main(List<String> arguments) async {
     _handleError(argParser, e.toString());
   }
 
+  // show help
+  if (argResults[helpArg]) {
+    _showUsage(argParser);
+    exit(0);
+  }
+
   // confirm os
   switch (Platform.operatingSystem) {
     case 'windows':
@@ -64,30 +71,11 @@ void main(List<String> arguments) async {
     exit(1);
   }
 
-  // check adb is in path
-  if (!cmd('sh', ['-c', 'which adb && echo adb || echo not installed'], '.',
-          true)
-      .toString()
-      .contains('adb')) {
-    stderr.write(
-        '#############################################################\n');
-    stderr.write("# 'adb' must be in the PATH to use Screenshots\n");
-    stderr.write("# You can usually add it to the PATH using\n"
-        "# export PATH='~/Library/Android/sdk/platform-tools:\$PATH'  \n");
-    stderr.write(
-        '#############################################################\n');
-    exit(1);
-  }
-
-  // show help
-  if (argResults[helpArg]) {
-    _showUsage(argParser);
-    exit(0);
-  }
+  // check adb is found
+  getAdbPath();
 
   // validate args
-  final file = File(argResults[configArg]);
-  if (!await file.exists()) {
+  if (!await File(argResults[configArg]).exists()) {
     _handleError(argParser, "File not found: ${argResults[configArg]}");
   }
 
@@ -104,4 +92,28 @@ void _showUsage(ArgParser argParser) {
   print('\n$sampleUsage\n');
   print(argParser.usage);
   exit(2);
+}
+
+/// Path to the `adb` executable.
+String getAdbPath() {
+  final String androidHome = Platform.environment['ANDROID_HOME'] ??
+      Platform.environment['ANDROID_SDK_ROOT'];
+  if (androidHome == null) {
+    throw 'The ANDROID_SDK_ROOT and ANDROID_HOME environment variables are '
+        'missing. At least one of these variables must point to the Android '
+        'SDK directory containing platform-tools.';
+  }
+  final String adbPath = path.join(androidHome, 'platform-tools/adb');
+  final absPath = path.absolute(adbPath);
+  if (!File(adbPath).existsSync()) {
+    stderr.write(
+        '#############################################################\n');
+    stderr.write("# 'adb' must be in the PATH to use Screenshots\n");
+    stderr.write("# You can usually add it to the PATH using\n"
+        "# export PATH='\$HOME/Library/Android/sdk/platform-tools:\$PATH'  \n");
+    stderr.write(
+        '#############################################################\n');
+    exit(1);
+  }
+  return absPath;
 }
