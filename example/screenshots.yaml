@@ -18,10 +18,15 @@ locales:
 devices:
   ios:
     iPhone XS Max:
+      frame: false
+      orientation: LandscapeRight
     iPad Pro (12.9-inch) (2nd generation):
       frame: false
+      orientation: LandscapeRight
   android:
     Nexus 6P:
+      frame: false
+      orientation: LandscapeRight
 
 # Frame screenshots
 frame: true

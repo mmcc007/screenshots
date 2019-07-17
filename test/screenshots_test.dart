@@ -6,6 +6,7 @@ import 'package:screenshots/src/config.dart';
 import 'package:screenshots/src/daemon_client.dart';
 import 'package:screenshots/src/globals.dart';
 import 'package:screenshots/src/image_processor.dart';
+import 'package:screenshots/src/orientation.dart' as orient;
 import 'package:screenshots/src/screens.dart';
 import 'package:screenshots/src/image_magick.dart' as im;
 import 'package:screenshots/src/resources.dart' as resources;
@@ -280,10 +281,14 @@ void main() {
     final simulatorName = 'iPhone X';
     final simulatorInfo =
         utils.getHighestIosSimulator(utils.getIosSimulators(), simulatorName);
-    // note: daemonClient should get an 'add.device' event after simulator startup
     final deviceId = simulatorInfo['udid'];
+    final daemonClient = DaemonClient();
+    daemonClient.verbose = true;
+    await daemonClient.start;
     run.startSimulator(deviceId);
+    await waitForEmulatorToStart(daemonClient, simulatorName);
     run.shutdownSimulator(deviceId);
+    await daemonClient.stop;
   });
 
   test('start emulator on travis', () async {
@@ -563,53 +568,80 @@ devices:
       expect(regExp.stringMatch(line), line);
       expect(regExp.hasMatch(line), true);
     });
+  });
 
-    group('manage device orientation', () {
-      test('find ios simulator orientation', () async {
-        final udId = '03D4FC12-3927-4C8B-A226-17DE34AE9C18';
-        final env = Platform.environment;
-        final preferencesDir =
-            '${env['HOME']}/Library/Developer/CoreSimulator/Devices/$udId/data/Library/Preferences';
-        await Directory(preferencesDir).listSync().forEach((fsEntity) {
-          // print contents
-          final filePath = fsEntity.path;
-          print('filePath=$filePath');
-          try {
-            final contents = run.cmd('plutil',
-                ['-convert', 'xml1', '-r', '-o', '-', filePath], '.', true);
-            print('contents=$contents');
-          } catch (e) {
-            print('error: $e');
-          }
-        });
-      });
-
-      test('set android emulator orientation', () async {
-        final emulatorId = 'Nexus_6P_API_28';
-        final daemonClient = DaemonClient();
-        await daemonClient.start;
-        final deviceId = await daemonClient.launchEmulator(emulatorId);
-        // change orientation to landscape
-        final landscape = '1';
-        final portrait = '0';
-        final changeOrientation = (orientation) async {
-          run.cmd('adb', [
-            '-s',
-            deviceId,
-            'shell',
-            'settings',
-            'put',
-            'system',
-            'user_rotation',
-            orientation
-          ]);
-          await Future.delayed(Duration(milliseconds: 5000));
-        };
-        await changeOrientation(landscape);
-        await changeOrientation(portrait);
-        expect(await run.shutdownAndroidEmulator(daemonClient, deviceId),
-            deviceId);
+  group('manage device orientation', () {
+    test('find ios simulator orientation', () async {
+      final udId = '03D4FC12-3927-4C8B-A226-17DE34AE9C18';
+      final env = Platform.environment;
+      final preferencesDir =
+          '${env['HOME']}/Library/Developer/CoreSimulator/Devices/$udId/data/Library/Preferences';
+      await Directory(preferencesDir).listSync().forEach((fsEntity) {
+        // print contents
+        final filePath = fsEntity.path;
+        print('filePath=$filePath');
+        try {
+          final contents = run.cmd('plutil',
+              ['-convert', 'xml1', '-r', '-o', '-', filePath], '.', true);
+          print('contents=$contents');
+        } catch (e) {
+          print('error: $e');
+        }
       });
     });
+
+    test('set ios simulator orientation', () async {
+      final scriptDir = 'lib/resources/script';
+      final simulatorName = 'iPhone 7 Plus';
+      final simulatorInfo =
+          utils.getHighestIosSimulator(utils.getIosSimulators(), simulatorName);
+      final deviceId = simulatorInfo['udid'];
+      run.startSimulator(deviceId);
+      final daemonClient = DaemonClient();
+      daemonClient.verbose = true;
+      await daemonClient.start;
+      await waitForEmulatorToStart(daemonClient, simulatorName);
+      await Future.delayed(Duration(milliseconds: 5000)); // finish booting
+      orient.changeDeviceOrientation(
+          DeviceType.ios, orient.Orientation.LandscapeRight,
+          scriptDir: scriptDir);
+      await Future.delayed(Duration(milliseconds: 3000));
+      orient.changeDeviceOrientation(
+          DeviceType.ios, orient.Orientation.Portrait,
+          scriptDir: scriptDir);
+      await Future.delayed(Duration(milliseconds: 1000));
+      run.shutdownSimulator(deviceId);
+      await daemonClient.stop;
+    });
+
+    test('set android emulator orientation', () async {
+      final emulatorId = 'Nexus_6P_API_28';
+      final daemonClient = DaemonClient();
+      await daemonClient.start;
+      final deviceId = await daemonClient.launchEmulator(emulatorId);
+      orient.changeDeviceOrientation(
+          DeviceType.android, orient.Orientation.LandscapeRight,
+          deviceId: deviceId);
+      await Future.delayed(Duration(milliseconds: 3000));
+      orient.changeDeviceOrientation(
+          DeviceType.android, orient.Orientation.Portrait,
+          deviceId: deviceId);
+      await Future.delayed(Duration(milliseconds: 3000));
+      expect(
+          await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
+    });
   });
+}
+
+Future waitForEmulatorToStart(
+    DaemonClient daemonClient, String simulatorName) async {
+  bool started = false;
+  while (!started) {
+    final devices = await daemonClient.devices;
+    final device = devices.firstWhere(
+        (device) => device['name'] == simulatorName && device['emulator'],
+        orElse: () => null);
+    started = device != null;
+    await Future.delayed(Duration(milliseconds: 1000));
+  }
 }

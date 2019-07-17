@@ -6,6 +6,7 @@ import 'daemon_client.dart';
 import 'fastlane.dart' as fastlane;
 import 'globals.dart';
 import 'image_processor.dart';
+import 'orientation.dart' as orient;
 import 'resources.dart' as resources;
 import 'screens.dart';
 import 'utils.dart' as utils;
@@ -26,6 +27,7 @@ Future<void> run([String configPath = kConfigFileName]) async {
   // start flutter daemon
   print('Starting flutter daemon...');
   final daemonClient = DaemonClient();
+  daemonClient.verbose = true;
   await daemonClient.start;
   // get all attached devices and running emulators/simulators
   final devices = await daemonClient.devices;
@@ -112,7 +114,9 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
         }
       }
     }
-    assert(deviceId != null);
+    deviceId == null
+        ? throw 'Error: device \'$configDeviceName\' not found'
+        : null;
 
     // Check for a running android device or emulator
     bool isRunningAndroidDeviceOrEmulator(Map device, Map emulator) {
@@ -166,6 +170,34 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
       // ignore: invalid_use_of_visible_for_testing_member
       await config.storeEnv(screens, configDeviceName, locale,
           utils.getStringFromEnum(deviceType));
+
+      // Change orientation if required
+      final deviceOrientation = configInfo['devices']
+              [utils.getStringFromEnum(deviceType)][configDeviceName]
+          ['orientation'];
+      if (deviceOrientation.isNotEmpty) {
+        final orientation = orient.getOrientationEnum(deviceOrientation);
+        switch (deviceType) {
+          case DeviceType.android:
+            final currentDevice =
+                utils.getDeviceFromId(await daemonClient.devices, deviceId);
+            currentDevice == null
+                ? throw 'Error: device \'$configDeviceName\' not found in flutter daemon.'
+                : null;
+            if (currentDevice['emulator']) {
+              orient.changeDeviceOrientation(deviceType, orientation,
+                  deviceId: deviceId);
+            } else {
+              print(
+                  'Warning: cannot change orientation of a real android device.');
+            }
+            break;
+          case DeviceType.ios:
+            orient.changeDeviceOrientation(deviceType, orientation,
+                scriptDir: '$stagingDir/resources/script');
+            break;
+        }
+      }
 
       // run tests
       for (final testPath in testPaths) {

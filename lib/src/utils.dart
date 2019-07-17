@@ -184,6 +184,12 @@ Future prefixFilesInDir(String dirPath, String prefix) async {
 /// Converts [enum] value to [String].
 String getStringFromEnum(dynamic _enum) => _enum.toString().split('.').last;
 
+/// Converts [String] to [enum].
+T getEnumFromString<T>(List<T> values, String value) {
+  return values.firstWhere((type) => getStringFromEnum(type) == value,
+      orElse: () => null);
+}
+
 /// Returns locale of currently attached android device.
 String androidDeviceLocale(String deviceId) {
   final deviceLocale = run
@@ -276,12 +282,18 @@ List getAllConfiguredDeviceNames(Map configInfo) {
   return deviceNames;
 }
 
-/// Get device from deviceName.
+/// Get device for deviceName from list of devices.
 Map getDevice(List devices, String deviceName) {
   return devices.firstWhere(
       (device) => device['model'] == null
           ? device['name'] == deviceName
           : device['model'].contains(deviceName),
+      orElse: () => null);
+}
+
+/// Get device for deviceId from list of devices.
+Map getDeviceFromId(List devices, String deviceId) {
+  return devices.firstWhere((device) => device['id'] == deviceId,
       orElse: () => null);
 }
 
@@ -311,4 +323,10 @@ Future<String> waitSysLogMsg(String deviceId, RegExp regExp) async {
 Map findEmulator(List emulators, String emulatorName) {
   return emulators.firstWhere((emulator) => emulator['name'] == emulatorName,
       orElse: () => null);
+}
+
+/// Run AppleScript
+/// Requires permission on first run.
+void runOsaScript(String script, List args) {
+  run.cmd('osascript', [script, ...args]);
 }
