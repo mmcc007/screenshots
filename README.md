@@ -183,6 +183,8 @@ Individual devices can be configured in `screenshots.yaml` by specifying per dev
 
 Note: images generated for those devices where framing is disabled are probably not suitable for upload, but can be used for local review.
 
+Note: orientation on iOS simulators is implemented using an AppleScript script which requires granting permission on first use.
+
 # Record/Compare Mode
 _Screenshots_ can be used to monitor any unexpected changes to the UI by comparing the new screenshots to previously recorded screenshots. Any differences will be highlighted in a 'diff' image for review.  
 
