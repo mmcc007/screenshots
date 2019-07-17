@@ -51,10 +51,10 @@ Future<void> run(
   await resources.unpackScripts(stagingDir);
   final archiveDir = configInfo['archive'];
   Archive archive = Archive(stagingDir, archiveDir);
-  if (archiveDir == null) {
-    await fastlane.clearFastlaneDirs(configInfo, screens, runMode);
-  } else {
+  if (runMode==RunMode.archive) {
     print('Archiving screenshots to ${archive.archiveDirPrefix}...');
+  } else {
+    await fastlane.clearFastlaneDirs(configInfo, screens, runMode);
   }
   // run integration tests in each real device (or emulator/simulator) for
   // each locale and process screenshots
@@ -69,14 +69,14 @@ Future<void> run(
     print('  $recordingDir/ios/fastlane/screenshots');
     print('  $recordingDir/android/fastlane/metadata/android');
   } else {
-    if (archiveDir == null) {
+    if (runMode==RunMode.archive) {
+      print('  ${archive.archiveDirPrefix}');
+    } else {
       print('  ios/fastlane/screenshots');
       print('  android/fastlane/metadata/android');
       print('for upload to both Apple and Google consoles.');
       print('\nFor uploading and other automation options see:');
       print('  https://pub.dartlang.org/packages/fledge');
-    } else {
-      print('  ${archive.archiveDirPrefix}');
     }
   }
   print('\nscreenshots completed successfully.');
@@ -210,15 +210,15 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
         final deviceOrientation = configInfo['devices']
                 [utils.getStringFromEnum(deviceType)][configDeviceName]
             ['orientation'];
-        if (deviceOrientation.isNotEmpty) {
+        if (deviceOrientation != null) {
           final orientation = orient.getOrientationEnum(deviceOrientation);
+          final currentDevice =
+              utils.getDeviceFromId(await daemonClient.devices, deviceId);
+          currentDevice == null
+              ? throw 'Error: device \'$configDeviceName\' not found in flutter daemon.'
+              : null;
           switch (deviceType) {
             case DeviceType.android:
-              final currentDevice =
-                  utils.getDeviceFromId(await daemonClient.devices, deviceId);
-              currentDevice == null
-                  ? throw 'Error: device \'$configDeviceName\' not found in flutter daemon.'
-                  : null;
               if (currentDevice['emulator']) {
                 orient.changeDeviceOrientation(deviceType, orientation,
                     deviceId: deviceId);
@@ -228,8 +228,13 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
               }
               break;
             case DeviceType.ios:
-              orient.changeDeviceOrientation(deviceType, orientation,
-                  scriptDir: '$stagingDir/resources/script');
+              if (currentDevice['emulator']) {
+                orient.changeDeviceOrientation(deviceType, orientation,
+                    scriptDir: '$stagingDir/resources/script');
+              } else {
+                print(
+                    'Warning: cannot change orientation of a real iOS device.');
+              }
               break;
           }
         }
