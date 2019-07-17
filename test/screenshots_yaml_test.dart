@@ -19,9 +19,9 @@ staging: /tmp/screenshots
 
 # A list of locales supported in app
 locales:
-#  - fr-CA
-  - en-US
-#  - de-DE
+#  - fr_CA
+  - en_US
+#  - de_DE
 
 # A list of devices to emulate
 devices:
@@ -49,7 +49,7 @@ void main() {
   test('config info for app from string', () {
     final expected = {
       'tests': ['example/test_driver/main.dart'],
-      'locales': ['en-US'],
+      'locales': ['en_US'],
       'frame': true,
       'devices': {
         'android': {'Nexus 5X': null},
@@ -68,7 +68,7 @@ void main() {
   test('config info for app from file', () {
     final expected = {
       'tests': ['example/test_driver/main.dart'],
-      'locales': ['en-US'],
+      'locales': ['en_US'],
       'frame': true,
       'devices': {
         'android': {'Nexus 5X': null},

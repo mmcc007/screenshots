@@ -170,17 +170,17 @@ T getEnumFromString<T>(List<T> values, String value) {
 String getAndroidDeviceLocale(String deviceId) {
 // ro.product.locale is available on first boot but does not update,
 // persist.sys.locale is empty on first boot but updates with locale changes
-  String deviceLocale = run
+  String locale = run
       .cmd('adb', ['-s', deviceId, 'shell', 'getprop persist.sys.locale'], '.',
           true)
       .trim();
-  if (deviceLocale.isEmpty) {
-    deviceLocale = run
+  if (locale.isEmpty) {
+    locale = run
         .cmd('adb', ['-s', deviceId, 'shell', 'getprop ro.product.locale'], '.',
             true)
         .trim();
   }
-  return deviceLocale;
+  return locale;
 }
 
 /// Returns locale of simulator with udid [udId].

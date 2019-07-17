@@ -10,7 +10,7 @@ void main() {
 
     final env = {
       'screen_size': '1440x2560',
-      'locale': 'en-US',
+      'locale': 'en_US',
       'device_name': 'Nexus 6P',
       'device_type': 'android',
     };

@@ -266,8 +266,8 @@ void main() {
   test('change android locale', () async {
     final deviceName = 'Nexus 6P';
     final emulatorId = 'Nexus_6P_API_28';
-    final origLocale = 'en-US';
-    final newLocale = 'fr-CA';
+    final origLocale = 'en_US';
+    final newLocale = 'fr_CA';
     final daemonClient = DaemonClient();
     await daemonClient.start;
     daemonClient.verbose = true;
@@ -318,8 +318,8 @@ void main() {
     final emulatorId = 'Nexus_6P_API_28';
     final deviceName = 'any device name';
     final stagingDir = '/tmp/tmp';
-    final origLocale = 'en-US';
-    final newLocale = 'fr-CA';
+    final origLocale = 'en_US';
+    final newLocale = 'fr_CA';
     final testAppDir = 'example';
     final testAppSrcPath = 'test_driver/main.dart';
 
@@ -348,7 +348,7 @@ void main() {
   test('get android device locale', () async {
     final emulatorId = 'Nexus_6P_API_28';
     final stagingDir = '/tmp/tmp';
-    final locale = 'en-US';
+    final locale = 'en_US';
 
     await resources.unpackScripts(stagingDir);
     final daemonClient = DaemonClient();
@@ -363,8 +363,8 @@ void main() {
   test('change locale on iOS and test', () async {
     final simulatorName = 'iPhone X';
     final stagingDir = '/tmp/tmp';
-    final origLocale = 'en-US';
-    final locale = 'fr-CA';
+    final origLocale = 'en_US';
+    final locale = 'fr_CA';
     final testAppDir = 'example';
     final testAppSrcPath = 'test_driver/main.dart';
 
@@ -399,7 +399,7 @@ void main() {
   test('get ios simulator locale', () async {
     final udId = '03D4FC12-3927-4C8B-A226-17DE34AE9C18';
     var locale = utils.getIosSimulatorLocale(udId);
-    expect(locale, 'en-US');
+    expect(locale, 'en_US');
   });
 
   test('get avd from a running emulator', () async {
@@ -507,7 +507,7 @@ devices:
     });
 
     test('scan syslog for string', () async {
-      final toLocale = 'en-US';
+      final toLocale = 'en_US';
 //      final expected =
 //          'ContactsProvider: Locale has changed from [fr_CA] to [en_US]';
 //      final expected = RegExp('Locale has changed from');
@@ -524,7 +524,7 @@ devices:
     });
 
     test('reg exp', () {
-      final locale = 'fr-CA';
+      final locale = 'fr_CA';
       final line =
           'ContactsProvider: Locale has changed from [en_US] to [${locale.replaceFirst('-', '_')}]';
 //      final regExp = RegExp(
