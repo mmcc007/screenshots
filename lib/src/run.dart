@@ -167,7 +167,7 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
       final defaultLocale = 'en_US'; // todo: need actual locale of real device
       print('Warning: the locale of a real device cannot be changed.');
       await runProcessTests(config, screens, configDeviceName, defaultLocale,
-          deviceType, testPaths, deviceId, imageProcessor, runMode, archive);
+          deviceType, testPaths, deviceId, imageProcessor, runMode, archive, 'unknown');
     } else {
       // Function to check for a running android device or emulator
       bool isRunningAndroidDeviceOrEmulator(Map device, Map emulator) {
@@ -258,8 +258,18 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
         }
 
         // run tests and process images
-        await runProcessTests(config, screens, configDeviceName, locale,
-            deviceType, testPaths, deviceId, imageProcessor, runMode, archive);
+        await runProcessTests(
+            config,
+            screens,
+            configDeviceName,
+            locale,
+            deviceType,
+            testPaths,
+            deviceId,
+            imageProcessor,
+            runMode,
+            archive,
+            deviceOrientation);
       }
 
       // if an emulator was started, revert locale if necessary and shut it down
@@ -286,11 +296,12 @@ Future runProcessTests(
     String deviceId,
     ImageProcessor imageProcessor,
     RunMode runMode,
-    Archive archive) async {
+    Archive archive,
+    String orientation) async {
   // store env for later use by tests
   // ignore: invalid_use_of_visible_for_testing_member
-  await config.storeEnv(
-      screens, configDeviceName, locale, utils.getStringFromEnum(deviceType));
+  await config.storeEnv(screens, configDeviceName, locale,
+      utils.getStringFromEnum(deviceType), orientation);
   for (final testPath in testPaths) {
     print('Running $testPath on \'$configDeviceName\' in locale $locale...');
     await utils.streamCmd('flutter', ['-d', deviceId, 'drive', testPath]);

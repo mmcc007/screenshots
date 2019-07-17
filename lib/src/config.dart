@@ -40,7 +40,7 @@ class Config {
   /// (called by screenshots)
   @visibleForTesting
   Future<void> storeEnv(Screens screens, String emulatorName, String locale,
-      String deviceType) async {
+      String deviceType, String orientation) async {
     // store env for later use by tests
     final screenProps = screens.screenProps(emulatorName);
     final screenSize = screenProps == null ? null : screenProps['size'];
@@ -49,6 +49,7 @@ class Config {
       'locale': locale,
       'device_name': emulatorName,
       'device_type': deviceType,
+      'orientation': orientation
     };
     await _envStore.writeAsString(json.encode(currentEnv));
   }
