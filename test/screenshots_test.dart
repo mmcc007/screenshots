@@ -291,8 +291,7 @@ void main() {
     final daemonClient = DaemonClient();
     daemonClient.verbose = true;
     await daemonClient.start;
-    run.startSimulator(deviceId);
-    await waitForEmulatorToStart(daemonClient, simulatorName);
+    await run.startSimulator(daemonClient, deviceId);
     run.shutdownSimulator(deviceId);
     await daemonClient.stop;
   });
@@ -315,26 +314,12 @@ void main() {
         ProcessStartMode.detached);
   });
 
-  // reproduce https://github.com/flutter/flutter/issues/27785
-  // on android (hangs during test)
-  // tested on android emulator in default locale (en-US) and it worked
-  // tested on android emulator in automatically changed to locale fr-CA and it hangs
-  // tested on android emulator booted in locale fr-CA and it hangs
-//  [trace] FlutterDriver: Isolate found with number: 939713595
-//  [trace] FlutterDriver: Isolate is paused at start.
-//  [trace] FlutterDriver: Attempting to resume isolate
-//  [trace] FlutterDriver: Waiting for service extension
-//  [info ] FlutterDriver: Connected to Flutter application.
-//  00:04 +0: end-to-end test tap on the floating action button; verify counter
-//  [warning] FlutterDriver: waitFor message is taking a long time to complete...
-//  hangs
   test('change locale on android and test', () async {
     final emulatorId = 'Nexus_6P_API_28';
     final deviceName = 'any device name';
     final stagingDir = '/tmp/tmp';
     final origLocale = 'en-US';
-    final newLocale = 'en-US'; // succeeds
-//    final newLocale = 'fr-CA'; // fails
+    final newLocale = 'fr-CA';
     final testAppDir = 'example';
     final testAppSrcPath = 'test_driver/main.dart';
 
@@ -343,6 +328,7 @@ void main() {
 
     final daemonClient = DaemonClient();
     await daemonClient.start;
+
     // start emulator
     final deviceId = await daemonClient.launchEmulator(emulatorId);
 
@@ -352,12 +338,12 @@ void main() {
     // run test
     await utils.streamCmd('flutter', ['drive', testAppSrcPath], testAppDir);
 
-    // stop emulator
+    // restore orig locale
     await run.setEmulatorLocale(deviceId, origLocale, deviceName);
+
+    // stop emulator
     expect(await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
-  },
-      timeout:
-          Timeout(Duration(seconds: 90))); // increase time to get stacktrace
+  }, timeout: Timeout(Duration(seconds: 90)));
 
   test('get android device locale', () async {
     final emulatorId = 'Nexus_6P_API_28';
@@ -374,17 +360,11 @@ void main() {
     expect(deviceLocale, locale);
   });
 
-  // reproduce https://github.com/flutter/flutter/issues/27785
-  // on ios
-  // tested on ios device in default locale (en-US) and it worked
-  // tested on ios device in manually changed to locale fr-CA and it hangs
-  // tested on ios simulator in default locale (en-US) and it worked
-  // tested on ios simulator in automatically changed to locale fr-CA and it hangs
   test('change locale on iOS and test', () async {
     final simulatorName = 'iPhone X';
     final stagingDir = '/tmp/tmp';
-    final locale = 'en-US'; // default locale (works)
-//    final locale = 'fr-CA'; // fails
+    final origLocale = 'en-US';
+    final locale = 'fr-CA';
     final testAppDir = 'example';
     final testAppSrcPath = 'test_driver/main.dart';
 
@@ -399,13 +379,10 @@ void main() {
         utils.getHighestIosSimulator(utils.getIosSimulators(), simulatorName);
     final deviceId = simulatorInfo['udid'];
     await run.setSimulatorLocale(
-        deviceId, simulatorName, locale, stagingDir, daemonClient,
-        running: false);
+        deviceId, simulatorName, locale, stagingDir, daemonClient);
 
     // start simulator
-//    final daemonClient = DaemonClient();
-//    await daemonClient.start;
-    run.startSimulator(deviceId);
+    await run.startSimulator(daemonClient, deviceId);
 
     // run test
     await utils.streamCmd(
@@ -413,9 +390,11 @@ void main() {
 
     // stop simulator
     run.shutdownSimulator(deviceId);
-  },
-      // increase time to get stacktrace
-      timeout: Timeout(Duration(minutes: 2)));
+
+    // restore orig locale
+    await run.setSimulatorLocale(
+        deviceId, simulatorName, origLocale, stagingDir, daemonClient);
+  }, timeout: Timeout(Duration(seconds: 90)));
 
   test('get ios simulator locale', () async {
     final udId = '03D4FC12-3927-4C8B-A226-17DE34AE9C18';
@@ -702,11 +681,10 @@ devices:
       final simulatorInfo =
           utils.getHighestIosSimulator(utils.getIosSimulators(), simulatorName);
       final deviceId = simulatorInfo['udid'];
-      run.startSimulator(deviceId);
       final daemonClient = DaemonClient();
       daemonClient.verbose = true;
       await daemonClient.start;
-      await waitForEmulatorToStart(daemonClient, simulatorName);
+      await run.startSimulator(daemonClient, deviceId);
       await Future.delayed(Duration(milliseconds: 5000)); // finish booting
       orient.changeDeviceOrientation(
           DeviceType.ios, orient.Orientation.LandscapeRight,
