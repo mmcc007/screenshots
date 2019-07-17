@@ -202,12 +202,12 @@ List iosDevices() {
 
 /// Wait for emulator or simulator to start
 Future waitForEmulatorToStart(
-    DaemonClient daemonClient, String simulatorName) async {
+    DaemonClient daemonClient, String deviceId) async {
   bool started = false;
   while (!started) {
     final devices = await daemonClient.devices;
     final device = devices.firstWhere(
-        (device) => device['name'] == simulatorName && device['emulator'],
+        (device) => device['id'] == deviceId && device['emulator'],
         orElse: () => null);
     started = device != null;
     await Future.delayed(Duration(milliseconds: 1000));
