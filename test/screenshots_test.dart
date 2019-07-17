@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:process/process.dart';
-import 'package:screenshots/src/archive.dart';
+import 'package:screenshots/screenshots.dart';
 import 'package:screenshots/src/config.dart';
 import 'package:screenshots/src/daemon_client.dart';
 import 'package:screenshots/src/globals.dart';
@@ -16,6 +16,7 @@ import 'package:yaml/yaml.dart';
 import 'package:screenshots/src/fastlane.dart' as fastlane;
 import 'package:path/path.dart' as p;
 
+import '../bin/main.dart';
 import 'common.dart';
 
 void main() {
@@ -633,7 +634,6 @@ devices:
   });
 
   group('archiving', () {
-
     test('run with archiving enabled', () async {
       final origDir = Directory.current;
       Directory.current = 'example';
@@ -657,6 +657,13 @@ devices:
       expect(filesPresent(dirPath, pattern), isEmpty);
       // restore deleted files
       run.cmd('git', ['checkout', dirPath]);
+    });
+  });
+
+  group('adb path', () {
+    test('find adb path', () async {
+      final _adbPath = getAdbPath();
+      print('adbPath=$_adbPath');
     });
   });
 }
