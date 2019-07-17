@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:intl/intl.dart';
+
 import 'archive.dart';
 import 'config.dart';
 import 'daemon_client.dart';
@@ -144,7 +146,8 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
             utils.getIosSimulators(), configDeviceName);
         deviceId = simulator['udid'];
         // check if current device is pending a locale change
-        if (locales[0] == utils.getIosSimulatorLocale(deviceId)) {
+        if (Intl.canonicalizedLocale(locales[0]) ==
+            Intl.canonicalizedLocale(utils.getIosSimulatorLocale(deviceId))) {
           print('Starting $configDeviceName...');
           await startSimulator(daemonClient, deviceId);
         } else {
@@ -161,7 +164,7 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
     final deviceType = getDeviceType(configInfo, configDeviceName);
     // if device is real ios or android, cannot change locale
     if (device != null && !device['emulator']) {
-      final defaultLocale = 'en-US'; // todo: need actual locale
+      final defaultLocale = 'en_US'; // todo: need actual locale of real device
       print('Warning: the locale of a real device cannot be changed.');
       await runProcessTests(config, screens, configDeviceName, defaultLocale,
           deviceType, testPaths, deviceId, imageProcessor, runMode, archive);
@@ -208,7 +211,7 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
           if (localeChanged) {
             // restart simulator
             print('Restarting \'$configDeviceName\' due to locale change...');
-            shutdownSimulator(deviceId);
+            await shutdownSimulator(deviceId);
             await startSimulator(daemonClient, deviceId);
           }
         }
@@ -267,7 +270,7 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
       if (simulator != null) {
         await setSimulatorLocale(deviceId, configDeviceName, origIosLocale,
             stagingDir, daemonClient);
-        shutdownSimulator(deviceId);
+        await shutdownSimulator(deviceId);
       }
     }
   }
@@ -297,8 +300,10 @@ Future runProcessTests(
   }
 }
 
-void shutdownSimulator(String deviceId) {
+Future<void> shutdownSimulator(String deviceId) async {
   cmd('xcrun', ['simctl', 'shutdown', deviceId]);
+  // shutdown apparently needs time when restarting
+  await Future.delayed(Duration(milliseconds: 2000));
 }
 
 Future<void> startSimulator(DaemonClient daemonClient, String deviceId) async {
@@ -351,10 +356,10 @@ Future<bool> setSimulatorLocale(String deviceId, String deviceName,
     String testLocale, String stagingDir, DaemonClient daemonClient) async {
   // a running simulator
   final deviceLocale = utils.getIosSimulatorLocale(deviceId);
-  print('simulator locale=$deviceLocale');
+  print('\'$deviceName\' locale: $deviceLocale, test locale: $testLocale');
   bool localeChanged = false;
-  if (testLocale != deviceLocale) {
-//    if (running) shutdownSimulator(deviceId);
+  if (Intl.canonicalizedLocale(testLocale) !=
+      Intl.canonicalizedLocale(deviceLocale)) {
     print(
         'Changing locale from $deviceLocale to $testLocale on \'$deviceName\'...');
     await _changeSimulatorLocale(stagingDir, deviceId, testLocale);
@@ -366,10 +371,11 @@ Future<bool> setSimulatorLocale(String deviceId, String deviceName,
 /// Set the locale of a running emulator.
 Future<void> setEmulatorLocale(String deviceId, testLocale, deviceName) async {
   final deviceLocale = utils.getAndroidDeviceLocale(deviceId);
-  print('emulator locale=$deviceLocale');
+  print('\'$deviceName\' locale: $deviceLocale, test locale: $testLocale');
   if (deviceLocale != null &&
       deviceLocale != '' &&
-      deviceLocale != testLocale) {
+      Intl.canonicalizedLocale(deviceLocale) !=
+          Intl.canonicalizedLocale(testLocale)) {
     //          daemonClient.verbose = true;
     print(
         'Changing locale from $deviceLocale to $testLocale on \'$deviceName\'...');
@@ -393,7 +399,7 @@ void changeAndroidLocale(
     stdout.write(
         '    https://stackoverflow.com/questions/43923996/adb-root-is-not-working-on-emulator/45668555#45668555 for details.\n');
   }
-  // adb shell "setprop persist.sys.locale fr-CA; setprop ctl.restart zygote"
+  // adb shell "setprop persist.sys.locale fr_CA; setprop ctl.restart zygote"
   cmd('adb', [
     '-s',
     deviceId,

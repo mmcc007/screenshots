@@ -292,7 +292,7 @@ void main() {
     daemonClient.verbose = true;
     await daemonClient.start;
     await run.startSimulator(daemonClient, deviceId);
-    run.shutdownSimulator(deviceId);
+    await run.shutdownSimulator(deviceId);
     await daemonClient.stop;
   });
 
@@ -389,7 +389,7 @@ void main() {
         'flutter', ['-d', deviceId, 'drive', testAppSrcPath], testAppDir);
 
     // stop simulator
-    run.shutdownSimulator(deviceId);
+    await run.shutdownSimulator(deviceId);
 
     // restore orig locale
     await run.setSimulatorLocale(
@@ -694,7 +694,7 @@ devices:
           DeviceType.ios, orient.Orientation.Portrait,
           scriptDir: scriptDir);
       await Future.delayed(Duration(milliseconds: 1000));
-      run.shutdownSimulator(deviceId);
+      await run.shutdownSimulator(deviceId);
       await daemonClient.stop;
     });
 
