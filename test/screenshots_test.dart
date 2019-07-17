@@ -391,11 +391,15 @@ void main() {
     // unpack resources
     await resources.unpackScripts(stagingDir);
 
+    final daemonClient = DaemonClient();
+    await daemonClient.start;
+
     // change locale
     final simulatorInfo =
         utils.getHighestIosSimulator(utils.getIosSimulators(), simulatorName);
     final deviceId = simulatorInfo['udid'];
-    await run.setSimulatorLocale(deviceId, simulatorName, locale, stagingDir,
+    await run.setSimulatorLocale(
+        deviceId, simulatorName, locale, stagingDir, daemonClient,
         running: false);
 
     // start simulator
@@ -696,7 +700,7 @@ devices:
       final scriptDir = 'lib/resources/script';
       final simulatorName = 'iPhone 7 Plus';
       final simulatorInfo =
-      utils.getHighestIosSimulator(utils.getIosSimulators(), simulatorName);
+          utils.getHighestIosSimulator(utils.getIosSimulators(), simulatorName);
       final deviceId = simulatorInfo['udid'];
       run.startSimulator(deviceId);
       final daemonClient = DaemonClient();
@@ -733,17 +737,4 @@ devices:
           await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
     });
   });
-}
-
-Future waitForEmulatorToStart(
-    DaemonClient daemonClient, String simulatorName) async {
-  bool started = false;
-  while (!started) {
-    final devices = await daemonClient.devices;
-    final device = devices.firstWhere(
-            (device) => device['name'] == simulatorName && device['emulator'],
-        orElse: () => null);
-    started = device != null;
-    await Future.delayed(Duration(milliseconds: 1000));
-  }
 }

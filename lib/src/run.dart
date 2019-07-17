@@ -189,19 +189,19 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
             device['emulator'])) {
           // an already running simulator
           await setSimulatorLocale(
-              deviceId, configDeviceName, locale, stagingDir);
+              deviceId, configDeviceName, locale, stagingDir, daemonClient);
         } else {
           if (device == null && simulator != null) {
             if (pendingIosLocaleChangeAtStart) {
               // a non-running simulator
               await setSimulatorLocale(
-                  deviceId, configDeviceName, locale, stagingDir,
+                  deviceId, configDeviceName, locale, stagingDir, daemonClient,
                   running: false);
               pendingIosLocaleChangeAtStart = false;
             } else {
               // a running simulator
               await setSimulatorLocale(
-                  deviceId, configDeviceName, locale, stagingDir);
+                  deviceId, configDeviceName, locale, stagingDir, daemonClient);
             }
           }
         }
@@ -323,8 +323,8 @@ Map _findDevice(List devices, List emulators, String deviceName) {
 }
 
 /// Set the locale for a running simulator.
-Future setSimulatorLocale(
-    String deviceId, String deviceName, String testLocale, stagingDir,
+Future setSimulatorLocale(String deviceId, String deviceName, String testLocale,
+    String stagingDir, DaemonClient daemonClient,
     {bool running = true}) async {
   // a running simulator
   final deviceLocale = utils.getIosSimulatorLocale(deviceId);
@@ -336,6 +336,7 @@ Future setSimulatorLocale(
     await _changeSimulatorLocale(stagingDir, deviceId, testLocale);
     print('Starting $deviceName...');
     startSimulator(deviceId);
+    await waitForEmulatorToStart(daemonClient, deviceName);
   }
 }
 
@@ -352,6 +353,8 @@ Future<void> setEmulatorLocale(String deviceId, testLocale, deviceName) async {
     changeAndroidLocale(deviceId, deviceLocale, testLocale);
     //          daemonClient.verbose = false;
     await utils.waitAndroidLocaleChange(deviceId, testLocale);
+    // allow additional time before orientation change
+    await Future.delayed(Duration(milliseconds: 5000));
   }
 }
 
