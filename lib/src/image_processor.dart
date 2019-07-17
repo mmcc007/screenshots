@@ -69,7 +69,7 @@ class ImageProcessor {
               _config, screenProps, screenshotPath.path, deviceType, runMode);
         }
       } else {
-        print('Warning: framing is not selected');
+        print('Warning: framing is not enabled');
       }
     }
 
