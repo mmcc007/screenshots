@@ -1,3 +1,7 @@
+## 1.2.0
+- Added archive feature to collect screenshots of all runs for reporting, etc... #77 #81
+- Improved detection of adb path #85
+
 ## 1.1.1
 - Fixed localization issue in test #19, #20
 - Improved handling of locale for emulators and real devices
