@@ -8,13 +8,13 @@ staging: /tmp/screenshots
 
 # A list of locales supported in app
 locales:
-  - fr-CA
   - en-US
+  - fr-CA
 
 # A list of devices to run tests on
 devices:
   ios:
-#    iPhone XS Max:
+    iPhone XS Max:
     iPad Pro (12.9-inch) (2nd generation):
       frame: false
   android:
