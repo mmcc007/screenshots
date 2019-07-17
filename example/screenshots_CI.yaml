@@ -14,7 +14,7 @@ locales:
 # A list of devices to run tests on
 devices:
   ios:
-    iPhone XS Max:
+#    iPhone XS Max:
     iPad Pro (12.9-inch) (2nd generation):
       frame: false
   android:

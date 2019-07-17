@@ -194,9 +194,12 @@ class ImageProcessor {
     bool isFrameRequired = config['frame'];
     if (device != null) {
       final isDeviceFrameRequired = device['frame'];
-      if (isDeviceFrameRequired != null) {
-        isFrameRequired = isDeviceFrameRequired;
-      }
+      // device frame over-rides global frame
+      isDeviceFrameRequired != null
+          ? isFrameRequired = isDeviceFrameRequired
+          : null;
+      // orientation over-rides global and device frame setting
+      device['orientation'] != null ? isFrameRequired = false : null;
     }
     return isFrameRequired;
   }
