@@ -40,32 +40,36 @@ class ImageProcessor {
     if (screenProps == null) {
       print('Warning: \'$deviceName\' images will not be processed');
     } else {
-      final Map screenResources = screenProps['resources'];
-      final staging = _config['staging'];
+      // add frame if required
+      if (isFrameRequired(_config, deviceType, deviceName)) {
+        final Map screenResources = screenProps['resources'];
+        final staging = _config['staging'];
 //  print('screenResources=$screenResources');
-      print('Processing screenshots from test...');
+        print('Processing screenshots from test...');
 
-      // unpack images for screen from package to local staging area
-      await resources.unpackImages(screenResources, staging);
+        // unpack images for screen from package to local staging area
+        await resources.unpackImages(screenResources, staging);
 
-      // add status and nav bar and frame for each screenshot
-      final screenshots = Directory('$staging/$kTestScreenshotsDir').listSync();
-      for (final screenshotPath in screenshots) {
-        // add status bar for each screenshot
+        // add status and nav bar and frame for each screenshot
+        final screenshots =
+            Directory('$staging/$kTestScreenshotsDir').listSync();
+        for (final screenshotPath in screenshots) {
+          // add status bar for each screenshot
 //    print('overlaying status bar over screenshot at $screenshotPath');
-        await overlay(_config, screenResources, screenshotPath.path);
+          await overlay(_config, screenResources, screenshotPath.path);
 
-        if (deviceType == DeviceType.android) {
-          // add nav bar for each screenshot
+          if (deviceType == DeviceType.android) {
+            // add nav bar for each screenshot
 //      print('appending navigation bar to screenshot at $screenshotPath');
-          await append(_config, screenResources, screenshotPath.path);
-        }
+            await append(_config, screenResources, screenshotPath.path);
+          }
 
-        // add frame if required
-        if (isFrameRequired(_config, deviceType, deviceName)) {
 //      print('placing $screenshotPath in frame');
-          await frame(_config, screenProps, screenshotPath.path, deviceType, runMode);
+          await frame(
+              _config, screenProps, screenshotPath.path, deviceType, runMode);
         }
+      } else {
+        print('Warning: framing is not selected');
       }
     }
 
@@ -211,7 +215,7 @@ class ImageProcessor {
 
     // set the default background color
     String backgroundColor;
-    (deviceType == DeviceType.ios && runMode!=RunMode.archive)
+    (deviceType == DeviceType.ios && runMode != RunMode.archive)
         ? backgroundColor = kDefaultIosBackground
         : backgroundColor = kDefaultAndroidBackground;
 
