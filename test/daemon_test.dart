@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:path/path.dart';
 import 'package:screenshots/src/daemon_client.dart';
 import 'package:screenshots/src/fastlane.dart' as fastlane;
-import 'package:screenshots/src/image_processor.dart';
+import 'package:screenshots/src/globals.dart';
 import 'package:screenshots/src/resources.dart' as resources;
 import 'package:screenshots/src/run.dart' as run;
 import 'package:screenshots/src/screens.dart';
@@ -192,10 +192,9 @@ main() {
 
     // init
     final stagingDir = configInfo['staging'];
-    await Directory(stagingDir + '/test').create(recursive: true);
+    await Directory(stagingDir + '/$kTestScreenshotsDir').create(recursive: true);
     await resources.unpackScripts(stagingDir);
-    await fastlane.clearFastlaneDirs(configInfo, screens);
-    final imageProcessor = ImageProcessor(screens, configInfo);
+    await fastlane.clearFastlaneDirs(configInfo, screens, RunMode.normal);
 
     final daemonClient = DaemonClient();
     await daemonClient.start;
@@ -206,8 +205,8 @@ main() {
     final origDir = Directory.current;
     Directory.current = 'example';
 
-    await run.runTestsOnAll(
-        daemonClient, devices, emulators, config, screens, imageProcessor);
+    await run.runTestsOnAll(daemonClient, devices, emulators, config, screens,
+        RunMode.normal, null);
     // allow other tests to continue
     Directory.current = origDir;
   }, timeout: Timeout(Duration(minutes: 4)));

@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:meta/meta.dart';
+
+import 'archive.dart';
 import 'screens.dart';
 import 'fastlane.dart' as fastlane;
-import 'image_magick.dart' as im;
 import 'resources.dart' as resources;
 import 'utils.dart' as utils;
 import 'package:path/path.dart' as p;
@@ -18,7 +20,9 @@ class ImageProcessor {
 
   final Screens _screens;
   final Map _config;
-  ImageProcessor(this._screens, this._config);
+  ImageProcessor(Screens screens, Map config)
+      : _screens = screens,
+        _config = config;
 
   /// Process screenshots.
   ///
@@ -30,7 +34,8 @@ class ImageProcessor {
   /// If 'frame' in config file is true, screenshots are placed within image of device.
   ///
   /// After processing, screenshots are handed off for upload via fastlane.
-  void process(DeviceType deviceType, String deviceName, String locale) async {
+  Future<void> process(DeviceType deviceType, String deviceName, String locale,
+      RunMode runMode, Archive archive) async {
     final Map screenProps = _screens.screenProps(deviceName);
     if (screenProps == null) {
       print('Warning: \'$deviceName\' images will not be processed');
@@ -44,7 +49,7 @@ class ImageProcessor {
       await resources.unpackImages(screenResources, staging);
 
       // add status and nav bar and frame for each screenshot
-      final screenshots = Directory('$staging/test').listSync();
+      final screenshots = Directory('$staging/$kTestScreenshotsDir').listSync();
       for (final screenshotPath in screenshots) {
         // add status bar for each screenshot
 //    print('overlaying status bar over screenshot at $screenshotPath');
@@ -59,21 +64,78 @@ class ImageProcessor {
         // add frame if required
         if (isFrameRequired(_config, deviceType, deviceName)) {
 //      print('placing $screenshotPath in frame');
-          await frame(_config, screenProps, screenshotPath.path, deviceType);
+          await frame(_config, screenProps, screenshotPath.path, deviceType, runMode);
         }
       }
     }
 
     // move to final destination for upload to stores via fastlane
-    final srcDir = '${_config['staging']}/test';
-    final androidDeviceType = fastlane.getAndroidDeviceType(screenProps);
-    final dstDir = fastlane.fastlaneDir(deviceType, locale, androidDeviceType);
+    final srcDir = '${_config['staging']}/$kTestScreenshotsDir';
+    final androidModelType = fastlane.getAndroidModelType(screenProps);
+    String dstDir = fastlane.getDirPath(deviceType, locale, androidModelType);
+    runMode == RunMode.recording
+        ? dstDir = '${_config['recording']}/$dstDir'
+        : null;
+    runMode == RunMode.archive
+        ? dstDir = archive.dstDir(deviceType, locale)
+        : null;
     // prefix screenshots with name of device before moving
     // (useful for uploading to apple via fastlane)
     await utils.prefixFilesInDir(srcDir, '$deviceName-');
 
     print('Moving screenshots to $dstDir');
     utils.moveFiles(srcDir, dstDir);
+
+    if (runMode == RunMode.comparison) {
+      final recordingDir = '${_config['recording']}/$dstDir';
+      print(
+          'Running comparison with recorded screenshots in $recordingDir ...');
+      final failedCompare =
+          await compareImages(deviceName, recordingDir, dstDir);
+      if (failedCompare.isNotEmpty) {
+        showFailedCompare(failedCompare);
+        throw 'Error: comparison failed.';
+      }
+    }
+  }
+
+  @visibleForTesting
+  void showFailedCompare(Map failedCompare) {
+    stderr.writeln('Error: comparison failed:');
+
+    failedCompare.forEach((screenshotName, result) {
+      stderr.writeln(
+          'Error: ${result['comparison']} is not equal to ${result['recording']}');
+      stderr.writeln('       Differences can be found in ${result['diff']}');
+    });
+  }
+
+  @visibleForTesting
+  Future<Map> compareImages(
+      String deviceName, String recordingDir, String comparisonDir) async {
+    Map failedCompare = {};
+    final recordedImages = Directory(recordingDir).listSync();
+    Directory(comparisonDir)
+        .listSync()
+        .where((screenshot) =>
+            p.basename(screenshot.path).contains(deviceName) &&
+            !p.basename(screenshot.path).contains(im.diffSuffix))
+        .forEach((screenshot) {
+      final screenshotName = p.basename(screenshot.path);
+      final recordedImageEntity = recordedImages.firstWhere(
+          (image) => p.basename(image.path) == screenshotName,
+          orElse: () =>
+              throw 'Error: screenshot $screenshotName not found in $recordingDir');
+
+      if (!im.compare(screenshot.path, recordedImageEntity.path)) {
+        failedCompare[screenshotName] = {
+          'recording': recordedImageEntity.path,
+          'comparison': screenshot.path,
+          'diff': im.getDiffName(screenshot.path)
+        };
+      }
+    });
+    return failedCompare;
   }
 
   /// Overlay status bar over screenshot.
@@ -103,7 +165,7 @@ class ImageProcessor {
       'screenshotPath': screenshotPath,
       'statusbarPath': statusbarPath,
     };
-    await im.imagemagick('overlay', options);
+    await im.convert('overlay', options);
   }
 
   /// Append android navigation bar to screenshot.
@@ -114,7 +176,7 @@ class ImageProcessor {
       'screenshotPath': screenshotPath,
       'screenshotNavbarPath': screenshotNavbarPath,
     };
-    await im.imagemagick('append', options);
+    await im.convert('append', options);
   }
 
   /// Checks if frame is required for [deviceName].
@@ -139,7 +201,7 @@ class ImageProcessor {
   ///
   /// Resulting image is scaled to fit dimensions required by stores.
   void frame(Map config, Map screen, String screenshotPath,
-      DeviceType deviceType) async {
+      DeviceType deviceType, RunMode runMode) async {
     final Map resources = screen['resources'];
 
     final framePath = config['staging'] + '/' + resources['frame'];
@@ -149,7 +211,7 @@ class ImageProcessor {
 
     // set the default background color
     String backgroundColor;
-    (deviceType == DeviceType.ios)
+    (deviceType == DeviceType.ios && runMode!=RunMode.archive)
         ? backgroundColor = kDefaultIosBackground
         : backgroundColor = kDefaultAndroidBackground;
 
@@ -161,6 +223,6 @@ class ImageProcessor {
       'screenshotPath': screenshotPath,
       'backgroundColor': backgroundColor,
     };
-    await im.imagemagick('frame', options);
+    await im.convert('frame', options);
   }
 }

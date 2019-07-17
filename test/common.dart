@@ -1,6 +1,22 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:meta/meta.dart';
 import 'package:screenshots/src/run.dart' as run;
+import 'package:path/path.dart' as p;
+
+/// Copy files from [srcDir] to [dstDir].
+/// If dstDir does not exist, it is created.
+void copyFiles(String srcDir, String dstDir) {
+  if (!Directory(dstDir).existsSync()) {
+    Directory(dstDir).createSync(recursive: true);
+  }
+  Directory(srcDir).listSync().forEach((file) {
+    file.statSync().type == FileSystemEntityType.file
+        ? File(file.path).copy('$dstDir/${p.basename(file.path)}')
+        : throw 'Error: ${file.path} is not a file';
+  });
+}
 
 /// Get device properties
 Map getDeviceProps(String deviceId) {
@@ -86,9 +102,22 @@ Map diffMaps(Map orig, Map diff, {bool verbose = false}) {
   return diffs;
 }
 
-T getEnumFromString<T>(Iterable<T> values, String value) {
-  return values.firstWhere((type) => type.toString().split(".").last == value,
-      orElse: () => null);
+/// Returns a future that completes with a path suitable for ANDROID_HOME
+/// or with null, if ANDROID_HOME cannot be found.
+Future<String> findAndroidHome() async {
+  final Iterable<String> hits = grep(
+    'ANDROID_HOME = ',
+    from: await run.cmd('flutter', <String>['doctor', '-v'], '.', true),
+  );
+  if (hits.isEmpty) return null;
+  return hits.first.split('= ').last;
+}
+
+/// Splits [from] into lines and selects those that contain [pattern].
+Iterable<String> grep(Pattern pattern, {@required String from}) {
+  return from.split('\n').where((String line) {
+    return line.contains(pattern);
+  });
 }
 
 ///// Wait for android emulator to stop.
@@ -167,4 +196,14 @@ T getEnumFromString<T>(Iterable<T> values, String value) {
 //  propsPoller.cancel();
 //  print(
 //      'locale changed during bootAnim change from $origBootAnimStatus to $bootAnimStatus');
+//}
+
+///// Clear directory [dirPath].
+///// Create directory if none exists.
+//void clearDirectory(String dirPath) {
+//  if (Directory(dirPath).existsSync()) {
+//    Directory(dirPath).deleteSync(recursive: true);
+//  } else {
+//    Directory(dirPath).createSync(recursive: true);
+//  }
 //}

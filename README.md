@@ -46,7 +46,7 @@ Select the devices you want to run on, using a convenient config file. _Screensh
 _Screenshots_ runs your tests on both iOS and Android in one run.  
 (as opposed to making separate Snapshots and Screengrab runs)
 1. One run for multiple locales  
-If your app supports multiple locales, _Screenshots_ will optionally set the locales listed in the config file before running each test (see Limitations below).
+If your app supports multiple locales, _Screenshots_ will optionally set the locales listed in the config file before running each test.
 1. One run for frames  
 Optionally places images in device frames in same run.  
 (as opposed to making separate FrameIt runs... which supports iOS only)
@@ -86,6 +86,22 @@ Or, if using a config file other than the default 'screenshots.yaml':
 ````
 $ screenshots -c <path to config file>
 ````
+Other options:
+```
+$ screenshots -h
+usage: screenshots [-h] [-c <config file>] [-m <normal|recording|comparison|archive>]
+
+sample usage: screenshots
+
+-c, --config=<screenshots.yaml>                     Path to config file.
+                                                    (defaults to "screenshots.yaml")
+
+-m, --mode=<normal|recording|comparison|archive>    If mode is recording, screenshots will be saved for later comparison.
+                                                    If mode is archive, screenshots will be archived and cannot be uploaded via fastlane.
+                                                    [normal (default), recording, comparison, archive]
+
+-h, --help                                          Display this help information.
+```
 
 # Modifying your tests for _Screenshots_
 A special function is provided in the _Screenshots_ package that is called by the test each time you want to capture a screenshot. 
@@ -103,11 +119,11 @@ To capture screenshots in your tests:
        ````
     2. Create the config at start of test  
        ````dart
-            final config = Config().configInfo;
+            final configInfo = Config().configInfo;
        ````  
     3. Throughout the test make calls to capture screenshots  
        ````dart
-           await screenshot(driver, config, 'myscreenshot1');
+           await screenshot(driver, configInfo, 'myscreenshot1');
        ````
        
 Note: make sure your screenshot names are unique across all your tests.
@@ -169,6 +185,37 @@ Individual devices can be configured in `screenshots.yaml` by specifying per dev
 
 Note: images generated for those devices where framing is disabled are probably not suitable for upload, but can be used for local review.
 
+# Record/Compare Mode
+_Screenshots_ can be used to monitor any unexpected changes to the UI by comparing the new screenshots to previously recorded screenshots. Any differences will be highlighted in a 'diff' image for review.  
+
+To use this feature:
+1. Add the location of your recording directory to a `screenshots.yaml`
+    ```yaml
+    recording: /tmp/screenshots_record
+    ```
+1. Run a recording to capture your screenshots:
+    ```
+    screenshots -m recording
+    ```
+1. Run subsequent _Screenshots_ with:
+    ```
+    screenshots -m comparison
+    ```
+    _Screenshots_ will compare the new screenshots with the recorded screenshots and generate a 'diff' image for each screenshot that does not compare. The diff image highlights the differences in red.
+
+# Archive Mode
+To generate screenshots for local use, such as generating reports of changes to UI over time, etc... use 'archive' mode. 
+
+To enable this mode:
+1. Add the location of your archive directory to screenshots.yaml:
+    ```yaml
+    archive: /tmp/screenshots_archive
+    ```
+1. Run _Screenshots_ with:
+    ````
+    $ screenshots -m archive
+    ````
+
 # Integration with Fastlane
 Since _Screenshots_ is intended to be used with Fastlane, after _Screenshots_ completes, the images can be found in your project at:
 ````
@@ -191,7 +238,7 @@ To change the devices to run your tests on, just change the list of devices in s
 
 Make sure each device you select has a supported screen and a
 corresponding attached device or installed emulator/simulator. To bypass
-this requirement use `frame: false` for each related device in your
+the supported screen requirement use `frame: false` for each related device in your
 screenshots.yaml.
 
 For each selected device:
@@ -226,22 +273,6 @@ https://github.com/mmcc007/screenshots/releases/
 
 * Running _Screenshots_ in the cloud is  useful for automating the generation of your screenshots in a CI/CD environment.  
 * Running _Screenshots_ on macOS in the cloud can be used to generate your screenshots when developing on Linux and/or Windows (if not using locally attached iOS devices).
-
-# Limitations
-
-Due to a Flutter issue ([flutter/issues/27785](https://github.com/flutter/flutter/issues/27785)), running _Screenshots_ in multiple locales has limitations. 
-
-To raise priority of this Flutter issue, so it will be fixed sooner rather than later, please give a thumbs-up on [flutter/issues/27785](https://github.com/flutter/flutter/issues/27785).
-
-Priority of this limitation in Flutter project:
-
-| Date | `flutter driver` | `internationalization` | `test` |
-| --- | --- | --- | ---  |
-| 4/26/2019 | [#1](https://github.com/flutter/flutter/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc+label%3A%22t%3A+flutter+driver%22+) | [#5](https://github.com/flutter/flutter/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc+label%3A%22a%3A+internationalization%22+) | [#7](https://github.com/flutter/flutter/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc+label%3A%22a%3A+tests%22+) |
-| 5/25/2019 | [#1](https://github.com/flutter/flutter/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc+label%3A%22t%3A+flutter+driver%22+) | [#3](https://github.com/flutter/flutter/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc+label%3A%22a%3A+internationalization%22+) | [#6](https://github.com/flutter/flutter/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc+label%3A%22a%3A+tests%22+) |
-| 6/29/2019 | [#1](https://github.com/flutter/flutter/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc+label%3A%22t%3A+flutter+driver%22+) | [#1](https://github.com/flutter/flutter/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc+label%3A%22a%3A+internationalization%22+) | [#3](https://github.com/flutter/flutter/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc+label%3A%22a%3A+tests%22+) |
-
-(This limitation is being tracked by _screenshots_ in [screenshots/issues/20](https://github.com/mmcc007/screenshots/issues/20)).
 
 # Issues and Pull Requests
 [Issues](https://github.com/mmcc007/screenshots/issues) and 

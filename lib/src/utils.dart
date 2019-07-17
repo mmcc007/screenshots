@@ -4,32 +4,8 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 import 'package:process/process.dart';
+import 'globals.dart';
 import 'run.dart' as run;
-
-/// Clear directory [dirPath].
-/// Create directory if none exists.
-void clearDirectory(String dirPath) {
-  if (Directory(dirPath).existsSync()) {
-    Directory(dirPath).deleteSync(recursive: true);
-  } else {
-    Directory(dirPath).createSync(recursive: true);
-  }
-}
-
-/// Clear files in a directory [dirPath] ending in [suffix]
-/// Create directory if none exists.
-void clearFilesWithSuffix(String dirPath, String suffix) {
-  // delete files with suffix
-  if (Directory(dirPath).existsSync()) {
-    Directory(dirPath).listSync().toList().forEach((e) {
-      if (p.extension(e.path) == suffix) {
-        File(e.path).delete();
-      }
-    });
-  } else {
-    Directory(dirPath).createSync(recursive: true);
-  }
-}
 
 /// Move files from [srcDir] to [dstDir].
 ///
@@ -96,10 +72,10 @@ Map transformIosSimulators(Map simsInfo) {
   Map simsInfoTransformed = {};
 
   simsInfo.forEach((iOSName, sims) {
-    //    print('iOSVersionName=$iOSVersionName');
     // note: 'isAvailable' field does not appear consistently
-    //       so using 'availability' instead
-    isSimAvailable(sim) => sim['availability'] == '(available)';
+    //       so using 'availability' as well
+    isSimAvailable(sim) =>
+        sim['availability'] == '(available)' || sim['isAvailable'] == true;
     for (final sim in sims) {
       // skip if simulator unavailable
       if (!isSimAvailable(sim)) continue;
@@ -191,16 +167,24 @@ T getEnumFromString<T>(List<T> values, String value) {
 }
 
 /// Returns locale of currently attached android device.
-String androidDeviceLocale(String deviceId) {
-  final deviceLocale = run
+String getAndroidDeviceLocale(String deviceId) {
+// ro.product.locale is available on first boot but does not update,
+// persist.sys.locale is empty on first boot but updates with locale changes
+  String deviceLocale = run
       .cmd('adb', ['-s', deviceId, 'shell', 'getprop persist.sys.locale'], '.',
           true)
       .trim();
+  if (deviceLocale.isEmpty) {
+    deviceLocale = run
+        .cmd('adb', ['-s', deviceId, 'shell', 'getprop ro.product.locale'], '.',
+            true)
+        .trim();
+  }
   return deviceLocale;
 }
 
 /// Returns locale of simulator with udid [udId].
-String iosSimulatorLocale(String udId) {
+String getIosSimulatorLocale(String udId) {
   final env = Platform.environment;
   final settingsPath =
       '${env['HOME']}/Library/Developer/CoreSimulator/Devices/$udId/data/Library/Preferences/.GlobalPreferences.plist';
@@ -254,7 +238,12 @@ Future stopAndroidEmulator(String deviceId, String stagingDir) async {
 Future<String> waitAndroidLocaleChange(String deviceId, String toLocale) async {
   final regExp = RegExp(
       'ContactsProvider: Locale has changed from .* to \\[${toLocale.replaceFirst('-', '_')}\\]|ContactsDatabaseHelper: Switching to locale \\[${toLocale.replaceFirst('-', '_')}\\]');
-  final line = await waitSysLogMsg(deviceId, regExp);
+//  final regExp = RegExp(
+//      'ContactsProvider: Locale has changed from .* to \\[${toLocale.replaceFirst('-', '_')}\\]');
+//  final regExp = RegExp(
+//      'ContactsProvider: Locale has changed from .* to \\[${toLocale.replaceFirst('-', '_')}\\]|ContactsDatabaseHelper: Locale change completed');
+  final line =
+      await waitSysLogMsg(deviceId, regExp, toLocale.replaceFirst('-', '_'));
   return line;
 }
 
@@ -298,15 +287,22 @@ Map getDeviceFromId(List devices, String deviceId) {
 }
 
 /// Wait for message to appear in sys log and return first matching line
-Future<String> waitSysLogMsg(String deviceId, RegExp regExp) async {
-  run.cmd('adb', ['logcat', '-c']);
+Future<String> waitSysLogMsg(
+    String deviceId, RegExp regExp, String locale) async {
+  run.cmd('adb', ['-s', deviceId, 'logcat', '-c']);
+  await Future.delayed(Duration(milliseconds: 1000)); // wait for log to clear
+  // -b main ContactsDatabaseHelper:I '*:S'
   final delegate = await Process.start('adb', [
     '-s',
     deviceId,
     'logcat',
-    '*:F',
+    '-b',
+    'main',
+    '*:S',
+    'ContactsDatabaseHelper:I',
     'ContactsProvider:I',
-    'ContactsDatabaseHelper:I'
+    '-e',
+    locale
   ]);
   final process = ProcessWrapper(delegate);
   return await process.stdout
@@ -325,8 +321,9 @@ Map findEmulator(List emulators, String emulatorName) {
       orElse: () => null);
 }
 
-/// Run AppleScript
-/// Requires permission on first run.
-void runOsaScript(String script, List args) {
-  run.cmd('osascript', [script, ...args]);
+RunMode getRunModeEnum(String runMode) {
+  return getEnumFromString<RunMode>(RunMode.values, runMode);
 }
+
+Future<bool> isRecorded(recordDir) async =>
+    !(await Directory(recordDir).list().isEmpty);

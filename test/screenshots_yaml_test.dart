@@ -109,7 +109,7 @@ void main() {
     final Screens screens = Screens();
     await screens.init();
     final Map config = loadYaml(screenshotsYaml);
-    await fastlane.clearFastlaneDirs(config, screens);
+    await fastlane.clearFastlaneDirs(config, screens, RunMode.normal);
   });
 
   test('check if frame is needed', () {

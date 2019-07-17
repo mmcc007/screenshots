@@ -59,7 +59,7 @@ class Config {
 
   /// Check emulators and simulators are installed, devices attached,
   /// matching screen is available and tests exist.
-  @visibleForTesting
+  @visibleForTesting // config is exported in library
   Future<bool> validate(
       Screens screens, List allDevices, List allEmulators) async {
     final isDeviceAttached = (device) => device != null;
@@ -114,19 +114,6 @@ class Config {
       }
     }
 
-    //  Due to issue with locales, issue warning for multiple locales.
-    //  https://github.com/flutter/flutter/issues/27785
-    if (configInfo['locales'].length > 1) {
-      stdout.write('Warning: Flutter integration tests do not work in '
-          'multiple locals.\n');
-      stdout.write('  See comment on issue:\n'
-          '  https://github.com/flutter/flutter/issues/27785#issue-408955077\n'
-          '  for details.\n'
-          '  and provide a thumbs-up on the comment to prioritize a fix for this issue!\n\n'
-          '  In the meantime, while waiting for a fix, only use the default locale\n'
-          '  for your location in screenshots.yaml\n\n');
-    }
-
     return true;
   }
 
@@ -167,7 +154,8 @@ class Config {
     stdout.write(
         '\n  Each device listed in screenshots.yaml with framing required must'
         '\n    1. have a supported screen'
-        '\n    2. have an attached device or an installed emulator/simulator.\n\n');
+        '\n    2. have an attached device or an installed emulator/simulator.'
+        '\n  To bypass requirement #1 add \'frame: false\' after device in screenshots.yaml\n\n');
   }
 
   // check screen is available for device

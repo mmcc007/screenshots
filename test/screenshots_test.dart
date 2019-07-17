@@ -2,19 +2,22 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:process/process.dart';
+import 'package:screenshots/screenshots.dart';
 import 'package:screenshots/src/config.dart';
 import 'package:screenshots/src/daemon_client.dart';
 import 'package:screenshots/src/globals.dart';
 import 'package:screenshots/src/image_processor.dart';
 import 'package:screenshots/src/orientation.dart' as orient;
 import 'package:screenshots/src/screens.dart';
-import 'package:screenshots/src/image_magick.dart' as im;
 import 'package:screenshots/src/resources.dart' as resources;
 import 'package:screenshots/src/run.dart' as run;
 import 'package:screenshots/src/utils.dart' as utils;
 import 'package:test/test.dart';
 import 'package:yaml/yaml.dart';
+import 'package:screenshots/src/fastlane.dart' as fastlane;
+import 'package:path/path.dart' as p;
 
+import '../bin/main.dart';
 import 'common.dart';
 
 void main() {
@@ -73,7 +76,7 @@ void main() {
       'screenshotPath': screenshotPath,
       'statusbarPath': statusbarPath,
     };
-    await im.imagemagick('overlay', options);
+    await im.convert('overlay', options);
   });
 
   test('unpack screen resource images', () async {
@@ -102,7 +105,7 @@ void main() {
       'screenshotPath': screenshotPath,
       'screenshotNavbarPath': screenshotNavbarPath,
     };
-    await im.imagemagick('append', options);
+    await im.convert('append', options);
   });
 
   test('frame screenshot', () async {
@@ -126,7 +129,7 @@ void main() {
       'screenshotPath': screenshotPath,
       'backgroundColor': ImageProcessor.kDefaultAndroidBackground,
     };
-    await im.imagemagick('frame', options);
+    await im.convert('frame', options);
   });
 
   test('parse json xcrun simctl list devices', () {
@@ -196,7 +199,8 @@ void main() {
   });
 
   test('add prefix to files in directory', () async {
-    await utils.prefixFilesInDir('/tmp/screenshots/test', 'my_prefix');
+    await utils.prefixFilesInDir(
+        '/tmp/screenshots/$kTestScreenshotsDir', 'my_prefix');
   });
 
   test('config guide', () async {
@@ -268,10 +272,12 @@ void main() {
     await daemonClient.start;
     daemonClient.verbose = true;
     final deviceId = await daemonClient.launchEmulator(emulatorId);
-    print('emulator started');
+    print('switching to $newLocale locale');
     run.changeAndroidLocale(deviceId, deviceName, newLocale);
     // wait for locale to change
     await utils.waitAndroidLocaleChange(deviceId, newLocale);
+    // change back for repeated testing
+    print('switching to $origLocale locale');
     run.changeAndroidLocale(deviceId, deviceName, origLocale);
     await utils.waitAndroidLocaleChange(deviceId, origLocale);
     expect(await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
@@ -309,29 +315,6 @@ void main() {
         ProcessStartMode.detached);
   });
 
-  test('delete all files with suffix', () async {
-    final dirPath = '/tmp/tmp';
-    final files = ['image1.png', 'image2.png'];
-    final suffix = 'png';
-
-    utils.clearDirectory(dirPath); // creates empty directory
-
-    // create files
-    files
-        .forEach((fileName) async => await File('$dirPath/$fileName').create());
-
-    // check created
-    files.forEach((fileName) async =>
-        expect(await File('$dirPath/$fileName').exists(), true));
-
-    // delete files with suffix
-    utils.clearFilesWithSuffix(dirPath, suffix);
-
-    // check deleted
-    files.forEach((fileName) async =>
-        expect(await File('$dirPath/$fileName').exists(), false));
-  });
-
   // reproduce https://github.com/flutter/flutter/issues/27785
   // on android (hangs during test)
   // tested on android emulator in default locale (en-US) and it worked
@@ -364,13 +347,13 @@ void main() {
     final deviceId = await daemonClient.launchEmulator(emulatorId);
 
     // change locale
-    await run.setAndroidLocale(deviceId, newLocale, deviceName);
+    await run.setEmulatorLocale(deviceId, newLocale, deviceName);
 
     // run test
     await utils.streamCmd('flutter', ['drive', testAppSrcPath], testAppDir);
 
     // stop emulator
-    await run.setAndroidLocale(deviceId, origLocale, deviceName);
+    await run.setEmulatorLocale(deviceId, origLocale, deviceName);
     expect(await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
   },
       timeout:
@@ -385,7 +368,7 @@ void main() {
     final daemonClient = DaemonClient();
     await daemonClient.start;
     final deviceId = await daemonClient.launchEmulator(emulatorId);
-    final deviceLocale = utils.androidDeviceLocale(deviceId);
+    final deviceLocale = utils.getAndroidDeviceLocale(deviceId);
     expect(await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
 
     expect(deviceLocale, locale);
@@ -432,7 +415,7 @@ void main() {
 
   test('get ios simulator locale', () async {
     final udId = '03D4FC12-3927-4C8B-A226-17DE34AE9C18';
-    var locale = utils.iosSimulatorLocale(udId);
+    var locale = utils.getIosSimulatorLocale(udId);
     expect(locale, 'en-US');
   });
 
@@ -541,7 +524,7 @@ devices:
     });
 
     test('scan syslog for string', () async {
-//      final toLocale = 'en-US';
+      final toLocale = 'en-US';
 //      final expected =
 //          'ContactsProvider: Locale has changed from [fr_CA] to [en_US]';
 //      final expected = RegExp('Locale has changed from');
@@ -550,7 +533,8 @@ devices:
       await daemonClient.start;
       final emulatorId = 'Nexus_6P_API_28';
       final deviceId = await daemonClient.launchEmulator(emulatorId);
-      String actual = await utils.waitSysLogMsg(deviceId, expected);
+      String actual = await utils.waitSysLogMsg(deviceId, expected, toLocale);
+      print('actual=$actual');
       expect(actual.contains(expected), isTrue);
       expect(
           await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
@@ -567,6 +551,124 @@ devices:
           'ContactsProvider: Locale has changed from .* to \\[${locale.replaceFirst('-', '_')}\\]');
       expect(regExp.stringMatch(line), line);
       expect(regExp.hasMatch(line), true);
+    });
+  });
+
+  group('recording, comparison', () {
+    test('recording mode', () async {
+      final origDir = Directory.current;
+      Directory.current = 'example';
+      final configPath = 'screenshots.yaml';
+      await run.run(configPath, utils.getStringFromEnum(RunMode.recording));
+      final configInfo = Config(configPath: configPath).configInfo;
+      final recordingDir = configInfo['recording'];
+      expect(await utils.isRecorded(recordingDir), isTrue);
+      Directory.current = origDir;
+    }, timeout: Timeout(Duration(seconds: 180)));
+
+    test('imagemagick compare', () {
+      final recordedImage0 = 'test/resources/recording/Nexus 6P-0.png';
+      final comparisonImage0 = 'test/resources/comparison/Nexus 6P-0.png';
+      final comparisonImage1 = 'test/resources/comparison/Nexus 6P-1.png';
+      final goodPair = {
+        'recorded': recordedImage0,
+        'comparison': comparisonImage0
+      };
+      final badPair = {
+        'recorded': recordedImage0,
+        'comparison': comparisonImage1
+      };
+      final pairs = {'good': goodPair, 'bad': badPair};
+
+      pairs.forEach((behave, pair) {
+        final recordedImage = pair['recorded'];
+        final comparisonImage = pair['comparison'];
+        bool doCompare = im.compare(comparisonImage, recordedImage);
+        behave == 'good' ? expect(doCompare, true) : expect(doCompare, false);
+        File(im.getDiffName(comparisonImage)).deleteSync();
+      });
+    });
+
+    test('compare images in directories', () async {
+      final comparisonDir = 'test/resources/comparison';
+      final recordingDir = 'test/resources/recording';
+      final deviceName = 'Nexus 6P';
+      final expected = {
+        'Nexus 6P-1.png': {
+          'recording': 'test/resources/recording/Nexus 6P-1.png',
+          'comparison': 'test/resources/comparison/Nexus 6P-1.png',
+          'diff': 'test/resources/comparison/Nexus 6P-1-diff.png'
+        }
+      };
+
+      final imageProcessor = ImageProcessor(null, null);
+      final failedCompare = await imageProcessor.compareImages(
+          deviceName, recordingDir, comparisonDir);
+      expect(failedCompare, expected);
+      // show diffs
+      if (failedCompare.isNotEmpty) {
+        imageProcessor.showFailedCompare(failedCompare);
+      }
+    });
+
+    test('comparison mode', () async {
+      final origDir = Directory.current;
+      Directory.current = 'example';
+      final configPath = 'screenshots.yaml';
+      final configInfo = Config(configPath: configPath).configInfo;
+      final recordingDir = configInfo['recording'];
+      expect(await utils.isRecorded(recordingDir), isTrue);
+      await run.run(configPath, utils.getStringFromEnum(RunMode.comparison));
+      Directory.current = origDir;
+    }, timeout: Timeout(Duration(seconds: 180)));
+
+    test('cleanup diffs at start of normal run', () {
+      final fastlaneDir = 'test/resources/comparison';
+      Directory(fastlaneDir).listSync().forEach(
+          (fsEntity) => File(im.getDiffName(fsEntity.path)).createSync());
+      expect(
+          Directory(fastlaneDir).listSync().where((fileSysEntity) =>
+              p.basename(fileSysEntity.path).contains(im.diffSuffix)),
+          isNotEmpty);
+      im.deleteDiffs(fastlaneDir);
+      expect(
+          Directory(fastlaneDir).listSync().where((fileSysEntity) =>
+              p.basename(fileSysEntity.path).contains(im.diffSuffix)),
+          isEmpty);
+    });
+  });
+
+  group('archiving', () {
+    test('run with archiving enabled', () async {
+      final origDir = Directory.current;
+      Directory.current = 'example';
+      final configPath = 'screenshots.yaml';
+      await run.run(configPath, utils.getStringFromEnum(RunMode.archive));
+      Directory.current = origDir;
+    }, timeout: Timeout(Duration(seconds: 180)));
+  });
+
+  group('fastlane dirs', () {
+    test('delete files matching a pattern', () {
+      final dirPath = 'test/resources/test';
+      final deviceId = 'Nexus 6P';
+      final pattern = RegExp('$deviceId.*.$kImageExtension');
+      final filesPresent = (dirPath, pattern) => Directory(dirPath)
+          .listSync()
+          .toList()
+          .where((e) => pattern.hasMatch(p.basename(e.path)));
+      expect(filesPresent(dirPath, pattern).length, 2);
+      fastlane.deleteMatchingFiles(dirPath, pattern);
+      expect(filesPresent(dirPath, pattern), isEmpty);
+      // restore deleted files
+      run.cmd('git', ['checkout', dirPath]);
+    });
+  });
+
+  group('adb path', () {
+    test('find adb path', () async {
+      final _adbPath = getAdbPath();
+      print('adbPath=$_adbPath');
     });
   });
 
@@ -594,7 +696,7 @@ devices:
       final scriptDir = 'lib/resources/script';
       final simulatorName = 'iPhone 7 Plus';
       final simulatorInfo =
-          utils.getHighestIosSimulator(utils.getIosSimulators(), simulatorName);
+      utils.getHighestIosSimulator(utils.getIosSimulators(), simulatorName);
       final deviceId = simulatorInfo['udid'];
       run.startSimulator(deviceId);
       final daemonClient = DaemonClient();
@@ -639,7 +741,7 @@ Future waitForEmulatorToStart(
   while (!started) {
     final devices = await daemonClient.devices;
     final device = devices.firstWhere(
-        (device) => device['name'] == simulatorName && device['emulator'],
+            (device) => device['name'] == simulatorName && device['emulator'],
         orElse: () => null);
     started = device != null;
     await Future.delayed(Duration(milliseconds: 1000));

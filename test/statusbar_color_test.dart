@@ -1,4 +1,4 @@
-import 'package:screenshots/src/image_magick.dart' as im;
+import 'package:screenshots/src/globals.dart';
 import 'package:test/test.dart';
 
 main() {
