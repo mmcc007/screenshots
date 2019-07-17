@@ -166,8 +166,18 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
     if (device != null && !device['emulator']) {
       final defaultLocale = 'en_US'; // todo: need actual locale of real device
       print('Warning: the locale of a real device cannot be changed.');
-      await runProcessTests(config, screens, configDeviceName, defaultLocale,
-          deviceType, testPaths, deviceId, imageProcessor, runMode, archive, 'unknown');
+      await runProcessTests(
+          config,
+          screens,
+          configDeviceName,
+          defaultLocale,
+          deviceType,
+          testPaths,
+          deviceId,
+          imageProcessor,
+          runMode,
+          archive,
+          'unknown');
     } else {
       // Function to check for a running android device or emulator
       bool isRunningAndroidDeviceOrEmulator(Map device, Map emulator) {
@@ -225,9 +235,12 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
         }
 
         // Change orientation if required
-        final deviceOrientation = configInfo['devices']
-                [utils.getStringFromEnum(deviceType)][configDeviceName]
-            ['orientation'];
+        final deviceInfo = configInfo['devices']
+            [utils.getStringFromEnum(deviceType)][configDeviceName];
+        String deviceOrientation;
+        deviceInfo != null
+            ? deviceOrientation = deviceInfo['orientation']
+            : null;
         if (deviceOrientation != null) {
           final orientation = orient.getOrientationEnum(deviceOrientation);
           final currentDevice =
