@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:meta/meta.dart';
 
 import 'image_processor.dart';
+import 'orientation.dart';
 import 'screens.dart';
 import 'package:yaml/yaml.dart';
 import 'utils.dart' as utils;
@@ -40,7 +41,7 @@ class Config {
   /// (called by screenshots)
   @visibleForTesting
   Future<void> storeEnv(Screens screens, String emulatorName, String locale,
-      String deviceType) async {
+      String deviceType, String orientation) async {
     // store env for later use by tests
     final screenProps = screens.screenProps(emulatorName);
     final screenSize = screenProps == null ? null : screenProps['size'];
@@ -49,6 +50,7 @@ class Config {
       'locale': locale,
       'device_name': emulatorName,
       'device_type': deviceType,
+      'orientation': orientation
     };
     await _envStore.writeAsString(json.encode(currentEnv));
   }
@@ -62,6 +64,33 @@ class Config {
   @visibleForTesting // config is exported in library
   Future<bool> validate(
       Screens screens, List allDevices, List allEmulators) async {
+    // validate params
+    final deviceNames = utils.getAllConfiguredDeviceNames(configInfo);
+    for (final devName in deviceNames) {
+      final deviceInfo = findDeviceInfo(configInfo, devName);
+      if (deviceInfo != null) {
+        final orientation = deviceInfo['orientation'];
+        if (orientation != null && !isValidOrientation(orientation)) {
+          stderr.writeln(
+              'Invalid value for \'orientation\' for device \'$devName\': $orientation');
+          stderr.writeln('Valid values:');
+          for (final orientation in Orientation.values) {
+            stderr.writeln('  ${utils.getStringFromEnum(orientation)}');
+          }
+          exit(1);
+        }
+        final frame = deviceInfo['frame'];
+        if (frame != null && !isValidFrame(frame)) {
+          stderr.writeln(
+              'Invalid value for \'frame\' for device \'$devName\': $frame');
+          stderr.writeln('Valid values:');
+          stderr.writeln('  true');
+          stderr.writeln('  false');
+          exit(1);
+        }
+      }
+    }
+
     final isDeviceAttached = (device) => device != null;
     final isEmulatorInstalled = (emulator) => emulator != null;
 
@@ -208,4 +237,28 @@ class Config {
     stdout.write('  Installed simulators:\n');
     simulators.forEach((simulator, _) => stdout.write('    $simulator\n'));
   }
+}
+
+bool isValidOrientation(String orientation) {
+  return Orientation.values.firstWhere(
+          (o) => utils.getStringFromEnum(o) == orientation,
+          orElse: () => null) !=
+      null;
+}
+
+bool isValidFrame(dynamic frame) {
+  return frame != null && (frame == true || frame == false);
+}
+
+/// Find device info in config for device name.
+Map findDeviceInfo(Map configInfo, String deviceName) {
+  Map deviceInfo;
+  configInfo['devices'].forEach((deviceType, devices) {
+    if (devices != null) {
+      devices.forEach((_deviceName, _deviceInfo) {
+        if (_deviceName == deviceName) deviceInfo = _deviceInfo;
+      });
+    }
+  });
+  return deviceInfo;
 }

@@ -1,12 +1,15 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:intl/intl.dart';
+
 import 'archive.dart';
 import 'config.dart';
 import 'daemon_client.dart';
 import 'fastlane.dart' as fastlane;
 import 'globals.dart';
 import 'image_processor.dart';
+import 'orientation.dart' as orient;
 import 'resources.dart' as resources;
 import 'screens.dart';
 import 'utils.dart' as utils;
@@ -48,12 +51,11 @@ Future<void> run(
   final stagingDir = configInfo['staging'];
   await Directory(stagingDir + '/$kTestScreenshotsDir').create(recursive: true);
   await resources.unpackScripts(stagingDir);
-  final archiveDir = configInfo['archive'];
-  Archive archive = Archive(stagingDir, archiveDir);
-  if (archiveDir == null) {
-    await fastlane.clearFastlaneDirs(configInfo, screens, runMode);
-  } else {
+  Archive archive = Archive(configInfo['archive']);
+  if (runMode == RunMode.archive) {
     print('Archiving screenshots to ${archive.archiveDirPrefix}...');
+  } else {
+    await fastlane.clearFastlaneDirs(configInfo, screens, runMode);
   }
   // run integration tests in each real device (or emulator/simulator) for
   // each locale and process screenshots
@@ -68,14 +70,14 @@ Future<void> run(
     print('  $recordingDir/ios/fastlane/screenshots');
     print('  $recordingDir/android/fastlane/metadata/android');
   } else {
-    if (archiveDir == null) {
+    if (runMode == RunMode.archive) {
+      print('  ${archive.archiveDirPrefix}');
+    } else {
       print('  ios/fastlane/screenshots');
       print('  android/fastlane/metadata/android');
       print('for upload to both Apple and Google consoles.');
       print('\nFor uploading and other automation options see:');
       print('  https://pub.dartlang.org/packages/fledge');
-    } else {
-      print('  ${archive.archiveDirPrefix}');
     }
   }
   print('\nscreenshots completed successfully.');
@@ -144,35 +146,61 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
             utils.getIosSimulators(), configDeviceName);
         deviceId = simulator['udid'];
         // check if current device is pending a locale change
-        if (locales[0] == utils.getIosSimulatorLocale(deviceId)) {
+        if (Intl.canonicalizedLocale(locales[0]) ==
+            Intl.canonicalizedLocale(utils.getIosSimulatorLocale(deviceId))) {
           print('Starting $configDeviceName...');
-          startSimulator(deviceId);
+          await startSimulator(daemonClient, deviceId);
         } else {
           pendingIosLocaleChangeAtStart = true;
-          print('Not starting $configDeviceName due to pending locale change');
+//          print(
+//              'Postponing \'$configDeviceName\' startup due to pending locale change');
         }
       }
     }
-    assert(deviceId != null);
+    deviceId == null
+        ? throw 'Error: device \'$configDeviceName\' not found'
+        : null;
 
     final deviceType = getDeviceType(configInfo, configDeviceName);
     // if device is real ios or android, cannot change locale
     if (device != null && !device['emulator']) {
-      final defaultLocale = 'en-US'; // todo: need actual local
+      final defaultLocale = 'en_US'; // todo: need actual locale of real device
       print('Warning: the locale of a real device cannot be changed.');
-      await runProcessTests(config, screens, configDeviceName, defaultLocale,
-          deviceType, testPaths, deviceId, imageProcessor, runMode, archive);
+      await runProcessTests(
+          config,
+          screens,
+          configDeviceName,
+          defaultLocale,
+          deviceType,
+          testPaths,
+          deviceId,
+          imageProcessor,
+          runMode,
+          archive,
+          'unknown');
     } else {
-      // Check for a running android device or emulator
+      // Function to check for a running android device or emulator
       bool isRunningAndroidDeviceOrEmulator(Map device, Map emulator) {
         return (device != null && device['platform'] != 'ios') ||
             (device == null && emulator != null);
       }
 
-      // save original locale for reverting later if necessary
+      // save original android locale for reverting later if necessary
       String origAndroidLocale;
       if (isRunningAndroidDeviceOrEmulator(device, emulator)) {
         origAndroidLocale = utils.getAndroidDeviceLocale(deviceId);
+      }
+
+      // Function to check for a running ios device or simulator.
+      bool isRunningIosDeviceOrSimulator(Map device, Map emulator) {
+        return (device != null && device['platform'] == 'ios') ||
+            (device == null && simulator != null);
+      }
+
+      // save original ios locale for reverting later if necessary
+      String origIosLocale;
+      if (isRunningIosDeviceOrSimulator(device, emulator)) {
+        origIosLocale = utils.getIosSimulatorLocale(deviceId);
       }
 
       for (final locale in locales) {
@@ -182,38 +210,90 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
         }
         // set locale if ios simulator
         if ((device != null &&
-            device['platform'] == 'ios' &&
-            device['emulator'])) {
-          // an already running simulator
-          await setSimulatorLocale(
-              deviceId, configDeviceName, locale, stagingDir);
-        } else {
-          if (device == null && simulator != null) {
-            if (pendingIosLocaleChangeAtStart) {
-              // a non-running simulator
-              await setSimulatorLocale(
-                  deviceId, configDeviceName, locale, stagingDir,
-                  running: false);
-              pendingIosLocaleChangeAtStart = false;
-            } else {
-              // a running simulator
-              await setSimulatorLocale(
-                  deviceId, configDeviceName, locale, stagingDir);
-            }
+                device['platform'] == 'ios' &&
+                device['emulator']) ||
+            (device == null &&
+                simulator != null &&
+                !pendingIosLocaleChangeAtStart)) {
+          // an already running simulator or a started simulator
+          final localeChanged = await setSimulatorLocale(
+              deviceId, configDeviceName, locale, stagingDir, daemonClient);
+          if (localeChanged) {
+            // restart simulator
+            print('Restarting \'$configDeviceName\' due to locale change...');
+            await shutdownSimulator(deviceId);
+            await startSimulator(daemonClient, deviceId);
           }
         }
+        if (pendingIosLocaleChangeAtStart) {
+          // a non-running simulator
+          await setSimulatorLocale(
+              deviceId, configDeviceName, locale, stagingDir, daemonClient);
+          print('Starting $configDeviceName...');
+          await startSimulator(daemonClient, deviceId);
+          pendingIosLocaleChangeAtStart = false;
+        }
+
+        // Change orientation if required
+        final deviceInfo = configInfo['devices']
+            [utils.getStringFromEnum(deviceType)][configDeviceName];
+        String deviceOrientation;
+        deviceInfo != null
+            ? deviceOrientation = deviceInfo['orientation']
+            : null;
+        if (deviceOrientation != null) {
+          final orientation = orient.getOrientationEnum(deviceOrientation);
+          final currentDevice =
+              utils.getDeviceFromId(await daemonClient.devices, deviceId);
+          currentDevice == null
+              ? throw 'Error: device \'$configDeviceName\' not found in flutter daemon.'
+              : null;
+          switch (deviceType) {
+            case DeviceType.android:
+              if (currentDevice['emulator']) {
+                orient.changeDeviceOrientation(deviceType, orientation,
+                    deviceId: deviceId);
+              } else {
+                print(
+                    'Warning: cannot change orientation of a real android device.');
+              }
+              break;
+            case DeviceType.ios:
+              if (currentDevice['emulator']) {
+                orient.changeDeviceOrientation(deviceType, orientation,
+                    scriptDir: '$stagingDir/resources/script');
+              } else {
+                print(
+                    'Warning: cannot change orientation of a real iOS device.');
+              }
+              break;
+          }
+        }
+
         // run tests and process images
-        await runProcessTests(config, screens, configDeviceName, locale,
-            deviceType, testPaths, deviceId, imageProcessor, runMode, archive);
+        await runProcessTests(
+            config,
+            screens,
+            configDeviceName,
+            locale,
+            deviceType,
+            testPaths,
+            deviceId,
+            imageProcessor,
+            runMode,
+            archive,
+            deviceOrientation);
       }
+
       // if an emulator was started, revert locale if necessary and shut it down
       if (emulator != null) {
         await setEmulatorLocale(deviceId, origAndroidLocale, configDeviceName);
         await shutdownAndroidEmulator(daemonClient, deviceId);
       }
       if (simulator != null) {
-        // todo: revert locale
-        shutdownSimulator(deviceId);
+        await setSimulatorLocale(deviceId, configDeviceName, origIosLocale,
+            stagingDir, daemonClient);
+        await shutdownSimulator(deviceId);
       }
     }
   }
@@ -229,11 +309,12 @@ Future runProcessTests(
     String deviceId,
     ImageProcessor imageProcessor,
     RunMode runMode,
-    Archive archive) async {
+    Archive archive,
+    String orientation) async {
   // store env for later use by tests
   // ignore: invalid_use_of_visible_for_testing_member
-  await config.storeEnv(
-      screens, configDeviceName, locale, utils.getStringFromEnum(deviceType));
+  await config.storeEnv(screens, configDeviceName, locale,
+      utils.getStringFromEnum(deviceType), orientation);
   for (final testPath in testPaths) {
     print('Running $testPath on \'$configDeviceName\' in locale $locale...');
     await utils.streamCmd('flutter', ['-d', deviceId, 'drive', testPath]);
@@ -243,12 +324,15 @@ Future runProcessTests(
   }
 }
 
-void shutdownSimulator(String deviceId) {
+Future<void> shutdownSimulator(String deviceId) async {
   cmd('xcrun', ['simctl', 'shutdown', deviceId]);
+  // shutdown apparently needs time when restarting
+  await Future.delayed(Duration(milliseconds: 2000));
 }
 
-void startSimulator(String deviceId) {
+Future<void> startSimulator(DaemonClient daemonClient, String deviceId) async {
   cmd('xcrun', ['simctl', 'boot', deviceId]);
+  await waitForEmulatorToStart(daemonClient, deviceId);
 }
 
 /// Start android emulator and return device id.
@@ -289,36 +373,41 @@ Map _findDevice(List devices, List emulators, String deviceName) {
   return device;
 }
 
-/// Set the locale for a running simulator.
-Future setSimulatorLocale(
-    String deviceId, String deviceName, String testLocale, stagingDir,
-    {bool running = true}) async {
+/// Set the simulator locale.
+/// (Startup managed elsewhere)
+/// Returns true of locale changed.
+Future<bool> setSimulatorLocale(String deviceId, String deviceName,
+    String testLocale, String stagingDir, DaemonClient daemonClient) async {
   // a running simulator
   final deviceLocale = utils.getIosSimulatorLocale(deviceId);
-//  print('simulator locale=$deviceLocale');
-  if (testLocale != deviceLocale) {
-    if (running) shutdownSimulator(deviceId);
+  print('\'$deviceName\' locale: $deviceLocale, test locale: $testLocale');
+  bool localeChanged = false;
+  if (Intl.canonicalizedLocale(testLocale) !=
+      Intl.canonicalizedLocale(deviceLocale)) {
     print(
         'Changing locale from $deviceLocale to $testLocale on \'$deviceName\'...');
     await _changeSimulatorLocale(stagingDir, deviceId, testLocale);
-    print('Starting $deviceName...');
-    startSimulator(deviceId);
+    localeChanged = true;
   }
+  return localeChanged;
 }
 
 /// Set the locale of a running emulator.
 Future<void> setEmulatorLocale(String deviceId, testLocale, deviceName) async {
   final deviceLocale = utils.getAndroidDeviceLocale(deviceId);
-  print('emulator locale=$deviceLocale');
+  print('\'$deviceName\' locale: $deviceLocale, test locale: $testLocale');
   if (deviceLocale != null &&
       deviceLocale != '' &&
-      deviceLocale != testLocale) {
+      Intl.canonicalizedLocale(deviceLocale) !=
+          Intl.canonicalizedLocale(testLocale)) {
     //          daemonClient.verbose = true;
     print(
         'Changing locale from $deviceLocale to $testLocale on \'$deviceName\'...');
     changeAndroidLocale(deviceId, deviceLocale, testLocale);
     //          daemonClient.verbose = false;
     await utils.waitAndroidLocaleChange(deviceId, testLocale);
+    // allow additional time before orientation change
+    await Future.delayed(Duration(milliseconds: 5000));
   }
 }
 
@@ -334,7 +423,7 @@ void changeAndroidLocale(
     stdout.write(
         '    https://stackoverflow.com/questions/43923996/adb-root-is-not-working-on-emulator/45668555#45668555 for details.\n');
   }
-  // adb shell "setprop persist.sys.locale fr-CA; setprop ctl.restart zygote"
+  // adb shell "setprop persist.sys.locale fr_CA; setprop ctl.restart zygote"
   cmd('adb', [
     '-s',
     deviceId,

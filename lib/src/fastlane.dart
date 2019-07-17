@@ -50,6 +50,7 @@ Future _clearFastlaneDir(Screens screens, String deviceName, String locale,
 /// Generate fastlane dir path for ios or android.
 String getDirPath(
     DeviceType deviceType, String locale, String androidModelType) {
+  locale = locale.replaceAll('_', '-'); // in case canonicalized
   const androidPrefix = 'android/fastlane/metadata/android';
   const iosPrefix = 'ios/fastlane/screenshots';
   String dirPath;

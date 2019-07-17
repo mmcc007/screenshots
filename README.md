@@ -145,23 +145,18 @@ _Screenshots_ uses a configuration file to configure a run.
  The default config filename is `screenshots.yaml`:
 ````yaml
 # A list of screen capture tests
+# Note: flutter driver expects a pair of files eg, main1.dart and main1_test.dart
 tests:
   - test_driver/main1.dart
   - test_driver/main2.dart
-
-# Note: flutter driver expects a pair of files for testing
-# For example:
-#   main1.dart is the test app (that calls your app)
-#   main1_test.dart is the matching test that flutter driver 
-#   expects to find.
 
 # Interim location of screenshots from tests
 staging: /tmp/screenshots
 
 # A list of locales supported by the app
 locales:
-  - de-DE
   - en-US
+  - de-DE
 
 # A map of devices to emulate
 devices:
@@ -169,6 +164,7 @@ devices:
     iPhone XS Max:
       frame: false
     iPad Pro (12.9-inch) (3rd generation):
+      orientation: LandscapeRight
   android:
     Nexus 6P:
 
@@ -182,8 +178,12 @@ Individual devices can be configured in `screenshots.yaml` by specifying per dev
 | Parameter | Values | Required | Description |
 | --- | --- | --- | --- |
 |frame|true/false|optional|Controls whether screenshots generated on the device should be placed in a frame. Overrides the global frame setting (see example `screenshots.yaml` above).
+|orientation|Portrait \| LandscapeRight \| PortraitUpsideDown \| LandscapeLeft|optional|Controls orientation of device during test. Currently disables framing resulting in a raw screenshot. Ignored for real devices.
+
 
 Note: images generated for those devices where framing is disabled are probably not suitable for upload, but can be used for local review.
+
+Note: orientation on iOS simulators is implemented using an AppleScript script which requires granting permission on first use.
 
 # Record/Compare Mode
 _Screenshots_ can be used to monitor any unexpected changes to the UI by comparing the new screenshots to previously recorded screenshots. Any differences will be highlighted in a 'diff' image for review.  

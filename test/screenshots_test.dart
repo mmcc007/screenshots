@@ -7,6 +7,8 @@ import 'package:screenshots/src/config.dart';
 import 'package:screenshots/src/daemon_client.dart';
 import 'package:screenshots/src/globals.dart';
 import 'package:screenshots/src/image_processor.dart';
+import 'package:screenshots/src/orientation.dart' as orient;
+import 'package:screenshots/src/orientation.dart';
 import 'package:screenshots/src/screens.dart';
 import 'package:screenshots/src/resources.dart' as resources;
 import 'package:screenshots/src/run.dart' as run;
@@ -202,15 +204,6 @@ void main() {
         '/tmp/screenshots/$kTestScreenshotsDir', 'my_prefix');
   });
 
-  test('config guide', () async {
-    final Screens screens = Screens();
-    await screens.init();
-    final Config config = Config(configPath: 'test/screenshots_test.yaml');
-    final daemonClient = DaemonClient();
-    await daemonClient.start;
-    config.generateConfigGuide(screens, await daemonClient.devices);
-  });
-
   test('rooted emulator', () async {
     final emulatorId = 'Nexus_5X_API_27';
     final stagingDir = '/tmp/tmp';
@@ -265,8 +258,8 @@ void main() {
   test('change android locale', () async {
     final deviceName = 'Nexus 6P';
     final emulatorId = 'Nexus_6P_API_28';
-    final origLocale = 'en-US';
-    final newLocale = 'fr-CA';
+    final origLocale = 'en_US';
+    final newLocale = 'fr_CA';
     final daemonClient = DaemonClient();
     await daemonClient.start;
     daemonClient.verbose = true;
@@ -286,10 +279,13 @@ void main() {
     final simulatorName = 'iPhone X';
     final simulatorInfo =
         utils.getHighestIosSimulator(utils.getIosSimulators(), simulatorName);
-    // note: daemonClient should get an 'add.device' event after simulator startup
     final deviceId = simulatorInfo['udid'];
-    run.startSimulator(deviceId);
-    run.shutdownSimulator(deviceId);
+    final daemonClient = DaemonClient();
+    daemonClient.verbose = true;
+    await daemonClient.start;
+    await run.startSimulator(daemonClient, deviceId);
+    await run.shutdownSimulator(deviceId);
+    await daemonClient.stop;
   });
 
   test('start emulator on travis', () async {
@@ -310,26 +306,12 @@ void main() {
         ProcessStartMode.detached);
   });
 
-  // reproduce https://github.com/flutter/flutter/issues/27785
-  // on android (hangs during test)
-  // tested on android emulator in default locale (en-US) and it worked
-  // tested on android emulator in automatically changed to locale fr-CA and it hangs
-  // tested on android emulator booted in locale fr-CA and it hangs
-//  [trace] FlutterDriver: Isolate found with number: 939713595
-//  [trace] FlutterDriver: Isolate is paused at start.
-//  [trace] FlutterDriver: Attempting to resume isolate
-//  [trace] FlutterDriver: Waiting for service extension
-//  [info ] FlutterDriver: Connected to Flutter application.
-//  00:04 +0: end-to-end test tap on the floating action button; verify counter
-//  [warning] FlutterDriver: waitFor message is taking a long time to complete...
-//  hangs
   test('change locale on android and test', () async {
     final emulatorId = 'Nexus_6P_API_28';
     final deviceName = 'any device name';
     final stagingDir = '/tmp/tmp';
-    final origLocale = 'en-US';
-    final newLocale = 'en-US'; // succeeds
-//    final newLocale = 'fr-CA'; // fails
+    final origLocale = 'en_US';
+    final newLocale = 'fr_CA';
     final testAppDir = 'example';
     final testAppSrcPath = 'test_driver/main.dart';
 
@@ -338,6 +320,7 @@ void main() {
 
     final daemonClient = DaemonClient();
     await daemonClient.start;
+
     // start emulator
     final deviceId = await daemonClient.launchEmulator(emulatorId);
 
@@ -347,17 +330,17 @@ void main() {
     // run test
     await utils.streamCmd('flutter', ['drive', testAppSrcPath], testAppDir);
 
-    // stop emulator
+    // restore orig locale
     await run.setEmulatorLocale(deviceId, origLocale, deviceName);
+
+    // stop emulator
     expect(await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
-  },
-      timeout:
-          Timeout(Duration(seconds: 90))); // increase time to get stacktrace
+  }, timeout: Timeout(Duration(seconds: 90)));
 
   test('get android device locale', () async {
     final emulatorId = 'Nexus_6P_API_28';
     final stagingDir = '/tmp/tmp';
-    final locale = 'en-US';
+    final locale = 'en_US';
 
     await resources.unpackScripts(stagingDir);
     final daemonClient = DaemonClient();
@@ -369,49 +352,46 @@ void main() {
     expect(deviceLocale, locale);
   });
 
-  // reproduce https://github.com/flutter/flutter/issues/27785
-  // on ios
-  // tested on ios device in default locale (en-US) and it worked
-  // tested on ios device in manually changed to locale fr-CA and it hangs
-  // tested on ios simulator in default locale (en-US) and it worked
-  // tested on ios simulator in automatically changed to locale fr-CA and it hangs
   test('change locale on iOS and test', () async {
     final simulatorName = 'iPhone X';
     final stagingDir = '/tmp/tmp';
-    final locale = 'en-US'; // default locale (works)
-//    final locale = 'fr-CA'; // fails
+    final origLocale = 'en_US';
+    final locale = 'fr_CA';
     final testAppDir = 'example';
     final testAppSrcPath = 'test_driver/main.dart';
 
     // unpack resources
     await resources.unpackScripts(stagingDir);
 
+    final daemonClient = DaemonClient();
+    await daemonClient.start;
+
     // change locale
     final simulatorInfo =
         utils.getHighestIosSimulator(utils.getIosSimulators(), simulatorName);
     final deviceId = simulatorInfo['udid'];
-    await run.setSimulatorLocale(deviceId, simulatorName, locale, stagingDir,
-        running: false);
+    await run.setSimulatorLocale(
+        deviceId, simulatorName, locale, stagingDir, daemonClient);
 
     // start simulator
-//    final daemonClient = DaemonClient();
-//    await daemonClient.start;
-    run.startSimulator(deviceId);
+    await run.startSimulator(daemonClient, deviceId);
 
     // run test
     await utils.streamCmd(
         'flutter', ['-d', deviceId, 'drive', testAppSrcPath], testAppDir);
 
     // stop simulator
-    run.shutdownSimulator(deviceId);
-  },
-      // increase time to get stacktrace
-      timeout: Timeout(Duration(minutes: 2)));
+    await run.shutdownSimulator(deviceId);
+
+    // restore orig locale
+    await run.setSimulatorLocale(
+        deviceId, simulatorName, origLocale, stagingDir, daemonClient);
+  }, timeout: Timeout(Duration(seconds: 90)));
 
   test('get ios simulator locale', () async {
     final udId = '03D4FC12-3927-4C8B-A226-17DE34AE9C18';
     var locale = utils.getIosSimulatorLocale(udId);
-    expect(locale, 'en-US');
+    expect(locale, 'en_US');
   });
 
   test('get avd from a running emulator', () async {
@@ -519,7 +499,7 @@ devices:
     });
 
     test('scan syslog for string', () async {
-      final toLocale = 'en-US';
+      final toLocale = 'en_US';
 //      final expected =
 //          'ContactsProvider: Locale has changed from [fr_CA] to [en_US]';
 //      final expected = RegExp('Locale has changed from');
@@ -536,7 +516,7 @@ devices:
     });
 
     test('reg exp', () {
-      final locale = 'fr-CA';
+      final locale = 'fr_CA';
       final line =
           'ContactsProvider: Locale has changed from [en_US] to [${locale.replaceFirst('-', '_')}]';
 //      final regExp = RegExp(
@@ -664,6 +644,118 @@ devices:
     test('find adb path', () async {
       final _adbPath = getAdbPath();
       print('adbPath=$_adbPath');
+    });
+  });
+
+  group('manage device orientation', () {
+    test('find ios simulator orientation', () async {
+      final udId = '03D4FC12-3927-4C8B-A226-17DE34AE9C18';
+      final env = Platform.environment;
+      final preferencesDir =
+          '${env['HOME']}/Library/Developer/CoreSimulator/Devices/$udId/data/Library/Preferences';
+      await Directory(preferencesDir).listSync().forEach((fsEntity) {
+        // print contents
+        final filePath = fsEntity.path;
+        print('filePath=$filePath');
+        try {
+          final contents = run.cmd('plutil',
+              ['-convert', 'xml1', '-r', '-o', '-', filePath], '.', true);
+          print('contents=$contents');
+        } catch (e) {
+          print('error: $e');
+        }
+      });
+    });
+
+    test('set ios simulator orientation', () async {
+      final scriptDir = 'lib/resources/script';
+      final simulatorName = 'iPhone 7 Plus';
+      final simulatorInfo =
+          utils.getHighestIosSimulator(utils.getIosSimulators(), simulatorName);
+      final deviceId = simulatorInfo['udid'];
+      final daemonClient = DaemonClient();
+      daemonClient.verbose = true;
+      await daemonClient.start;
+      await run.startSimulator(daemonClient, deviceId);
+      await Future.delayed(Duration(milliseconds: 5000)); // finish booting
+      orient.changeDeviceOrientation(
+          DeviceType.ios, orient.Orientation.LandscapeRight,
+          scriptDir: scriptDir);
+      await Future.delayed(Duration(milliseconds: 3000));
+      orient.changeDeviceOrientation(
+          DeviceType.ios, orient.Orientation.Portrait,
+          scriptDir: scriptDir);
+      await Future.delayed(Duration(milliseconds: 1000));
+      await run.shutdownSimulator(deviceId);
+      await daemonClient.stop;
+    });
+
+    test('set android emulator orientation', () async {
+      final emulatorId = 'Nexus_6P_API_28';
+      final daemonClient = DaemonClient();
+      await daemonClient.start;
+      final deviceId = await daemonClient.launchEmulator(emulatorId);
+      orient.changeDeviceOrientation(
+          DeviceType.android, orient.Orientation.LandscapeRight,
+          deviceId: deviceId);
+      await Future.delayed(Duration(milliseconds: 3000));
+      orient.changeDeviceOrientation(
+          DeviceType.android, orient.Orientation.Portrait,
+          deviceId: deviceId);
+      await Future.delayed(Duration(milliseconds: 3000));
+      expect(
+          await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
+    });
+  });
+
+  group('config validate', () {
+    test('config guide', () async {
+      final Screens screens = Screens();
+      await screens.init();
+      final Config config = Config(configPath: 'test/screenshots_test.yaml');
+      final daemonClient = DaemonClient();
+      await daemonClient.start;
+      config.generateConfigGuide(screens, await daemonClient.devices);
+    });
+
+    test('validate device params', () {
+      final deviceName = 'ios device 1';
+      final orientation = 'Portrait';
+      final frame = true;
+      final params = '''
+      devices:
+        ios:
+          $deviceName:
+            orientation: $orientation
+            frame: $frame
+          ios device 2:
+        android:
+          android device 1:
+          android device 2:
+        fuschia:
+      ''';
+      final configInfo = loadYaml(params);
+      final deviceNames = utils.getAllConfiguredDeviceNames(configInfo);
+      for (final devName in deviceNames) {
+        final deviceInfo = findDeviceInfo(configInfo, devName);
+        print('devName=$devName');
+        print('deviceInfo=$deviceInfo');
+        if (deviceInfo != null) {
+          expect(deviceInfo['orientation'], orientation);
+          expect(isValidOrientation(orientation), isTrue);
+          expect(isValidOrientation('bad orientation'), isFalse);
+          expect(deviceInfo['frame'], frame);
+          expect(isValidFrame(frame), isTrue);
+          expect(isValidFrame('bad frame'), isFalse);
+        }
+      }
+    });
+
+    test('valid values for params', () {
+      print(Orientation.values);
+      for (final orientation in Orientation.values) {
+        print('${utils.getStringFromEnum(orientation)}');
+      }
     });
   });
 }

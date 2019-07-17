@@ -31,6 +31,10 @@ Future<void> unpackScripts(String dstDir) async {
     'resources/script/simulator-controller',
     dstDir,
   );
+  await unpackScript(
+    'resources/script/sim_orientation.scpt',
+    dstDir,
+  );
 }
 
 /// Read script from resources and install in staging area.

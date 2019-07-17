@@ -199,3 +199,17 @@ List iosDevices() {
     return device;
   }).toList();
 }
+
+/// Wait for emulator or simulator to start
+Future waitForEmulatorToStart(
+    DaemonClient daemonClient, String deviceId) async {
+  bool started = false;
+  while (!started) {
+    final devices = await daemonClient.devices;
+    final device = devices.firstWhere(
+        (device) => device['id'] == deviceId && device['emulator'],
+        orElse: () => null);
+    started = device != null;
+    await Future.delayed(Duration(milliseconds: 1000));
+  }
+}

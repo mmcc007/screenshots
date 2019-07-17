@@ -5,12 +5,9 @@ import 'utils.dart' as utils;
 class Archive {
   static final _timeStamp = getTimestamp();
 
-  final _stagingTestDir;
   final archiveDirPrefix;
 
-  Archive(String stagingDir, String archiveDir)
-      : _stagingTestDir = '$stagingDir/$kTestScreenshotsDir',
-        archiveDirPrefix = '$archiveDir/$_timeStamp';
+  Archive(String archiveDir) : archiveDirPrefix = '$archiveDir/$_timeStamp';
 
   String dstDir(DeviceType deviceType, String locale) =>
       '$archiveDirPrefix/${utils.getStringFromEnum(deviceType)}/$locale';
