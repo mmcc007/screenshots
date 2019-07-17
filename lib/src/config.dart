@@ -253,10 +253,12 @@ bool isValidFrame(dynamic frame) {
 /// Find device info in config for device name.
 Map findDeviceInfo(Map configInfo, String deviceName) {
   Map deviceInfo;
-  configInfo['devices'].values.forEach((devices) {
-    devices.forEach((_deviceName, _deviceInfo) {
-      if (_deviceName == deviceName) deviceInfo = _deviceInfo;
-    });
+  configInfo['devices'].forEach((deviceType, devices) {
+    if (devices != null) {
+      devices.forEach((_deviceName, _deviceInfo) {
+        if (_deviceName == deviceName) deviceInfo = _deviceInfo;
+      });
+    }
   });
   return deviceInfo;
 }

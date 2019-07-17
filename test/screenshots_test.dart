@@ -732,11 +732,13 @@ devices:
         android:
           android device 1:
           android device 2:
+        fuschia:
       ''';
       final configInfo = loadYaml(params);
       final deviceNames = utils.getAllConfiguredDeviceNames(configInfo);
       for (final devName in deviceNames) {
         final deviceInfo = findDeviceInfo(configInfo, devName);
+        print('devName=$devName');
         print('deviceInfo=$deviceInfo');
         if (deviceInfo != null) {
           expect(deviceInfo['orientation'], orientation);
