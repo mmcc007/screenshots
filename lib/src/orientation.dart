@@ -22,7 +22,7 @@ void changeDeviceOrientation(DeviceType deviceType, Orientation orientation,
   };
   const sim_orientation_script = 'sim_orientation.scpt';
   final _orientation = utils.getStringFromEnum(orientation);
-  print('_orientation=$_orientation');
+  print('Setting orientation to $_orientation');
   switch (deviceType) {
     case DeviceType.android:
       run.cmd('adb', [
@@ -38,10 +38,11 @@ void changeDeviceOrientation(DeviceType deviceType, Orientation orientation,
       break;
     case DeviceType.ios:
       // requires permission when run for first time
-      run.cmd('osascript', [
-        '$scriptDir/$sim_orientation_script',
-        iosOrientations[_orientation]
-      ]);
+      run.cmd(
+          'osascript',
+          ['$scriptDir/$sim_orientation_script', iosOrientations[_orientation]],
+          '.',
+          true);
       break;
   }
 }
