@@ -206,48 +206,48 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
           }
         }
 
-      // Change orientation if required
-      final deviceOrientation = configInfo['devices']
-              [utils.getStringFromEnum(deviceType)][configDeviceName]
-          ['orientation'];
-      if (deviceOrientation.isNotEmpty) {
-        final orientation = orient.getOrientationEnum(deviceOrientation);
-        switch (deviceType) {
-          case DeviceType.android:
-            final currentDevice =
-                utils.getDeviceFromId(await daemonClient.devices, deviceId);
-            currentDevice == null
-                ? throw 'Error: device \'$configDeviceName\' not found in flutter daemon.'
-                : null;
-            if (currentDevice['emulator']) {
+        // Change orientation if required
+        final deviceOrientation = configInfo['devices']
+                [utils.getStringFromEnum(deviceType)][configDeviceName]
+            ['orientation'];
+        if (deviceOrientation.isNotEmpty) {
+          final orientation = orient.getOrientationEnum(deviceOrientation);
+          switch (deviceType) {
+            case DeviceType.android:
+              final currentDevice =
+                  utils.getDeviceFromId(await daemonClient.devices, deviceId);
+              currentDevice == null
+                  ? throw 'Error: device \'$configDeviceName\' not found in flutter daemon.'
+                  : null;
+              if (currentDevice['emulator']) {
+                orient.changeDeviceOrientation(deviceType, orientation,
+                    deviceId: deviceId);
+              } else {
+                print(
+                    'Warning: cannot change orientation of a real android device.');
+              }
+              break;
+            case DeviceType.ios:
               orient.changeDeviceOrientation(deviceType, orientation,
-                  deviceId: deviceId);
-            } else {
-              print(
-                  'Warning: cannot change orientation of a real android device.');
-            }
-            break;
-          case DeviceType.ios:
-            orient.changeDeviceOrientation(deviceType, orientation,
-                scriptDir: '$stagingDir/resources/script');
-            break;
+                  scriptDir: '$stagingDir/resources/script');
+              break;
+          }
         }
+
+        // run tests and process images
+        await runProcessTests(config, screens, configDeviceName, locale,
+            deviceType, testPaths, deviceId, imageProcessor, runMode, archive);
       }
 
-      // run tests and process images
-      await runProcessTests(config, screens, configDeviceName, locale,
-          deviceType, testPaths, deviceId, imageProcessor, runMode, archive);
-
-    }
-
-    // if an emulator was started, revert locale if necessary and shut it down
-    if (emulator != null) {
-      await setEmulatorLocale(deviceId, origAndroidLocale, configDeviceName);
-      await shutdownAndroidEmulator(daemonClient, deviceId);
-    }
-    if (simulator != null) {
-      // todo: revert locale
-      shutdownSimulator(deviceId);
+      // if an emulator was started, revert locale if necessary and shut it down
+      if (emulator != null) {
+        await setEmulatorLocale(deviceId, origAndroidLocale, configDeviceName);
+        await shutdownAndroidEmulator(daemonClient, deviceId);
+      }
+      if (simulator != null) {
+        // todo: revert locale
+        shutdownSimulator(deviceId);
+      }
     }
   }
 }
