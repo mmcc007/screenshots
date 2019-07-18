@@ -328,7 +328,7 @@ Future runProcessTests(
   await config.storeEnv(screens, configDeviceName, locale,
       utils.getStringFromEnum(deviceType), orientation);
   for (final testPath in testPaths) {
-    if (flavor != kNoFlavor) {
+    if (flavor != null && flavor != kNoFlavor) {
       print(
           'Running $testPath on \'$configDeviceName\' in locale $locale with flavor $flavor ...');
       await utils.streamCmd('flutter',
