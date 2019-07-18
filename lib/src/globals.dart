@@ -18,5 +18,8 @@ enum DeviceType { android, ios }
 /// Run mode
 enum RunMode { normal, recording, comparison, archive }
 
-// singleton
+/// singleton
 ImageMagick get im => ImageMagick();
+
+/// No flavor
+const String kNoFlavor = 'no flavor';
