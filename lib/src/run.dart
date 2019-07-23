@@ -24,7 +24,9 @@ import 'utils.dart' as utils;
 /// 4. Move processed screenshots to fastlane destination for upload to stores.
 /// 5. If not a real device, stop emulator/simulator.
 Future<void> run(
-    [String configPath = kConfigFileName, String _runMode = 'normal']) async {
+    [String configPath = kConfigFileName,
+    String _runMode = 'normal',
+    String flavor = kNoFlavor]) async {
   final runMode = utils.getRunModeEnum(_runMode);
 
   final screens = Screens();
@@ -59,8 +61,8 @@ Future<void> run(
   }
   // run integration tests in each real device (or emulator/simulator) for
   // each locale and process screenshots
-  await runTestsOnAll(
-      daemonClient, devices, emulators, config, screens, runMode, archive);
+  await runTestsOnAll(daemonClient, devices, emulators, config, screens,
+      runMode, archive, flavor);
   // shutdown daemon
   await daemonClient.stop;
 
@@ -90,8 +92,15 @@ Future<void> run(
 ///
 /// Assumes the integration tests capture the screen shots into a known directory using
 /// provided [capture_screen.screenshot()].
-Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
-    Config config, Screens screens, RunMode runMode, Archive archive) async {
+Future runTestsOnAll(
+    DaemonClient daemonClient,
+    List devices,
+    List emulators,
+    Config config,
+    Screens screens,
+    RunMode runMode,
+    Archive archive,
+    String flavor) async {
   final configInfo = config.configInfo;
   final locales = configInfo['locales'];
   final stagingDir = configInfo['staging'];
@@ -177,7 +186,8 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
           imageProcessor,
           runMode,
           archive,
-          'unknown');
+          'unknown',
+          flavor);
     } else {
       // Function to check for a running android device or emulator
       bool isRunningAndroidDeviceOrEmulator(Map device, Map emulator) {
@@ -282,7 +292,8 @@ Future runTestsOnAll(DaemonClient daemonClient, List devices, List emulators,
             imageProcessor,
             runMode,
             archive,
-            deviceOrientation);
+            deviceOrientation,
+            flavor);
       }
 
       // if an emulator was started, revert locale if necessary and shut it down
@@ -310,14 +321,22 @@ Future runProcessTests(
     ImageProcessor imageProcessor,
     RunMode runMode,
     Archive archive,
-    String orientation) async {
+    String orientation,
+    String flavor) async {
   // store env for later use by tests
   // ignore: invalid_use_of_visible_for_testing_member
   await config.storeEnv(screens, configDeviceName, locale,
       utils.getStringFromEnum(deviceType), orientation);
   for (final testPath in testPaths) {
-    print('Running $testPath on \'$configDeviceName\' in locale $locale...');
-    await utils.streamCmd('flutter', ['-d', deviceId, 'drive', testPath]);
+    if (flavor != null && flavor != kNoFlavor) {
+      print(
+          'Running $testPath on \'$configDeviceName\' in locale $locale with flavor $flavor ...');
+      await utils.streamCmd('flutter',
+          ['-d', deviceId, 'drive', '-t', testPath, '--flavor', flavor]);
+    } else {
+      print('Running $testPath on \'$configDeviceName\' in locale $locale...');
+      await utils.streamCmd('flutter', ['-d', deviceId, 'drive', testPath]);
+    }
     // process screenshots
     await imageProcessor.process(
         deviceType, configDeviceName, locale, runMode, archive);
@@ -327,11 +346,13 @@ Future runProcessTests(
 Future<void> shutdownSimulator(String deviceId) async {
   cmd('xcrun', ['simctl', 'shutdown', deviceId]);
   // shutdown apparently needs time when restarting
+  // see https://github.com/flutter/flutter/issues/10228 for race condition on simulator
   await Future.delayed(Duration(milliseconds: 2000));
 }
 
 Future<void> startSimulator(DaemonClient daemonClient, String deviceId) async {
   cmd('xcrun', ['simctl', 'boot', deviceId]);
+  await Future.delayed(Duration(milliseconds: 2000));
   await waitForEmulatorToStart(daemonClient, deviceId);
 }
 

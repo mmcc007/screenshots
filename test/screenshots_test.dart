@@ -758,4 +758,16 @@ devices:
       }
     });
   });
+
+  group('flavors', () {
+    test('flavor run', () async {
+      final flavor = 'paid';
+      final origDir = Directory.current;
+      Directory.current = 'flavors';
+      final configPath = 'screenshots.yaml';
+      await run.run(
+          configPath, utils.getStringFromEnum(RunMode.normal), flavor);
+      Directory.current = origDir;
+    }, timeout: Timeout(Duration(seconds: 240)));
+  });
 }

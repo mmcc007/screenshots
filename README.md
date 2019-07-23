@@ -89,7 +89,7 @@ $ screenshots -c <path to config file>
 Other options:
 ```
 $ screenshots -h
-usage: screenshots [-h] [-c <config file>] [-m <normal|recording|comparison|archive>]
+usage: screenshots [-h] [-c <config file>] [-m <normal|recording|comparison|archive>] [-f <flavor>]
 
 sample usage: screenshots
 
@@ -97,9 +97,11 @@ sample usage: screenshots
                                                     (defaults to "screenshots.yaml")
 
 -m, --mode=<normal|recording|comparison|archive>    If mode is recording, screenshots will be saved for later comparison.
-                                                    If mode is archive, screenshots will be archived and cannot be uploaded via fastlane.
+                                                    If mode is comparison, screenshots will be compared with recorded.
+                                                    If mode is archive, screenshots will be archived (and cannot be uploaded via fastlane).
                                                     [normal (default), recording, comparison, archive]
 
+-f, --flavor=<flavor name>                          Flavor name.
 -h, --help                                          Display this help information.
 ```
 
@@ -134,7 +136,7 @@ Note: to turn off the debug banner on your screens, in your integration test's m
 ````
 
 ## Modifying tests based on screenshots environment
-In some cases it is useful to know what device, device type, screen size and locale you are currently testing with. To obtain this information in your test use:
+In some cases it is useful to know what device, device type, screen size, screen orientation and locale you are currently testing with. To obtain this information in your test use:
 ```
 final screenshotsEnv = config.screenshotsEnv;
 ```

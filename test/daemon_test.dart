@@ -206,7 +206,7 @@ main() {
     Directory.current = 'example';
 
     await run.runTestsOnAll(daemonClient, devices, emulators, config, screens,
-        RunMode.normal, null);
+        RunMode.normal, null, kNoFlavor);
     // allow other tests to continue
     Directory.current = origDir;
   }, timeout: Timeout(Duration(minutes: 4)));

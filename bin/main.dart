@@ -5,7 +5,7 @@ import 'package:screenshots/screenshots.dart';
 import 'package:path/path.dart' as path;
 
 const usage =
-    'usage: screenshots [-h] [-c <config file>] [-m <normal|recording|comparison|archive>]';
+    'usage: screenshots [-h] [-c <config file>] [-m <normal|recording|comparison|archive>] [-f <flavor>]';
 const sampleUsage = 'sample usage: screenshots';
 
 void main(List<String> arguments) async {
@@ -13,6 +13,7 @@ void main(List<String> arguments) async {
 
   final configArg = 'config';
   final modeArg = 'mode';
+  final flavorArg = 'flavor';
   final helpArg = 'help';
   final ArgParser argParser = ArgParser(allowTrailingOptions: false)
     ..addOption(configArg,
@@ -24,9 +25,11 @@ void main(List<String> arguments) async {
         abbr: 'm',
         defaultsTo: 'normal',
         help:
-            'If mode is recording, screenshots will be saved for later comparison. \nIf mode is archive, screenshots will be archived and cannot be uploaded via fastlane.',
+            'If mode is recording, screenshots will be saved for later comparison. \nIf mode is comparison, screenshots will be compared with recorded.\nIf mode is archive, screenshots will be archived (and cannot be uploaded via fastlane).',
         allowed: ['normal', 'recording', 'comparison', 'archive'],
         valueHelp: 'normal|recording|comparison|archive')
+    ..addOption(flavorArg,
+        abbr: 'f', help: 'Flavor name.', valueHelp: 'flavor name')
     ..addFlag(helpArg,
         abbr: 'h', help: 'Display this help information.', negatable: false);
   try {
@@ -79,7 +82,7 @@ void main(List<String> arguments) async {
     _handleError(argParser, "File not found: ${argResults[configArg]}");
   }
 
-  await run(argResults[configArg], argResults[modeArg]);
+  await run(argResults[configArg], argResults[modeArg], argResults[flavorArg]);
 }
 
 void _handleError(ArgParser argParser, String msg) {
