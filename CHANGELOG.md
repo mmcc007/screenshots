@@ -1,3 +1,8 @@
+## 1.3.0
+- Added support for landscape screenshots #66
+- Added support for flavors #55
+- Modified no-frame behavior and various improvements
+
 ## 1.2.0
 - Added archive feature to collect screenshots of all runs for reporting, etc... #77 #81
 - Improved detection of adb path #79
