@@ -346,11 +346,13 @@ Future runProcessTests(
 Future<void> shutdownSimulator(String deviceId) async {
   cmd('xcrun', ['simctl', 'shutdown', deviceId]);
   // shutdown apparently needs time when restarting
+  // see https://github.com/flutter/flutter/issues/10228 for race condition on simulator
   await Future.delayed(Duration(milliseconds: 2000));
 }
 
 Future<void> startSimulator(DaemonClient daemonClient, String deviceId) async {
   cmd('xcrun', ['simctl', 'boot', deviceId]);
+  await Future.delayed(Duration(milliseconds: 2000));
   await waitForEmulatorToStart(daemonClient, deviceId);
 }
 
