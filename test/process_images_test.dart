@@ -2,11 +2,13 @@ import 'package:screenshots/src/config.dart';
 import 'package:screenshots/src/globals.dart';
 import 'package:screenshots/src/image_processor.dart';
 import 'package:screenshots/src/resources.dart' as resources;
+import 'package:screenshots/src/run.dart' as run;
 import 'package:screenshots/src/screens.dart';
 import 'package:test/test.dart';
 
 main() {
   test('process screenshots for iPhone X and iPhone XS Max', () async {
+    final imageDir = 'test/resources';
     final Screens screens = Screens();
     await screens.init();
     final Config config = Config(configPath: 'test/screenshots_test.yaml');
@@ -27,7 +29,7 @@ main() {
       final Map screenResources = screen['resources'];
       await resources.unpackImages(screenResources, '/tmp/screenshots');
 
-      final screenshotPath = './test/resources/$screenshotName';
+      final screenshotPath = '$imageDir/$screenshotName';
       final statusbarPath =
           '${appConfig['staging']}/${screenResources['statusbar']}';
 
@@ -52,6 +54,9 @@ main() {
       };
 //      print('options=$options');
       await im.convert('frame', options);
+    }
+    for (var deviceName in devices.values) {
+      run.cmd('git', ['checkout', '$imageDir/$deviceName']);
     }
   });
 }

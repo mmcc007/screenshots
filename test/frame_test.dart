@@ -2,6 +2,7 @@ import 'package:screenshots/src/config.dart';
 import 'package:screenshots/src/globals.dart';
 import 'package:screenshots/src/image_processor.dart';
 import 'package:screenshots/src/resources.dart' as resources;
+import 'package:screenshots/src/run.dart' as run;
 import 'package:screenshots/src/screens.dart';
 import 'package:test/test.dart';
 
@@ -50,5 +51,6 @@ main() {
     };
     print('options=$options');
     await im.convert('frame', options);
+    run.cmd('git', ['checkout', screenshotPath]);
   });
 }

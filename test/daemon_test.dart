@@ -109,7 +109,7 @@ main() {
     final deviceId = await daemonClient.launchEmulator(emulatorId);
     expect(deviceId, expected);
     await run.shutdownAndroidEmulator(daemonClient, deviceId);
-  });
+  }, skip: true);
 
   test('parse ios-deploy response', () {
     final expectedDeviceId = '3b3455019e329e007e67239d9b897148244b5053';
@@ -153,7 +153,7 @@ main() {
     // run the test
     await utils.streamCmd(
         'flutter', ['-d', device['id'], 'drive', testPath], 'example');
-  }, timeout: Timeout(Duration(minutes: 2)));
+  }, timeout: Timeout(Duration(minutes: 2)), skip: true);
 
   test('wait for start of android emulator', () async {
     final id = 'Nexus_6P_API_28';
@@ -167,7 +167,7 @@ main() {
 
     // shutdown
     await run.shutdownAndroidEmulator(daemonClient, deviceId);
-  });
+  }, skip: true);
 
   test('join devices', () {
     final configPath = 'test/screenshots_test.yaml';
@@ -192,7 +192,8 @@ main() {
 
     // init
     final stagingDir = configInfo['staging'];
-    await Directory(stagingDir + '/$kTestScreenshotsDir').create(recursive: true);
+    await Directory(stagingDir + '/$kTestScreenshotsDir')
+        .create(recursive: true);
     await resources.unpackScripts(stagingDir);
     await fastlane.clearFastlaneDirs(configInfo, screens, RunMode.normal);
 
@@ -209,5 +210,5 @@ main() {
         RunMode.normal, null, kNoFlavor);
     // allow other tests to continue
     Directory.current = origDir;
-  }, timeout: Timeout(Duration(minutes: 4)));
+  }, timeout: Timeout(Duration(minutes: 4)), skip: true);
 }
