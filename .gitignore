@@ -26,3 +26,6 @@ example/android/fastlane
 
 # mac
 .DS_Store
+
+# code coverage
+coverage/
