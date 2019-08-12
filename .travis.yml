@@ -15,6 +15,8 @@ jobs:
       language: dart
       dart: stable
       install:
+        # skip homebrew update
+        - export HOMEBREW_NO_AUTO_UPDATE=1
         # install ImageMagick
         - brew install imagemagick
         # install most current (released or unreleased) Screenshots
