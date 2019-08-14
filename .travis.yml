@@ -19,6 +19,8 @@ jobs:
         - export HOMEBREW_NO_AUTO_UPDATE=1
         # install ImageMagick
         - brew install imagemagick
+        # install coverage tool
+        - pub global activate coverage
         # install most current (released or unreleased) Screenshots
         - pub global activate --source path .
       script:
