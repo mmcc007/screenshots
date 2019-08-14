@@ -9,8 +9,30 @@ osx_image: xcode10 # macOS 10.13, JDK 10.0.2+13
 
 jobs:
   include:
+
+    - stage: Run tests
+      env: Run Tests
+      language: dart
+      dart: stable
+      install:
+        # skip homebrew update
+        - export HOMEBREW_NO_AUTO_UPDATE=1
+        # install ImageMagick
+        - brew install imagemagick
+        # install coverage tool
+        - pub global activate coverage
+        # install most current (released or unreleased) Screenshots
+        - pub global activate --source path .
+      script:
+        - script/code_coverage.sh
+      after_success: bash <(curl -s https://codecov.io/bash) -f coverage/lcov.info
+
     - stage: Run screenshots
 #      env: Create screenshots
+
+      # run on master or PRs
+      if: branch = master
+
       before_install:
 #      - xcrun simctl list devices
       # create repository for artifacts

@@ -77,7 +77,7 @@ void deleteMatchingFiles(String dirPath, RegExp pattern) {
   if (Directory(dirPath).existsSync()) {
     Directory(dirPath).listSync().toList().forEach((e) {
       if (pattern.hasMatch(p.basename(e.path))) {
-        File(e.path).delete();
+        File(e.path).deleteSync();
       }
     });
   } else {

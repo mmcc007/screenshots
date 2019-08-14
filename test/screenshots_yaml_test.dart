@@ -55,7 +55,8 @@ void main() {
         'android': {'Nexus 5X': null},
         'ios': {
           'iPhone 7 Plus': {'frame': false},
-          'iPhone X': null
+          'iPhone X': null,
+          'iPhone 5c': {'frame': false}
         }
       },
       'staging': '/tmp/screenshots'
@@ -67,14 +68,14 @@ void main() {
 
   test('config info for app from file', () {
     final expected = {
-      'tests': ['example/test_driver/main.dart'],
-      'locales': ['en_US'],
+      'tests': ['test_driver/main.dart'],
+      'locales': ['en-US'],
       'frame': true,
       'devices': {
-        'android': {'Nexus 5X': null},
+        'android': {'Nexus 6P': null},
         'ios': {
-          'iPhone 7 Plus': {'frame': false},
-          'iPhone X': null
+          'iPhone X': null,
+          'iPhone 5c': {'frame': false}
         }
       },
       'staging': '/tmp/screenshots'

@@ -359,7 +359,7 @@ Future<void> startSimulator(DaemonClient daemonClient, String deviceId) async {
 /// Start android emulator and return device id.
 Future<String> _startEmulator(
     DaemonClient daemonClient, String emulatorId, stagingDir) async {
-  if (Platform.environment['CI'] == 'true') {
+  if (utils.isCI()) {
     // testing on CI/CD requires starting emulator in a specific way
     await _startAndroidEmulatorOnCI(emulatorId, stagingDir);
     return utils.findAndroidDeviceId(emulatorId);

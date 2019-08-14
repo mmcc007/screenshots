@@ -78,6 +78,7 @@ void main() {
       'statusbarPath': statusbarPath,
     };
     await im.convert('overlay', options);
+    run.cmd('git', ['checkout', screenshotPath]);
   });
 
   test('unpack screen resource images', () async {
@@ -107,6 +108,7 @@ void main() {
       'screenshotNavbarPath': screenshotNavbarPath,
     };
     await im.convert('append', options);
+    run.cmd('git', ['checkout', screenshotPath]);
   });
 
   test('frame screenshot', () async {
@@ -131,6 +133,7 @@ void main() {
       'backgroundColor': ImageProcessor.kDefaultAndroidBackground,
     };
     await im.convert('frame', options);
+    run.cmd('git', ['checkout', screenshotPath]);
   });
 
   test('parse json xcrun simctl list devices', () {
@@ -155,7 +158,7 @@ void main() {
     final iosDevices = utils.getIosSimulators();
     final iPhone7Plus = iosDevices['iPhone 7 Plus'];
     expect(iPhone7Plus, expected);
-  });
+  }, tags: 'udid', skip: utils.isCI());
 
   test('get highest and available version of ios device', () {
     final expected = {
@@ -169,7 +172,7 @@ void main() {
 //    final deviceName = 'iPhone 5c';
     final highestDevice = utils.getHighestIosSimulator(iosDevices, deviceName);
     expect(highestDevice, expected);
-  });
+  }, tags: 'udid', skip: utils.isCI());
 
   test('read resource and write to path', () async {
     final scrnResources = [
@@ -200,8 +203,15 @@ void main() {
   });
 
   test('add prefix to files in directory', () async {
-    await utils.prefixFilesInDir(
-        '/tmp/screenshots/$kTestScreenshotsDir', 'my_prefix');
+    final dirPath = 'test/resources/$kTestScreenshotsDir';
+    final prefix = 'my_prefix';
+    await utils.prefixFilesInDir(dirPath, prefix);
+    await for (final file in Directory(dirPath).list()) {
+      expect(file.path.contains(prefix), isTrue);
+    }
+    // cleanup
+    fastlane.deleteMatchingFiles(dirPath, RegExp(prefix));
+    run.cmd('git', ['checkout', dirPath]);
   });
 
   test('rooted emulator', () async {
@@ -214,7 +224,7 @@ void main() {
     final result = run.cmd('adb', ['root'], '.', true);
     expect(result, 'adbd cannot run as root in production builds\n');
     expect(await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
-  });
+  }, tags: 'androidSDK', skip: utils.isCI());
 
   test('get emulator id from device name', () {
     final _emulators = utils.getAvdNames();
@@ -222,7 +232,7 @@ void main() {
     final emulator =
         _emulators.firstWhere((emulator) => emulator.contains('Nexus_5X'));
     expect(emulator, 'Nexus_5X_API_27');
-  });
+  }, tags: 'androidSDK', skip: utils.isCI());
 
   test('move files', () async {
     final fileName = 'filename';
@@ -239,7 +249,10 @@ void main() {
       'id': 'emulator-5554',
       'name': 'Android SDK built for x86',
       'platform': 'android-x86',
-      'emulator': true
+      'emulator': true,
+      'category': 'mobile',
+      'platformType': 'android',
+      'ephemeral': true
     };
     final emulatorName = 'Nexus 6P';
     final emulatorId = 'Nexus_6P_API_28';
@@ -253,7 +266,7 @@ void main() {
     expect(startedDevice(devices, emulatorName), expected);
     expect(await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
     expect(startedDevice(await daemonClient.devices, emulatorName), null);
-  });
+  }, tags: 'androidSDK', skip: utils.isCI());
 
   test('change android locale', () async {
     final deviceName = 'Nexus 6P';
@@ -273,7 +286,7 @@ void main() {
     run.changeAndroidLocale(deviceId, deviceName, origLocale);
     await utils.waitAndroidLocaleChange(deviceId, origLocale);
     expect(await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
-  }, timeout: Timeout(Duration(seconds: 180)));
+  }, timeout: Timeout(Duration(seconds: 180)), skip: utils.isCI());
 
   test('start/stop simulator', () async {
     final simulatorName = 'iPhone X';
@@ -286,7 +299,7 @@ void main() {
     await run.startSimulator(daemonClient, deviceId);
     await run.shutdownSimulator(deviceId);
     await daemonClient.stop;
-  });
+  }, skip: utils.isCI());
 
   test('start emulator on travis', () async {
     final androidHome = Platform.environment['ANDROID_HOME'];
@@ -304,7 +317,7 @@ void main() {
         ],
         '.',
         ProcessStartMode.detached);
-  });
+  }, skip: utils.isCI());
 
   test('change locale on android and test', () async {
     final emulatorId = 'Nexus_6P_API_28';
@@ -335,7 +348,7 @@ void main() {
 
     // stop emulator
     expect(await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
-  }, timeout: Timeout(Duration(seconds: 90)));
+  }, timeout: Timeout(Duration(seconds: 90)), skip: utils.isCI());
 
   test('get android device locale', () async {
     final emulatorId = 'Nexus_6P_API_28';
@@ -350,7 +363,7 @@ void main() {
     expect(await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
 
     expect(deviceLocale, locale);
-  });
+  }, skip: utils.isCI());
 
   test('change locale on iOS and test', () async {
     final simulatorName = 'iPhone X';
@@ -386,13 +399,13 @@ void main() {
     // restore orig locale
     await run.setSimulatorLocale(
         deviceId, simulatorName, origLocale, stagingDir, daemonClient);
-  }, timeout: Timeout(Duration(seconds: 90)));
+  }, timeout: Timeout(Duration(seconds: 90)), skip: utils.isCI());
 
   test('get ios simulator locale', () async {
     final udId = '03D4FC12-3927-4C8B-A226-17DE34AE9C18';
     var locale = utils.getIosSimulatorLocale(udId);
-    expect(locale, 'en_US');
-  });
+    expect(locale, 'en-US');
+  }, skip: utils.isCI());
 
   test('get avd from a running emulator', () async {
     final expectedId = 'Nexus_6P_API_28';
@@ -403,7 +416,7 @@ void main() {
     final emulatorId = utils.getAndroidEmulatorId(deviceId);
     expect(emulatorId, expectedId);
     expect(await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
-  });
+  }, skip: utils.isCI());
 
   test('get real devices', () async {
     final expected = [
@@ -412,6 +425,9 @@ void main() {
         'name': 'Maurice’s iPhone',
         'platform': 'ios',
         'emulator': false,
+        'category': 'mobile',
+        'platformType': 'ios',
+        'ephemeral': true,
         'model': 'iPhone 5c (GSM)'
       }
     ];
@@ -422,7 +438,7 @@ void main() {
     final androidDevices = utils.getAndroidDevices(devices);
     expect(androidDevices, []);
     expect(iosDevices, expected);
-  });
+  }, skip: utils.isCI());
 
   test('get devices', () {
     final expected = {
@@ -484,7 +500,7 @@ devices:
     final Map diffs = diffMaps(props, newProps);
     expect(diffs, expected);
     expect(await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
-  });
+  }, skip: utils.isCI());
 
   group('ProcessWrapper', () {
     test('works in conjunction with subscribers to stdio streams', () async {
@@ -513,7 +529,7 @@ devices:
       expect(actual.contains(expected), isTrue);
       expect(
           await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
-    });
+    }, skip: utils.isCI());
 
     test('reg exp', () {
       final locale = 'fr_CA';
@@ -539,7 +555,7 @@ devices:
       final recordingDir = configInfo['recording'];
       expect(await utils.isRecorded(recordingDir), isTrue);
       Directory.current = origDir;
-    }, timeout: Timeout(Duration(seconds: 180)));
+    }, timeout: Timeout(Duration(seconds: 180)), skip: utils.isCI());
 
     test('imagemagick compare', () {
       final recordedImage0 = 'test/resources/recording/Nexus 6P-0.png';
@@ -560,7 +576,9 @@ devices:
         final comparisonImage = pair['comparison'];
         bool doCompare = im.compare(comparisonImage, recordedImage);
         behave == 'good' ? expect(doCompare, true) : expect(doCompare, false);
-        File(im.getDiffName(comparisonImage)).deleteSync();
+        behave == 'good'
+            ? null
+            : File(im.getDiffName(comparisonImage)).deleteSync();
       });
     });
 
@@ -595,7 +613,7 @@ devices:
       expect(await utils.isRecorded(recordingDir), isTrue);
       await run.run(configPath, utils.getStringFromEnum(RunMode.comparison));
       Directory.current = origDir;
-    }, timeout: Timeout(Duration(seconds: 180)));
+    }, timeout: Timeout(Duration(seconds: 180)), skip: utils.isCI());
 
     test('cleanup diffs at start of normal run', () {
       final fastlaneDir = 'test/resources/comparison';
@@ -620,7 +638,7 @@ devices:
       final configPath = 'screenshots.yaml';
       await run.run(configPath, utils.getStringFromEnum(RunMode.archive));
       Directory.current = origDir;
-    }, timeout: Timeout(Duration(seconds: 180)));
+    }, timeout: Timeout(Duration(seconds: 180)), skip: utils.isCI());
   });
 
   group('fastlane dirs', () {
@@ -644,7 +662,7 @@ devices:
     test('find adb path', () async {
       final _adbPath = getAdbPath();
       print('adbPath=$_adbPath');
-    });
+    }, skip: utils.isCI());
   });
 
   group('manage device orientation', () {
@@ -656,16 +674,16 @@ devices:
       await Directory(preferencesDir).listSync().forEach((fsEntity) {
         // print contents
         final filePath = fsEntity.path;
-        print('filePath=$filePath');
+//        print('filePath=$filePath');
         try {
           final contents = run.cmd('plutil',
               ['-convert', 'xml1', '-r', '-o', '-', filePath], '.', true);
-          print('contents=$contents');
+//          print('contents=$contents');
         } catch (e) {
           print('error: $e');
         }
       });
-    });
+    }, skip: utils.isCI());
 
     test('set ios simulator orientation', () async {
       final scriptDir = 'lib/resources/script';
@@ -688,7 +706,7 @@ devices:
       await Future.delayed(Duration(milliseconds: 1000));
       await run.shutdownSimulator(deviceId);
       await daemonClient.stop;
-    });
+    }, skip: utils.isCI());
 
     test('set android emulator orientation', () async {
       final emulatorId = 'Nexus_6P_API_28';
@@ -705,7 +723,7 @@ devices:
       await Future.delayed(Duration(milliseconds: 3000));
       expect(
           await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
-    });
+    }, skip: utils.isCI());
   });
 
   group('config validate', () {
@@ -716,7 +734,7 @@ devices:
       final daemonClient = DaemonClient();
       await daemonClient.start;
       config.generateConfigGuide(screens, await daemonClient.devices);
-    });
+    }, skip: utils.isCI());
 
     test('validate device params', () {
       final deviceName = 'ios device 1';
@@ -768,6 +786,6 @@ devices:
       await run.run(
           configPath, utils.getStringFromEnum(RunMode.normal), flavor);
       Directory.current = origDir;
-    }, timeout: Timeout(Duration(seconds: 240)));
+    }, timeout: Timeout(Duration(seconds: 240)), skip: utils.isCI());
   });
 }
