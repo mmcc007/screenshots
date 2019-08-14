@@ -321,9 +321,16 @@ Map findEmulator(List emulators, String emulatorName) {
       orElse: () => null);
 }
 
+/// Get [RunMode] from [String].
 RunMode getRunModeEnum(String runMode) {
   return getEnumFromString<RunMode>(RunMode.values, runMode);
 }
 
-Future<bool> isRecorded(recordDir) async =>
+/// Test for recordings in [recordDir].
+Future<bool> isRecorded(String recordDir) async =>
     !(await Directory(recordDir).list().isEmpty);
+
+/// Test for CI environment.
+bool isCI() {
+  return Platform.environment['CI'] == 'true';
+}
