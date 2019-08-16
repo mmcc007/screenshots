@@ -38,57 +38,57 @@ jobs:
       # create repository for artifacts
       - mkdir $HOME/screenshots
 
-      # Install android tools
-      - ANDROID_TOOLS=4333796 # android-28
-      - export ANDROID_HOME=~/android-sdk
-      - wget -q "https://dl.google.com/android/repository/sdk-tools-darwin-$ANDROID_TOOLS.zip" -O android-sdk-tools.zip
-      - unzip -q android-sdk-tools.zip -d ${ANDROID_HOME}
-      - rm android-sdk-tools.zip
-#      - PATH=${PATH}:${ANDROID_HOME}/tools:${ANDROID_HOME}/tools/bin:${ANDROID_HOME}/platform-tools
-      - PATH=${PATH}:${ANDROID_HOME}/emulator:${ANDROID_HOME}/tools/bin:${ANDROID_HOME}/platform-tools
-      # Silence warning.
-      - mkdir -p ~/.android
-      - touch ~/.android/repositories.cfg
-
-      # Add missing java module used by sdkmanager, etc...
-#      - export SDKMANAGER_OPTS="--add-modules java.se.ee"
-      - export JAVA_OPTS='-XX:+IgnoreUnrecognizedVMOptions --add-modules java.se.ee'
-      # Accept licenses before installing components, no need to echo y for each component
-      - yes | sdkmanager --licenses
-      # Platform tools
-      - sdkmanager "emulator" "tools" "platform-tools" > /dev/null
-      - sdkmanager --list | head -15
-      # install older build tools (for emulator)
-      - sdkmanager "build-tools;25.0.2" "platforms;android-25" > /dev/null
-
-      # Download a pinned version of the emulator since upgrades can cause issues
-      - ${ANDROID_HOME}/emulator/emulator -version
-      - emulator_version=5264690 # 29.0.9.0 (build_id 5537588) ==> 28.0.23.0 (build_id 5264690)
-      - curl -fo emulator.zip "https://dl.google.com/android/repository/emulator-darwin-$emulator_version.zip"
-      - rm -rf "${ANDROID_HOME}/emulator"
-      - unzip -q emulator.zip -d "${ANDROID_HOME}"
-      - rm -f emulator.zip
-      - ${ANDROID_HOME}/emulator/emulator -version
-
-      # Create emulator
-      - EMULATOR_API_LEVEL=22
-      - ABI="default;armeabi-v7a"
-      - EMULATOR_NAME='Nexus_6P_API_28'
-      - sdkmanager "system-images;android-$EMULATOR_API_LEVEL;$ABI" > /dev/null
-      - sdkmanager --list | head -15
-      - echo no | avdmanager create avd -n $EMULATOR_NAME -k "system-images;android-$EMULATOR_API_LEVEL;$ABI"
-#      - cat ~/.android/avd/$EMULATOR_NAME.ini
-#      - cat ~/.android/avd/$EMULATOR_NAME.avd/config.ini
-      - echo "hw.lcd.width=1440" >> ~/.android/avd/$EMULATOR_NAME.avd/config.ini
-      - echo "hw.lcd.height=2560" >> ~/.android/avd/$EMULATOR_NAME.avd/config.ini
-      - echo "hw.device.name=Nexus 6P" >> ~/.android/avd/$EMULATOR_NAME.avd/config.ini
-      - echo "hw.device.manufacturer=Google" >> ~/.android/avd/$EMULATOR_NAME.avd/config.ini
-      - echo "avd.ini.displayname=Nexus 6P API 28" >> ~/.android/avd/$EMULATOR_NAME.avd/config.ini
-
-      # fix timezone warning on osx
-      - sudo ln -sf /usr/share/zoneinfo/US/Pacific /etc/localtime
-
-      # setup osx environment for flutter and simulators
+#      # Install android tools
+#      - ANDROID_TOOLS=4333796 # android-28
+#      - export ANDROID_HOME=~/android-sdk
+#      - wget -q "https://dl.google.com/android/repository/sdk-tools-darwin-$ANDROID_TOOLS.zip" -O android-sdk-tools.zip
+#      - unzip -q android-sdk-tools.zip -d ${ANDROID_HOME}
+#      - rm android-sdk-tools.zip
+##      - PATH=${PATH}:${ANDROID_HOME}/tools:${ANDROID_HOME}/tools/bin:${ANDROID_HOME}/platform-tools
+#      - PATH=${PATH}:${ANDROID_HOME}/emulator:${ANDROID_HOME}/tools/bin:${ANDROID_HOME}/platform-tools
+#      # Silence warning.
+#      - mkdir -p ~/.android
+#      - touch ~/.android/repositories.cfg
+#
+#      # Add missing java module used by sdkmanager, etc...
+##      - export SDKMANAGER_OPTS="--add-modules java.se.ee"
+#      - export JAVA_OPTS='-XX:+IgnoreUnrecognizedVMOptions --add-modules java.se.ee'
+#      # Accept licenses before installing components, no need to echo y for each component
+#      - yes | sdkmanager --licenses
+#      # Platform tools
+#      - sdkmanager "emulator" "tools" "platform-tools" > /dev/null
+#      - sdkmanager --list | head -15
+#      # install older build tools (for emulator)
+#      - sdkmanager "build-tools;25.0.2" "platforms;android-25" > /dev/null
+#
+#      # Download a pinned version of the emulator since upgrades can cause issues
+#      - ${ANDROID_HOME}/emulator/emulator -version
+#      - emulator_version=5264690 # 29.0.9.0 (build_id 5537588) ==> 28.0.23.0 (build_id 5264690)
+#      - curl -fo emulator.zip "https://dl.google.com/android/repository/emulator-darwin-$emulator_version.zip"
+#      - rm -rf "${ANDROID_HOME}/emulator"
+#      - unzip -q emulator.zip -d "${ANDROID_HOME}"
+#      - rm -f emulator.zip
+#      - ${ANDROID_HOME}/emulator/emulator -version
+#
+#      # Create emulator
+#      - EMULATOR_API_LEVEL=22
+#      - ABI="default;armeabi-v7a"
+#      - EMULATOR_NAME='Nexus_6P_API_28'
+#      - sdkmanager "system-images;android-$EMULATOR_API_LEVEL;$ABI" > /dev/null
+#      - sdkmanager --list | head -15
+#      - echo no | avdmanager create avd -n $EMULATOR_NAME -k "system-images;android-$EMULATOR_API_LEVEL;$ABI"
+##      - cat ~/.android/avd/$EMULATOR_NAME.ini
+##      - cat ~/.android/avd/$EMULATOR_NAME.avd/config.ini
+#      - echo "hw.lcd.width=1440" >> ~/.android/avd/$EMULATOR_NAME.avd/config.ini
+#      - echo "hw.lcd.height=2560" >> ~/.android/avd/$EMULATOR_NAME.avd/config.ini
+#      - echo "hw.device.name=Nexus 6P" >> ~/.android/avd/$EMULATOR_NAME.avd/config.ini
+#      - echo "hw.device.manufacturer=Google" >> ~/.android/avd/$EMULATOR_NAME.avd/config.ini
+#      - echo "avd.ini.displayname=Nexus 6P API 28" >> ~/.android/avd/$EMULATOR_NAME.avd/config.ini
+#
+#      # fix timezone warning on osx
+#      - sudo ln -sf /usr/share/zoneinfo/US/Pacific /etc/localtime
+#
+#      # setup osx environment for flutter and simulators
       - export HOMEBREW_NO_AUTO_UPDATE=1
       - brew install libimobiledevice
       - brew install ideviceinstaller
@@ -97,7 +97,7 @@ jobs:
       - brew link --overwrite cocoapods
 
       # install pre-compiled flutter
-      - sdkmanager "platforms;android-28" "build-tools;28.0.3" > /dev/null # required by flutter
+#      - sdkmanager "platforms;android-28" "build-tools;28.0.3" > /dev/null # required by flutter
       - FLUTTER_CHANNEL=stable
       - FLUTTER_VERSION=1.5.4-hotfix.2-${FLUTTER_CHANNEL}
       - wget --quiet --output-document=flutter.zip https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/macos/flutter_macos_v${FLUTTER_VERSION}.zip && unzip -qq flutter.zip > /dev/null && rm flutter.zip
