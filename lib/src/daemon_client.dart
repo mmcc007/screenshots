@@ -4,7 +4,7 @@ import 'dart:io';
 
 import 'utils.dart' as utils;
 
-enum Event { deviceRemoved }
+enum EventType { deviceRemoved }
 
 /// Creates and communicates with flutter daemon.
 class DaemonClient {
@@ -36,7 +36,7 @@ class DaemonClient {
       // enable device discovery
       await _sendCommandWaitResponse(
           <String, dynamic>{'method': 'device.enable'});
-      _iosDevices = iosDevices();
+      _iosDevices = getIosDevices();
       // wait for device discovery
       await Future.delayed(Duration(milliseconds: 100));
     }
@@ -90,13 +90,15 @@ class DaemonClient {
     }).toList());
   }
 
-  Future<Map> waitForEvent(Event event) async {
+  /// Wait for an event of type [EventType] and return event info.
+  Future<Map> waitForEvent(EventType eventType) async {
     final eventInfo = jsonDecode(await _waitForEvent.future);
-    switch (event) {
-      case Event.deviceRemoved:
+    switch (eventType) {
+      case EventType.deviceRemoved:
+        // event info is a device descriptor
         if (eventInfo.length != 1 ||
             eventInfo[0]['event'] != 'device.removed') {
-          throw 'Error: expected: $event, received: $eventInfo';
+          throw 'Error: expected: $eventType, received: $eventInfo';
         }
         break;
       default:
@@ -181,7 +183,7 @@ class DaemonClient {
 }
 
 /// Get attached ios devices with id and model.
-List iosDevices() {
+List getIosDevices() {
   final regExp = RegExp(r'Found (\w+) \(\w+, (.*), \w+, \w+\)');
   final noAttachedDevices = 'no attached devices';
   final iosDeployDevices = utils

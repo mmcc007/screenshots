@@ -471,7 +471,7 @@ Future<String> shutdownAndroidEmulator(
     DaemonClient daemonClient, String deviceId) async {
   utils.cmd('adb', ['-s', deviceId, 'emu', 'kill'], '.', true);
 //  await waitAndroidEmulatorShutdown(deviceId);
-  final device = await daemonClient.waitForEvent(Event.deviceRemoved);
+  final device = await daemonClient.waitForEvent(EventType.deviceRemoved);
   if (device['id'] != deviceId) {
     throw 'Error: device id \'$deviceId\' not shutdown';
   }
