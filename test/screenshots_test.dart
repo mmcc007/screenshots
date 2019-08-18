@@ -790,9 +790,45 @@ devices:
   });
 
   group('run across platforms', () {
-    test('ios only', () {
-      final config = '''''';
-      final configInfo = '';
+    test('active run type', () {
+      final configIosOnly = '''
+        devices:
+          ios:
+            iPhone X:
+      ''';
+      final configAndroidOnly = '''
+        devices:
+          ios: # check for empty devices
+          android:
+            Nexus 6P:
+      ''';
+      final configBoth = '''
+        devices:
+          ios:
+            iPhone X:
+          android:
+            Nexus 6P:
+      ''';
+      final configNeither = '''
+        devices:
+          ios:
+          android:
+      ''';
+      Map configInfo = utils.parseYamlStr(configIosOnly);
+      expect(utils.isRunTypeActive(configInfo, DeviceType.ios), isTrue);
+      expect(utils.isRunTypeActive(configInfo, DeviceType.android), isFalse);
+
+      configInfo = utils.parseYamlStr(configAndroidOnly);
+      expect(utils.isRunTypeActive(configInfo, DeviceType.ios), isFalse);
+      expect(utils.isRunTypeActive(configInfo, DeviceType.android), isTrue);
+
+      configInfo = utils.parseYamlStr(configBoth);
+      expect(utils.isRunTypeActive(configInfo, DeviceType.ios), isTrue);
+      expect(utils.isRunTypeActive(configInfo, DeviceType.android), isTrue);
+
+      configInfo = utils.parseYamlStr(configNeither);
+      expect(utils.isRunTypeActive(configInfo, DeviceType.ios), isFalse);
+      expect(utils.isRunTypeActive(configInfo, DeviceType.android), isFalse);
     });
   });
 }

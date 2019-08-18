@@ -357,3 +357,12 @@ Future<bool> isRecorded(String recordDir) async =>
 bool isCI() {
   return Platform.environment['CI'] == 'true';
 }
+
+/// Check for active run type.
+/// Runs can only be one of [DeviceType].
+isRunTypeActive(Map config, DeviceType runType) {
+  final Map devices = config['devices'];
+  final deviceType = getStringFromEnum(runType);
+  final isActive = devices.keys.contains(deviceType);
+  return isActive && devices[deviceType] != null;
+}
