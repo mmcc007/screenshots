@@ -76,15 +76,15 @@ Future<bool> run(
       print('  ${archive.archiveDirPrefix}');
     } else {
       printScreenshotDirs(configInfo, null);
-      final iosActive = isRunTypeActive(configInfo, DeviceType.ios);
-      final androidActive = isRunTypeActive(configInfo, DeviceType.android);
-      if (iosActive && androidActive) {
+      final isIosActive = isRunTypeActive(configInfo, DeviceType.ios);
+      final isAndroidActive = isRunTypeActive(configInfo, DeviceType.android);
+      if (isIosActive && isAndroidActive) {
         print('for upload to both Apple and Google consoles.');
       }
-      if (iosActive && !androidActive) {
+      if (isIosActive && !isAndroidActive) {
         print('for upload to Apple console.');
       }
-      if (!iosActive && androidActive) {
+      if (!isIosActive && isAndroidActive) {
         print('for upload to Google console.');
       }
       print('\nFor uploading and other automation options see:');
