@@ -128,7 +128,7 @@ main() {
 
   test('get ios model from device id', () {
     final deviceId = '3b3455019e329e007e67239d9b897148244b5053';
-    final devices = iosDevices();
+    final devices = getIosDevices();
     print('devices=$devices');
 
     final device = devices.firstWhere((device) => device['id'] == deviceId,
