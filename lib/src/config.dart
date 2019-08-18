@@ -138,9 +138,23 @@ class Config {
     }
 
     for (String test in configInfo['tests']) {
-      if (!await File(test).exists()) {
-        stderr.write('Missing test: $test from $configPath not found.\n');
-        exit(1);
+      final targetRegExp = RegExp(r'--target=([^\s]*)');
+      final driverRegExp = RegExp(r'--driver=([^\s]*)');
+      final paths = [];
+      if (targetRegExp.hasMatch(test)) {
+        paths.add(targetRegExp.firstMatch(test).group(1));
+      }
+      if (driverRegExp.hasMatch(test)) {
+        paths.add(driverRegExp.firstMatch(test).group(1));
+      }
+      if (paths.isEmpty) {
+        paths.add(test);
+      }
+      for (String path in paths) {
+        if (!await File(path).exists()) {
+          stderr.write('File: $path for test: $test from $configPath not found.\n');
+          exit(1);
+        }
       }
     }
 
