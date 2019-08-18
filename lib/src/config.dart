@@ -17,14 +17,15 @@ import 'globals.dart';
 ///
 class Config {
   final String configPath;
-  final YamlNode _docYaml;
+  final Map _configInfo;
   Map _screenshotsEnv; // current screenshots env
 
   Config({this.configPath = kConfigFileName})
-      : _docYaml = loadYaml(File(configPath).readAsStringSync());
+      : _configInfo = jsonDecode(
+            jsonEncode(loadYaml(File(configPath).readAsStringSync())));
 
   /// Get configuration information for supported devices
-  Map get configInfo => _docYaml.value;
+  Map get configInfo => _configInfo;
 
   /// Current screenshots runtime environment
   /// (updated before start of each test)
