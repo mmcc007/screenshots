@@ -70,21 +70,39 @@ Future<bool> run(
   print('\n\nScreen images are available in:');
   if (runMode == RunMode.recording) {
     final recordingDir = configInfo['recording'];
-    print('  $recordingDir/ios/fastlane/screenshots');
-    print('  $recordingDir/android/fastlane/metadata/android');
+    printScreenshotDirs(configInfo, recordingDir);
   } else {
     if (runMode == RunMode.archive) {
       print('  ${archive.archiveDirPrefix}');
     } else {
-      print('  ios/fastlane/screenshots');
-      print('  android/fastlane/metadata/android');
-      print('for upload to both Apple and Google consoles.');
+      printScreenshotDirs(configInfo, null);
+      final iosActive = isRunTypeActive(configInfo, DeviceType.ios);
+      final androidActive = isRunTypeActive(configInfo, DeviceType.android);
+      if (iosActive && androidActive) {
+        print('for upload to both Apple and Google consoles.');
+      }
+      if (iosActive && !androidActive) {
+        print('for upload to Apple console.');
+      }
+      if (!iosActive && androidActive) {
+        print('for upload to Google console.');
+      }
       print('\nFor uploading and other automation options see:');
       print('  https://pub.dartlang.org/packages/fledge');
     }
   }
   print('\nscreenshots completed successfully.');
   return true;
+}
+
+void printScreenshotDirs(Map configInfo, String dirPrefix) {
+  final prefix = dirPrefix == null ? '' : '${dirPrefix}/';
+  if (isRunTypeActive(configInfo, DeviceType.ios)) {
+    print('  ${prefix}ios/fastlane/screenshots');
+  }
+  if (isRunTypeActive(configInfo, DeviceType.android)) {
+    print('  ${prefix}android/fastlane/metadata/android');
+  }
 }
 
 /// Run the screenshot integration tests on current device, emulator or simulator.
