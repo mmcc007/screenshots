@@ -13,6 +13,7 @@ import 'orientation.dart' as orient;
 import 'resources.dart' as resources;
 import 'screens.dart';
 import 'utils.dart' as utils;
+import 'validate.dart';
 
 /// Capture screenshots, process, and load into fastlane according to config file.
 ///
@@ -45,8 +46,7 @@ Future<void> run(
 
   final config = Config(configPath: configPath);
   // validate config file
-  // ignore: invalid_use_of_visible_for_testing_member
-  await config.validate(screens, devices, emulators);
+  await validate(config, screens, devices, emulators);
   final configInfo = config.configInfo;
 
   // init
@@ -344,14 +344,14 @@ Future runProcessTests(
 }
 
 Future<void> shutdownSimulator(String deviceId) async {
-  cmd('xcrun', ['simctl', 'shutdown', deviceId]);
+  utils.cmd('xcrun', ['simctl', 'shutdown', deviceId]);
   // shutdown apparently needs time when restarting
   // see https://github.com/flutter/flutter/issues/10228 for race condition on simulator
   await Future.delayed(Duration(milliseconds: 2000));
 }
 
 Future<void> startSimulator(DaemonClient daemonClient, String deviceId) async {
-  cmd('xcrun', ['simctl', 'boot', deviceId]);
+  utils.cmd('xcrun', ['simctl', 'boot', deviceId]);
   await Future.delayed(Duration(milliseconds: 2000));
   await waitForEmulatorToStart(daemonClient, deviceId);
 }
@@ -435,7 +435,7 @@ Future<void> setEmulatorLocale(String deviceId, testLocale, deviceName) async {
 /// Change local of real android device or running emulator.
 void changeAndroidLocale(
     String deviceId, String deviceLocale, String testLocale) {
-  if (cmd('adb', ['-s', deviceId, 'root'], '.', true) ==
+  if (utils.cmd('adb', ['-s', deviceId, 'root'], '.', true) ==
       'adbd cannot run as root in production builds\n') {
     stdout.write(
         'Warning: locale will not be changed. Running in locale \'$deviceLocale\'.\n');
@@ -445,7 +445,7 @@ void changeAndroidLocale(
         '    https://stackoverflow.com/questions/43923996/adb-root-is-not-working-on-emulator/45668555#45668555 for details.\n');
   }
   // adb shell "setprop persist.sys.locale fr_CA; setprop ctl.restart zygote"
-  cmd('adb', [
+  utils.cmd('adb', [
     '-s',
     deviceId,
     'shell',
@@ -469,7 +469,7 @@ Future _changeSimulatorLocale(
 /// Shutdown an android emulator.
 Future<String> shutdownAndroidEmulator(
     DaemonClient daemonClient, String deviceId) async {
-  cmd('adb', ['-s', deviceId, 'emu', 'kill'], '.', true);
+  utils.cmd('adb', ['-s', deviceId, 'emu', 'kill'], '.', true);
 //  await waitAndroidEmulatorShutdown(deviceId);
   final device = await daemonClient.waitForEvent(Event.deviceRemoved);
   if (device['id'] != deviceId) {
@@ -520,20 +520,22 @@ DeviceType getDeviceType(Map configInfo, String deviceName) {
   return deviceType;
 }
 
-/// Execute command [cmd] with arguments [arguments] in a separate process
-/// and return stdout as string.
-///
-/// If [silent] is false, output to stdout.
-String cmd(String cmd, List<String> arguments,
-    [String workingDir = '.', bool silent = false]) {
-//  print(
-//      'cmd=\'$cmd ${arguments.join(" ")}\', workingDir=$workingDir, silent=$silent');
-  final result = Process.runSync(cmd, arguments, workingDirectory: workingDir);
-  if (!silent) stdout.write(result.stdout);
-  if (result.exitCode != 0) {
-    stderr.write(result.stderr);
-    throw 'command failed: exitcode=${result.exitCode}, cmd=\'$cmd ${arguments.join(" ")}\', workingDir=$workingDir, silent=$silent';
+/// Check Image Magick is installed.
+void checkImageMagicInstalled() {
+  // check imagemagick is installed
+  if (!utils
+      .cmd('sh', ['-c', 'which convert && echo convert || echo not installed'],
+          '.', true)
+      .toString()
+      .contains('convert')) {
+    stderr.write(
+        '#############################################################\n');
+    stderr.write("# You have to install ImageMagick to use Screenshots\n");
+    stderr.write(
+        "# Install it using 'brew update && brew install imagemagick'\n");
+    stderr.write("# If you don't have homebrew: goto http://brew.sh\n");
+    stderr.write(
+        '#############################################################\n');
+    exit(1);
   }
-  // return stdout
-  return result.stdout;
 }

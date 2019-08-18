@@ -13,6 +13,7 @@ import 'package:screenshots/src/screens.dart';
 import 'package:screenshots/src/resources.dart' as resources;
 import 'package:screenshots/src/run.dart' as run;
 import 'package:screenshots/src/utils.dart' as utils;
+import 'package:screenshots/src/validate.dart' as validate;
 import 'package:test/test.dart';
 import 'package:yaml/yaml.dart';
 import 'package:screenshots/src/fastlane.dart' as fastlane;
@@ -78,7 +79,7 @@ void main() {
       'statusbarPath': statusbarPath,
     };
     await im.convert('overlay', options);
-    run.cmd('git', ['checkout', screenshotPath]);
+    utils.cmd('git', ['checkout', screenshotPath]);
   });
 
   test('unpack screen resource images', () async {
@@ -108,7 +109,7 @@ void main() {
       'screenshotNavbarPath': screenshotNavbarPath,
     };
     await im.convert('append', options);
-    run.cmd('git', ['checkout', screenshotPath]);
+    utils.cmd('git', ['checkout', screenshotPath]);
   });
 
   test('frame screenshot', () async {
@@ -133,7 +134,7 @@ void main() {
       'backgroundColor': ImageProcessor.kDefaultAndroidBackground,
     };
     await im.convert('frame', options);
-    run.cmd('git', ['checkout', screenshotPath]);
+    utils.cmd('git', ['checkout', screenshotPath]);
   });
 
   test('parse json xcrun simctl list devices', () {
@@ -211,7 +212,7 @@ void main() {
     }
     // cleanup
     fastlane.deleteMatchingFiles(dirPath, RegExp(prefix));
-    run.cmd('git', ['checkout', dirPath]);
+    utils.cmd('git', ['checkout', dirPath]);
   });
 
   test('rooted emulator', () async {
@@ -221,7 +222,7 @@ void main() {
     final daemonClient = DaemonClient();
     await daemonClient.start;
     final deviceId = await daemonClient.launchEmulator(emulatorId);
-    final result = run.cmd('adb', ['root'], '.', true);
+    final result = utils.cmd('adb', ['root'], '.', true);
     expect(result, 'adbd cannot run as root in production builds\n');
     expect(await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
   }, tags: 'androidSDK', skip: utils.isCI());
@@ -654,7 +655,7 @@ devices:
       fastlane.deleteMatchingFiles(dirPath, pattern);
       expect(filesPresent(dirPath, pattern), isEmpty);
       // restore deleted files
-      run.cmd('git', ['checkout', dirPath]);
+      utils.cmd('git', ['checkout', dirPath]);
     });
   });
 
@@ -676,8 +677,8 @@ devices:
         final filePath = fsEntity.path;
 //        print('filePath=$filePath');
         try {
-          final contents = run.cmd('plutil',
-              ['-convert', 'xml1', '-r', '-o', '-', filePath], '.', true);
+          utils.cmd('plutil', ['-convert', 'xml1', '-r', '-o', '-', filePath],
+              '.', true);
 //          print('contents=$contents');
         } catch (e) {
           print('error: $e');
@@ -730,10 +731,9 @@ devices:
     test('config guide', () async {
       final Screens screens = Screens();
       await screens.init();
-      final Config config = Config(configPath: 'test/screenshots_test.yaml');
       final daemonClient = DaemonClient();
       await daemonClient.start;
-      config.generateConfigGuide(screens, await daemonClient.devices);
+      validate.generateConfigGuide(screens, await daemonClient.devices);
     }, skip: utils.isCI());
 
     test('validate device params', () {
@@ -755,16 +755,16 @@ devices:
       final configInfo = loadYaml(params);
       final deviceNames = utils.getAllConfiguredDeviceNames(configInfo);
       for (final devName in deviceNames) {
-        final deviceInfo = findDeviceInfo(configInfo, devName);
+        final deviceInfo = validate.findDeviceInfo(configInfo, devName);
         print('devName=$devName');
         print('deviceInfo=$deviceInfo');
         if (deviceInfo != null) {
           expect(deviceInfo['orientation'], orientation);
-          expect(isValidOrientation(orientation), isTrue);
-          expect(isValidOrientation('bad orientation'), isFalse);
+          expect(validate.isValidOrientation(orientation), isTrue);
+          expect(validate.isValidOrientation('bad orientation'), isFalse);
           expect(deviceInfo['frame'], frame);
-          expect(isValidFrame(frame), isTrue);
-          expect(isValidFrame('bad frame'), isFalse);
+          expect(validate.isValidFrame(frame), isTrue);
+          expect(validate.isValidFrame('bad frame'), isFalse);
         }
       }
     });
@@ -787,5 +787,12 @@ devices:
           configPath, utils.getStringFromEnum(RunMode.normal), flavor);
       Directory.current = origDir;
     }, timeout: Timeout(Duration(seconds: 240)), skip: utils.isCI());
+  });
+
+  group('run across platforms', () {
+    test('ios only', () {
+      final config = '''''';
+      final configInfo = '';
+    });
   });
 }

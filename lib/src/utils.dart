@@ -5,7 +5,6 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:process/process.dart';
 import 'globals.dart';
-import 'run.dart' as run;
 
 /// Move files from [srcDir] to [dstDir].
 ///
@@ -17,6 +16,24 @@ void moveFiles(String srcDir, String dstDir) {
   Directory(srcDir).listSync().forEach((file) {
     file.renameSync('$dstDir/${p.basename(file.path)}');
   });
+}
+
+/// Execute command [cmd] with arguments [arguments] in a separate process
+/// and return stdout as string.
+///
+/// If [silent] is false, output to stdout.
+String cmd(String cmd, List<String> arguments,
+    [String workingDir = '.', bool silent = false]) {
+//  print(
+//      'cmd=\'$cmd ${arguments.join(" ")}\', workingDir=$workingDir, silent=$silent');
+  final result = Process.runSync(cmd, arguments, workingDirectory: workingDir);
+  if (!silent) stdout.write(result.stdout);
+  if (result.exitCode != 0) {
+    stderr.write(result.stderr);
+    throw 'command failed: exitcode=${result.exitCode}, cmd=\'$cmd ${arguments.join(" ")}\', workingDir=$workingDir, silent=$silent';
+  }
+  // return stdout
+  return result.stdout;
 }
 
 /// Execute command [cmd] with arguments [arguments] in a separate process
@@ -55,7 +72,7 @@ Future<void> streamCmd(String cmd, List<String> arguments,
 /// Provides access to their IDs and status'.
 Map getIosSimulators() {
   final simulators =
-      run.cmd('xcrun', ['simctl', 'list', 'devices', '--json'], '.', true);
+      cmd('xcrun', ['simctl', 'list', 'devices', '--json'], '.', true);
   final simulatorsInfo = cnv.jsonDecode(simulators)['devices'];
   return transformIosSimulators(simulatorsInfo);
 }
@@ -132,7 +149,7 @@ String getHighestIosVersion(Map iOSVersions) {
 
 /// Create list of avds,
 List<String> getAvdNames() {
-  return run.cmd('emulator', ['-list-avds'], '.', true).split('\n');
+  return cmd('emulator', ['-list-avds'], '.', true).split('\n');
 }
 
 /// Get the highest available avd version for the android emulator.
@@ -170,13 +187,11 @@ T getEnumFromString<T>(List<T> values, String value) {
 String getAndroidDeviceLocale(String deviceId) {
 // ro.product.locale is available on first boot but does not update,
 // persist.sys.locale is empty on first boot but updates with locale changes
-  String locale = run
-      .cmd('adb', ['-s', deviceId, 'shell', 'getprop persist.sys.locale'], '.',
+  String locale = cmd('adb', ['-s', deviceId, 'shell', 'getprop persist.sys.locale'], '.',
           true)
       .trim();
   if (locale.isEmpty) {
-    locale = run
-        .cmd('adb', ['-s', deviceId, 'shell', 'getprop ro.product.locale'], '.',
+    locale = cmd('adb', ['-s', deviceId, 'shell', 'getprop ro.product.locale'], '.',
             true)
         .trim();
   }
@@ -188,7 +203,7 @@ String getIosSimulatorLocale(String udId) {
   final env = Platform.environment;
   final settingsPath =
       '${env['HOME']}/Library/Developer/CoreSimulator/Devices/$udId/data/Library/Preferences/.GlobalPreferences.plist';
-  final localeInfo = cnv.jsonDecode(run.cmd(
+  final localeInfo = cnv.jsonDecode(cmd(
       'plutil', ['-convert', 'json', '-o', '-', settingsPath], '.', true));
   final locale = localeInfo['AppleLocale'];
   return locale;
@@ -197,8 +212,7 @@ String getIosSimulatorLocale(String udId) {
 /// Get android emulator id from a running emulator with id [deviceId].
 /// Returns emulator id as [String].
 String getAndroidEmulatorId(String deviceId) {
-  return run
-      .cmd('adb', ['-s', deviceId, 'emu', 'avd', 'name'], '.', true)
+  return cmd('adb', ['-s', deviceId, 'emu', 'avd', 'name'], '.', true)
       .split('\r\n')
       .map((line) => line.trim())
       .first;
@@ -216,8 +230,7 @@ String findAndroidDeviceId(String emulatorId) {
 
 /// Get the list of running android devices by id.
 List<String> getAndroidDeviceIds() {
-  return run
-      .cmd('adb', ['devices'], '.', true)
+  return cmd('adb', ['devices'], '.', true)
       .trim()
       .split('\n')
       .sublist(1) // remove first line
@@ -227,7 +240,7 @@ List<String> getAndroidDeviceIds() {
 
 /// Stop an android emulator.
 Future stopAndroidEmulator(String deviceId, String stagingDir) async {
-  run.cmd('adb', ['-s', deviceId, 'emu', 'kill']);
+  cmd('adb', ['-s', deviceId, 'emu', 'kill']);
   // wait for emulator to stop
   await streamCmd(
       '$stagingDir/resources/script/android-wait-for-emulator-to-stop',
@@ -289,7 +302,7 @@ Map getDeviceFromId(List devices, String deviceId) {
 /// Wait for message to appear in sys log and return first matching line
 Future<String> waitSysLogMsg(
     String deviceId, RegExp regExp, String locale) async {
-  run.cmd('adb', ['-s', deviceId, 'logcat', '-c']);
+  cmd('adb', ['-s', deviceId, 'logcat', '-c']);
   await Future.delayed(Duration(milliseconds: 1000)); // wait for log to clear
   // -b main ContactsDatabaseHelper:I '*:S'
   final delegate = await Process.start('adb', [

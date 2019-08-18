@@ -59,20 +59,7 @@ void main(List<String> arguments) async {
   }
 
   // check imagemagick is installed
-  if (!cmd('sh', ['-c', 'which convert && echo convert || echo not installed'],
-          '.', true)
-      .toString()
-      .contains('convert')) {
-    stderr.write(
-        '#############################################################\n');
-    stderr.write("# You have to install ImageMagick to use Screenshots\n");
-    stderr.write(
-        "# Install it using 'brew update && brew install imagemagick'\n");
-    stderr.write("# If you don't have homebrew: goto http://brew.sh\n");
-    stderr.write(
-        '#############################################################\n');
-    exit(1);
-  }
+  checkImageMagicInstalled();
 
   // check adb is found
   getAdbPath();

@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:meta/meta.dart';
-import 'package:screenshots/src/run.dart' as run;
 import 'package:path/path.dart' as p;
+import 'package:screenshots/src/utils.dart' as utils;
 
 /// Copy files from [srcDir] to [dstDir].
 /// If dstDir does not exist, it is created.
@@ -21,8 +21,7 @@ void copyFiles(String srcDir, String dstDir) {
 /// Get device properties
 Map getDeviceProps(String deviceId) {
   final props = {};
-  run
-      .cmd('adb', ['-s', deviceId, 'shell', 'getprop'], '.', true)
+  utils.cmd('adb', ['-s', deviceId, 'shell', 'getprop'], '.', true)
       .trim()
       .split('\n')
       .forEach((line) {
@@ -107,7 +106,7 @@ Map diffMaps(Map orig, Map diff, {bool verbose = false}) {
 Future<String> findAndroidHome() async {
   final Iterable<String> hits = grep(
     'ANDROID_HOME = ',
-    from: await run.cmd('flutter', <String>['doctor', '-v'], '.', true),
+    from: await utils.cmd('flutter', <String>['doctor', '-v'], '.', true),
   );
   if (hits.isEmpty) return null;
   return hits.first.split('= ').last;

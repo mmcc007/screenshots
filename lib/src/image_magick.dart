@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'run.dart' as run;
 import 'package:path/path.dart' as p;
+import 'utils.dart' as utils;
 
 class ImageMagick {
   static const _kThreshold = 0.76;
@@ -75,14 +75,14 @@ class ImageMagick {
       default:
         throw 'unknown command: $command';
     }
-    run.cmd('convert', cmdOptions);
+    utils.cmd('convert', cmdOptions);
   }
 
   /// Checks if brightness of section of image exceeds a threshold
   bool thresholdExceeded(String imagePath, String crop,
       [double threshold = _kThreshold]) {
     //convert logo.png -crop $crop_size$offset +repage -colorspace gray -format "%[fx:(mean>$threshold)?1:0]" info:
-    final result = run.cmd(
+    final result = utils.cmd(
         'convert',
         [
           imagePath,
@@ -104,7 +104,7 @@ class ImageMagick {
   bool compare(String comparisonImage, String recordedImage) {
     final diffImage = getDiffName(comparisonImage);
     try {
-      run.cmd(
+      utils.cmd(
           'compare',
           ['-metric', 'mae', recordedImage, comparisonImage, diffImage],
           '.',
