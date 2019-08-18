@@ -5,6 +5,7 @@ import 'package:screenshots/src/daemon_client.dart';
 import 'package:screenshots/src/globals.dart';
 import 'package:screenshots/src/image_processor.dart';
 import 'package:screenshots/src/screens.dart';
+import 'package:screenshots/src/validate.dart';
 import 'package:test/test.dart';
 import 'package:screenshots/src/fastlane.dart' as fastlane;
 import 'package:yaml/yaml.dart';
@@ -96,7 +97,8 @@ void main() {
     final origDir = Directory.current;
     Directory.current = 'example';
     expect(
-        await config.validate(
+        await validate(
+          config,
           screens,
           await daemonClient.devices,
           await daemonClient.emulators,
