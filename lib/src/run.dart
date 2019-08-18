@@ -541,3 +541,12 @@ void checkImageMagicInstalled() {
     exit(1);
   }
 }
+
+/// Check for active run type.
+/// Runs can only be one of [DeviceType].
+isRunTypeActive(Map config, DeviceType runType) {
+  final Map devices = config['devices'];
+  final deviceType = utils.getStringFromEnum(runType);
+  final isActive = devices.keys.contains(deviceType);
+  return isActive && devices[deviceType] != null;
+}

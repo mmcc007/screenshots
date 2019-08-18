@@ -61,12 +61,15 @@ void main(List<String> arguments) async {
   // check imagemagick is installed
   checkImageMagicInstalled();
 
-  // check adb is found
-  getAdbPath();
-
   // validate args
   if (!await File(argResults[configArg]).exists()) {
     _handleError(argParser, "File not found: ${argResults[configArg]}");
+  }
+
+  // check adb is found
+  final config = Config(configPath: argResults[configArg]);
+  if (isRunTypeActive(config.configInfo, DeviceType.android)) {
+    getAdbPath();
   }
 
   final success = await run(

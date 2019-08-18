@@ -815,20 +815,20 @@ devices:
           android:
       ''';
       Map configInfo = utils.parseYamlStr(configIosOnly);
-      expect(utils.isRunTypeActive(configInfo, DeviceType.ios), isTrue);
-      expect(utils.isRunTypeActive(configInfo, DeviceType.android), isFalse);
+      expect(run.isRunTypeActive(configInfo, DeviceType.ios), isTrue);
+      expect(run.isRunTypeActive(configInfo, DeviceType.android), isFalse);
 
       configInfo = utils.parseYamlStr(configAndroidOnly);
-      expect(utils.isRunTypeActive(configInfo, DeviceType.ios), isFalse);
-      expect(utils.isRunTypeActive(configInfo, DeviceType.android), isTrue);
+      expect(run.isRunTypeActive(configInfo, DeviceType.ios), isFalse);
+      expect(run.isRunTypeActive(configInfo, DeviceType.android), isTrue);
 
       configInfo = utils.parseYamlStr(configBoth);
-      expect(utils.isRunTypeActive(configInfo, DeviceType.ios), isTrue);
-      expect(utils.isRunTypeActive(configInfo, DeviceType.android), isTrue);
+      expect(run.isRunTypeActive(configInfo, DeviceType.ios), isTrue);
+      expect(run.isRunTypeActive(configInfo, DeviceType.android), isTrue);
 
       configInfo = utils.parseYamlStr(configNeither);
-      expect(utils.isRunTypeActive(configInfo, DeviceType.ios), isFalse);
-      expect(utils.isRunTypeActive(configInfo, DeviceType.android), isFalse);
+      expect(run.isRunTypeActive(configInfo, DeviceType.ios), isFalse);
+      expect(run.isRunTypeActive(configInfo, DeviceType.android), isFalse);
     });
 
     test('ios only', () async {
