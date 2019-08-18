@@ -1,10 +1,20 @@
 import 'dart:async';
 import 'dart:convert' as cnv;
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:path/path.dart' as p;
 import 'package:process/process.dart';
+import 'package:yaml/yaml.dart';
 import 'globals.dart';
+
+/// Parse a yaml file.
+Map parseYamlFile(String yamlPath) =>
+    jsonDecode(jsonEncode(loadYaml(File(yamlPath).readAsStringSync())));
+
+/// Parse a yaml string.
+Map parseYamlStr(String yamlString) =>
+    jsonDecode(jsonEncode(loadYaml(yamlString)));
 
 /// Move files from [srcDir] to [dstDir].
 ///

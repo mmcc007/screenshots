@@ -5,8 +5,7 @@ import 'dart:io';
 import 'package:meta/meta.dart';
 
 import 'screens.dart';
-import 'package:yaml/yaml.dart';
-
+import 'utils.dart' as utils;
 import 'globals.dart';
 
 ///
@@ -19,8 +18,7 @@ class Config {
 
   Config({this.configPath = kConfigFileName}) : _configInfo = parse(configPath);
 
-  static Map parse(String configPath) =>
-      jsonDecode(jsonEncode(loadYaml(File(configPath).readAsStringSync())));
+  static Map parse(String configPath) => utils.parseYamlFile(configPath);
 
   /// Get configuration information for supported devices
   Map get configInfo => _configInfo;

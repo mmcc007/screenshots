@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:yaml/yaml.dart';
 import 'package:resource/resource.dart';
+import 'utils.dart' as utils;
 
 /// Manage screens file.
 class Screens {
@@ -12,7 +13,7 @@ class Screens {
   Future<void> init() async {
     final resource = Resource("package:screenshots/$_screensPath");
     String screens = await resource.readAsString(encoding: utf8);
-    _screens = loadYaml(screens);
+    _screens = utils.parseYamlStr(screens);
   }
 
   /// Get screen information
