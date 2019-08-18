@@ -99,7 +99,7 @@ jobs:
       # install pre-compiled flutter
 #      - sdkmanager "platforms;android-28" "build-tools;28.0.3" > /dev/null # required by flutter
       - FLUTTER_CHANNEL=stable
-      - FLUTTER_VERSION=1.5.4-hotfix.2-${FLUTTER_CHANNEL}
+      - FLUTTER_VERSION=1.7.8+hotfix.4-${FLUTTER_CHANNEL}
       - wget --quiet --output-document=flutter.zip https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/macos/flutter_macos_v${FLUTTER_VERSION}.zip && unzip -qq flutter.zip > /dev/null && rm flutter.zip
       - export PATH="$PATH":"$HOME/.pub-cache/bin"
       - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
