@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:resource/resource.dart';
 import 'utils.dart' as utils;
+
 ///
 /// Copy resource images for a screen from package to files.
 ///

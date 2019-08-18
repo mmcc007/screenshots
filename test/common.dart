@@ -21,7 +21,8 @@ void copyFiles(String srcDir, String dstDir) {
 /// Get device properties
 Map getDeviceProps(String deviceId) {
   final props = {};
-  utils.cmd('adb', ['-s', deviceId, 'shell', 'getprop'], '.', true)
+  utils
+      .cmd('adb', ['-s', deviceId, 'shell', 'getprop'], '.', true)
       .trim()
       .split('\n')
       .forEach((line) {

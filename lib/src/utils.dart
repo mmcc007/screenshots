@@ -187,12 +187,12 @@ T getEnumFromString<T>(List<T> values, String value) {
 String getAndroidDeviceLocale(String deviceId) {
 // ro.product.locale is available on first boot but does not update,
 // persist.sys.locale is empty on first boot but updates with locale changes
-  String locale = cmd('adb', ['-s', deviceId, 'shell', 'getprop persist.sys.locale'], '.',
-          true)
+  String locale = cmd('adb',
+          ['-s', deviceId, 'shell', 'getprop persist.sys.locale'], '.', true)
       .trim();
   if (locale.isEmpty) {
-    locale = cmd('adb', ['-s', deviceId, 'shell', 'getprop ro.product.locale'], '.',
-            true)
+    locale = cmd('adb', ['-s', deviceId, 'shell', 'getprop ro.product.locale'],
+            '.', true)
         .trim();
   }
   return locale;
@@ -203,8 +203,8 @@ String getIosSimulatorLocale(String udId) {
   final env = Platform.environment;
   final settingsPath =
       '${env['HOME']}/Library/Developer/CoreSimulator/Devices/$udId/data/Library/Preferences/.GlobalPreferences.plist';
-  final localeInfo = cnv.jsonDecode(cmd(
-      'plutil', ['-convert', 'json', '-o', '-', settingsPath], '.', true));
+  final localeInfo = cnv.jsonDecode(
+      cmd('plutil', ['-convert', 'json', '-o', '-', settingsPath], '.', true));
   final locale = localeInfo['AppleLocale'];
   return locale;
 }
