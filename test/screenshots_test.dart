@@ -830,5 +830,26 @@ devices:
       expect(utils.isRunTypeActive(configInfo, DeviceType.ios), isFalse);
       expect(utils.isRunTypeActive(configInfo, DeviceType.android), isFalse);
     });
+
+    test('ios only', () async {
+      final configIosOnly = '''
+        tests:
+          - test_driver/main.dart
+        staging: /tmp/screenshots
+        locales:
+          - en-US
+        devices:
+          ios:
+            iPhone X:
+        frame: false
+      ''';
+      Map configInfo = utils.parseYamlStr(configIosOnly);
+      // for this test change directory
+      final origDir = Directory.current;
+      Directory.current = 'example';
+      expect(await run.run(null, configIosOnly), isTrue);
+      // allow other tests to continue
+      Directory.current = origDir;
+    }, timeout: Timeout(Duration(minutes: 4)), skip: utils.isCI());
   });
 }

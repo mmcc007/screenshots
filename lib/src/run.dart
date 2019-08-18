@@ -24,8 +24,9 @@ import 'validate.dart';
 /// 3. Process the screenshots including adding a frame if required.
 /// 4. Move processed screenshots to fastlane destination for upload to stores.
 /// 5. If not a real device, stop emulator/simulator.
-Future<void> run(
+Future<bool> run(
     [String configPath = kConfigFileName,
+    String configStr,
     String _runMode = 'normal',
     String flavor = kNoFlavor]) async {
   final runMode = utils.getRunModeEnum(_runMode);
@@ -44,7 +45,7 @@ Future<void> run(
   //       so have to be handled separately
   final emulators = await daemonClient.emulators;
 
-  final config = Config(configPath: configPath);
+  final config = Config(configPath: configPath, configStr: configStr);
   // validate config file
   await validate(config, screens, devices, emulators);
   final configInfo = config.configInfo;
@@ -83,6 +84,7 @@ Future<void> run(
     }
   }
   print('\nscreenshots completed successfully.');
+  return true;
 }
 
 /// Run the screenshot integration tests on current device, emulator or simulator.

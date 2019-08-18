@@ -69,7 +69,9 @@ void main(List<String> arguments) async {
     _handleError(argParser, "File not found: ${argResults[configArg]}");
   }
 
-  await run(argResults[configArg], argResults[modeArg], argResults[flavorArg]);
+  final success = await run(
+      argResults[configArg], null, argResults[modeArg], argResults[flavorArg]);
+  exit(success ? 0 : 1);
 }
 
 void _handleError(ArgParser argParser, String msg) {

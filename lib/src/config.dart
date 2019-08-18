@@ -12,13 +12,17 @@ import 'globals.dart';
 /// Config info used to process screenshots for android and ios.
 ///
 class Config {
+  Config({this.configPath = kConfigFileName, String configStr}) {
+    if (configStr != null) {
+      _configInfo = utils.parseYamlStr(configStr);
+    } else {
+      _configInfo = utils.parseYamlFile(configPath);
+    }
+  }
+
   final String configPath;
-  final Map _configInfo;
+  Map _configInfo;
   Map _screenshotsEnv; // current screenshots env
-
-  Config({this.configPath = kConfigFileName}) : _configInfo = parse(configPath);
-
-  static Map parse(String configPath) => utils.parseYamlFile(configPath);
 
   /// Get configuration information for supported devices
   Map get configInfo => _configInfo;
