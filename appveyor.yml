@@ -12,7 +12,8 @@ install:
   - echo Examine environment
   - echo %USERPROFILE%
   - pwd
-  - set
+  - echo %CD%
+#  - set
 #  - hostname
 #  - SET /?
 
@@ -84,8 +85,10 @@ install:
   - echo Start emulator in background
   - emulator -accel-check & exit 0
   - echo no | avdmanager create avd --force -n test -k system-images;android-%SYS%;%ABI%
-  - start "" emulator -avd test -no-audio -no-window -gpu swiftshader
+#  - start /B emulator -avd test -no-audio -no-window -gpu swiftshader
+#  - start "" emulator -avd test -no-audio -no-window -gpu swiftshader
 #  - start cmd.exe %ANDROID_HOME%\emulator\emulator -avd test -no-audio -no-window -gpu swiftshader
+  - ps: Start-Process -FilePath emulator -ArgumentList "-avd test -no-audio -no-window -gpu swiftshader" -PassThru
 #  - where emulator
 #  - which emulator
 
