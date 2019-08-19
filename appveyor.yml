@@ -104,11 +104,14 @@ build: off
 
 test_script:
   # run screenshots
-  - pub
   - dir .\flutter\bin\cache\dart-sdk\bin
+  - dir
   - cd example
+  - pub
   - rem %APPDATA%\Pub\Cache\bin\screenshots.bat
   - where screenshots & exit 0
   - which screenshots & exit 0
   - screenshots & exit 0
-  - .\flutter\bin\cache\dart-sdk\bin\pub.bat global run screenshots:main
+  - dir
+#  - .\flutter\bin\cache\dart-sdk\bin\pub.bat global run screenshots:main
+  - C:\projects\screenshots\flutter\bin\cache\dart-sdk\bin\pub.bat global run screenshots:main
