@@ -13,6 +13,7 @@ install:
   - pwd
   - rem set
   - rem hostname
+  - SET /?
 
   - which java
   - which curl
@@ -89,7 +90,7 @@ install:
 
   # install flutter
   - git clone -b stable https://github.com/flutter/flutter.git
-  - SET PATH=.\flutter\bin;.\flutter\bin\cache\dart-sdk\bin;%APPDATA%\Pub\Cache\bin;%PATH%
+  - SET PATH=%CD%\flutter\bin;%CD%\flutter\bin\cache\dart-sdk\bin;%APPDATA%\Pub\Cache\bin;%PATH%
   - flutter precache
   - flutter doctor -v
 
@@ -111,7 +112,7 @@ test_script:
   - rem %APPDATA%\Pub\Cache\bin\screenshots.bat
   - where screenshots & exit 0
   - which screenshots & exit 0
-  - screenshots & exit 0
-  - dir
+  - screenshots -c screenshots_android.yaml
+#  - dir
 #  - .\flutter\bin\cache\dart-sdk\bin\pub.bat global run screenshots:main
-  - C:\projects\screenshots\flutter\bin\cache\dart-sdk\bin\pub.bat global run screenshots:main
+#  - C:\projects\screenshots\flutter\bin\cache\dart-sdk\bin\pub.bat global run screenshots:main
