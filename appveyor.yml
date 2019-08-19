@@ -1,0 +1,114 @@
+install:
+#  - ps: wget https://storage.googleapis.com/dart-archive/channels/dev/release/latest/sdk/dartsdk-windows-x64-release.zip -OutFile dart-sdk.zip
+#  - cmd: echo "Unzipping dart-sdk..."
+#  - cmd: 7z x dart-sdk.zip -o"C:\tools" -y > nul
+#  - set PATH=%PATH%;C:\tools\dart-sdk\bin
+#  - set PATH=%PATH%;%APPDATA%\Pub\Cache\bin
+#  - cmd: cd packages\file
+#  - ps: pwd
+#  - cmd: pub get
+
+  # examine env
+  - echo %USERPROFILE%
+  - pwd
+  - rem set
+  - rem hostname
+
+  - which java
+  - which curl
+  - which 7z
+  - which mkdir
+  - which touch
+  - which yes
+  - rem which no
+  - which head
+  - which start
+  - which sc
+  - which systeminfo
+  - rem sc query state= all
+
+  - rem sc query intelhaxm
+  - rem systeminfo
+  - java -version
+  - dir
+
+  # install android SDK
+  - SET ANDROID_HOME=\android-sdk-windows
+  - SET ANDROID_SDK_ROOT=%ANDROID_HOME%
+  - SET ANDROID_TOOLS=4333796 # android-28
+  - SET ANDROID_PLATFORM_SDK=28
+  - SET ANDROID_BUILD_TOOLS=28.0.3
+  - SET EMU_ANDROID_PLATFORM_SDK=25
+  - SET EMU_ANDROID_BUILD_TOOLS=25.0.2
+#  - SET SYS=%ANDROID_PLATFORM_SDK%
+#  - SET ABI=google_apis;x86_64
+  - SET SYS=22
+  - SET ABI=default;armeabi-v7a
+  - curl https://dl.google.com/android/repository/sdk-tools-windows-%ANDROID_TOOLS%.zip -o android-sdk-tools.zip
+  - 7z x android-sdk-tools.zip -o%ANDROID_HOME% > nul
+  - del android-sdk-tools.zip
+  - dir %ANDROID_HOME%
+  - SET PATH=%ANDROID_HOME%/emulator;%ANDROID_HOME%/tools/bin;%ANDROID_HOME%/platform-tools;%PATH%
+  # silence warning
+  - touch %USERPROFILE%/.android/repositories.cfg
+  # install components
+  - yes | sdkmanager --licenses > nul
+#  - sdkmanager "emulator" "tools" "platform-tools" "platforms;android-%ANDROID_PLATFORM_SDK%" "build-tools;%ANDROID_BUILD_TOOLS%" system-images;android-%SYS%;%ABI% extras;intel;Hardware_Accelerated_Execution_Manager > nul
+  - sdkmanager emulator tools platform-tools platforms;android-%ANDROID_PLATFORM_SDK% build-tools;%ANDROID_BUILD_TOOLS% platforms;android-%EMU_ANDROID_PLATFORM_SDK% build-tools;%EMU_ANDROID_BUILD_TOOLS% system-images;android-%SYS%;%ABI% > nul
+  - sdkmanager --list | head -15
+  - dir \android-sdk-windows\tools
+  - dir \android-sdk-windows\tools\bin
+  - dir \android-sdk-windows\emulator
+  - dir \android-sdk-windows\platform-tools
+  - dir \android-sdk-windows\build-tools
+  - dir \android-sdk-windows\platforms
+  - dir \android-sdk-windows\system-images
+#  - dir \android-sdk-windows\extras\intel\Hardware_Accelerated_Execution_Manager
+  - dir \android-sdk-windows
+
+  # install emulator
+#  - sdkmanager system-images;android-%SYS%;%ABI% > nul
+#  - sdkmanager --list | head -15
+
+  # download a pinned version of the emulator since upgrades can cause issues
+  - %ANDROID_HOME%\emulator\emulator -version
+  - set emulator_version=5264690 # downgrade 29.0.9.0 (build_id 5537588) ==> 28.0.23.0 (build_id 5264690)
+  - curl -fo emulator.zip "https://dl.google.com/android/repository/emulator-windows-%emulator_version%.zip"
+  - rmdir %ANDROID_HOME%\emulator /s /q
+  - 7z x emulator.zip -o%ANDROID_HOME% > nul
+  - dir \android-sdk-windows\emulator
+  - del emulator.zip
+  - %ANDROID_HOME%\emulator\emulator -version
+
+  - %ANDROID_HOME%\emulator\emulator -accel-check & exit 0
+  - echo no | avdmanager create avd --force -n test -k system-images;android-%SYS%;%ABI%
+#  - start /B emulator -avd test -no-audio -no-window -gpu swiftshader
+  - start cmd.exe %ANDROID_HOME%\emulator\emulator -avd test -no-audio -no-window -gpu swiftshader
+  - where emulator
+  - which emulator
+
+  # install flutter
+  - git clone -b stable https://github.com/flutter/flutter.git
+  - SET PATH=.\flutter\bin;.\flutter\bin\cache\dart-sdk\bin;%APPDATA%\Pub\Cache\bin;%PATH%
+  - flutter precache
+  - flutter doctor -v
+
+  # install screenshots
+  - pub global activate --source path .
+  - pub global list
+  - dir %APPDATA%\Pub\Cache\bin
+  - type %APPDATA%\Pub\Cache\bin\screenshots.bat
+
+
+build: off
+
+test_script:
+  # run screenshots
+  - pub
+  - dir .\flutter\bin\cache\dart-sdk\bin
+  - cd example
+  - rem %APPDATA%\Pub\Cache\bin\screenshots.bat
+  - where screenshots & exit 0
+  - which screenshots & exit 0
+  - screenshots & exit 0
+  - .\flutter\bin\cache\dart-sdk\bin\pub.bat global run screenshots:main

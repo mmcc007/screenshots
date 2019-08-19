@@ -1,6 +1,7 @@
 
 [![pub package](https://img.shields.io/pub/v/screenshots.svg)](https://pub.dartlang.org/packages/screenshots) 
 [![Build Status](https://travis-ci.com/mmcc007/screenshots.svg?branch=master)](https://travis-ci.com/mmcc007/screenshots)
+[![Build status](https://ci.appveyor.com/api/projects/status/b6vlfyio9e21hxw8?svg=true)](https://ci.appveyor.com/project/mmcc007/screenshots)
 [![codecov](https://codecov.io/gh/mmcc007/screenshots/branch/master/graph/badge.svg)](https://codecov.io/gh/mmcc007/screenshots)
 
 ![alt text][demo]
