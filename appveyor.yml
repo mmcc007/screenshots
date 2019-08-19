@@ -9,11 +9,12 @@ install:
 #  - cmd: pub get
 
   # examine env
+  - echo Examine environment
   - echo %USERPROFILE%
   - pwd
-  - rem set
-  - rem hostname
-  - SET /?
+  - set
+#  - hostname
+#  - SET /?
 
   - which java
   - which curl
@@ -34,6 +35,7 @@ install:
   - dir
 
   # install android SDK
+  - echo Install Android SDK
   - SET ANDROID_HOME=\android-sdk-windows
   - SET ANDROID_SDK_ROOT=%ANDROID_HOME%
   - SET ANDROID_TOOLS=4333796 # android-28
@@ -57,21 +59,18 @@ install:
 #  - sdkmanager "emulator" "tools" "platform-tools" "platforms;android-%ANDROID_PLATFORM_SDK%" "build-tools;%ANDROID_BUILD_TOOLS%" system-images;android-%SYS%;%ABI% extras;intel;Hardware_Accelerated_Execution_Manager > nul
   - sdkmanager emulator tools platform-tools platforms;android-%ANDROID_PLATFORM_SDK% build-tools;%ANDROID_BUILD_TOOLS% platforms;android-%EMU_ANDROID_PLATFORM_SDK% build-tools;%EMU_ANDROID_BUILD_TOOLS% system-images;android-%SYS%;%ABI% > nul
   - sdkmanager --list | head -15
-  - dir \android-sdk-windows\tools
-  - dir \android-sdk-windows\tools\bin
-  - dir \android-sdk-windows\emulator
-  - dir \android-sdk-windows\platform-tools
-  - dir \android-sdk-windows\build-tools
-  - dir \android-sdk-windows\platforms
-  - dir \android-sdk-windows\system-images
-#  - dir \android-sdk-windows\extras\intel\Hardware_Accelerated_Execution_Manager
-  - dir \android-sdk-windows
-
-  # install emulator
-#  - sdkmanager system-images;android-%SYS%;%ABI% > nul
-#  - sdkmanager --list | head -15
+#  - dir \android-sdk-windows\tools
+#  - dir \android-sdk-windows\tools\bin
+#  - dir \android-sdk-windows\emulator
+#  - dir \android-sdk-windows\platform-tools
+#  - dir \android-sdk-windows\build-tools
+#  - dir \android-sdk-windows\platforms
+#  - dir \android-sdk-windows\system-images
+##  - dir \android-sdk-windows\extras\intel\Hardware_Accelerated_Execution_Manager
+#  - dir \android-sdk-windows
 
   # download a pinned version of the emulator since upgrades can cause issues
+  - echo Downgrade emulator
   - emulator -version
   - set emulator_version=5264690 # downgrade 29.0.9.0 (build_id 5537588) ==> 28.0.23.0 (build_id 5264690)
   - curl -fo emulator.zip "https://dl.google.com/android/repository/emulator-windows-%emulator_version%.zip"
@@ -81,38 +80,30 @@ install:
   - del emulator.zip
   - emulator -version
 
+  # start emulator in background
+  - echo Start emulator in background
   - emulator -accel-check & exit 0
   - echo no | avdmanager create avd --force -n test -k system-images;android-%SYS%;%ABI%
-#  - start /B emulator -avd test -no-audio -no-window -gpu swiftshader
+  - start "" emulator -avd test -no-audio -no-window -gpu swiftshader
 #  - start cmd.exe %ANDROID_HOME%\emulator\emulator -avd test -no-audio -no-window -gpu swiftshader
 #  - where emulator
 #  - which emulator
 
   # install flutter
+  - echo Install Flutter
   - git clone -b stable https://github.com/flutter/flutter.git
   - SET PATH=%CD%\flutter\bin;%CD%\flutter\bin\cache\dart-sdk\bin;%APPDATA%\Pub\Cache\bin;%PATH%
   - flutter precache
   - flutter doctor -v
 
   # install screenshots
+  - echo Install screenshots
   - pub global activate --source path .
-  - pub global list
-  - dir %APPDATA%\Pub\Cache\bin
-  - type %APPDATA%\Pub\Cache\bin\screenshots.bat
-
 
 build: off
 
 test_script:
   # run screenshots
-  - dir .\flutter\bin\cache\dart-sdk\bin
-  - dir
+  - echo Run screenshots
   - cd example
-  - pub
-  - rem %APPDATA%\Pub\Cache\bin\screenshots.bat
-  - where screenshots & exit 0
-  - which screenshots & exit 0
   - screenshots -c screenshots_android.yaml
-#  - dir
-#  - .\flutter\bin\cache\dart-sdk\bin\pub.bat global run screenshots:main
-#  - C:\projects\screenshots\flutter\bin\cache\dart-sdk\bin\pub.bat global run screenshots:main
