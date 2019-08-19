@@ -112,7 +112,7 @@ jobs:
       - pub global activate --source path .
 
       script:
-      - cd example; screenshots -c screenshots_CI.yaml
+      - cd example; screenshots -c screenshots_ios.yaml
       # copy artifacts to cache for later deploy
       - zip -r $HOME/screenshots/screenshots.zip ios/fastlane/screenshots android/fastlane/metadata/android/*/images
 
