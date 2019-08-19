@@ -45,17 +45,9 @@ void main(List<String> arguments) async {
   }
 
   // confirm os
-  switch (Platform.operatingSystem) {
-    case 'windows':
-      print(
-          'Screenshots is not supported on windows. Try running on MacOS or Linux in cloud.');
-      exit(1);
-      break;
-    case 'linux':
-    case 'macos':
-      break;
-    default:
-      throw 'unknown os: ${Platform.operatingSystem}';
+  if (!['windows', 'linux', 'macos'].contains(Platform.operatingSystem)) {
+    stderr.writeln('Error: unsupported os: ${Platform.operatingSystem}');
+    exit(1);
   }
 
   // check imagemagick is installed
