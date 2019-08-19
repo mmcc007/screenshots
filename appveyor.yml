@@ -1,6 +1,9 @@
 # Do not build feature branch with open Pull Requests
 skip_branch_with_pr: true
 
+init:
+  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+
 install:
 #  - ps: wget https://storage.googleapis.com/dart-archive/channels/dev/release/latest/sdk/dartsdk-windows-x64-release.zip -OutFile dart-sdk.zip
 #  - cmd: echo "Unzipping dart-sdk..."
