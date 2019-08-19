@@ -138,27 +138,30 @@ class Config {
     }
 
     for (String test in configInfo['tests']) {
-      final targetRegExp = RegExp(r'--target=([^\s]*)');
-      final driverRegExp = RegExp(r'--driver=([^\s]*)');
-      final paths = [];
-      if (targetRegExp.hasMatch(test)) {
-        paths.add(targetRegExp.firstMatch(test).group(1));
-      }
-      if (driverRegExp.hasMatch(test)) {
-        paths.add(driverRegExp.firstMatch(test).group(1));
-      }
-      if (paths.isEmpty) {
-        paths.add(test);
-      }
-      for (String path in paths) {
-        if (!await File(path).exists()) {
-          stderr.write('File: $path for test: $test from $configPath not found.\n');
-          exit(1);
-        }
+      try {
+        await validateTestPaths(test);
+      } on ArgumentError catch(error) {
+        stderr.write('File: ${error.message} for test: $test from $configPath not found.\n');
+        exit(1);
       }
     }
 
     return true;
+  }
+
+  @visibleForTesting
+  Future validateTestPaths(String test) async {
+    final testPathValidityRegExp =
+        RegExp(r'--target=(?<target>[^\s]+)(\s+)--driver=(?<driver>[^\s]+)|--target=(?<onlyTarget>[^\s]+)|(?<default>[^\s]+)');
+    var testPathMatch = testPathValidityRegExp.firstMatch(test);
+
+    final paths = testPathMatch.groupNames.map((group) => testPathMatch.namedGroup(group)).where((str) => str != null).toList();
+
+    for (String path in paths) {
+      if (!await File(path).exists()) {
+        throw ArgumentError(path);
+      }
+    }
   }
 
   /// Checks if a simulator is installed, matching the device named in config file.

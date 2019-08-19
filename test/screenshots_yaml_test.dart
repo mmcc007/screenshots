@@ -86,6 +86,15 @@ void main() {
     expect(appConfig, expected);
   });
 
+  test('validate test paths', () async {
+    final Config config = Config(configPath: 'test/screenshots_test.yaml');
+
+    expect(() async => await config.validateTestPaths("example/test_driver/main.dart"), returnsNormally);
+    expect(() async => await config.validateTestPaths("--target=example/test_driver/main.dart"), returnsNormally);
+    expect(() async => await config.validateTestPaths("--target=example/test_driver/main.dart --driver=example/test_driver/main_test.dart"), returnsNormally);
+    expect(() async => await config.validateTestPaths("example/test_driver/main1.dart"), throwsA(TypeMatcher<ArgumentError>()));
+  });
+
   test('validate config file', () async {
     final Screens screens = Screens();
     await screens.init();
