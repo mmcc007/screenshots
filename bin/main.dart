@@ -92,7 +92,8 @@ String getAdbPath() {
         'SDK directory containing platform-tools.');
     exit(1);
   }
-  final String adbPath = path.join(androidHome, 'platform-tools/adb');
+  final adbName = Platform.isWindows ? 'adb.exe' : 'adb';
+  final String adbPath = path.join(androidHome, 'platform-tools/${adbName}');
   final absPath = path.absolute(adbPath);
   if (!File(adbPath).existsSync()) {
     stderr.write(
