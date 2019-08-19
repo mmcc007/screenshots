@@ -71,16 +71,16 @@ install:
 #  - sdkmanager --list | head -15
 
   # download a pinned version of the emulator since upgrades can cause issues
-  - %ANDROID_HOME%\emulator\emulator -version
+  - emulator -version
   - set emulator_version=5264690 # downgrade 29.0.9.0 (build_id 5537588) ==> 28.0.23.0 (build_id 5264690)
   - curl -fo emulator.zip "https://dl.google.com/android/repository/emulator-windows-%emulator_version%.zip"
   - rmdir %ANDROID_HOME%\emulator /s /q
   - 7z x emulator.zip -o%ANDROID_HOME% > nul
   - dir \android-sdk-windows\emulator
   - del emulator.zip
-  - %ANDROID_HOME%\emulator\emulator -version
+  - emulator -version
 
-  - %ANDROID_HOME%\emulator\emulator -accel-check & exit 0
+  - emulator -accel-check & exit 0
   - echo no | avdmanager create avd --force -n test -k system-images;android-%SYS%;%ABI%
 #  - start /B emulator -avd test -no-audio -no-window -gpu swiftshader
   - start cmd.exe %ANDROID_HOME%\emulator\emulator -avd test -no-audio -no-window -gpu swiftshader
