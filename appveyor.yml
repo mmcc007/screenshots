@@ -83,9 +83,9 @@ install:
   - emulator -accel-check & exit 0
   - echo no | avdmanager create avd --force -n test -k system-images;android-%SYS%;%ABI%
 #  - start /B emulator -avd test -no-audio -no-window -gpu swiftshader
-  - start cmd.exe %ANDROID_HOME%\emulator\emulator -avd test -no-audio -no-window -gpu swiftshader
-  - where emulator
-  - which emulator
+#  - start cmd.exe %ANDROID_HOME%\emulator\emulator -avd test -no-audio -no-window -gpu swiftshader
+#  - where emulator
+#  - which emulator
 
   # install flutter
   - git clone -b stable https://github.com/flutter/flutter.git
