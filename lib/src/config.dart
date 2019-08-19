@@ -153,7 +153,7 @@ class Config {
   Future validateTestPaths(String test) async {
     final testPathValidityRegExp =
         RegExp(r'--target=(?<target>[^\s]+)(\s+)--driver=(?<driver>[^\s]+)|--target=(?<onlyTarget>[^\s]+)|(?<default>[^\s]+)');
-    var testPathMatch = testPathValidityRegExp.firstMatch(test);
+    RegExpMatch testPathMatch = testPathValidityRegExp.firstMatch(test);
 
     final paths = testPathMatch.groupNames.map((group) => testPathMatch.namedGroup(group)).where((str) => str != null).toList();
 
