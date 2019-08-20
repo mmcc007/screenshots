@@ -36,7 +36,7 @@ class DaemonClient {
       // enable device discovery
       await _sendCommandWaitResponse(
           <String, dynamic>{'method': 'device.enable'});
-      _iosDevices = getIosDevices();
+      if (Platform.isMacOS) _iosDevices = getIosDevices();
       // wait for device discovery
       await Future.delayed(Duration(milliseconds: 100));
     }
