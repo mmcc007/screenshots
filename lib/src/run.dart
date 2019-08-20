@@ -53,7 +53,7 @@ Future<bool> run(
   // init
   final stagingDir = configInfo['staging'];
   await Directory(stagingDir + '/$kTestScreenshotsDir').create(recursive: true);
-  await resources.unpackScripts(stagingDir);
+  if (!Platform.isWindows) await resources.unpackScripts(stagingDir);
   Archive archive = Archive(configInfo['archive']);
   if (runMode == RunMode.archive) {
     print('Archiving screenshots to ${archive.archiveDirPrefix}...');
