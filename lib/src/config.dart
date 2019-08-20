@@ -138,13 +138,30 @@ class Config {
     }
 
     for (String test in configInfo['tests']) {
-      if (!await File(test).exists()) {
-        stderr.write('Missing test: $test from $configPath not found.\n');
+      try {
+        await validateTestPaths(test);
+      } on ArgumentError catch(error) {
+        stderr.write('File: ${error.message} for test: $test from $configPath not found.\n');
         exit(1);
       }
     }
 
     return true;
+  }
+
+  @visibleForTesting
+  Future validateTestPaths(String test) async {
+    final testPathValidityRegExp =
+        RegExp(r'--target=(?<target>[^\s]+)(\s+)--driver=(?<driver>[^\s]+)|--target=(?<onlyTarget>[^\s]+)|(?<default>[^\s]+)');
+    RegExpMatch testPathMatch = testPathValidityRegExp.firstMatch(test);
+
+    final paths = testPathMatch.groupNames.map((group) => testPathMatch.namedGroup(group)).where((str) => str != null).toList();
+
+    for (String path in paths) {
+      if (!await File(path).exists()) {
+        throw ArgumentError(path);
+      }
+    }
   }
 
   /// Checks if a simulator is installed, matching the device named in config file.

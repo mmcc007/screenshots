@@ -148,10 +148,14 @@ _Screenshots_ uses a configuration file to configure a run.
  The default config filename is `screenshots.yaml`:
 ````yaml
 # A list of screen capture tests
-# Note: flutter driver expects a pair of files eg, main1.dart and main1_test.dart
 tests:
-  - test_driver/main1.dart
-  - test_driver/main2.dart
+# Note: flutter driver expects a pair of files. Giving just one means flutter defines the other by adding _test. For this pair main1.dart is tend to spin up application and main1_test.dart has all tests
+  - test_driver/main1.dart 
+  - test_driver/main2.dart 
+# Note: this is the same as the example above
+  - --target=test_driver/main3.dart 
+# Note: using both --target and --driver gives some flexibility in choosing what to spin up and which tests to run 
+  - --target=test_driver/main4.dart --driver=integration_test/suites/basic.dart
 
 # Interim location of screenshots from tests
 staging: /tmp/screenshots
