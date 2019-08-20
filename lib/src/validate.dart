@@ -125,7 +125,7 @@ void generateConfigGuide(Screens screens, List devices) {
   stdout.write('\nGuide:');
   _reportAttachedDevices(devices);
   _reportInstalledEmulators(utils.getAvdNames());
-  _reportInstalledSimulators(utils.getIosSimulators());
+  if (Platform.isMacOS) _reportInstalledSimulators(utils.getIosSimulators());
   _reportSupportedDevices(screens);
   stdout.write(
       '\n  Each device listed in screenshots.yaml with framing required must'
@@ -154,12 +154,14 @@ void _checkScreenAvailable(
 void _reportSupportedDevices(Screens screens) {
   stdout.write('\n  Devices with supported screens:\n');
   screens.screens.forEach((os, v) {
-    stdout.write('    $os:\n');
-    v.value.forEach((screenNum, screenProps) {
-      for (String device in screenProps['devices']) {
-        stdout.write('      $device\n');
-      }
-    });
+    if (!(!Platform.isMacOS && os == 'ios')) {
+      stdout.write('    $os:\n');
+      v.forEach((screenNum, screenProps) {
+        for (String device in screenProps['devices']) {
+          stdout.write('      $device\n');
+        }
+      });
+    }
   });
 }
 
