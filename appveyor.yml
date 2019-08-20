@@ -8,14 +8,6 @@ on_finish:
   - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
 install:
-#  - ps: wget https://storage.googleapis.com/dart-archive/channels/dev/release/latest/sdk/dartsdk-windows-x64-release.zip -OutFile dart-sdk.zip
-#  - cmd: echo "Unzipping dart-sdk..."
-#  - cmd: 7z x dart-sdk.zip -o"C:\tools" -y > nul
-#  - set PATH=%PATH%;C:\tools\dart-sdk\bin
-#  - set PATH=%PATH%;%APPDATA%\Pub\Cache\bin
-#  - cmd: cd packages\file
-#  - ps: pwd
-#  - cmd: pub get
 
   # examine env
   - echo Examine environment
