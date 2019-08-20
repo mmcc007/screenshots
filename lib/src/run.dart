@@ -542,12 +542,17 @@ DeviceType getDeviceType(Map configInfo, String deviceName) {
 
 /// Check Image Magick is installed.
 void checkImageMagicInstalled() {
-  // check imagemagick is installed
-  if (!utils
+  bool isInstalled=false;
+  if (Platform.isWindows){
+    isInstalled=utils.cmd('magick', [], '.', true).isNotEmpty;
+  } else{
+  isInstalled=utils
       .cmd('sh', ['-c', 'which convert && echo convert || echo not installed'],
-          '.', true)
+      '.', true)
       .toString()
-      .contains('convert')) {
+      .contains('convert');
+  }
+  if (!isInstalled) {
     stderr.write(
         '#############################################################\n');
     stderr.write("# You have to install ImageMagick to use Screenshots\n");
