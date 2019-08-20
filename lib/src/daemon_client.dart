@@ -192,7 +192,7 @@ List getIosDevices() {
       .trim()
       .split('\n')
       .sublist(1);
-  if (iosDeployDevices[0] == noAttachedDevices) return [];
+  if (iosDeployDevices.isEmpty || iosDeployDevices[0] == noAttachedDevices) return [];
   return iosDeployDevices.map((line) {
     final matches = regExp.firstMatch(line);
     final device = {};

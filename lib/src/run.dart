@@ -355,7 +355,7 @@ Future runProcessTests(
           ['-d', deviceId, 'drive', '-t', testPath, '--flavor', flavor]);
     } else {
       print('Running $testPath on \'$configDeviceName\' in locale $locale...');
-      await utils.streamCmd('flutter', ['-d', deviceId, 'drive', testPath]);
+      await utils.streamCmd('flutter', ['-d', deviceId, 'drive']..addAll(testPath.split(" ")));
     }
     // process screenshots
     await imageProcessor.process(
