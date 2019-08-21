@@ -85,13 +85,47 @@ Future<bool> validate(
   }
 
   for (String test in configInfo['tests']) {
-    if (!await File(test).exists()) {
-      stderr.write('Missing test: $test from $configPath not found.\n');
+    if (!isValidTestPaths(test)) {
+      stderr.writeln('Invalid config: $test in $configPath');
       exit(1);
     }
   }
 
   return true;
+}
+
+/// Checks all paths are valid.
+/// Note: does not cover all uses cases.
+bool isValidTestPaths(String driverArgs) {
+  final driverPathRegExp = RegExp(r'--driver[= ]+([^\s]+)');
+  final targetPathRegExp = RegExp(r'--target[= ]+([^\s]+)');
+  final regExps = [driverPathRegExp, targetPathRegExp];
+
+  bool pathExists(String path) {
+    if (!File(path).existsSync()) {
+      stderr
+          .write('File \'$path\' for test config \'$driverArgs\' not found.\n');
+      return false;
+    }
+    return true;
+  }
+
+  // Remember any failed path during matching (if any matching)
+  bool isInvalidPath = false;
+  bool matchFound = false;
+  for (final regExp in regExps) {
+    final match = regExp.firstMatch(driverArgs);
+    if (match != null) {
+      matchFound = true;
+      final path = match.group(1);
+      isInvalidPath = isInvalidPath || !pathExists(path);
+    }
+  }
+
+  // if invalid path found during matching return, otherwise check default path
+  return !(isInvalidPath
+      ? isInvalidPath
+      : matchFound ? isInvalidPath : !pathExists(driverArgs));
 }
 
 /// Checks if a simulator is installed, matching the device named in config file.
