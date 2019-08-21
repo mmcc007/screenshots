@@ -153,7 +153,7 @@ Future runTestsOnAll(
 
   for (final configDeviceName in configDeviceNames) {
     // look for matching device first
-    final device = _findDevice(devices, emulators, configDeviceName);
+    final device = findDevice(devices, emulators, configDeviceName);
 
     String deviceId;
     Map emulator;
@@ -392,7 +392,7 @@ Future<String> _startEmulator(
 }
 
 /// Find a real device or running emulator/simulator for [deviceName].
-Map _findDevice(List devices, List emulators, String deviceName) {
+Map findDevice(List devices, List emulators, String deviceName) {
   final device = devices.firstWhere((device) {
     if (device['platform'] == 'ios') {
       if (device['emulator']) {
@@ -524,8 +524,8 @@ Future _startAndroidEmulatorOnCI(String emulatorId, String stagingDir) async {
 
 /// Find the emulator info of a running device.
 Map _findDeviceEmulator(List emulators, String deviceId) {
-  return emulators.firstWhere(
-      (emulator) => emulator['id'] == utils.getAndroidEmulatorId(deviceId),
+  final emulatorId = utils.getAndroidEmulatorId(deviceId);
+  return emulators.firstWhere((emulator) => emulator['id'] == emulatorId,
       orElse: () => null);
 }
 

@@ -34,8 +34,8 @@ void moveFiles(String srcDir, String dstDir) {
 /// If [silent] is false, output to stdout.
 String cmd(String cmd, List<String> arguments,
     [String workingDir = '.', bool silent = false]) {
-//  print(
-//      'cmd=\'$cmd ${arguments.join(" ")}\', workingDir=$workingDir, silent=$silent');
+  print(
+      'cmd=\'$cmd ${arguments.join(" ")}\', workingDir=$workingDir, silent=$silent');
   final result = Process.runSync(cmd, arguments, workingDirectory: workingDir);
   if (!silent) stdout.write(result.stdout);
   if (result.exitCode != 0) {
@@ -222,6 +222,7 @@ String getIosSimulatorLocale(String udId) {
 /// Get android emulator id from a running emulator with id [deviceId].
 /// Returns emulator id as [String].
 String getAndroidEmulatorId(String deviceId) {
+  // get name of avd of running emulator
   return cmd('adb', ['-s', deviceId, 'emu', 'avd', 'name'], '.', true)
       .split('\r\n')
       .map((line) => line.trim())

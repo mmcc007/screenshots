@@ -865,5 +865,56 @@ devices:
       final emulator = utils.findEmulator(emulators, emulatorName);
       expect(emulator, expected);
     }, skip: utils.isCI());
+
+    test('find a running device', () {
+      final androidDeviceName = 'Nexus 6P';
+      final iosDeviceName = 'iPhone 5c';
+      final androidDevice = {
+        'id': 'emulator-5554',
+        'name': 'Android SDK built for x86',
+        'platform': 'android-x86',
+        'emulator': true,
+        'category': 'mobile',
+        'platformType': 'android',
+        'ephemeral': true
+      };
+      final iosDevice = {
+        'id': '3b3455019e329e007e67239d9b897148244b5053',
+        'name': 'Maurice’s iPhone',
+        'platform': 'ios',
+        'emulator': false,
+        'category': 'mobile',
+        'platformType': 'ios',
+        'ephemeral': true,
+        'model': 'iPhone 5c (GSM)'
+      };
+      final runningDevices = [androidDevice, iosDevice];
+      final installedEmulators = [
+        {
+          'id': 'Nexus_6P_API_28',
+          'name': 'Nexus 6P',
+          'category': 'mobile',
+          'platformType': 'android'
+        },
+        {
+          'id': 'Nexus_6P_API_30',
+          'name': 'Nexus 6P',
+          'category': 'mobile',
+          'platformType': 'android'
+        },
+        {
+          'id': 'apple_ios_simulator',
+          'name': 'iOS Simulator',
+          'category': 'mobile',
+          'platformType': 'ios'
+        }
+      ];
+      Map deviceInfo =
+          run.findDevice(runningDevices, installedEmulators, androidDeviceName);
+      expect(deviceInfo, androidDevice);
+      deviceInfo =
+          run.findDevice(runningDevices, installedEmulators, iosDeviceName);
+      expect(deviceInfo, iosDevice);
+    });
   });
 }
