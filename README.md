@@ -150,13 +150,9 @@ _Screenshots_ uses a configuration file to configure a run.
 ````yaml
 # A list of screen capture tests
 tests:
-# Note: flutter driver expects a pair of files. Giving just one means flutter defines the other by adding _test. For this pair main1.dart is tend to spin up application and main1_test.dart has all tests
+# Note: flutter driver expects a pair of files eg, main1.dart and main1_test.dart
   - test_driver/main1.dart 
   - test_driver/main2.dart 
-# Note: this is the same as the example above
-  - --target=test_driver/main3.dart 
-# Note: using both --target and --driver gives some flexibility in choosing what to spin up and which tests to run 
-  - --target=test_driver/main4.dart --driver=integration_test/suites/basic.dart
 
 # Interim location of screenshots from tests
 staging: /tmp/screenshots
@@ -192,6 +188,14 @@ Individual devices can be configured in `screenshots.yaml` by specifying per dev
 Note: images generated for those devices where framing is disabled are probably not suitable for upload, but can be used for local review.
 
 Note: orientation on iOS simulators is implemented using an AppleScript script which requires granting permission on first use.
+
+## Test Options
+In addition to using the default flutter driver mode, tests can also be specified using flutter driver parameters. For example:
+```
+tests:
+  - --target=test_driver/main1.dart --driver=test_driver/main1_test1.dart
+  - --target=test_driver/main2.dart --driver=test_driver/main2_test1.dart
+``` 
 
 # Record/Compare Mode
 _Screenshots_ can be used to monitor any unexpected changes to the UI by comparing the new screenshots to previously recorded screenshots. Any differences will be highlighted in a 'diff' image for review.  
