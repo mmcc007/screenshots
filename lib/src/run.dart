@@ -43,7 +43,8 @@ Future<bool> run(
   // get all available unstarted android emulators
   // note: unstarted simulators are not properly included in this list
   //       so have to be handled separately
-  final emulators = await daemonClient.emulators;
+  final emulators = (await daemonClient.emulators);
+  emulators.sort(utils.emulatorComparison);
 
   final config = Config(configPath: configPath, configStr: configStr);
   // validate config file
@@ -355,7 +356,8 @@ Future runProcessTests(
           ['-d', deviceId, 'drive', '-t', testPath, '--flavor', flavor]);
     } else {
       print('Running $testPath on \'$configDeviceName\' in locale $locale...');
-      await utils.streamCmd('flutter', ['-d', deviceId, 'drive']..addAll(testPath.split(" ")));
+      await utils.streamCmd(
+          'flutter', ['-d', deviceId, 'drive']..addAll(testPath.split(" ")));
     }
     // process screenshots
     await imageProcessor.process(
@@ -542,15 +544,18 @@ DeviceType getDeviceType(Map configInfo, String deviceName) {
 
 /// Check Image Magick is installed.
 void checkImageMagicInstalled() {
-  bool isInstalled=false;
-  if (Platform.isWindows){
-    isInstalled=utils.cmd('magick', [], '.', true).isNotEmpty;
-  } else{
-  isInstalled=utils
-      .cmd('sh', ['-c', 'which convert && echo convert || echo not installed'],
-      '.', true)
-      .toString()
-      .contains('convert');
+  bool isInstalled = false;
+  if (Platform.isWindows) {
+    isInstalled = utils.cmd('magick', [], '.', true).isNotEmpty;
+  } else {
+    isInstalled = utils
+        .cmd(
+            'sh',
+            ['-c', 'which convert && echo convert || echo not installed'],
+            '.',
+            true)
+        .toString()
+        .contains('convert');
   }
   if (!isInstalled) {
     stderr.write(
