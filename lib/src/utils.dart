@@ -340,9 +340,13 @@ Future<String> waitSysLogMsg(
 
 /// Find the emulator info of an named emulator available to boot.
 Map findEmulator(List emulators, String emulatorName) {
-  return emulators.firstWhere((emulator) => emulator['name'] == emulatorName,
+  // find highest by avd version number
+  emulators.sort(emulatorComparison);
+  return emulators.lastWhere((emulator) => emulator['name'] == emulatorName,
       orElse: () => null);
 }
+
+int emulatorComparison(a, b) => a['id'].compareTo(b['id']);
 
 /// Get [RunMode] from [String].
 RunMode getRunModeEnum(String runMode) {
