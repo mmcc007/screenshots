@@ -159,7 +159,7 @@ void main() {
     final iosDevices = utils.getIosSimulators();
     final iPhone7Plus = iosDevices['iPhone 7 Plus'];
     expect(iPhone7Plus, expected);
-  }, tags: 'udid', skip: utils.isCI());
+  }, skip: utils.isCI());
 
   test('get highest and available version of ios device', () {
     final expected = {
@@ -173,7 +173,7 @@ void main() {
 //    final deviceName = 'iPhone 5c';
     final highestDevice = utils.getHighestIosSimulator(iosDevices, deviceName);
     expect(highestDevice, expected);
-  }, tags: 'udid', skip: utils.isCI());
+  }, skip: utils.isCI());
 
   test('read resource and write to path', () async {
     final scrnResources = [
@@ -225,7 +225,7 @@ void main() {
     final result = utils.cmd('adb', ['root'], '.', true);
     expect(result, 'adbd cannot run as root in production builds\n');
     expect(await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
-  }, tags: 'androidSDK', skip: utils.isCI());
+  }, skip: utils.isCI());
 
   test('get emulator id from device name', () {
     final _emulators = utils.getAvdNames();
@@ -233,7 +233,7 @@ void main() {
     final emulator =
         _emulators.firstWhere((emulator) => emulator.contains('Nexus_5X'));
     expect(emulator, 'Nexus_5X_API_27');
-  }, tags: 'androidSDK', skip: utils.isCI());
+  }, skip: utils.isCI());
 
   test('move files', () async {
     final fileName = 'filename';
@@ -267,7 +267,7 @@ void main() {
     expect(startedDevice(devices, emulatorName), expected);
     expect(await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
     expect(startedDevice(await daemonClient.devices, emulatorName), null);
-  }, tags: 'androidSDK', skip: utils.isCI());
+  }, skip: utils.isCI());
 
   test('change android locale', () async {
     final deviceName = 'Nexus 6P';
@@ -843,7 +843,6 @@ devices:
             iPhone X:
         frame: false
       ''';
-      Map configInfo = utils.parseYamlStr(configIosOnly);
       // for this test change directory
       final origDir = Directory.current;
       Directory.current = 'example';
@@ -851,5 +850,20 @@ devices:
       // allow other tests to continue
       Directory.current = origDir;
     }, timeout: Timeout(Duration(minutes: 4)), skip: utils.isCI());
+
+    test('find highest avd', () async {
+      final emulatorName = 'Nexus 6P';
+      final expected = {
+        'id': 'Nexus_6P_API_30',
+        'name': 'Nexus 6P',
+        'category': 'mobile',
+        'platformType': 'android'
+      };
+      final daemonClient = DaemonClient();
+      await daemonClient.start;
+      final emulators = await daemonClient.emulators;
+      final emulator = utils.findEmulator(emulators, emulatorName);
+      expect(emulator, expected);
+    }, skip: utils.isCI());
   });
 }

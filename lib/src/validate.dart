@@ -41,7 +41,6 @@ Future<bool> validate(
   }
 
   final isDeviceAttached = (device) => device != null;
-  final isEmulatorInstalled = (emulator) => emulator != null;
 
   if (configInfo['devices']['android'] != null) {
     final devices = utils.getAndroidDevices(allDevices);
@@ -54,7 +53,7 @@ Future<bool> validate(
 
       // check emulator installed
       if (!isDeviceAttached(utils.getDevice(devices, deviceName)) &&
-          !isEmulatorInstalled(utils.findEmulator(allEmulators, deviceName))) {
+          !isEmulatorInstalled(allEmulators, deviceName)) {
         stderr.write('Error: no device attached or emulator installed for '
             'device \'$deviceName\' in $configPath.\n');
         generateConfigGuide(screens, allDevices);
@@ -126,6 +125,24 @@ bool isValidTestPaths(String driverArgs) {
   return !(isInvalidPath
       ? isInvalidPath
       : matchFound ? isInvalidPath : !pathExists(driverArgs));
+}
+
+/// Check if an emulator is installed.
+bool isEmulatorInstalled(List emulators, String deviceName) {
+  final emulator = utils.findEmulator(emulators, deviceName);
+  final isEmulatorInstalled = emulator != null;
+
+  // check for device installed with multiple avd versions
+  if (isEmulatorInstalled) {
+    final matchingEmulators =
+        emulators.where((emulator) => emulator['name'] == deviceName);
+    if (matchingEmulators != null && matchingEmulators.length > 1) {
+      print('Warning: \'$deviceName\' has multiple avd versions.');
+      print(
+          '       : Using \'$deviceName\' with avd version ${emulator['id']}.');
+    }
+  }
+  return isEmulatorInstalled;
 }
 
 /// Checks if a simulator is installed, matching the device named in config file.
