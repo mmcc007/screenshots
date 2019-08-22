@@ -85,24 +85,25 @@ class ImageMagick {
   bool thresholdExceeded(String imagePath, String crop,
       [double threshold = _kThreshold]) {
     //convert logo.png -crop $crop_size$offset +repage -colorspace gray -format "%[fx:(mean>$threshold)?1:0]" info:
-    final result = utils.cmd(
-        'magick',
-        [
-          'convert',
-          imagePath,
-          '-crop',
-          crop,
-          '+repage',
-          '-colorspace',
-          'gray',
-          '-format',
-          '\'%[fx:(mean>$threshold)?1:0]\'',
-          'info:'
-        ],
-        '.',
-        true);
-//  print('result=$result');
-    return result.contains('1'); // looks like there is some junk in string
+    final result = utils
+        .cmd(
+            'magick',
+            [
+              'convert',
+              imagePath,
+              '-crop',
+              crop,
+              '+repage',
+              '-colorspace',
+              'gray',
+              '-format',
+              '""%[fx:(mean>$threshold)?1:0]""',
+              'info:'
+            ],
+            '.',
+            true)
+        .replaceAll('"', '');
+    return result == '1';
   }
 
   bool compare(String comparisonImage, String recordedImage) {
