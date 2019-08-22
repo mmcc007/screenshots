@@ -37,11 +37,15 @@ install:
   - dir
 
   # install imagemagick
+  - SET MAGICK_HOME=\imagemagick
   - echo Install ImageMagick
   - curl https://imagemagick.org/download/binaries/ImageMagick-7.0.8-61-Q8-x64-dll.exe -o imagemagick_installer.exe
-  - .\imagemagick_installer.exe /SP /VERYSILENT /DIR=\imagemagick /COMPONENTS=legacy_support
+  - .\imagemagick_installer.exe /SP /VERYSILENT /DIR=%MAGICK_HOME% /COMPONENTS=legacy_support
   - del imagemagick_installer.exe
-  - where magick & exit 0
+  - refreshenv
+  - magick & exit 0
+  - SET PATH=$MAGICK_HOME;%PATH%
+  - magick & exit 0
 
   # install android SDK
   - echo Install Android SDK
@@ -50,12 +54,14 @@ install:
   - SET ANDROID_TOOLS=4333796 # android-28
   - SET ANDROID_PLATFORM_SDK=28
   - SET ANDROID_BUILD_TOOLS=28.0.3
-  - SET EMU_ANDROID_PLATFORM_SDK=25
-  - SET EMU_ANDROID_BUILD_TOOLS=25.0.2
-#  - SET SYS=%ANDROID_PLATFORM_SDK%
-#  - SET ABI=google_apis;x86_64
-  - SET SYS=22
-  - SET ABI=default;armeabi-v7a
+  - SET EMU_ANDROID_PLATFORM_SDK=%ANDROID_PLATFORM_SDK%
+  - SET EMU_ANDROID_BUILD_TOOLS=%ANDROID_BUILD_TOOLS%
+#  - SET EMU_ANDROID_PLATFORM_SDK=25
+#  - SET EMU_ANDROID_BUILD_TOOLS=25.0.2
+  - SET SYS=%ANDROID_PLATFORM_SDK%
+  - SET ABI=google_apis;x86_64
+#  - SET SYS=22
+#  - SET ABI=default;armeabi-v7a
   - curl https://dl.google.com/android/repository/sdk-tools-windows-%ANDROID_TOOLS%.zip -o android-sdk-tools.zip
   - 7z x android-sdk-tools.zip -o%ANDROID_HOME% > nul
   - del android-sdk-tools.zip
@@ -100,7 +106,10 @@ install:
 #  - ps: Start-Process -FilePath emulator -ArgumentList "-avd test -no-audio -no-window -gpu swiftshader" -PassThru
 #  - ps: Start-Process -FilePath emulator -ArgumentList "-avd test -no-audio -gpu swiftshader"
 #  - ps: Start-Process emulator "-avd test -no-audio -no-window"
-  - ps: Start-Process emulator "-avd %EMULATOR_NAME% -partition-size 512 -no-boot-anim -no-audio -verbose -feature WindowsHypervisorPlatform -prop monodroid.avdname=%EMULATOR_NAME%"
+#  - ps: Start-Process emulator "-avd %EMULATOR_NAME% -partition-size 512 -no-boot-anim -no-audio -verbose -feature WindowsHypervisorPlatform -prop monodroid.avdname=%EMULATOR_NAME%"
+#  - ps: Start-Process emulator "-avd %EMULATOR_NAME% -partition-size 512 -no-boot-anim -no-audio -verbose -feature WindowsHypervisorPlatform -prop monodroid.avdname=%EMULATOR_NAME%"
+  - ps: echo $env:EMULATOR_NAME
+  - ps: start -NoNewWindow emulator "-avd $env:EMULATOR_NAME -no-audio -no-boot-anim -gpu swiftshader -feature WindowsHypervisorPlatform"
 #  - ps: Start-sleep -s 120
 #  - where emulator
 #  - which emulator
