@@ -75,7 +75,10 @@ class ImageMagick {
       default:
         throw 'unknown command: $command';
     }
-    utils.cmd('convert', cmdOptions);
+    utils.cmd('magick', [
+      ...['convert'],
+      ...cmdOptions
+    ]);
   }
 
   /// Checks if brightness of section of image exceeds a threshold
@@ -83,8 +86,9 @@ class ImageMagick {
       [double threshold = _kThreshold]) {
     //convert logo.png -crop $crop_size$offset +repage -colorspace gray -format "%[fx:(mean>$threshold)?1:0]" info:
     final result = utils.cmd(
-        'convert',
+        'magick',
         [
+          'convert',
           imagePath,
           '-crop',
           crop,
@@ -105,8 +109,15 @@ class ImageMagick {
     final diffImage = getDiffName(comparisonImage);
     try {
       utils.cmd(
-          'compare',
-          ['-metric', 'mae', recordedImage, comparisonImage, diffImage],
+          'magick',
+          [
+            'compare',
+            '-metric',
+            'mae',
+            recordedImage,
+            comparisonImage,
+            diffImage
+          ],
           '.',
           true);
     } catch (e) {
