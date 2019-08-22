@@ -14,6 +14,7 @@ import 'resources.dart' as resources;
 import 'screens.dart';
 import 'utils.dart' as utils;
 import 'validate.dart';
+import 'package:path/path.dart' as path;
 
 /// Capture screenshots, process, and load into fastlane according to config file.
 ///
@@ -54,7 +55,8 @@ Future<bool> run(
 
   // init
   final stagingDir = configInfo['staging'];
-  await Directory(stagingDir + '/$kTestScreenshotsDir').create(recursive: true);
+  await Directory(path.join(stagingDir, kTestScreenshotsDir))
+      .create(recursive: true);
   if (!Platform.isWindows) await resources.unpackScripts(stagingDir);
   Archive archive = Archive(configInfo['archive']);
   if (runMode == RunMode.archive) {
