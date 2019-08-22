@@ -49,7 +49,7 @@ install:
 
   # install android SDK
   - echo Install Android SDK
-  - SET ANDROID_HOME=\android-sdk-windows
+  - SET ANDROID_HOME=c:\android-sdk-windows
   - SET ANDROID_SDK_ROOT=%ANDROID_HOME%
   - SET ANDROID_TOOLS=4333796 # android-28
   - SET ANDROID_PLATFORM_SDK=28
