@@ -24,17 +24,24 @@ install:
   - which mkdir
   - which touch
   - which yes
-  - rem which no
+#  - which no
   - which head
   - which start
   - which sc
   - which systeminfo
-  - rem sc query state= all
+#  - sc query state= all
 
-  - rem sc query intelhaxm
-  - rem systeminfo
+#  - sc query intelhaxm
+#  - systeminfo
   - java -version
   - dir
+
+  # install imagemagick
+  - echo Install ImageMagick
+  - curl https://imagemagick.org/download/binaries/ImageMagick-7.0.8-61-Q8-x64-dll.exe -o imagemagick_installer.exe
+  - .\imagemagick_installer.exe /SP /VERYSILENT /DIR=\imagemagick /COMPONENTS=legacy_support
+  - del imagemagick_installer.exe
+  - where magick & exit 0
 
   # install android SDK
   - echo Install Android SDK
@@ -82,15 +89,19 @@ install:
   - del emulator.zip
   - emulator -version
 
-  # start emulator in background
-  - echo Start emulator in background
+  # create and start emulator in background
+  - SET EMULATOR_NAME=Nexus_6P_API_28
+  - echo Create and start emulator in background
   - emulator -accel-check & exit 0
-  - echo no | avdmanager create avd --force -n test -k system-images;android-%SYS%;%ABI%
+  - echo no | avdmanager create avd --force -n %EMULATOR_NAME% -k system-images;android-%SYS%;%ABI%
 #  - start /B emulator -avd test -no-audio -no-window -gpu swiftshader
 #  - start "" emulator -avd test -no-audio -no-window -gpu swiftshader
 #  - start cmd.exe %ANDROID_HOME%\emulator\emulator -avd test -no-audio -no-window -gpu swiftshader
 #  - ps: Start-Process -FilePath emulator -ArgumentList "-avd test -no-audio -no-window -gpu swiftshader" -PassThru
-  - ps: Start-Process -FilePath emulator -ArgumentList "-avd test -no-audio -gpu swiftshader"
+#  - ps: Start-Process -FilePath emulator -ArgumentList "-avd test -no-audio -gpu swiftshader"
+#  - ps: Start-Process emulator "-avd test -no-audio -no-window"
+  - ps: Start-Process emulator "-avd %EMULATOR_NAME% -partition-size 512 -no-boot-anim -no-audio -verbose -feature WindowsHypervisorPlatform -prop monodroid.avdname=%EMULATOR_NAME%"
+#  - ps: Start-sleep -s 120
 #  - where emulator
 #  - which emulator
 
