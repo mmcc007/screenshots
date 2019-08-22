@@ -37,6 +37,7 @@ Future<bool> run(
   // start flutter daemon
   print('Starting flutter daemon...');
   final daemonClient = DaemonClient();
+  daemonClient.verbose=true;
   await daemonClient.start;
   // get all attached devices and running emulators/simulators
   final devices = await daemonClient.devices;
