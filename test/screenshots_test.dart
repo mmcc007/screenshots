@@ -867,13 +867,15 @@ devices:
     }, skip: utils.isCI());
 
     test('find a running device', () {
+      // note: expects a running emulator
       final androidDeviceName = 'Nexus 6P';
       final iosDeviceName = 'iPhone 5c';
       final androidDevice = {
         'id': 'emulator-5554',
         'name': 'Android SDK built for x86',
         'platform': 'android-x86',
-        'emulator': true,
+//        'emulator': true, // seems to misbehave on some emulators
+        'emulator': false,
         'category': 'mobile',
         'platformType': 'android',
         'ephemeral': true
@@ -915,6 +917,6 @@ devices:
       deviceInfo =
           run.findDevice(runningDevices, installedEmulators, iosDeviceName);
       expect(deviceInfo, iosDevice);
-    });
+    }, skip: utils.isCI());
   });
 }

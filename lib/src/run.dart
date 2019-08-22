@@ -37,7 +37,7 @@ Future<bool> run(
   // start flutter daemon
   print('Starting flutter daemon...');
   final daemonClient = DaemonClient();
-  daemonClient.verbose=true;
+  daemonClient.verbose = true;
   await daemonClient.start;
   // get all attached devices and running emulators/simulators
   final devices = await daemonClient.devices;
@@ -404,8 +404,14 @@ Map findDevice(List devices, List emulators, String deviceName) {
         return device['model'].contains(deviceName);
       }
     } else {
-      if (device['emulator']) {
-        // running android emulator
+      // platform is android
+      // check if ephemeral is present
+      // note: sometimes a running emulator has device['emulator'] of false
+      //       so using ephemeral for now (may not work for real devices)
+      final isEphemeral =
+          device['ephemeral'] == null ? false : device['ephemeral'];
+      if (isEphemeral || device['emulator']) {
+        // running android emulator ??
         return _findDeviceEmulator(emulators, device['id'])['name'] ==
             deviceName;
       } else {
