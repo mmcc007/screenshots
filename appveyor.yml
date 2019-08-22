@@ -54,14 +54,14 @@ install:
   - SET ANDROID_TOOLS=4333796 # android-28
   - SET ANDROID_PLATFORM_SDK=28
   - SET ANDROID_BUILD_TOOLS=28.0.3
-  - SET EMU_ANDROID_PLATFORM_SDK=%ANDROID_PLATFORM_SDK%
-  - SET EMU_ANDROID_BUILD_TOOLS=%ANDROID_BUILD_TOOLS%
-#  - SET EMU_ANDROID_PLATFORM_SDK=25
-#  - SET EMU_ANDROID_BUILD_TOOLS=25.0.2
-  - SET SYS=%ANDROID_PLATFORM_SDK%
-  - SET ABI=google_apis;x86_64
-#  - SET SYS=22
-#  - SET ABI=default;armeabi-v7a
+#  - SET EMU_ANDROID_PLATFORM_SDK=%ANDROID_PLATFORM_SDK%
+#  - SET EMU_ANDROID_BUILD_TOOLS=%ANDROID_BUILD_TOOLS%
+  - SET EMU_ANDROID_PLATFORM_SDK=25
+  - SET EMU_ANDROID_BUILD_TOOLS=25.0.2
+#  - SET SYS=%ANDROID_PLATFORM_SDK%
+#  - SET ABI=google_apis;x86_64
+  - SET SYS=22
+  - SET ABI=default;armeabi-v7a
   - curl https://dl.google.com/android/repository/sdk-tools-windows-%ANDROID_TOOLS%.zip -o android-sdk-tools.zip
   - 7z x android-sdk-tools.zip -o%ANDROID_HOME% > nul
   - del android-sdk-tools.zip
