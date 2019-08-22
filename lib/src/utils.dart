@@ -36,7 +36,8 @@ String cmd(String cmd, List<String> arguments,
     [String workingDir = '.', bool silent = false]) {
   print(
       'cmd=\'$cmd ${arguments.join(" ")}\', workingDir=$workingDir, silent=$silent');
-  final result = Process.runSync(cmd, arguments, workingDirectory: workingDir);
+  final result = Process.runSync(cmd, arguments,
+      workingDirectory: workingDir, runInShell: true);
   if (!silent) stdout.write(result.stdout);
   if (result.exitCode != 0) {
     stderr.write(result.stderr);
@@ -51,11 +52,10 @@ String cmd(String cmd, List<String> arguments,
 Future<void> streamCmd(String cmd, List<String> arguments,
     [String workingDirectory = '.',
     ProcessStartMode mode = ProcessStartMode.normal]) async {
-//  print(
-//      'streamCmd=\'$cmd ${arguments.join(" ")}\', workingDirectory=$workingDirectory, mode=$mode');
-
+  print(
+      'streamCmd=\'$cmd ${arguments.join(" ")}\', workingDirectory=$workingDirectory, mode=$mode');
   final process = await Process.start(cmd, arguments,
-      workingDirectory: workingDirectory, mode: mode);
+      workingDirectory: workingDirectory, mode: mode, runInShell: true);
 
   if (mode == ProcessStartMode.normal) {
     final stdoutFuture = process.stdout
