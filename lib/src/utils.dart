@@ -362,3 +362,14 @@ Future<bool> isRecorded(String recordDir) async =>
 bool isCI() {
   return Platform.environment['CI'] == 'true';
 }
+
+/// Convert a posix path to platform path (windows/posix).
+String toPlatformPath(String posixPath, {p.Context context}) {
+  const posixPathSeparator = '/';
+  final splitPath = posixPath.split(posixPathSeparator);
+  if (context != null) {
+    // for testing
+    return context.joinAll(splitPath);
+  }
+  return p.joinAll(splitPath);
+}

@@ -919,4 +919,25 @@ devices:
       expect(deviceInfo, iosDevice);
     }, skip: utils.isCI());
   });
+
+  group('paths', () {
+    test('convert', () {
+      final paths = [
+        {'path': '/a/b/c', 'posix': 'a/b/c', 'windows': 'a\\b\\c'},
+        {'path': './a/b/c', 'posix': './a/b/c', 'windows': '.\\a\\b\\c'},
+        {'path': 'a/b/c.d', 'posix': 'a/b/c.d', 'windows': 'a\\b\\c.d'},
+        {'path': './a/b/c.d', 'posix': './a/b/c.d', 'windows': '.\\a\\b\\c.d'},
+        {'path': './a/0.png', 'posix': './a/0.png', 'windows': '.\\a\\0.png'},
+      ];
+      expect(p.relative(p.current), '.');
+      final posixContext = p.Context(style: p.Style.posix);
+      final windowsContext = p.Context(style: p.Style.windows);
+      for (var path in paths) {
+        expect(utils.toPlatformPath(path['path'], context: posixContext),
+            path['posix']);
+        expect(utils.toPlatformPath(path['path'], context: windowsContext),
+            path['windows']);
+      }
+    });
+  });
 }
