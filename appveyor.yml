@@ -97,9 +97,15 @@ install:
 
   # create and start emulator in background
   - SET EMULATOR_NAME=Nexus_6P_API_28
+  - SET AVD_CONFIG=%USERPROFILE%\.android\avd\%EMULATOR_NAME%.avd\config.ini
   - echo Create and start emulator in background
   - emulator -accel-check & exit 0
   - echo no | avdmanager create avd --force -n %EMULATOR_NAME% -k system-images;android-%SYS%;%ABI%
+  - echo hw.lcd.width=1440 >> %AVD_CONFIG%
+  - echo hw.lcd.height=2560 >> %AVD_CONFIG%
+  - echo hw.device.name=Nexus 6P >> %AVD_CONFIG%
+  - echo hw.device.manufacturer=Google >> %AVD_CONFIG%
+  - echo avd.ini.displayname=Nexus 6P API 28 >> %AVD_CONFIG%
 #  - start /B emulator -avd test -no-audio -no-window -gpu swiftshader
 #  - start "" emulator -avd test -no-audio -no-window -gpu swiftshader
 #  - start cmd.exe %ANDROID_HOME%\emulator\emulator -avd test -no-audio -no-window -gpu swiftshader
