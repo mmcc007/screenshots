@@ -14,21 +14,27 @@ jobs:
       os: linux
 #      language: dart
 #      dart: stable
-      # install flutter
-      before_install: &install_flutter
-        - wget --quiet --output-document=flutter.zip https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/${OS}/flutter_${OS}_v${FLUTTER_VERSION}.zip && unzip -qq flutter.zip > /dev/null && rm flutter.zip
+
+      # install flutter on linux
+      before_install: &install_flutter_linux
+        - sudo apt-get install -y --no-install-recommends lib32stdc++6 libstdc++6 > /dev/null
+        # install pre-compiled flutter
+        - wget --quiet --output-document=flutter.tar.xz https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/${OS}/flutter_${OS}_v${FLUTTER_VERSION}.tar.xz && tar xf flutter.tar.xz > /dev/null && rm flutter.tar.xz
         - export PATH="$PATH":"$HOME/.pub-cache/bin"
         - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
-        - flutter doctor -v
+
       install:
+        - flutter doctor -v
         - sudo apt-get install imagemagick
         - magick || echo 'ignore exit(1)'
         # install coverage tool
         - pub global activate coverage
         # install most current (released or unreleased) Screenshots
         - pub global activate --source path .
+
       script:
         - script/code_coverage.sh
+
       after_success: bash <(curl -s https://codecov.io/bash) -f coverage/lcov.info
 
     - stage: Run screenshots on macOS
@@ -45,7 +51,11 @@ jobs:
       # run on master or PRs
       if: branch = master
 
-      before_install: *install_flutter
+      before_install:
+        # Install flutter on macOS
+        - wget --quiet --output-document=flutter.zip https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/${OS}/flutter_${OS}_v${FLUTTER_VERSION}.zip && unzip -qq flutter.zip > /dev/null && rm flutter.zip
+        - export PATH="$PATH":"$HOME/.pub-cache/bin"
+        - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
 
       install:
         #      - xcrun simctl list devices
@@ -160,9 +170,10 @@ jobs:
         - sudo apt-get install imagemagick
         - magick || echo 'ignore exit(1)'
 
-      install: *install_flutter
+      install: *install_flutter_linux
 
       before_script:
+        - flutter doctor -v
         # install most current (released or unreleased) Screenshots
         - pub global activate --source path .
 
