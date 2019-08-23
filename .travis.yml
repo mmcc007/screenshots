@@ -25,7 +25,10 @@ jobs:
 
       install:
         - flutter doctor -v
-        - sudo apt-get install imagemagick
+#        - sudo apt-get install imagemagick
+        - which convert || echo 'ignore exit(1)'
+        - which magick || echo 'ignore exit(1)'
+        - convert || echo 'ignore exit(1)'
         - magick || echo 'ignore exit(1)'
         # install coverage tool
         - pub global activate coverage
