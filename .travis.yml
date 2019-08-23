@@ -19,24 +19,24 @@ jobs:
       before_install: &install_flutter_linux
         - sudo apt-get install -y --no-install-recommends lib32stdc++6 libstdc++6 > /dev/null
         # install pre-compiled flutter
-#        - wget --quiet --output-document=flutter.tar.xz https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/${OS}/flutter_${OS}_v${FLUTTER_VERSION}.tar.xz && tar xf flutter.tar.xz > /dev/null && rm flutter.tar.xz
-#        - export PATH="$PATH":"$HOME/.pub-cache/bin"
-#        - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
+        - wget --quiet --output-document=flutter.tar.xz https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/${OS}/flutter_${OS}_v${FLUTTER_VERSION}.tar.xz && tar xf flutter.tar.xz > /dev/null && rm flutter.tar.xz
+        - export PATH="$PATH":"$HOME/.pub-cache/bin"
+        - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
 
       install:
-#        - flutter doctor -v
+        - flutter doctor -v
 #        - sudo apt-get install imagemagick
 #        - sudo apt-get update
 #        - sudo apt-get install --only-upgrade imagemagick
-        - sudo apt-get install build-essential checkinstall
-        - sudo apt-get build-dep imagemagick -y
-        - wget http://www.imagemagick.org/download/ImageMagick.tar.gz
-        - tar xzvf ImageMagick.tar.gz > /dev/null
-        - cd ImageMagick*
-        - ./configure > /dev/null
-        - make
-        - sudo make install
-        - sudo ldconfig /usr/local/lib
+#        - sudo apt-get install build-essential checkinstall
+#        - sudo apt-get build-dep imagemagick -y
+#        - wget http://www.imagemagick.org/download/ImageMagick.tar.gz
+#        - tar xzvf ImageMagick.tar.gz > /dev/null
+#        - cd ImageMagick*
+#        - ./configure > /dev/null
+#        - make
+#        - sudo make install
+#        - sudo ldconfig /usr/local/lib
         - which convert || echo "ignore exit($?)"
         - which magick || echo "ignore exit($?)"
         - convert -version || echo "ignore exit($?)"
