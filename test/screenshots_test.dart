@@ -657,6 +657,39 @@ devices:
       // restore deleted files
       utils.cmd('git', ['checkout', dirPath]);
     });
+
+    test('get android model type', () async {
+      final defaultPhone = 'default phone';
+      final defaultSevenInch = 'default seven inch';
+      final defaultTenInch = 'default ten inch';
+      final phones = {
+        defaultPhone: fastlane.kFastlanePhone,
+        'Nexus 5X': fastlane.kFastlanePhone,
+        'Nexus 6': fastlane.kFastlanePhone,
+        'Nexus 6P': fastlane.kFastlanePhone,
+        'unknown device': fastlane.kFastlanePhone
+      };
+      final sevenInches = {defaultSevenInch: fastlane.kFastlaneSevenInch};
+      final tenInches = {
+        defaultTenInch: fastlane.kFastlaneTenInch,
+        'Nexus 9': fastlane.kFastlaneTenInch
+      };
+      final androidDeviceNames = phones..addAll(sevenInches)..addAll(tenInches);
+      final screens = Screens();
+      await screens.init();
+      for (final androidDeviceName in androidDeviceNames.keys) {
+        print('androidDeviceName=$androidDeviceName');
+        final screenProps = screens.screenProps(androidDeviceName);
+//        expect(screenProps, isNotNull);
+        expect(fastlane.getAndroidModelType(screenProps),
+            androidDeviceNames[androidDeviceName]);
+      }
+
+      // handle unknown device
+      final unknownDevice = 'unknown device';
+      final screenProps = screens.screenProps(unknownDevice);
+      expect(screenProps, isNull);
+    });
   });
 
   group('adb path', () {
