@@ -5,6 +5,7 @@ import 'package:screenshots/src/daemon_client.dart';
 import 'package:screenshots/src/globals.dart';
 import 'package:screenshots/src/image_processor.dart';
 import 'package:screenshots/src/screens.dart';
+import 'package:screenshots/src/validate.dart';
 import 'package:test/test.dart';
 import 'package:screenshots/src/fastlane.dart' as fastlane;
 import 'package:yaml/yaml.dart';
@@ -87,12 +88,20 @@ void main() {
   });
 
   test('validate test paths', () async {
-    final Config config = Config(configPath: 'test/screenshots_test.yaml');
+    final mainPath = 'example/test_driver/main.dart';
+    final testPath = 'example/test_driver/main_test.dart';
+    final bogusPath = 'example/test_driver/non_existant.dart';
 
-    expect(() async => await config.validateTestPaths("example/test_driver/main.dart"), returnsNormally);
-    expect(() async => await config.validateTestPaths("--target=example/test_driver/main.dart"), returnsNormally);
-    expect(() async => await config.validateTestPaths("--target=example/test_driver/main.dart --driver=example/test_driver/main_test.dart"), returnsNormally);
-    expect(() async => await config.validateTestPaths("example/test_driver/main1.dart"), throwsA(TypeMatcher<ArgumentError>()));
+    expect(isValidTestPaths(mainPath), isTrue);
+    expect(isValidTestPaths('--target=$mainPath'), isTrue);
+    expect(isValidTestPaths('--target=$mainPath --driver=$testPath'), isTrue);
+    expect(isValidTestPaths('--driver=$testPath --target=$mainPath '), isTrue);
+    expect(isValidTestPaths('--driver $testPath --target $mainPath '), isTrue);
+
+    expect(isValidTestPaths(bogusPath), isFalse);
+    expect(isValidTestPaths('--target=$bogusPath'), isFalse);
+    expect(isValidTestPaths('--target=$bogusPath --driver=$mainPath'), isFalse);
+    expect(isValidTestPaths('--target=$mainPath --driver=$bogusPath'), isFalse);
   });
 
   test('validate config file', () async {
@@ -105,7 +114,8 @@ void main() {
     final origDir = Directory.current;
     Directory.current = 'example';
     expect(
-        await config.validate(
+        await validate(
+          config,
           screens,
           await daemonClient.devices,
           await daemonClient.emulators,

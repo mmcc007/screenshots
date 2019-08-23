@@ -1,6 +1,5 @@
 import 'globals.dart';
 import 'utils.dart' as utils;
-import 'run.dart' as run;
 
 enum Orientation { Portrait, LandscapeRight, PortraitUpsideDown, LandscapeLeft }
 
@@ -25,7 +24,7 @@ void changeDeviceOrientation(DeviceType deviceType, Orientation orientation,
   print('Setting orientation to $_orientation');
   switch (deviceType) {
     case DeviceType.android:
-      run.cmd('adb', [
+      utils.cmd('adb', [
         '-s',
         deviceId,
         'shell',
@@ -38,7 +37,7 @@ void changeDeviceOrientation(DeviceType deviceType, Orientation orientation,
       break;
     case DeviceType.ios:
       // requires permission when run for first time
-      run.cmd(
+      utils.cmd(
           'osascript',
           ['$scriptDir/$sim_orientation_script', iosOrientations[_orientation]],
           '.',

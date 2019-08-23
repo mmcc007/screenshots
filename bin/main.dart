@@ -45,44 +45,28 @@ void main(List<String> arguments) async {
   }
 
   // confirm os
-  switch (Platform.operatingSystem) {
-    case 'windows':
-      print(
-          'Screenshots is not supported on windows. Try running on MacOS or Linux in cloud.');
-      exit(1);
-      break;
-    case 'linux':
-    case 'macos':
-      break;
-    default:
-      throw 'unknown os: ${Platform.operatingSystem}';
-  }
-
-  // check imagemagick is installed
-  if (!cmd('sh', ['-c', 'which convert && echo convert || echo not installed'],
-          '.', true)
-      .toString()
-      .contains('convert')) {
-    stderr.write(
-        '#############################################################\n');
-    stderr.write("# You have to install ImageMagick to use Screenshots\n");
-    stderr.write(
-        "# Install it using 'brew update && brew install imagemagick'\n");
-    stderr.write("# If you don't have homebrew: goto http://brew.sh\n");
-    stderr.write(
-        '#############################################################\n');
+  if (!['windows', 'linux', 'macos'].contains(Platform.operatingSystem)) {
+    stderr.writeln('Error: unsupported os: ${Platform.operatingSystem}');
     exit(1);
   }
 
-  // check adb is found
-  getAdbPath();
+  // check imagemagick is installed
+  checkImageMagicInstalled();
 
   // validate args
   if (!await File(argResults[configArg]).exists()) {
     _handleError(argParser, "File not found: ${argResults[configArg]}");
   }
 
-  await run(argResults[configArg], argResults[modeArg], argResults[flavorArg]);
+  // check adb is found
+  final config = Config(configPath: argResults[configArg]);
+  if (isRunTypeActive(config.configInfo, DeviceType.android)) {
+    getAdbPath();
+  }
+
+  final success = await run(
+      argResults[configArg], null, argResults[modeArg], argResults[flavorArg]);
+  exit(success ? 0 : 1);
 }
 
 void _handleError(ArgParser argParser, String msg) {
@@ -102,11 +86,14 @@ String getAdbPath() {
   final String androidHome = Platform.environment['ANDROID_HOME'] ??
       Platform.environment['ANDROID_SDK_ROOT'];
   if (androidHome == null) {
-    throw 'The ANDROID_SDK_ROOT and ANDROID_HOME environment variables are '
+    stderr.writeln(
+        'The ANDROID_SDK_ROOT and ANDROID_HOME environment variables are '
         'missing. At least one of these variables must point to the Android '
-        'SDK directory containing platform-tools.';
+        'SDK directory containing platform-tools.');
+    exit(1);
   }
-  final String adbPath = path.join(androidHome, 'platform-tools/adb');
+  final adbName = Platform.isWindows ? 'adb.exe' : 'adb';
+  final String adbPath = path.join(androidHome, 'platform-tools/${adbName}');
   final absPath = path.absolute(adbPath);
   if (!File(adbPath).existsSync()) {
     stderr.write(

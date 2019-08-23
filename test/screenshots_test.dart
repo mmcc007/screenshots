@@ -13,6 +13,7 @@ import 'package:screenshots/src/screens.dart';
 import 'package:screenshots/src/resources.dart' as resources;
 import 'package:screenshots/src/run.dart' as run;
 import 'package:screenshots/src/utils.dart' as utils;
+import 'package:screenshots/src/validate.dart' as validate;
 import 'package:test/test.dart';
 import 'package:yaml/yaml.dart';
 import 'package:screenshots/src/fastlane.dart' as fastlane;
@@ -78,7 +79,7 @@ void main() {
       'statusbarPath': statusbarPath,
     };
     await im.convert('overlay', options);
-    run.cmd('git', ['checkout', screenshotPath]);
+    utils.cmd('git', ['checkout', screenshotPath]);
   });
 
   test('unpack screen resource images', () async {
@@ -108,7 +109,7 @@ void main() {
       'screenshotNavbarPath': screenshotNavbarPath,
     };
     await im.convert('append', options);
-    run.cmd('git', ['checkout', screenshotPath]);
+    utils.cmd('git', ['checkout', screenshotPath]);
   });
 
   test('frame screenshot', () async {
@@ -133,7 +134,7 @@ void main() {
       'backgroundColor': ImageProcessor.kDefaultAndroidBackground,
     };
     await im.convert('frame', options);
-    run.cmd('git', ['checkout', screenshotPath]);
+    utils.cmd('git', ['checkout', screenshotPath]);
   });
 
   test('parse json xcrun simctl list devices', () {
@@ -158,7 +159,7 @@ void main() {
     final iosDevices = utils.getIosSimulators();
     final iPhone7Plus = iosDevices['iPhone 7 Plus'];
     expect(iPhone7Plus, expected);
-  }, tags: 'udid', skip: utils.isCI());
+  }, skip: utils.isCI());
 
   test('get highest and available version of ios device', () {
     final expected = {
@@ -172,7 +173,7 @@ void main() {
 //    final deviceName = 'iPhone 5c';
     final highestDevice = utils.getHighestIosSimulator(iosDevices, deviceName);
     expect(highestDevice, expected);
-  }, tags: 'udid', skip: utils.isCI());
+  }, skip: utils.isCI());
 
   test('read resource and write to path', () async {
     final scrnResources = [
@@ -211,7 +212,7 @@ void main() {
     }
     // cleanup
     fastlane.deleteMatchingFiles(dirPath, RegExp(prefix));
-    run.cmd('git', ['checkout', dirPath]);
+    utils.cmd('git', ['checkout', dirPath]);
   });
 
   test('rooted emulator', () async {
@@ -221,10 +222,10 @@ void main() {
     final daemonClient = DaemonClient();
     await daemonClient.start;
     final deviceId = await daemonClient.launchEmulator(emulatorId);
-    final result = run.cmd('adb', ['root'], '.', true);
+    final result = utils.cmd('adb', ['root'], '.', true);
     expect(result, 'adbd cannot run as root in production builds\n');
     expect(await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
-  }, tags: 'androidSDK', skip: utils.isCI());
+  }, skip: utils.isCI());
 
   test('get emulator id from device name', () {
     final _emulators = utils.getAvdNames();
@@ -232,7 +233,7 @@ void main() {
     final emulator =
         _emulators.firstWhere((emulator) => emulator.contains('Nexus_5X'));
     expect(emulator, 'Nexus_5X_API_27');
-  }, tags: 'androidSDK', skip: utils.isCI());
+  }, skip: utils.isCI());
 
   test('move files', () async {
     final fileName = 'filename';
@@ -266,7 +267,7 @@ void main() {
     expect(startedDevice(devices, emulatorName), expected);
     expect(await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
     expect(startedDevice(await daemonClient.devices, emulatorName), null);
-  }, tags: 'androidSDK', skip: utils.isCI());
+  }, skip: utils.isCI());
 
   test('change android locale', () async {
     final deviceName = 'Nexus 6P';
@@ -654,7 +655,7 @@ devices:
       fastlane.deleteMatchingFiles(dirPath, pattern);
       expect(filesPresent(dirPath, pattern), isEmpty);
       // restore deleted files
-      run.cmd('git', ['checkout', dirPath]);
+      utils.cmd('git', ['checkout', dirPath]);
     });
   });
 
@@ -676,8 +677,8 @@ devices:
         final filePath = fsEntity.path;
 //        print('filePath=$filePath');
         try {
-          final contents = run.cmd('plutil',
-              ['-convert', 'xml1', '-r', '-o', '-', filePath], '.', true);
+          utils.cmd('plutil', ['-convert', 'xml1', '-r', '-o', '-', filePath],
+              '.', true);
 //          print('contents=$contents');
         } catch (e) {
           print('error: $e');
@@ -730,10 +731,9 @@ devices:
     test('config guide', () async {
       final Screens screens = Screens();
       await screens.init();
-      final Config config = Config(configPath: 'test/screenshots_test.yaml');
       final daemonClient = DaemonClient();
       await daemonClient.start;
-      config.generateConfigGuide(screens, await daemonClient.devices);
+      validate.generateConfigGuide(screens, await daemonClient.devices);
     }, skip: utils.isCI());
 
     test('validate device params', () {
@@ -755,16 +755,16 @@ devices:
       final configInfo = loadYaml(params);
       final deviceNames = utils.getAllConfiguredDeviceNames(configInfo);
       for (final devName in deviceNames) {
-        final deviceInfo = findDeviceInfo(configInfo, devName);
+        final deviceInfo = validate.findDeviceInfo(configInfo, devName);
         print('devName=$devName');
         print('deviceInfo=$deviceInfo');
         if (deviceInfo != null) {
           expect(deviceInfo['orientation'], orientation);
-          expect(isValidOrientation(orientation), isTrue);
-          expect(isValidOrientation('bad orientation'), isFalse);
+          expect(validate.isValidOrientation(orientation), isTrue);
+          expect(validate.isValidOrientation('bad orientation'), isFalse);
           expect(deviceInfo['frame'], frame);
-          expect(isValidFrame(frame), isTrue);
-          expect(isValidFrame('bad frame'), isFalse);
+          expect(validate.isValidFrame(frame), isTrue);
+          expect(validate.isValidFrame('bad frame'), isFalse);
         }
       }
     });
@@ -787,5 +787,157 @@ devices:
           configPath, utils.getStringFromEnum(RunMode.normal), flavor);
       Directory.current = origDir;
     }, timeout: Timeout(Duration(seconds: 240)), skip: utils.isCI());
+  });
+
+  group('run across platforms', () {
+    test('active run type', () {
+      final configIosOnly = '''
+        devices:
+          ios:
+            iPhone X:
+      ''';
+      final configAndroidOnly = '''
+        devices:
+          ios: # check for empty devices
+          android:
+            Nexus 6P:
+      ''';
+      final configBoth = '''
+        devices:
+          ios:
+            iPhone X:
+          android:
+            Nexus 6P:
+      ''';
+      final configNeither = '''
+        devices:
+          ios:
+          android:
+      ''';
+      Map configInfo = utils.parseYamlStr(configIosOnly);
+      expect(run.isRunTypeActive(configInfo, DeviceType.ios), isTrue);
+      expect(run.isRunTypeActive(configInfo, DeviceType.android), isFalse);
+
+      configInfo = utils.parseYamlStr(configAndroidOnly);
+      expect(run.isRunTypeActive(configInfo, DeviceType.ios), isFalse);
+      expect(run.isRunTypeActive(configInfo, DeviceType.android), isTrue);
+
+      configInfo = utils.parseYamlStr(configBoth);
+      expect(run.isRunTypeActive(configInfo, DeviceType.ios), isTrue);
+      expect(run.isRunTypeActive(configInfo, DeviceType.android), isTrue);
+
+      configInfo = utils.parseYamlStr(configNeither);
+      expect(run.isRunTypeActive(configInfo, DeviceType.ios), isFalse);
+      expect(run.isRunTypeActive(configInfo, DeviceType.android), isFalse);
+    });
+
+    test('ios only', () async {
+      final configIosOnly = '''
+        tests:
+          - test_driver/main.dart
+        staging: /tmp/screenshots
+        locales:
+          - en-US
+        devices:
+          ios:
+            iPhone X:
+        frame: false
+      ''';
+      // for this test change directory
+      final origDir = Directory.current;
+      Directory.current = 'example';
+      expect(await run.run(null, configIosOnly), isTrue);
+      // allow other tests to continue
+      Directory.current = origDir;
+    }, timeout: Timeout(Duration(minutes: 4)), skip: utils.isCI());
+
+    test('find highest avd', () async {
+      final emulatorName = 'Nexus 6P';
+      final expected = {
+        'id': 'Nexus_6P_API_30',
+        'name': 'Nexus 6P',
+        'category': 'mobile',
+        'platformType': 'android'
+      };
+      final daemonClient = DaemonClient();
+      await daemonClient.start;
+      final emulators = await daemonClient.emulators;
+      final emulator = utils.findEmulator(emulators, emulatorName);
+      expect(emulator, expected);
+    }, skip: utils.isCI());
+
+    test('find a running device', () {
+      // note: expects a running emulator
+      final androidDeviceName = 'Nexus 6P';
+      final iosDeviceName = 'iPhone 5c';
+      final androidDevice = {
+        'id': 'emulator-5554',
+        'name': 'Android SDK built for x86',
+        'platform': 'android-x86',
+//        'emulator': true, // seems to misbehave on some emulators
+        'emulator': false,
+        'category': 'mobile',
+        'platformType': 'android',
+        'ephemeral': true
+      };
+      final iosDevice = {
+        'id': '3b3455019e329e007e67239d9b897148244b5053',
+        'name': 'Maurice’s iPhone',
+        'platform': 'ios',
+        'emulator': false,
+        'category': 'mobile',
+        'platformType': 'ios',
+        'ephemeral': true,
+        'model': 'iPhone 5c (GSM)'
+      };
+      final runningDevices = [androidDevice, iosDevice];
+      final installedEmulators = [
+        {
+          'id': 'Nexus_6P_API_28',
+          'name': 'Nexus 6P',
+          'category': 'mobile',
+          'platformType': 'android'
+        },
+        {
+          'id': 'Nexus_6P_API_30',
+          'name': 'Nexus 6P',
+          'category': 'mobile',
+          'platformType': 'android'
+        },
+        {
+          'id': 'apple_ios_simulator',
+          'name': 'iOS Simulator',
+          'category': 'mobile',
+          'platformType': 'ios'
+        }
+      ];
+      Map deviceInfo =
+          run.findDevice(runningDevices, installedEmulators, androidDeviceName);
+      expect(deviceInfo, androidDevice);
+      deviceInfo =
+          run.findDevice(runningDevices, installedEmulators, iosDeviceName);
+      expect(deviceInfo, iosDevice);
+    }, skip: utils.isCI());
+  });
+
+  group('paths', () {
+    test('convert', () {
+      final paths = [
+        {'path': '/a/b/c', 'posix': 'a/b/c', 'windows': 'a\\b\\c'},
+        {'path': './a/b/c', 'posix': './a/b/c', 'windows': '.\\a\\b\\c'},
+        {'path': 'a/b/c.d', 'posix': 'a/b/c.d', 'windows': 'a\\b\\c.d'},
+        {'path': './a/b/c.d', 'posix': './a/b/c.d', 'windows': '.\\a\\b\\c.d'},
+        {'path': './a/0.png', 'posix': './a/0.png', 'windows': '.\\a\\0.png'},
+      ];
+      expect(p.relative(p.current), '.');
+      final posixContext = p.Context(style: p.Style.posix);
+      final windowsContext = p.Context(style: p.Style.windows);
+      for (var path in paths) {
+        expect(utils.toPlatformPath(path['path'], context: posixContext),
+            path['posix']);
+        expect(utils.toPlatformPath(path['path'], context: windowsContext),
+            path['windows']);
+      }
+    });
   });
 }

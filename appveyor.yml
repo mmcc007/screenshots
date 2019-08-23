@@ -1,0 +1,140 @@
+# Do not build feature branch with open Pull Requests
+skip_branch_with_pr: true
+
+#init:
+#  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+#
+#on_finish:
+#  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+
+install:
+
+  # examine env
+  - echo Examine environment
+  - echo %USERPROFILE%
+  - pwd
+  - echo %CD%
+#  - set
+#  - hostname
+#  - SET /?
+
+  - which java
+  - which curl
+  - which 7z
+  - which mkdir
+  - which touch
+  - which yes
+#  - which no
+  - which head
+  - which start
+  - which sc
+  - which systeminfo
+#  - sc query state= all
+
+#  - sc query intelhaxm
+#  - systeminfo
+  - java -version
+  - dir
+
+  # install imagemagick
+  - SET MAGICK_HOME=\imagemagick
+  - echo Install ImageMagick
+  - curl https://imagemagick.org/download/binaries/ImageMagick-7.0.8-61-Q8-x64-dll.exe -o imagemagick_installer.exe
+  - .\imagemagick_installer.exe /SP /VERYSILENT /DIR=%MAGICK_HOME% /COMPONENTS=legacy_support
+  - del imagemagick_installer.exe
+  - refreshenv
+  - magick & exit 0
+  - SET PATH=$MAGICK_HOME;%PATH%
+  - magick & exit 0
+
+  # install android SDK
+  - echo Install Android SDK
+  - SET ANDROID_HOME=c:\android-sdk-windows
+  - SET ANDROID_SDK_ROOT=%ANDROID_HOME%
+  - SET ANDROID_TOOLS=4333796 # android-28
+  - SET ANDROID_PLATFORM_SDK=28
+  - SET ANDROID_BUILD_TOOLS=28.0.3
+#  - SET EMU_ANDROID_PLATFORM_SDK=%ANDROID_PLATFORM_SDK%
+#  - SET EMU_ANDROID_BUILD_TOOLS=%ANDROID_BUILD_TOOLS%
+  - SET EMU_ANDROID_PLATFORM_SDK=25
+  - SET EMU_ANDROID_BUILD_TOOLS=25.0.2
+#  - SET SYS=%ANDROID_PLATFORM_SDK%
+#  - SET ABI=google_apis;x86_64
+  - SET SYS=22
+  - SET ABI=default;armeabi-v7a
+  - curl https://dl.google.com/android/repository/sdk-tools-windows-%ANDROID_TOOLS%.zip -o android-sdk-tools.zip
+  - 7z x android-sdk-tools.zip -o%ANDROID_HOME% > nul
+  - del android-sdk-tools.zip
+#  - dir %ANDROID_HOME%
+  - SET PATH=%ANDROID_HOME%/emulator;%ANDROID_HOME%/tools/bin;%ANDROID_HOME%/platform-tools;%PATH%
+  # silence warning
+  - touch %USERPROFILE%/.android/repositories.cfg
+  # install components
+  - yes | sdkmanager --licenses > nul
+#  - sdkmanager "emulator" "tools" "platform-tools" "platforms;android-%ANDROID_PLATFORM_SDK%" "build-tools;%ANDROID_BUILD_TOOLS%" system-images;android-%SYS%;%ABI% extras;intel;Hardware_Accelerated_Execution_Manager > nul
+  - sdkmanager emulator tools platform-tools platforms;android-%ANDROID_PLATFORM_SDK% build-tools;%ANDROID_BUILD_TOOLS% platforms;android-%EMU_ANDROID_PLATFORM_SDK% build-tools;%EMU_ANDROID_BUILD_TOOLS% system-images;android-%SYS%;%ABI% > nul
+  - sdkmanager --list | head -15
+#  - dir \android-sdk-windows\tools
+#  - dir \android-sdk-windows\tools\bin
+#  - dir \android-sdk-windows\emulator
+#  - dir \android-sdk-windows\platform-tools
+#  - dir \android-sdk-windows\build-tools
+#  - dir \android-sdk-windows\platforms
+#  - dir \android-sdk-windows\system-images
+##  - dir \android-sdk-windows\extras\intel\Hardware_Accelerated_Execution_Manager
+#  - dir \android-sdk-windows
+
+  # download a pinned version of the emulator since upgrades can cause issues
+  - echo Downgrade emulator
+  - emulator -version
+  - set emulator_version=5264690 # downgrade 29.0.9.0 (build_id 5537588) ==> 28.0.23.0 (build_id 5264690)
+  - curl -fo emulator.zip "https://dl.google.com/android/repository/emulator-windows-%emulator_version%.zip"
+  - rmdir %ANDROID_HOME%\emulator /s /q
+  - 7z x emulator.zip -o%ANDROID_HOME% > nul
+#  - dir \android-sdk-windows\emulator
+  - del emulator.zip
+  - emulator -version
+
+  # create and start emulator in background
+  - SET EMULATOR_NAME=Nexus_6P_API_28
+  - SET AVD_CONFIG=%USERPROFILE%\.android\avd\%EMULATOR_NAME%.avd\config.ini
+  - echo Create and start emulator in background
+  - emulator -accel-check & exit 0
+  - echo no | avdmanager create avd --force -n %EMULATOR_NAME% -k system-images;android-%SYS%;%ABI%
+  - echo hw.lcd.width=1440 >> %AVD_CONFIG%
+  - echo hw.lcd.height=2560 >> %AVD_CONFIG%
+  - echo hw.device.name=Nexus 6P >> %AVD_CONFIG%
+  - echo hw.device.manufacturer=Google >> %AVD_CONFIG%
+  - echo avd.ini.displayname=Nexus 6P API 28 >> %AVD_CONFIG%
+#  - start /B emulator -avd test -no-audio -no-window -gpu swiftshader
+#  - start "" emulator -avd test -no-audio -no-window -gpu swiftshader
+#  - start cmd.exe %ANDROID_HOME%\emulator\emulator -avd test -no-audio -no-window -gpu swiftshader
+#  - ps: Start-Process -FilePath emulator -ArgumentList "-avd test -no-audio -no-window -gpu swiftshader" -PassThru
+#  - ps: Start-Process -FilePath emulator -ArgumentList "-avd test -no-audio -gpu swiftshader"
+#  - ps: Start-Process emulator "-avd test -no-audio -no-window"
+#  - ps: Start-Process emulator "-avd %EMULATOR_NAME% -partition-size 512 -no-boot-anim -no-audio -verbose -feature WindowsHypervisorPlatform -prop monodroid.avdname=%EMULATOR_NAME%"
+#  - ps: Start-Process emulator "-avd %EMULATOR_NAME% -partition-size 512 -no-boot-anim -no-audio -verbose -feature WindowsHypervisorPlatform -prop monodroid.avdname=%EMULATOR_NAME%"
+  - ps: echo $env:EMULATOR_NAME
+  - ps: start -NoNewWindow emulator "-avd $env:EMULATOR_NAME -no-audio -no-boot-anim -gpu swiftshader -feature WindowsHypervisorPlatform"
+#  - ps: Start-sleep -s 120
+#  - where emulator
+#  - which emulator
+
+  # install flutter
+  - echo Install Flutter
+  - git clone -b stable https://github.com/flutter/flutter.git
+  - SET PATH=%CD%\flutter\bin;%CD%\flutter\bin\cache\dart-sdk\bin;%APPDATA%\Pub\Cache\bin;%PATH%
+  - flutter precache
+  - flutter doctor -v
+
+  # install screenshots
+  - echo Install screenshots
+  - pub global activate --source path .
+
+build: off
+
+test_script:
+  # run screenshots
+  - echo Run screenshots
+  - cd example
+  - screenshots -c screenshots_android.yaml

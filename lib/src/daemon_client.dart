@@ -2,11 +2,11 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'run.dart' as run;
+import 'utils.dart' as utils;
 
-enum Event { deviceRemoved }
+enum EventType { deviceRemoved }
 
-/// Creates and communicates with flutter daemon.
+/// Starts and communicates with flutter daemon.
 class DaemonClient {
   static final DaemonClient _daemonClient = DaemonClient._internal();
 
@@ -29,14 +29,14 @@ class DaemonClient {
   /// Start flutter tools daemon.
   Future<void> get start async {
     if (!_connected) {
-      _process = await Process.start('flutter', ['daemon']);
+      _process = await Process.start('flutter', ['daemon'], runInShell: true);
       _listen();
       _waitForConnection = Completer<bool>();
       _connected = await _waitForConnection.future;
       // enable device discovery
       await _sendCommandWaitResponse(
           <String, dynamic>{'method': 'device.enable'});
-      _iosDevices = iosDevices();
+      if (Platform.isMacOS) _iosDevices = getIosDevices();
       // wait for device discovery
       await Future.delayed(Duration(milliseconds: 100));
     }
@@ -90,13 +90,15 @@ class DaemonClient {
     }).toList());
   }
 
-  Future<Map> waitForEvent(Event event) async {
+  /// Wait for an event of type [EventType] and return event info.
+  Future<Map> waitForEvent(EventType eventType) async {
     final eventInfo = jsonDecode(await _waitForEvent.future);
-    switch (event) {
-      case Event.deviceRemoved:
+    switch (eventType) {
+      case EventType.deviceRemoved:
+        // event info is a device descriptor
         if (eventInfo.length != 1 ||
             eventInfo[0]['event'] != 'device.removed') {
-          throw 'Error: expected: $event, received: $eventInfo';
+          throw 'Error: expected: $eventType, received: $eventInfo';
         }
         break;
       default:
@@ -181,10 +183,10 @@ class DaemonClient {
 }
 
 /// Get attached ios devices with id and model.
-List iosDevices() {
+List getIosDevices() {
   final regExp = RegExp(r'Found (\w+) \(\w+, (.*), \w+, \w+\)');
   final noAttachedDevices = 'no attached devices';
-  final iosDeployDevices = run
+  final iosDeployDevices = utils
       .cmd(
           'sh', ['-c', 'ios-deploy -c || echo "$noAttachedDevices"'], '.', true)
       .trim()

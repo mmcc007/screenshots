@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'run.dart' as run;
 import 'package:path/path.dart' as p;
+import 'utils.dart' as utils;
 
 class ImageMagick {
   static const _kThreshold = 0.76;
@@ -75,38 +75,50 @@ class ImageMagick {
       default:
         throw 'unknown command: $command';
     }
-    run.cmd('convert', cmdOptions);
+    utils.cmd('magick', [
+      ...['convert'],
+      ...cmdOptions
+    ]);
   }
 
   /// Checks if brightness of section of image exceeds a threshold
   bool thresholdExceeded(String imagePath, String crop,
       [double threshold = _kThreshold]) {
     //convert logo.png -crop $crop_size$offset +repage -colorspace gray -format "%[fx:(mean>$threshold)?1:0]" info:
-    final result = run.cmd(
-        'convert',
-        [
-          imagePath,
-          '-crop',
-          crop,
-          '+repage',
-          '-colorspace',
-          'gray',
-          '-format',
-          '\'%[fx:(mean>$threshold)?1:0]\'',
-          'info:'
-        ],
-        '.',
-        true);
-//  print('result=$result');
-    return result.contains('1'); // looks like there is some junk in string
+    final result = utils
+        .cmd(
+            'magick',
+            [
+              'convert',
+              imagePath,
+              '-crop',
+              crop,
+              '+repage',
+              '-colorspace',
+              'gray',
+              '-format',
+              '""%[fx:(mean>$threshold)?1:0]""',
+              'info:'
+            ],
+            '.',
+            true)
+        .replaceAll('"', '');
+    return result == '1';
   }
 
   bool compare(String comparisonImage, String recordedImage) {
     final diffImage = getDiffName(comparisonImage);
     try {
-      run.cmd(
-          'compare',
-          ['-metric', 'mae', recordedImage, comparisonImage, diffImage],
+      utils.cmd(
+          'magick',
+          [
+            'compare',
+            '-metric',
+            'mae',
+            recordedImage,
+            comparisonImage,
+            diffImage
+          ],
           '.',
           true);
     } catch (e) {

@@ -13,6 +13,8 @@ import 'orientation.dart' as orient;
 import 'resources.dart' as resources;
 import 'screens.dart';
 import 'utils.dart' as utils;
+import 'validate.dart';
+import 'package:path/path.dart' as path;
 
 /// Capture screenshots, process, and load into fastlane according to config file.
 ///
@@ -23,8 +25,9 @@ import 'utils.dart' as utils;
 /// 3. Process the screenshots including adding a frame if required.
 /// 4. Move processed screenshots to fastlane destination for upload to stores.
 /// 5. If not a real device, stop emulator/simulator.
-Future<void> run(
+Future<bool> run(
     [String configPath = kConfigFileName,
+    String configStr,
     String _runMode = 'normal',
     String flavor = kNoFlavor]) async {
   final runMode = utils.getRunModeEnum(_runMode);
@@ -35,24 +38,26 @@ Future<void> run(
   // start flutter daemon
   print('Starting flutter daemon...');
   final daemonClient = DaemonClient();
+//  daemonClient.verbose = true;
   await daemonClient.start;
   // get all attached devices and running emulators/simulators
   final devices = await daemonClient.devices;
   // get all available unstarted android emulators
   // note: unstarted simulators are not properly included in this list
   //       so have to be handled separately
-  final emulators = await daemonClient.emulators;
+  final emulators = (await daemonClient.emulators);
+  emulators.sort(utils.emulatorComparison);
 
-  final config = Config(configPath: configPath);
+  final config = Config(configPath: configPath, configStr: configStr);
   // validate config file
-  // ignore: invalid_use_of_visible_for_testing_member
-  await config.validate(screens, devices, emulators);
+  await validate(config, screens, devices, emulators);
   final configInfo = config.configInfo;
 
   // init
   final stagingDir = configInfo['staging'];
-  await Directory(stagingDir + '/$kTestScreenshotsDir').create(recursive: true);
-  await resources.unpackScripts(stagingDir);
+  await Directory(path.join(stagingDir, kTestScreenshotsDir))
+      .create(recursive: true);
+  if (!Platform.isWindows) await resources.unpackScripts(stagingDir);
   Archive archive = Archive(configInfo['archive']);
   if (runMode == RunMode.archive) {
     print('Archiving screenshots to ${archive.archiveDirPrefix}...');
@@ -69,20 +74,39 @@ Future<void> run(
   print('\n\nScreen images are available in:');
   if (runMode == RunMode.recording) {
     final recordingDir = configInfo['recording'];
-    print('  $recordingDir/ios/fastlane/screenshots');
-    print('  $recordingDir/android/fastlane/metadata/android');
+    printScreenshotDirs(configInfo, recordingDir);
   } else {
     if (runMode == RunMode.archive) {
       print('  ${archive.archiveDirPrefix}');
     } else {
-      print('  ios/fastlane/screenshots');
-      print('  android/fastlane/metadata/android');
-      print('for upload to both Apple and Google consoles.');
+      printScreenshotDirs(configInfo, null);
+      final isIosActive = isRunTypeActive(configInfo, DeviceType.ios);
+      final isAndroidActive = isRunTypeActive(configInfo, DeviceType.android);
+      if (isIosActive && isAndroidActive) {
+        print('for upload to both Apple and Google consoles.');
+      }
+      if (isIosActive && !isAndroidActive) {
+        print('for upload to Apple console.');
+      }
+      if (!isIosActive && isAndroidActive) {
+        print('for upload to Google console.');
+      }
       print('\nFor uploading and other automation options see:');
       print('  https://pub.dartlang.org/packages/fledge');
     }
   }
   print('\nscreenshots completed successfully.');
+  return true;
+}
+
+void printScreenshotDirs(Map configInfo, String dirPrefix) {
+  final prefix = dirPrefix == null ? '' : '${dirPrefix}/';
+  if (isRunTypeActive(configInfo, DeviceType.ios)) {
+    print('  ${prefix}ios/fastlane/screenshots');
+  }
+  if (isRunTypeActive(configInfo, DeviceType.android)) {
+    print('  ${prefix}android/fastlane/metadata/android');
+  }
 }
 
 /// Run the screenshot integration tests on current device, emulator or simulator.
@@ -132,7 +156,7 @@ Future runTestsOnAll(
 
   for (final configDeviceName in configDeviceNames) {
     // look for matching device first
-    final device = _findDevice(devices, emulators, configDeviceName);
+    final device = findDevice(devices, emulators, configDeviceName);
 
     String deviceId;
     Map emulator;
@@ -335,7 +359,8 @@ Future runProcessTests(
           ['-d', deviceId, 'drive', '-t', testPath, '--flavor', flavor]);
     } else {
       print('Running $testPath on \'$configDeviceName\' in locale $locale...');
-      await utils.streamCmd('flutter', ['-d', deviceId, 'drive']..addAll(testPath.split(" ")));
+      await utils.streamCmd(
+          'flutter', ['-d', deviceId, 'drive']..addAll(testPath.split(" ")));
     }
     // process screenshots
     await imageProcessor.process(
@@ -344,14 +369,14 @@ Future runProcessTests(
 }
 
 Future<void> shutdownSimulator(String deviceId) async {
-  cmd('xcrun', ['simctl', 'shutdown', deviceId]);
+  utils.cmd('xcrun', ['simctl', 'shutdown', deviceId]);
   // shutdown apparently needs time when restarting
   // see https://github.com/flutter/flutter/issues/10228 for race condition on simulator
   await Future.delayed(Duration(milliseconds: 2000));
 }
 
 Future<void> startSimulator(DaemonClient daemonClient, String deviceId) async {
-  cmd('xcrun', ['simctl', 'boot', deviceId]);
+  utils.cmd('xcrun', ['simctl', 'boot', deviceId]);
   await Future.delayed(Duration(milliseconds: 2000));
   await waitForEmulatorToStart(daemonClient, deviceId);
 }
@@ -370,7 +395,7 @@ Future<String> _startEmulator(
 }
 
 /// Find a real device or running emulator/simulator for [deviceName].
-Map _findDevice(List devices, List emulators, String deviceName) {
+Map findDevice(List devices, List emulators, String deviceName) {
   final device = devices.firstWhere((device) {
     if (device['platform'] == 'ios') {
       if (device['emulator']) {
@@ -381,8 +406,14 @@ Map _findDevice(List devices, List emulators, String deviceName) {
         return device['model'].contains(deviceName);
       }
     } else {
-      if (device['emulator']) {
-        // running android emulator
+      // platform is android
+      // check if ephemeral is present
+      // note: sometimes a running emulator has device['emulator'] of false
+      //       so using ephemeral for now (may not work for real devices)
+      final isEphemeral =
+          device['ephemeral'] == null ? false : device['ephemeral'];
+      if (isEphemeral || device['emulator']) {
+        // running android emulator ??
         return _findDeviceEmulator(emulators, device['id'])['name'] ==
             deviceName;
       } else {
@@ -435,7 +466,7 @@ Future<void> setEmulatorLocale(String deviceId, testLocale, deviceName) async {
 /// Change local of real android device or running emulator.
 void changeAndroidLocale(
     String deviceId, String deviceLocale, String testLocale) {
-  if (cmd('adb', ['-s', deviceId, 'root'], '.', true) ==
+  if (utils.cmd('adb', ['-s', deviceId, 'root'], '.', true) ==
       'adbd cannot run as root in production builds\n') {
     stdout.write(
         'Warning: locale will not be changed. Running in locale \'$deviceLocale\'.\n');
@@ -445,7 +476,7 @@ void changeAndroidLocale(
         '    https://stackoverflow.com/questions/43923996/adb-root-is-not-working-on-emulator/45668555#45668555 for details.\n');
   }
   // adb shell "setprop persist.sys.locale fr_CA; setprop ctl.restart zygote"
-  cmd('adb', [
+  utils.cmd('adb', [
     '-s',
     deviceId,
     'shell',
@@ -469,9 +500,9 @@ Future _changeSimulatorLocale(
 /// Shutdown an android emulator.
 Future<String> shutdownAndroidEmulator(
     DaemonClient daemonClient, String deviceId) async {
-  cmd('adb', ['-s', deviceId, 'emu', 'kill'], '.', true);
+  utils.cmd('adb', ['-s', deviceId, 'emu', 'kill'], '.', true);
 //  await waitAndroidEmulatorShutdown(deviceId);
-  final device = await daemonClient.waitForEvent(Event.deviceRemoved);
+  final device = await daemonClient.waitForEvent(EventType.deviceRemoved);
   if (device['id'] != deviceId) {
     throw 'Error: device id \'$deviceId\' not shutdown';
   }
@@ -502,8 +533,8 @@ Future _startAndroidEmulatorOnCI(String emulatorId, String stagingDir) async {
 
 /// Find the emulator info of a running device.
 Map _findDeviceEmulator(List emulators, String deviceId) {
-  return emulators.firstWhere(
-      (emulator) => emulator['id'] == utils.getAndroidEmulatorId(deviceId),
+  final emulatorId = utils.getAndroidEmulatorId(deviceId);
+  return emulators.firstWhere((emulator) => emulator['id'] == emulatorId,
       orElse: () => null);
 }
 
@@ -520,20 +551,39 @@ DeviceType getDeviceType(Map configInfo, String deviceName) {
   return deviceType;
 }
 
-/// Execute command [cmd] with arguments [arguments] in a separate process
-/// and return stdout as string.
-///
-/// If [silent] is false, output to stdout.
-String cmd(String cmd, List<String> arguments,
-    [String workingDir = '.', bool silent = false]) {
-//  print(
-//      'cmd=\'$cmd ${arguments.join(" ")}\', workingDir=$workingDir, silent=$silent');
-  final result = Process.runSync(cmd, arguments, workingDirectory: workingDir);
-  if (!silent) stdout.write(result.stdout);
-  if (result.exitCode != 0) {
-    stderr.write(result.stderr);
-    throw 'command failed: exitcode=${result.exitCode}, cmd=\'$cmd ${arguments.join(" ")}\', workingDir=$workingDir, silent=$silent';
+/// Check Image Magick is installed.
+void checkImageMagicInstalled() {
+  bool isInstalled = false;
+  if (Platform.isWindows) {
+    isInstalled = utils.cmd('magick', [], '.', true).isNotEmpty;
+  } else {
+    isInstalled = utils
+        .cmd(
+            'sh',
+            ['-c', 'which convert && echo convert || echo not installed'],
+            '.',
+            true)
+        .toString()
+        .contains('convert');
   }
-  // return stdout
-  return result.stdout;
+  if (!isInstalled) {
+    stderr.write(
+        '#############################################################\n');
+    stderr.write("# You have to install ImageMagick to use Screenshots\n");
+    stderr.write(
+        "# Install it using 'brew update && brew install imagemagick'\n");
+    stderr.write("# If you don't have homebrew: goto http://brew.sh\n");
+    stderr.write(
+        '#############################################################\n');
+    exit(1);
+  }
+}
+
+/// Check for active run type.
+/// Runs can only be one of [DeviceType].
+isRunTypeActive(Map config, DeviceType runType) {
+  final Map devices = config['devices'];
+  final deviceType = utils.getStringFromEnum(runType);
+  final isActive = devices.keys.contains(deviceType);
+  return isActive && devices[deviceType] != null;
 }
