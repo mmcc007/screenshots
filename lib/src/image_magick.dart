@@ -82,7 +82,7 @@ class ImageMagick {
   bool thresholdExceeded(String imagePath, String crop,
       [double threshold = _kThreshold]) {
     //convert logo.png -crop $crop_size$offset +repage -colorspace gray -format "%[fx:(mean>$threshold)?1:0]" info:
-    final result = cmd('convert', [
+    final result = cmd('convert', <String>[
       imagePath,
       '-crop',
       crop,
@@ -99,8 +99,13 @@ class ImageMagick {
   bool compare(String comparisonImage, String recordedImage) {
     final diffImage = getDiffName(comparisonImage);
     try {
-      cmd('compare',
-          ['-metric', 'mae', recordedImage, comparisonImage, diffImage]);
+      cmd('compare', <String>[
+        '-metric',
+        'mae',
+        recordedImage,
+        comparisonImage,
+        diffImage
+      ]);
     } catch (e) {
       return false;
     }
