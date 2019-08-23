@@ -34,8 +34,8 @@ void moveFiles(String srcDir, String dstDir) {
 /// If [silent] is false, output to stdout.
 String cmd(String cmd, List<String> arguments,
     [String workingDir = '.', bool silent = false]) {
-  print(
-      'cmd=\'$cmd ${arguments.join(" ")}\', workingDir=$workingDir, silent=$silent');
+//  print(
+//      'cmd=\'$cmd ${arguments.join(" ")}\', workingDir=$workingDir, silent=$silent');
   final result = Process.runSync(cmd, arguments,
       workingDirectory: workingDir, runInShell: true);
   if (!silent) stdout.write(result.stdout);
@@ -52,8 +52,8 @@ String cmd(String cmd, List<String> arguments,
 Future<void> streamCmd(String cmd, List<String> arguments,
     [String workingDirectory = '.',
     ProcessStartMode mode = ProcessStartMode.normal]) async {
-  print(
-      'streamCmd=\'$cmd ${arguments.join(" ")}\', workingDirectory=$workingDirectory, mode=$mode');
+//  print(
+//      'streamCmd=\'$cmd ${arguments.join(" ")}\', workingDirectory=$workingDirectory, mode=$mode');
   final process = await Process.start(cmd, arguments,
       workingDirectory: workingDirectory, mode: mode, runInShell: true);
 
