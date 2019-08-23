@@ -70,7 +70,12 @@ String getDirPath(
 /// Get android model type (phone or tablet screen size).
 String getAndroidModelType(Map screenProps) {
   String androidDeviceType = kFastlanePhone;
-  if (screenProps != null) androidDeviceType = screenProps['destName'];
+  if (screenProps == null) {
+    print(
+        'Warning: using default value \'$kFastlanePhone\' in fastlane directory.');
+  } else {
+    androidDeviceType = screenProps['destName'];
+  }
   return androidDeviceType;
 }
 
