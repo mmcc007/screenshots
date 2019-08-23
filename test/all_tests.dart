@@ -14,8 +14,8 @@ void main() {
   env_test.main();
   frame_test.main();
   process_images_test.main();
-//  screenshots_yaml_test.main();
+  screenshots_yaml_test.main();
   statusbar_color_test.main();
-//  regression_issue_29_test.main();
+  regression_issue_29_test.main();
   regression_regression_test.main();
 }
