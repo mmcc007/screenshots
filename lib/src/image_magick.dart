@@ -75,52 +75,32 @@ class ImageMagick {
       default:
         throw 'unknown command: $command';
     }
-    utils.cmd('magick', [
-      ...['convert'],
-      ...cmdOptions
-    ]);
+    cmd('convert', cmdOptions);
   }
 
   /// Checks if brightness of section of image exceeds a threshold
   bool thresholdExceeded(String imagePath, String crop,
       [double threshold = _kThreshold]) {
     //convert logo.png -crop $crop_size$offset +repage -colorspace gray -format "%[fx:(mean>$threshold)?1:0]" info:
-    final result = utils
-        .cmd(
-            'magick',
-            [
-              'convert',
-              imagePath,
-              '-crop',
-              crop,
-              '+repage',
-              '-colorspace',
-              'gray',
-              '-format',
-              '""%[fx:(mean>$threshold)?1:0]""',
-              'info:'
-            ],
-            '.',
-            true)
-        .replaceAll('"', '');
+    final result = cmd('convert', [
+      imagePath,
+      '-crop',
+      crop,
+      '+repage',
+      '-colorspace',
+      'gray',
+      '-format',
+      '""%[fx:(mean>$threshold)?1:0]""',
+      'info:'
+    ]).replaceAll('"', '');
     return result == '1';
   }
 
   bool compare(String comparisonImage, String recordedImage) {
     final diffImage = getDiffName(comparisonImage);
     try {
-      utils.cmd(
-          'magick',
-          [
-            'compare',
-            '-metric',
-            'mae',
-            recordedImage,
-            comparisonImage,
-            diffImage
-          ],
-          '.',
-          true);
+      cmd('compare',
+          ['-metric', 'mae', recordedImage, comparisonImage, diffImage]);
     } catch (e) {
       return false;
     }
@@ -144,5 +124,22 @@ class ImageMagick {
         .where((fileSysEntity) =>
             p.basename(fileSysEntity.path).contains(diffSuffix))
         .forEach((diffImage) => File(diffImage.path).deleteSync());
+  }
+
+  /// ImageMagick command
+  String cmd(String cmd, List cmdArgs) {
+    // windows uses ImageMagick v7 or later
+    if (Platform.isWindows) {
+      return utils.cmd(
+          'magick',
+          [
+            ...[cmd],
+            ...cmdArgs
+          ],
+          '.',
+          true);
+    } else {
+      return utils.cmd(cmd, cmdArgs, '.', true);
+    }
   }
 }
