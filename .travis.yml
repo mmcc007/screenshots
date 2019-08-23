@@ -28,7 +28,8 @@ jobs:
 #        - sudo apt-get install imagemagick
 #        - sudo apt-get update
 #        - sudo apt-get install --only-upgrade imagemagick
-        - sudo apt-get install build-essential checkinstall && apt-get build-dep imagemagick -y
+        - sudo apt-get install build-essential checkinstall
+        - sudo apt-get build-dep imagemagick -y
         - wget http://www.imagemagick.org/download/ImageMagick.tar.gz
         - tar xzvf ImageMagick.tar.gz
         - cd ImageMagick*
