@@ -662,12 +662,13 @@ devices:
       final defaultPhone = 'default phone';
       final defaultSevenInch = 'default seven inch';
       final defaultTenInch = 'default ten inch';
+      final unknownDevice = 'unknown device';
       final phones = {
         defaultPhone: fastlane.kFastlanePhone,
+        unknownDevice: fastlane.kFastlanePhone,
         'Nexus 5X': fastlane.kFastlanePhone,
         'Nexus 6': fastlane.kFastlanePhone,
         'Nexus 6P': fastlane.kFastlanePhone,
-        'unknown device': fastlane.kFastlanePhone
       };
       final sevenInches = {defaultSevenInch: fastlane.kFastlaneSevenInch};
       final tenInches = {
@@ -678,17 +679,16 @@ devices:
       final screens = Screens();
       await screens.init();
       for (final androidDeviceName in androidDeviceNames.keys) {
-        print('androidDeviceName=$androidDeviceName');
         final screenProps = screens.screenProps(androidDeviceName);
-//        expect(screenProps, isNotNull);
         expect(fastlane.getAndroidModelType(screenProps),
             androidDeviceNames[androidDeviceName]);
       }
 
-      // handle unknown device
-      final unknownDevice = 'unknown device';
+      // confirm handling of unknown device
       final screenProps = screens.screenProps(unknownDevice);
       expect(screenProps, isNull);
+      expect(
+          fastlane.getAndroidModelType(screenProps), fastlane.kFastlanePhone);
     });
   });
 

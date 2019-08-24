@@ -210,8 +210,9 @@ void _reportSupportedDevices(Screens screens) {
     if (!(!Platform.isMacOS && os == 'ios')) {
       stdout.write('    $os:\n');
       v.forEach((screenId, screenProps) {
-        // omit devices that are used to identify android model type
-        if (_isAndroidModelTypeScreen(screenProps)) {
+        // omit devices that have screens that are
+        // only used to identify android model type
+        if (!_isAndroidModelTypeScreen(screenProps)) {
           for (String device in screenProps['devices']) {
             stdout.write('      $device\n');
           }
@@ -222,7 +223,7 @@ void _reportSupportedDevices(Screens screens) {
 }
 
 /// Test for screen used for identifying android model type
-bool _isAndroidModelTypeScreen(screenProps) => screenProps['size'] != null;
+bool _isAndroidModelTypeScreen(screenProps) => screenProps['size'] == null;
 
 void _reportAttachedDevices(List devices) {
   stdout.write('\n  Attached devices:\n');
