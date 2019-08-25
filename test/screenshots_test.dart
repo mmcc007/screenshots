@@ -20,7 +20,7 @@ import 'package:screenshots/src/fastlane.dart' as fastlane;
 import 'package:path/path.dart' as p;
 
 import '../bin/main.dart';
-import 'common.dart';
+import 'src/common.dart';
 
 void main() {
   test('screen info for device: Nexus 5X', () async {
