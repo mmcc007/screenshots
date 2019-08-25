@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:process/process.dart';
 import 'package:screenshots/screenshots.dart';
+import 'package:screenshots/src/base/process.dart';
 import 'package:screenshots/src/config.dart';
 import 'package:screenshots/src/daemon_client.dart';
 import 'package:screenshots/src/globals.dart';
@@ -79,7 +80,7 @@ void main() {
       'statusbarPath': statusbarPath,
     };
     await im.convert('overlay', options);
-    utils.cmd('git', ['checkout', screenshotPath]);
+    cmd(['git', 'checkout', screenshotPath]);
   });
 
   test('unpack screen resource images', () async {
@@ -109,7 +110,7 @@ void main() {
       'screenshotNavbarPath': screenshotNavbarPath,
     };
     await im.convert('append', options);
-    utils.cmd('git', ['checkout', screenshotPath]);
+    cmd(['git', 'checkout', screenshotPath]);
   });
 
   test('frame screenshot', () async {
@@ -134,7 +135,7 @@ void main() {
       'backgroundColor': ImageProcessor.kDefaultAndroidBackground,
     };
     await im.convert('frame', options);
-    utils.cmd('git', ['checkout', screenshotPath]);
+    cmd(['git', 'checkout', screenshotPath]);
   });
 
   test('parse json xcrun simctl list devices', () {
@@ -212,7 +213,7 @@ void main() {
     }
     // cleanup
     fastlane.deleteMatchingFiles(dirPath, RegExp(prefix));
-    utils.cmd('git', ['checkout', dirPath]);
+    cmd(['git', 'checkout', dirPath]);
   });
 
   test('rooted emulator', () async {
@@ -222,7 +223,7 @@ void main() {
     final daemonClient = DaemonClient();
     await daemonClient.start;
     final deviceId = await daemonClient.launchEmulator(emulatorId);
-    final result = utils.cmd('adb', ['root'], '.', true);
+    final result = cmd(['adb', 'root']);
     expect(result, 'adbd cannot run as root in production builds\n');
     expect(await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
   }, skip: utils.isCI());
@@ -305,20 +306,20 @@ void main() {
   test('start emulator on travis', () async {
     final androidHome = Platform.environment['ANDROID_HOME'];
     final emulatorName = 'Nexus_6P_API_27';
-    await utils.streamCmd(
+    await streamCmd(
+      [
         '$androidHome/emulator/emulator',
-        [
-          '-avd',
-          emulatorName,
-          '-no-audio',
-          '-no-window',
-          '-no-snapshot',
-          '-gpu',
-          'swiftshader',
-        ],
-        '.',
-        ProcessStartMode.detached);
-  }, skip: utils.isCI());
+        '-avd',
+        emulatorName,
+        '-no-audio',
+        '-no-window',
+        '-no-snapshot',
+        '-gpu',
+        'swiftshader',
+      ],
+//        ProcessStartMode.detached
+    );
+  }, skip: true);
 
   test('change locale on android and test', () async {
     final emulatorId = 'Nexus_6P_API_28';
@@ -342,7 +343,8 @@ void main() {
     await run.setEmulatorLocale(deviceId, newLocale, deviceName);
 
     // run test
-    await utils.streamCmd('flutter', ['drive', testAppSrcPath], testAppDir);
+    await streamCmd(['flutter', 'drive', testAppSrcPath],
+        workingDirectory: testAppDir);
 
     // restore orig locale
     await run.setEmulatorLocale(deviceId, origLocale, deviceName);
@@ -391,8 +393,8 @@ void main() {
     await run.startSimulator(daemonClient, deviceId);
 
     // run test
-    await utils.streamCmd(
-        'flutter', ['-d', deviceId, 'drive', testAppSrcPath], testAppDir);
+    await streamCmd(['flutter', '-d', deviceId, 'drive', testAppSrcPath],
+        workingDirectory: testAppDir);
 
     // stop simulator
     await run.shutdownSimulator(deviceId);
@@ -655,7 +657,7 @@ devices:
       fastlane.deleteMatchingFiles(dirPath, pattern);
       expect(filesPresent(dirPath, pattern), isEmpty);
       // restore deleted files
-      utils.cmd('git', ['checkout', dirPath]);
+      cmd(['git', 'checkout', dirPath]);
     });
   });
 
@@ -677,8 +679,7 @@ devices:
         final filePath = fsEntity.path;
 //        print('filePath=$filePath');
         try {
-          utils.cmd('plutil', ['-convert', 'xml1', '-r', '-o', '-', filePath],
-              '.', true);
+          cmd(['plutil', '-convert', 'xml1', '-r', '-o', '-', filePath]);
 //          print('contents=$contents');
         } catch (e) {
           print('error: $e');

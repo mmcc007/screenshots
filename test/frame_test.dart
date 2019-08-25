@@ -1,10 +1,10 @@
+import 'package:screenshots/src/base/process.dart';
 import 'package:screenshots/src/config.dart';
 import 'package:screenshots/src/globals.dart';
 import 'package:screenshots/src/image_processor.dart';
 import 'package:screenshots/src/resources.dart' as resources;
 import 'package:screenshots/src/screens.dart';
 import 'package:test/test.dart';
-import 'package:screenshots/src/utils.dart' as utils;
 
 main() {
   test('frame Nexus 9', () async {
@@ -51,6 +51,6 @@ main() {
     };
     print('options=$options');
     await im.convert('frame', options);
-    utils.cmd('git', ['checkout', screenshotPath]);
+    cmd(['git', 'checkout', screenshotPath]);
   });
 }

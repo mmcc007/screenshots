@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:intl/intl.dart';
 
 import 'archive.dart';
+import 'base/process.dart';
 import 'config.dart';
 import 'daemon_client.dart';
 import 'fastlane.dart' as fastlane;
@@ -355,12 +356,20 @@ Future runProcessTests(
     if (flavor != null && flavor != kNoFlavor) {
       print(
           'Running $testPath on \'$configDeviceName\' in locale $locale with flavor $flavor ...');
-      await utils.streamCmd('flutter',
-          ['-d', deviceId, 'drive', '-t', testPath, '--flavor', flavor]);
+      await streamCmd([
+        'flutter',
+        '-d',
+        deviceId,
+        'drive',
+        '-t',
+        testPath,
+        '--flavor',
+        flavor
+      ]);
     } else {
       print('Running $testPath on \'$configDeviceName\' in locale $locale...');
-      await utils.streamCmd(
-          'flutter', ['-d', deviceId, 'drive']..addAll(testPath.split(" ")));
+      await streamCmd(
+          ['flutter', '-d', deviceId, 'drive']..addAll(testPath.split(" ")));
     }
     // process screenshots
     await imageProcessor.process(
@@ -369,14 +378,14 @@ Future runProcessTests(
 }
 
 Future<void> shutdownSimulator(String deviceId) async {
-  utils.cmd('xcrun', ['simctl', 'shutdown', deviceId]);
+  cmd(['xcrun', 'simctl', 'shutdown', deviceId]);
   // shutdown apparently needs time when restarting
   // see https://github.com/flutter/flutter/issues/10228 for race condition on simulator
   await Future.delayed(Duration(milliseconds: 2000));
 }
 
 Future<void> startSimulator(DaemonClient daemonClient, String deviceId) async {
-  utils.cmd('xcrun', ['simctl', 'boot', deviceId]);
+  cmd(['xcrun', 'simctl', 'boot', deviceId]);
   await Future.delayed(Duration(milliseconds: 2000));
   await waitForEmulatorToStart(daemonClient, deviceId);
 }
@@ -466,7 +475,7 @@ Future<void> setEmulatorLocale(String deviceId, testLocale, deviceName) async {
 /// Change local of real android device or running emulator.
 void changeAndroidLocale(
     String deviceId, String deviceLocale, String testLocale) {
-  if (utils.cmd('adb', ['-s', deviceId, 'root'], '.', true) ==
+  if (cmd(['adb', '-s', deviceId, 'root']) ==
       'adbd cannot run as root in production builds\n') {
     stdout.write(
         'Warning: locale will not be changed. Running in locale \'$deviceLocale\'.\n');
@@ -476,7 +485,8 @@ void changeAndroidLocale(
         '    https://stackoverflow.com/questions/43923996/adb-root-is-not-working-on-emulator/45668555#45668555 for details.\n');
   }
   // adb shell "setprop persist.sys.locale fr_CA; setprop ctl.restart zygote"
-  utils.cmd('adb', [
+  cmd([
+    'adb',
     '-s',
     deviceId,
     'shell',
@@ -493,14 +503,18 @@ void changeAndroidLocale(
 /// Change locale of non-running simulator.
 Future _changeSimulatorLocale(
     String stagingDir, String name, String testLocale) async {
-  await utils.streamCmd('$stagingDir/resources/script/simulator-controller',
-      [name, 'locale', testLocale]);
+  await streamCmd([
+    '$stagingDir/resources/script/simulator-controller',
+    name,
+    'locale',
+    testLocale
+  ]);
 }
 
 /// Shutdown an android emulator.
 Future<String> shutdownAndroidEmulator(
     DaemonClient daemonClient, String deviceId) async {
-  utils.cmd('adb', ['-s', deviceId, 'emu', 'kill'], '.', true);
+  cmd(['adb', '-s', deviceId, 'emu', 'kill']);
 //  await waitAndroidEmulatorShutdown(deviceId);
   final device = await daemonClient.waitForEvent(EventType.deviceRemoved);
   if (device['id'] != deviceId) {
@@ -513,22 +527,21 @@ Future<String> shutdownAndroidEmulator(
 Future _startAndroidEmulatorOnCI(String emulatorId, String stagingDir) async {
   // testing on CI/CD requires starting emulator in a specific way
   final androidHome = Platform.environment['ANDROID_HOME'];
-  await utils.streamCmd(
+  await streamCmd(
+    [
       '$androidHome/emulator/emulator',
-      [
-        '-avd',
-        emulatorId,
-        '-no-audio',
-        '-no-window',
-        '-no-snapshot',
-        '-gpu',
-        'swiftshader',
-      ],
-      '.',
-      ProcessStartMode.detached);
+      '-avd',
+      emulatorId,
+      '-no-audio',
+      '-no-window',
+      '-no-snapshot',
+      '-gpu',
+      'swiftshader',
+    ],
+//      ProcessStartMode.detached
+  );
   // wait for emulator to start
-  await utils
-      .streamCmd('$stagingDir/resources/script/android-wait-for-emulator', []);
+  await streamCmd(['$stagingDir/resources/script/android-wait-for-emulator']);
 }
 
 /// Find the emulator info of a running device.
@@ -555,16 +568,14 @@ DeviceType getDeviceType(Map configInfo, String deviceName) {
 void checkImageMagicInstalled() {
   bool isInstalled = false;
   if (Platform.isWindows) {
-    isInstalled = utils.cmd('magick', [], '.', true).isNotEmpty;
+    isInstalled = cmd([
+      'magick',
+    ]).isNotEmpty;
   } else {
-    isInstalled = utils
-        .cmd(
-            'sh',
-            ['-c', 'which convert && echo convert || echo not installed'],
-            '.',
-            true)
-        .toString()
-        .contains('convert');
+    isInstalled =
+        cmd(['sh', '-c', 'which convert && echo convert || echo not installed'])
+            .toString()
+            .contains('convert');
   }
   if (!isInstalled) {
     stderr.write(

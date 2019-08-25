@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'utils.dart' as utils;
+import 'base/process.dart';
 
 enum EventType { deviceRemoved }
 
@@ -186,13 +186,13 @@ class DaemonClient {
 List getIosDevices() {
   final regExp = RegExp(r'Found (\w+) \(\w+, (.*), \w+, \w+\)');
   final noAttachedDevices = 'no attached devices';
-  final iosDeployDevices = utils
-      .cmd(
-          'sh', ['-c', 'ios-deploy -c || echo "$noAttachedDevices"'], '.', true)
-      .trim()
-      .split('\n')
-      .sublist(1);
-  if (iosDeployDevices.isEmpty || iosDeployDevices[0] == noAttachedDevices) return [];
+  final iosDeployDevices =
+      cmd(['sh', '-c', 'ios-deploy -c || echo "$noAttachedDevices"'])
+          .trim()
+          .split('\n')
+          .sublist(1);
+  if (iosDeployDevices.isEmpty || iosDeployDevices[0] == noAttachedDevices)
+    return [];
   return iosDeployDevices.map((line) {
     final matches = regExp.firstMatch(line);
     final device = {};

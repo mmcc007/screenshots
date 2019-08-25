@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:path/path.dart' as p;
-import 'utils.dart' as utils;
+import 'base/process.dart';
 
 class ImageMagick {
   static const _kThreshold = 0.76;
@@ -75,14 +75,14 @@ class ImageMagick {
       default:
         throw 'unknown command: $command';
     }
-    cmd('convert', cmdOptions);
+    _cmd('convert', cmdOptions);
   }
 
   /// Checks if brightness of section of image exceeds a threshold
   bool thresholdExceeded(String imagePath, String crop,
       [double threshold = _kThreshold]) {
     //convert logo.png -crop $crop_size$offset +repage -colorspace gray -format "%[fx:(mean>$threshold)?1:0]" info:
-    final result = cmd('convert', <String>[
+    final result = _cmd('convert', <String>[
       imagePath,
       '-crop',
       crop,
@@ -99,7 +99,7 @@ class ImageMagick {
   bool compare(String comparisonImage, String recordedImage) {
     final diffImage = getDiffName(comparisonImage);
     try {
-      cmd('compare', <String>[
+      _cmd('compare', <String>[
         '-metric',
         'mae',
         recordedImage,
@@ -132,19 +132,19 @@ class ImageMagick {
   }
 
   /// ImageMagick command
-  String cmd(String cmd, List cmdArgs) {
+  String _cmd(String imCmd, List imCmdArgs) {
     // windows uses ImageMagick v7 or later
     if (Platform.isWindows) {
-      return utils.cmd(
-          'magick',
-          [
-            ...[cmd],
-            ...cmdArgs
-          ],
-          '.',
-          true);
+      return cmd([
+        ...['magick'],
+        ...[imCmd],
+        ...imCmdArgs
+      ]);
     } else {
-      return utils.cmd(cmd, cmdArgs, '.', true);
+      return cmd([
+        ...[imCmd],
+        ...imCmdArgs
+      ]);
     }
   }
 }

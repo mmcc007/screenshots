@@ -1,3 +1,4 @@
+import 'base/process.dart';
 import 'globals.dart';
 import 'utils.dart' as utils;
 
@@ -24,7 +25,8 @@ void changeDeviceOrientation(DeviceType deviceType, Orientation orientation,
   print('Setting orientation to $_orientation');
   switch (deviceType) {
     case DeviceType.android:
-      utils.cmd('adb', [
+      cmd([
+        'adb',
         '-s',
         deviceId,
         'shell',
@@ -37,11 +39,11 @@ void changeDeviceOrientation(DeviceType deviceType, Orientation orientation,
       break;
     case DeviceType.ios:
       // requires permission when run for first time
-      utils.cmd(
-          'osascript',
-          ['$scriptDir/$sim_orientation_script', iosOrientations[_orientation]],
-          '.',
-          true);
+      cmd([
+        'osascript',
+        '$scriptDir/$sim_orientation_script',
+        iosOrientations[_orientation]
+      ]);
       break;
   }
 }
