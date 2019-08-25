@@ -18,6 +18,7 @@ dependencies:
   process: ^3.0.9
   meta: ^1.1.6
   intl: ^0.15.8
+  logging: ^0.11.3+2
 
 dev_dependencies:
   test: ^1.5.1+1
