@@ -39,7 +39,8 @@ install:
   # install imagemagick
   - SET MAGICK_HOME=\imagemagick
   - echo Install ImageMagick
-  - curl https://imagemagick.org/download/binaries/ImageMagick-7.0.8-61-Q8-x64-dll.exe -o imagemagick_installer.exe
+  # (older binaries are not archived, so have to increment the version when released!
+  - curl https://imagemagick.org/download/binaries/ImageMagick-7.0.8-62-Q8-x64-dll.exe -o imagemagick_installer.exe
   - .\imagemagick_installer.exe /SP /VERYSILENT /DIR=%MAGICK_HOME% /COMPONENTS=legacy_support
   - del imagemagick_installer.exe
   - refreshenv

@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:process/process.dart';
 import 'package:yaml/yaml.dart';
+import 'base/process.dart';
 import 'globals.dart';
 
 /// Parse a yaml file.
@@ -28,61 +29,11 @@ void moveFiles(String srcDir, String dstDir) {
   });
 }
 
-/// Execute command [cmd] with arguments [arguments] in a separate process
-/// and return stdout as string.
-///
-/// If [silent] is false, output to stdout.
-String cmd(String cmd, List<String> arguments,
-    [String workingDir = '.', bool silent = false]) {
-//  print(
-//      'cmd=\'$cmd ${arguments.join(" ")}\', workingDir=$workingDir, silent=$silent');
-  final result = Process.runSync(cmd, arguments,
-      workingDirectory: workingDir, runInShell: true);
-  if (!silent) stdout.write(result.stdout);
-  if (result.exitCode != 0) {
-    stderr.write(result.stderr);
-    throw 'command failed: exitcode=${result.exitCode}, cmd=\'$cmd ${arguments.join(" ")}\', workingDir=$workingDir, silent=$silent';
-  }
-  // return stdout
-  return result.stdout;
-}
-
-/// Execute command [cmd] with arguments [arguments] in a separate process
-/// and stream stdout/stderr.
-Future<void> streamCmd(String cmd, List<String> arguments,
-    [String workingDirectory = '.',
-    ProcessStartMode mode = ProcessStartMode.normal]) async {
-//  print(
-//      'streamCmd=\'$cmd ${arguments.join(" ")}\', workingDirectory=$workingDirectory, mode=$mode');
-  final process = await Process.start(cmd, arguments,
-      workingDirectory: workingDirectory, mode: mode, runInShell: true);
-
-  if (mode == ProcessStartMode.normal) {
-    final stdoutFuture = process.stdout
-        .transform(cnv.utf8.decoder)
-        .transform(cnv.LineSplitter())
-        .listen(stdout.writeln)
-        .asFuture();
-    final stderrFuture = process.stderr
-        .transform(cnv.utf8.decoder)
-        .transform(cnv.LineSplitter())
-        .listen(stderr.writeln)
-        .asFuture();
-    await Future.wait([stdoutFuture, stderrFuture]);
-
-    final exitCode = await process.exitCode;
-    if (exitCode != 0) {
-      throw 'command failed: exitcode=$exitCode, cmd=\'$cmd ${arguments.join(" ")}\', workingDirectory=$workingDirectory, mode=$mode';
-    }
-  }
-}
-
 /// Creates a list of available iOS simulators.
 /// (really just concerned with simulators for now).
 /// Provides access to their IDs and status'.
 Map getIosSimulators() {
-  final simulators =
-      cmd('xcrun', ['simctl', 'list', 'devices', '--json'], '.', true);
+  final simulators = cmd(['xcrun', 'simctl', 'list', 'devices', '--json']);
   final simulatorsInfo = cnv.jsonDecode(simulators)['devices'];
   return transformIosSimulators(simulatorsInfo);
 }
@@ -159,7 +110,7 @@ String getHighestIosVersion(Map iOSVersions) {
 
 /// Create list of avds,
 List<String> getAvdNames() {
-  return cmd('emulator', ['-list-avds'], '.', true).split('\n');
+  return cmd(['emulator', '-list-avds']).split('\n');
 }
 
 /// Get the highest available avd version for the android emulator.
@@ -197,12 +148,11 @@ T getEnumFromString<T>(List<T> values, String value) {
 String getAndroidDeviceLocale(String deviceId) {
 // ro.product.locale is available on first boot but does not update,
 // persist.sys.locale is empty on first boot but updates with locale changes
-  String locale = cmd('adb',
-          ['-s', deviceId, 'shell', 'getprop persist.sys.locale'], '.', true)
-      .trim();
+  String locale =
+      cmd(['adb', '-s', deviceId, 'shell', 'getprop persist.sys.locale'])
+          .trim();
   if (locale.isEmpty) {
-    locale = cmd('adb', ['-s', deviceId, 'shell', 'getprop ro.product.locale'],
-            '.', true)
+    locale = cmd(['adb', '-s', deviceId, 'shell', 'getprop ro.product.locale'])
         .trim();
   }
   return locale;
@@ -213,8 +163,8 @@ String getIosSimulatorLocale(String udId) {
   final env = Platform.environment;
   final settingsPath =
       '${env['HOME']}/Library/Developer/CoreSimulator/Devices/$udId/data/Library/Preferences/.GlobalPreferences.plist';
-  final localeInfo = cnv.jsonDecode(
-      cmd('plutil', ['-convert', 'json', '-o', '-', settingsPath], '.', true));
+  final localeInfo = cnv
+      .jsonDecode(cmd(['plutil', '-convert', 'json', '-o', '-', settingsPath]));
   final locale = localeInfo['AppleLocale'];
   return locale;
 }
@@ -223,7 +173,7 @@ String getIosSimulatorLocale(String udId) {
 /// Returns emulator id as [String].
 String getAndroidEmulatorId(String deviceId) {
   // get name of avd of running emulator
-  return cmd('adb', ['-s', deviceId, 'emu', 'avd', 'name'], '.', true)
+  return cmd(['adb', '-s', deviceId, 'emu', 'avd', 'name'])
       .split('\r\n')
       .map((line) => line.trim())
       .first;
@@ -241,7 +191,7 @@ String findAndroidDeviceId(String emulatorId) {
 
 /// Get the list of running android devices by id.
 List<String> getAndroidDeviceIds() {
-  return cmd('adb', ['devices'], '.', true)
+  return cmd(['adb', 'devices'])
       .trim()
       .split('\n')
       .sublist(1) // remove first line
@@ -251,11 +201,12 @@ List<String> getAndroidDeviceIds() {
 
 /// Stop an android emulator.
 Future stopAndroidEmulator(String deviceId, String stagingDir) async {
-  cmd('adb', ['-s', deviceId, 'emu', 'kill']);
+  cmd(['adb', '-s', deviceId, 'emu', 'kill']);
   // wait for emulator to stop
-  await streamCmd(
-      '$stagingDir/resources/script/android-wait-for-emulator-to-stop',
-      [deviceId]);
+  await streamCmd([
+    '$stagingDir/resources/script/android-wait-for-emulator-to-stop',
+    deviceId
+  ]);
 }
 
 /// Wait for android device/emulator locale to change.
@@ -313,7 +264,7 @@ Map getDeviceFromId(List devices, String deviceId) {
 /// Wait for message to appear in sys log and return first matching line
 Future<String> waitSysLogMsg(
     String deviceId, RegExp regExp, String locale) async {
-  cmd('adb', ['-s', deviceId, 'logcat', '-c']);
+  cmd(['adb', '-s', deviceId, 'logcat', '-c']);
   await Future.delayed(Duration(milliseconds: 1000)); // wait for log to clear
   // -b main ContactsDatabaseHelper:I '*:S'
   final delegate = await Process.start('adb', [

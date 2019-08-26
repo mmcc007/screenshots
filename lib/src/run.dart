@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:intl/intl.dart';
 
 import 'archive.dart';
+import 'base/process.dart';
 import 'config.dart';
 import 'daemon_client.dart';
 import 'fastlane.dart' as fastlane;
@@ -26,18 +27,24 @@ import 'package:path/path.dart' as path;
 /// 4. Move processed screenshots to fastlane destination for upload to stores.
 /// 5. If not a real device, stop emulator/simulator.
 Future<bool> run(
-    [String configPath = kConfigFileName,
+    {String configPath = kConfigFileName,
     String configStr,
-    String _runMode = 'normal',
-    String flavor = kNoFlavor]) async {
-  final runMode = utils.getRunModeEnum(_runMode);
+    String mode = 'normal',
+    String flavor = kNoFlavor,
+    DaemonClient client}) async {
+  final runMode = utils.getRunModeEnum(mode);
 
   final screens = Screens();
   await screens.init();
 
-  // start flutter daemon
-  print('Starting flutter daemon...');
-  final daemonClient = DaemonClient();
+  DaemonClient daemonClient;
+  if (client == null) {
+    // start flutter daemon
+    print('Starting flutter daemon...');
+    daemonClient = DaemonClient();
+  } else {
+    daemonClient = client;
+  }
 //  daemonClient.verbose = true;
   await daemonClient.start;
   // get all attached devices and running emulators/simulators
@@ -118,7 +125,7 @@ void printScreenshotDirs(Map configInfo, String dirPrefix) {
 /// provided [capture_screen.screenshot()].
 Future runTestsOnAll(
     DaemonClient daemonClient,
-    List devices,
+    List runningDevices,
     List emulators,
     Config config,
     Screens screens,
@@ -155,8 +162,10 @@ Future runTestsOnAll(
   }
 
   for (final configDeviceName in configDeviceNames) {
-    // look for matching device first
-    final device = findDevice(devices, emulators, configDeviceName);
+    // look for matching device first.
+    // Note: flutter daemon handles devices and running emulators/simulators as devices.
+    final device =
+        findRunningDevice(runningDevices, emulators, configDeviceName);
 
     String deviceId;
     Map emulator;
@@ -178,7 +187,7 @@ Future runTestsOnAll(
         simulator = utils.getHighestIosSimulator(
             utils.getIosSimulators(), configDeviceName);
         deviceId = simulator['udid'];
-        // check if current device is pending a locale change
+        // check if current simulator is pending a locale change
         if (Intl.canonicalizedLocale(locales[0]) ==
             Intl.canonicalizedLocale(utils.getIosSimulatorLocale(deviceId))) {
           print('Starting $configDeviceName...');
@@ -190,30 +199,26 @@ Future runTestsOnAll(
         }
       }
     }
+
+    // a device is now found
+    // (and running if not ios simulator pending locale change)
     deviceId == null
         ? throw 'Error: device \'$configDeviceName\' not found'
-        : null;
+        : Null;
 
+    // set locale and run tests
     final deviceType = getDeviceType(configInfo, configDeviceName);
-    // if device is real ios or android, cannot change locale
     if (device != null && !device['emulator']) {
+      // device is real
       final defaultLocale = 'en_US'; // todo: need actual locale of real device
       print('Warning: the locale of a real device cannot be changed.');
-      await runProcessTests(
-          config,
-          screens,
-          configDeviceName,
-          defaultLocale,
-          deviceType,
-          testPaths,
-          deviceId,
-          imageProcessor,
-          runMode,
-          archive,
-          'unknown',
-          flavor);
+      print('Warning: currently defaulting to locale $defaultLocale.');
+      await runProcessTests(configDeviceName, defaultLocale, deviceType,
+          testPaths, deviceId, imageProcessor, runMode, archive, flavor);
     } else {
-      // Function to check for a running android device or emulator
+      // device is emulated
+
+      // Function to check for a running android device or emulator.
       bool isRunningAndroidDeviceOrEmulator(Map device, Map emulator) {
         return (device != null && device['platform'] != 'ios') ||
             (device == null && emulator != null);
@@ -304,20 +309,14 @@ Future runTestsOnAll(
           }
         }
 
+        // store env for later use by tests
+        // ignore: invalid_use_of_visible_for_testing_member
+        await config.storeEnv(screens, configDeviceName, locale,
+            utils.getStringFromEnum(deviceType), deviceOrientation);
+
         // run tests and process images
-        await runProcessTests(
-            config,
-            screens,
-            configDeviceName,
-            locale,
-            deviceType,
-            testPaths,
-            deviceId,
-            imageProcessor,
-            runMode,
-            archive,
-            deviceOrientation,
-            flavor);
+        await runProcessTests(configDeviceName, locale, deviceType, testPaths,
+            deviceId, imageProcessor, runMode, archive, flavor);
       }
 
       // if an emulator was started, revert locale if necessary and shut it down
@@ -325,6 +324,7 @@ Future runTestsOnAll(
         await setEmulatorLocale(deviceId, origAndroidLocale, configDeviceName);
         await shutdownAndroidEmulator(daemonClient, deviceId);
       }
+      // if a simulator was started, revert locale if necessary and shut it down
       if (simulator != null) {
         await setSimulatorLocale(deviceId, configDeviceName, origIosLocale,
             stagingDir, daemonClient);
@@ -335,8 +335,6 @@ Future runTestsOnAll(
 }
 
 Future runProcessTests(
-    Config config,
-    Screens screens,
     configDeviceName,
     String locale,
     DeviceType deviceType,
@@ -345,22 +343,25 @@ Future runProcessTests(
     ImageProcessor imageProcessor,
     RunMode runMode,
     Archive archive,
-    String orientation,
     String flavor) async {
-  // store env for later use by tests
-  // ignore: invalid_use_of_visible_for_testing_member
-  await config.storeEnv(screens, configDeviceName, locale,
-      utils.getStringFromEnum(deviceType), orientation);
   for (final testPath in testPaths) {
     if (flavor != null && flavor != kNoFlavor) {
       print(
           'Running $testPath on \'$configDeviceName\' in locale $locale with flavor $flavor ...');
-      await utils.streamCmd('flutter',
-          ['-d', deviceId, 'drive', '-t', testPath, '--flavor', flavor]);
+      await streamCmd([
+        'flutter',
+        '-d',
+        deviceId,
+        'drive',
+        '-t',
+        testPath,
+        '--flavor',
+        flavor
+      ]);
     } else {
       print('Running $testPath on \'$configDeviceName\' in locale $locale...');
-      await utils.streamCmd(
-          'flutter', ['-d', deviceId, 'drive']..addAll(testPath.split(" ")));
+      await streamCmd(
+          ['flutter', '-d', deviceId, 'drive']..addAll(testPath.split(" ")));
     }
     // process screenshots
     await imageProcessor.process(
@@ -369,14 +370,14 @@ Future runProcessTests(
 }
 
 Future<void> shutdownSimulator(String deviceId) async {
-  utils.cmd('xcrun', ['simctl', 'shutdown', deviceId]);
+  cmd(['xcrun', 'simctl', 'shutdown', deviceId]);
   // shutdown apparently needs time when restarting
   // see https://github.com/flutter/flutter/issues/10228 for race condition on simulator
   await Future.delayed(Duration(milliseconds: 2000));
 }
 
 Future<void> startSimulator(DaemonClient daemonClient, String deviceId) async {
-  utils.cmd('xcrun', ['simctl', 'boot', deviceId]);
+  cmd(['xcrun', 'simctl', 'boot', deviceId]);
   await Future.delayed(Duration(milliseconds: 2000));
   await waitForEmulatorToStart(daemonClient, deviceId);
 }
@@ -395,7 +396,8 @@ Future<String> _startEmulator(
 }
 
 /// Find a real device or running emulator/simulator for [deviceName].
-Map findDevice(List devices, List emulators, String deviceName) {
+/// Note: flutter daemon handles devices and running emulators/simulators as devices.
+Map findRunningDevice(List devices, List emulators, String deviceName) {
   final device = devices.firstWhere((device) {
     if (device['platform'] == 'ios') {
       if (device['emulator']) {
@@ -414,7 +416,7 @@ Map findDevice(List devices, List emulators, String deviceName) {
           device['ephemeral'] == null ? false : device['ephemeral'];
       if (isEphemeral || device['emulator']) {
         // running android emulator ??
-        return _findDeviceEmulator(emulators, device['id'])['name'] ==
+        return _findDeviceNameOfRunningEmulator(emulators, device['id']) ==
             deviceName;
       } else {
         // real android device
@@ -466,7 +468,7 @@ Future<void> setEmulatorLocale(String deviceId, testLocale, deviceName) async {
 /// Change local of real android device or running emulator.
 void changeAndroidLocale(
     String deviceId, String deviceLocale, String testLocale) {
-  if (utils.cmd('adb', ['-s', deviceId, 'root'], '.', true) ==
+  if (cmd(['adb', '-s', deviceId, 'root']) ==
       'adbd cannot run as root in production builds\n') {
     stdout.write(
         'Warning: locale will not be changed. Running in locale \'$deviceLocale\'.\n');
@@ -476,7 +478,8 @@ void changeAndroidLocale(
         '    https://stackoverflow.com/questions/43923996/adb-root-is-not-working-on-emulator/45668555#45668555 for details.\n');
   }
   // adb shell "setprop persist.sys.locale fr_CA; setprop ctl.restart zygote"
-  utils.cmd('adb', [
+  cmd([
+    'adb',
     '-s',
     deviceId,
     'shell',
@@ -493,14 +496,18 @@ void changeAndroidLocale(
 /// Change locale of non-running simulator.
 Future _changeSimulatorLocale(
     String stagingDir, String name, String testLocale) async {
-  await utils.streamCmd('$stagingDir/resources/script/simulator-controller',
-      [name, 'locale', testLocale]);
+  await streamCmd([
+    '$stagingDir/resources/script/simulator-controller',
+    name,
+    'locale',
+    testLocale
+  ]);
 }
 
 /// Shutdown an android emulator.
 Future<String> shutdownAndroidEmulator(
     DaemonClient daemonClient, String deviceId) async {
-  utils.cmd('adb', ['-s', deviceId, 'emu', 'kill'], '.', true);
+  cmd(['adb', '-s', deviceId, 'emu', 'kill']);
 //  await waitAndroidEmulatorShutdown(deviceId);
   final device = await daemonClient.waitForEvent(EventType.deviceRemoved);
   if (device['id'] != deviceId) {
@@ -513,29 +520,30 @@ Future<String> shutdownAndroidEmulator(
 Future _startAndroidEmulatorOnCI(String emulatorId, String stagingDir) async {
   // testing on CI/CD requires starting emulator in a specific way
   final androidHome = Platform.environment['ANDROID_HOME'];
-  await utils.streamCmd(
+  await streamCmd(
+    [
       '$androidHome/emulator/emulator',
-      [
-        '-avd',
-        emulatorId,
-        '-no-audio',
-        '-no-window',
-        '-no-snapshot',
-        '-gpu',
-        'swiftshader',
-      ],
-      '.',
-      ProcessStartMode.detached);
+      '-avd',
+      emulatorId,
+      '-no-audio',
+      '-no-window',
+      '-no-snapshot',
+      '-gpu',
+      'swiftshader',
+    ],
+//      ProcessStartMode.detached
+  );
   // wait for emulator to start
-  await utils
-      .streamCmd('$stagingDir/resources/script/android-wait-for-emulator', []);
+  await streamCmd(['$stagingDir/resources/script/android-wait-for-emulator']);
 }
 
-/// Find the emulator info of a running device.
-Map _findDeviceEmulator(List emulators, String deviceId) {
+/// Find the device name of a running emulator.
+String _findDeviceNameOfRunningEmulator(List emulators, String deviceId) {
   final emulatorId = utils.getAndroidEmulatorId(deviceId);
-  return emulators.firstWhere((emulator) => emulator['id'] == emulatorId,
+  final emulator = emulators.firstWhere(
+      (emulator) => emulator['id'] == emulatorId,
       orElse: () => null);
+  return emulator == null ? null : emulator['name'];
 }
 
 /// Get device type from config info
@@ -555,16 +563,14 @@ DeviceType getDeviceType(Map configInfo, String deviceName) {
 void checkImageMagicInstalled() {
   bool isInstalled = false;
   if (Platform.isWindows) {
-    isInstalled = utils.cmd('magick', [], '.', true).isNotEmpty;
+    isInstalled = cmd([
+      'magick',
+    ]).isNotEmpty;
   } else {
-    isInstalled = utils
-        .cmd(
-            'sh',
-            ['-c', 'which convert && echo convert || echo not installed'],
-            '.',
-            true)
-        .toString()
-        .contains('convert');
+    isInstalled =
+        cmd(['sh', '-c', 'which convert && echo convert || echo not installed'])
+            .toString()
+            .contains('convert');
   }
   if (!isInstalled) {
     stderr.write(

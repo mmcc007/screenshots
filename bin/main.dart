@@ -65,7 +65,9 @@ void main(List<String> arguments) async {
   }
 
   final success = await run(
-      argResults[configArg], null, argResults[modeArg], argResults[flavorArg]);
+      configPath: argResults[configArg],
+      mode: argResults[modeArg],
+      flavor: argResults[flavorArg]);
   exit(success ? 0 : 1);
 }
 

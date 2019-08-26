@@ -6,6 +6,7 @@ import 'package:screenshots/src/globals.dart';
 import 'package:screenshots/src/image_processor.dart';
 import 'package:screenshots/src/screens.dart';
 import 'package:screenshots/src/validate.dart';
+import 'package:screenshots/src/utils.dart' as utils;
 import 'package:test/test.dart';
 import 'package:screenshots/src/fastlane.dart' as fastlane;
 import 'package:yaml/yaml.dart';
@@ -123,7 +124,7 @@ void main() {
         true);
     // allow other tests to continue
     Directory.current = origDir;
-  });
+  }, skip: utils.isCI());
 
   test('clear all destination directories on init', () async {
     final Screens screens = Screens();
