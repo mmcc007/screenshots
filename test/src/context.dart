@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:logging/logging.dart';
 import 'package:meta/meta.dart';
 import 'package:process/process.dart';
 import 'package:screenshots/src/base/context.dart';
 import 'package:screenshots/src/base/context_runner.dart';
+import 'package:screenshots/src/base/logger.dart';
 import 'package:test/test.dart';
 
 import 'fake_process_manager.dart';
@@ -46,6 +48,7 @@ void testUsingContext(
         overrides: <Type, Generator>{
 //          DeviceManager: () => MockDeviceManager(),
           ProcessManager: () => FakeProcessManager(),
+          Logger: () => initDefaultLogger(),
         },
         body: () {
 //          final String flutterRoot = getFlutterRoot();

@@ -9,14 +9,14 @@ import 'package:process/process.dart';
 import 'context.dart';
 import 'logger.dart';
 
-/// Execute command [cmd] with arguments [arguments] in a separate process
+/// Execute command with arguments [cmd] in a separate process
 /// and return stdout as string.
 ///
 /// If [silent] is false, output to stdout.
 String cmd(List<String> cmd,
     {String workingDirectory = '.', bool silent = true}) {
-//  print(
-//      'cmd=\'${cmd.join(" ")}\', workingDir=$workingDir, silent=$silent');
+  print(
+      'cmd=\'${cmd.join(" ")}\', workingDirectory=$workingDirectory, silent=$silent');
   final result = processManager.runSync(cmd,
       workingDirectory: workingDirectory, runInShell: true);
   _traceCommand(cmd, workingDirectory: workingDirectory);
@@ -29,12 +29,11 @@ String cmd(List<String> cmd,
   return result.stdout;
 }
 
-/// Execute command [cmd] with arguments [arguments] in a separate process
+/// Execute command with arguments [cmd] in a separate process
 /// and stream stdout/stderr.
 Future<void> streamCmd(List<String> cmd,
     {String workingDirectory = '.'}) async {
-//  print(
-//      'streamCmd=\'$cmd ${arguments.join(" ")}\', workingDirectory=$workingDirectory, mode=$mode');
+  print('streamCmd=\'${cmd.join(" ")}\', workingDirectory=$workingDirectory');
   final exitCode =
       await runCommandAndStreamOutput(cmd, workingDirectory: workingDirectory);
   if (exitCode != 0) {
@@ -62,6 +61,7 @@ Future<Process> runCommand(
     cmd,
     workingDirectory: workingDirectory,
     environment: environment,
+    runInShell: true,
   );
 }
 

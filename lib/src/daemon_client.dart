@@ -29,7 +29,8 @@ class DaemonClient {
   /// Start flutter tools daemon.
   Future<void> get start async {
     if (!_connected) {
-      _process = await Process.start('flutter', ['daemon'], runInShell: true);
+//      _process = await Process.start('flutter', ['daemon'], runInShell: true);
+      _process = await runCommand(['flutter', 'daemon']);
       _listen();
       _waitForConnection = Completer<bool>();
       _connected = await _waitForConnection.future;

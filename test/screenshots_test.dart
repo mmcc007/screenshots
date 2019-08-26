@@ -553,7 +553,9 @@ devices:
       final origDir = Directory.current;
       Directory.current = 'example';
       final configPath = 'screenshots.yaml';
-      await run.run(configPath, utils.getStringFromEnum(RunMode.recording));
+      await run.run(
+          configPath: configPath,
+          mode: utils.getStringFromEnum(RunMode.recording));
       final configInfo = Config(configPath: configPath).configInfo;
       final recordingDir = configInfo['recording'];
       expect(await utils.isRecorded(recordingDir), isTrue);
@@ -614,7 +616,9 @@ devices:
       final configInfo = Config(configPath: configPath).configInfo;
       final recordingDir = configInfo['recording'];
       expect(await utils.isRecorded(recordingDir), isTrue);
-      await run.run(configPath, utils.getStringFromEnum(RunMode.comparison));
+      await run.run(
+          configPath: configPath,
+          mode: utils.getStringFromEnum(RunMode.comparison));
       Directory.current = origDir;
     }, timeout: Timeout(Duration(seconds: 180)), skip: utils.isCI());
 
@@ -639,7 +643,9 @@ devices:
       final origDir = Directory.current;
       Directory.current = 'example';
       final configPath = 'screenshots.yaml';
-      await run.run(configPath, utils.getStringFromEnum(RunMode.archive));
+      await run.run(
+          configPath: configPath,
+          mode: utils.getStringFromEnum(RunMode.archive));
       Directory.current = origDir;
     }, timeout: Timeout(Duration(seconds: 180)), skip: utils.isCI());
   });
@@ -785,7 +791,9 @@ devices:
       Directory.current = 'flavors';
       final configPath = 'screenshots.yaml';
       await run.run(
-          configPath, utils.getStringFromEnum(RunMode.normal), flavor);
+          configPath: configPath,
+          mode: utils.getStringFromEnum(RunMode.normal),
+          flavor: flavor);
       Directory.current = origDir;
     }, timeout: Timeout(Duration(seconds: 240)), skip: utils.isCI());
   });
@@ -847,7 +855,7 @@ devices:
       // for this test change directory
       final origDir = Directory.current;
       Directory.current = 'example';
-      expect(await run.run(null, configIosOnly), isTrue);
+      expect(await run.run(configStr: configIosOnly), isTrue);
       // allow other tests to continue
       Directory.current = origDir;
     }, timeout: Timeout(Duration(minutes: 4)), skip: utils.isCI());
@@ -912,11 +920,11 @@ devices:
           'platformType': 'ios'
         }
       ];
-      Map deviceInfo =
-          run.findDevice(runningDevices, installedEmulators, androidDeviceName);
+      Map deviceInfo = run.findRunningDevice(
+          runningDevices, installedEmulators, androidDeviceName);
       expect(deviceInfo, androidDevice);
-      deviceInfo =
-          run.findDevice(runningDevices, installedEmulators, iosDeviceName);
+      deviceInfo = run.findRunningDevice(
+          runningDevices, installedEmulators, iosDeviceName);
       expect(deviceInfo, iosDevice);
     }, skip: utils.isCI());
   });
