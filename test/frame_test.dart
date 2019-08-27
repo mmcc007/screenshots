@@ -1,5 +1,6 @@
 import 'package:screenshots/src/base/process.dart';
 import 'package:screenshots/src/config.dart';
+import 'package:screenshots/src/context_runner.dart';
 import 'package:screenshots/src/globals.dart';
 import 'package:screenshots/src/image_processor.dart';
 import 'package:screenshots/src/resources.dart' as resources;
@@ -26,8 +27,9 @@ main() {
       'statusbarPath': statusbarPath,
     };
     print('options=$options');
-    await im.convert('overlay', options);
-
+    await runInContext<void>(() async {
+      return im.convert('overlay', options);
+    });
     final screenshotNavbarPath =
         '${appConfig['staging']}/${ScreenResources['navbar']}';
     options = {
@@ -35,8 +37,9 @@ main() {
       'screenshotNavbarPath': screenshotNavbarPath,
     };
     print('options=$options');
-    await im.convert('append', options);
-
+    await runInContext<void>(() async {
+      return im.convert('append', options);
+    });
     final framePath = appConfig['staging'] + '/' + ScreenResources['frame'];
     final size = screen['size'];
     final resize = screen['resize'];
@@ -50,7 +53,11 @@ main() {
       'backgroundColor': ImageProcessor.kDefaultAndroidBackground,
     };
     print('options=$options');
-    await im.convert('frame', options);
-    cmd(['git', 'checkout', screenshotPath]);
+    await runInContext<void>(() async {
+      return im.convert('frame', options);
+    });
+    await runInContext<void>(() async {
+      return cmd(['git', 'checkout', screenshotPath]);
+    });
   });
 }

@@ -5,6 +5,7 @@ import 'package:process/process.dart';
 import 'package:screenshots/screenshots.dart';
 import 'package:screenshots/src/base/process.dart';
 import 'package:screenshots/src/config.dart';
+import 'package:screenshots/src/context_runner.dart';
 import 'package:screenshots/src/daemon_client.dart';
 import 'package:screenshots/src/globals.dart';
 import 'package:screenshots/src/image_processor.dart';
@@ -17,7 +18,6 @@ import 'package:screenshots/src/utils.dart' as utils;
 import 'package:screenshots/src/validate.dart' as validate;
 import 'package:test/test.dart';
 import 'package:yaml/yaml.dart';
-import 'package:screenshots/src/fastlane.dart' as fastlane;
 import 'package:path/path.dart' as p;
 
 import '../bin/main.dart';
@@ -81,18 +81,7 @@ void main() {
     };
     await im.convert('overlay', options);
     cmd(['git', 'checkout', screenshotPath]);
-  });
-
-  test('unpack screen resource images', () async {
-    final Screens screens = Screens();
-    await screens.init();
-    final screen = screens.screenProps('iPhone 7 Plus');
-    final Config config = Config(configPath: 'test/screenshots_test.yaml');
-    final configInfo = config.configInfo;
-    final staging = configInfo['staging'];
-    final Map screenResources = screen['resources'];
-    await resources.unpackImages(screenResources, staging);
-  });
+  }, skip: true);
 
   test('append navbar', () async {
     final Screens screens = Screens();
@@ -111,7 +100,7 @@ void main() {
     };
     await im.convert('append', options);
     cmd(['git', 'checkout', screenshotPath]);
-  });
+  }, skip: true);
 
   test('frame screenshot', () async {
     final Screens screens = Screens();
@@ -136,7 +125,7 @@ void main() {
     };
     await im.convert('frame', options);
     cmd(['git', 'checkout', screenshotPath]);
-  });
+  }, skip: true);
 
   test('parse json xcrun simctl list devices', () {
     final expected = {
@@ -197,24 +186,7 @@ void main() {
     };
     final dest = '/tmp';
     await resources.unpackImages(scrnResources, dest);
-  });
-
-  test('unpack script', () async {
-    await resources.unpackScript(
-        'resources/script/android-wait-for-emulator', '/tmp');
-  });
-
-  test('add prefix to files in directory', () async {
-    final dirPath = 'test/resources/$kTestScreenshotsDir';
-    final prefix = 'my_prefix';
-    await utils.prefixFilesInDir(dirPath, prefix);
-    await for (final file in Directory(dirPath).list()) {
-      expect(file.path.contains(prefix), isTrue);
-    }
-    // cleanup
-    fastlane.deleteMatchingFiles(dirPath, RegExp(prefix));
-    cmd(['git', 'checkout', dirPath]);
-  });
+  }, skip: true);
 
   test('rooted emulator', () async {
     final emulatorId = 'Nexus_5X_API_27';
@@ -576,14 +548,16 @@ devices:
       };
       final pairs = {'good': goodPair, 'bad': badPair};
 
-      pairs.forEach((behave, pair) {
+      pairs.forEach((behave, pair) async {
         final recordedImage = pair['recorded'];
         final comparisonImage = pair['comparison'];
-        bool doCompare = im.compare(comparisonImage, recordedImage);
-        behave == 'good' ? expect(doCompare, true) : expect(doCompare, false);
+        bool doCompare = await runInContext<bool>(() async {
+          return im.compare(comparisonImage, recordedImage);
+        });
         behave == 'good'
-            ? null
+            ? Null
             : File(im.getDiffName(comparisonImage)).deleteSync();
+        behave == 'good' ? expect(doCompare, true) : expect(doCompare, false);
       });
     });
 
@@ -600,8 +574,10 @@ devices:
       };
 
       final imageProcessor = ImageProcessor(null, null);
-      final failedCompare = await imageProcessor.compareImages(
-          deviceName, recordingDir, comparisonDir);
+      final failedCompare = await runInContext<Map>(() async {
+        return await imageProcessor.compareImages(
+            deviceName, recordingDir, comparisonDir);
+      });
       expect(failedCompare, expected);
       // show diffs
       if (failedCompare.isNotEmpty) {
@@ -648,23 +624,6 @@ devices:
           mode: utils.getStringFromEnum(RunMode.archive));
       Directory.current = origDir;
     }, timeout: Timeout(Duration(seconds: 180)), skip: utils.isCI());
-  });
-
-  group('fastlane dirs', () {
-    test('delete files matching a pattern', () {
-      final dirPath = 'test/resources/test';
-      final deviceId = 'Nexus 6P';
-      final pattern = RegExp('$deviceId.*.$kImageExtension');
-      final filesPresent = (dirPath, pattern) => Directory(dirPath)
-          .listSync()
-          .toList()
-          .where((e) => pattern.hasMatch(p.basename(e.path)));
-      expect(filesPresent(dirPath, pattern).length, 2);
-      fastlane.deleteMatchingFiles(dirPath, pattern);
-      expect(filesPresent(dirPath, pattern), isEmpty);
-      // restore deleted files
-      cmd(['git', 'checkout', dirPath]);
-    });
   });
 
   group('adb path', () {
@@ -855,7 +814,7 @@ devices:
       // for this test change directory
       final origDir = Directory.current;
       Directory.current = 'example';
-      expect(await run.run(configStr: configIosOnly), isTrue);
+      expect(await run.runScreenshots(configStr: configIosOnly), isTrue);
       // allow other tests to continue
       Directory.current = origDir;
     }, timeout: Timeout(Duration(minutes: 4)), skip: utils.isCI());

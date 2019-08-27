@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'archive.dart';
 import 'base/process.dart';
 import 'config.dart';
+import 'context_runner.dart';
 import 'daemon_client.dart';
 import 'fastlane.dart' as fastlane;
 import 'globals.dart';
@@ -17,6 +18,14 @@ import 'utils.dart' as utils;
 import 'validate.dart';
 import 'package:path/path.dart' as path;
 
+/// Run screenshots
+Future<bool> run({String configPath, String mode, String flavor}) async {
+  // run in context
+  return runInContext<bool>(() async {
+    return runScreenshots(configPath: configPath, mode: mode, flavor: flavor);
+  });
+}
+
 /// Capture screenshots, process, and load into fastlane according to config file.
 ///
 /// For each locale and device or emulator/simulator:
@@ -26,7 +35,7 @@ import 'package:path/path.dart' as path;
 /// 3. Process the screenshots including adding a frame if required.
 /// 4. Move processed screenshots to fastlane destination for upload to stores.
 /// 5. If not a real device, stop emulator/simulator.
-Future<bool> run(
+Future<bool> runScreenshots(
     {String configPath = kConfigFileName,
     String configStr,
     String mode = 'normal',
@@ -561,28 +570,31 @@ DeviceType getDeviceType(Map configInfo, String deviceName) {
 
 /// Check Image Magick is installed.
 void checkImageMagicInstalled() {
-  bool isInstalled = false;
-  if (Platform.isWindows) {
-    isInstalled = cmd([
-      'magick',
-    ]).isNotEmpty;
-  } else {
-    isInstalled =
-        cmd(['sh', '-c', 'which convert && echo convert || echo not installed'])
-            .toString()
-            .contains('convert');
-  }
-  if (!isInstalled) {
-    stderr.write(
-        '#############################################################\n');
-    stderr.write("# You have to install ImageMagick to use Screenshots\n");
-    stderr.write(
-        "# Install it using 'brew update && brew install imagemagick'\n");
-    stderr.write("# If you don't have homebrew: goto http://brew.sh\n");
-    stderr.write(
-        '#############################################################\n');
-    exit(1);
-  }
+  runInContext<void>(() async {
+    bool isInstalled = false;
+    if (Platform.isWindows) {
+      isInstalled = cmd([
+        'magick',
+      ]).isNotEmpty;
+    } else {
+      isInstalled = cmd([
+        'sh',
+        '-c',
+        'which convert && echo convert || echo not installed'
+      ]).toString().contains('convert');
+    }
+    if (!isInstalled) {
+      stderr.write(
+          '#############################################################\n');
+      stderr.write("# You have to install ImageMagick to use Screenshots\n");
+      stderr.write(
+          "# Install it using 'brew update && brew install imagemagick'\n");
+      stderr.write("# If you don't have homebrew: goto http://brew.sh\n");
+      stderr.write(
+          '#############################################################\n');
+      exit(1);
+    }
+  });
 }
 
 /// Check for active run type.

@@ -5,9 +5,11 @@ import 'dart:io';
 import 'package:file/file.dart';
 import 'package:file/local.dart';
 import 'package:process/process.dart';
+import 'package:screenshots/src/base/utils.dart';
 
+import '../globals.dart';
 import 'context.dart';
-import 'logger.dart';
+import 'file_system.dart';
 
 /// Execute command with arguments [cmd] in a separate process
 /// and return stdout as string.
@@ -15,8 +17,8 @@ import 'logger.dart';
 /// If [silent] is false, output to stdout.
 String cmd(List<String> cmd,
     {String workingDirectory = '.', bool silent = true}) {
-  print(
-      'cmd=\'${cmd.join(" ")}\', workingDirectory=$workingDirectory, silent=$silent');
+//  print(
+//      'cmd=\'${cmd.join(" ")}\', workingDirectory=$workingDirectory, silent=$silent');
   final result = processManager.runSync(cmd,
       workingDirectory: workingDirectory, runInShell: true);
   _traceCommand(cmd, workingDirectory: workingDirectory);
@@ -33,7 +35,7 @@ String cmd(List<String> cmd,
 /// and stream stdout/stderr.
 Future<void> streamCmd(List<String> cmd,
     {String workingDirectory = '.'}) async {
-  print('streamCmd=\'${cmd.join(" ")}\', workingDirectory=$workingDirectory');
+//  print('streamCmd=\'${cmd.join(" ")}\', workingDirectory=$workingDirectory');
   final exitCode =
       await runCommandAndStreamOutput(cmd, workingDirectory: workingDirectory);
   if (exitCode != 0) {
@@ -96,9 +98,10 @@ Future<int> runCommandAndStreamOutput(
     if (line != null) {
       final String message = '$prefix$line';
       if (trace)
-        printTrace(message);
+        printTrace(message); // ignore: curly_braces_in_flow_control_structures
       else
-        printStatus(message, wrap: false);
+        printStatus(message,
+            wrap: false); // ignore: curly_braces_in_flow_control_structures
     }
   });
   final StreamSubscription<String> stderrSubscription = process.stderr
@@ -125,25 +128,6 @@ Future<int> runCommandAndStreamOutput(
   return await process.exitCode;
 }
 
-/// Returns a [Future] that completes when all given [Future]s complete.
-///
-/// Uses [Future.wait] but removes null elements from the provided
-/// `futures` iterable first.
-///
-/// The returned [Future<List>] will be shorter than the given `futures` if
-/// it contains nulls.
-Future<List<T>> waitGroup<T>(Iterable<Future<T>> futures) {
-  return Future.wait<T>(futures.where((Future<T> future) => future != null));
-}
-
-const FileSystem _kLocalFs = LocalFileSystem();
-
-/// Currently active implementation of the file system.
-///
-/// By default it uses local disk-based implementation. Override this in tests
-/// with [MemoryFileSystem].
-FileSystem get fs => _kLocalFs;
-
 void _traceCommand(List<String> args, {String workingDirectory}) {
   final String argsText = args.join(' ');
   if (workingDirectory == null) {
@@ -151,4 +135,16 @@ void _traceCommand(List<String> args, {String workingDirectory}) {
   } else {
     printTrace('executing: [$workingDirectory${fs.path.separator}] $argsText');
   }
+}
+
+class ProcessExit implements Exception {
+  ProcessExit(this.exitCode, {this.immediate = false});
+
+  final bool immediate;
+  final int exitCode;
+
+  String get message => 'ProcessExit: $exitCode';
+
+  @override
+  String toString() => message;
 }
