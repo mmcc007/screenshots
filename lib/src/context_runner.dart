@@ -4,11 +4,13 @@
 
 import 'dart:async';
 
-import 'package:logging/logging.dart';
 import 'package:process/process.dart';
 
-import 'context.dart';
-import 'logger.dart';
+import 'base/context.dart';
+import 'base/io.dart';
+import 'base/logger.dart';
+import 'base/platform.dart';
+import 'base/utils.dart';
 
 Future<T> runInContext<T>(
   FutureOr<T> runner(), {
@@ -19,8 +21,11 @@ Future<T> runInContext<T>(
     body: runner,
     overrides: overrides,
     fallbacks: <Type, Generator>{
+      BotDetector: () => const BotDetector(),
+      Logger: () => platform.isWindows ? WindowsStdoutLogger() : StdoutLogger(),
       ProcessManager: () => LocalProcessManager(),
-      Logger: () => initDefaultLogger(),
+      TimeoutConfiguration: () => const TimeoutConfiguration(),
+      Stdio: () => const Stdio(),
     },
   );
 }

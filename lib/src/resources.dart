@@ -18,7 +18,7 @@ Future unpackImages(Map screenResources, String dstDir) async {
 }
 
 /// Read scripts from resources and install in staging area.
-Future<void> unpackScripts(String dstDir) async {
+Future unpackScripts(String dstDir) async {
   await unpackScript(
     'resources/script/android-wait-for-emulator',
     dstDir,

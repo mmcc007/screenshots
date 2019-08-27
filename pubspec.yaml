@@ -18,13 +18,13 @@ dependencies:
   process: ^3.0.9
   meta: ^1.1.6
   intl: ^0.15.8
-  logging: ^0.11.3+2
 
 dev_dependencies:
   test: ^1.5.1+1
   test_api: ^0.2.5
   mockito: ^4.1.0
   pedantic: ^1.8.0+1
+  quiver: '>=2.0.0 <3.0.0'
 
 executables:
   screenshots: main

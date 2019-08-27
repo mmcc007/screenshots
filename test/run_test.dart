@@ -164,7 +164,8 @@ main() {
           $emulatorName:
       frame: true
       ''';
-      final result = await run(configStr: configStr, client: mockDaemonClient);
+      final result =
+          await runScreenshots(configStr: configStr, client: mockDaemonClient);
       expect(result, isTrue);
     }, overrides: <Type, Generator>{ProcessManager: () => fakeProcessManager});
   });

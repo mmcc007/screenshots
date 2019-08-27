@@ -1,15 +1,19 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:logging/logging.dart';
 import 'package:meta/meta.dart';
 import 'package:process/process.dart';
 import 'package:screenshots/src/base/context.dart';
-import 'package:screenshots/src/base/context_runner.dart';
+import 'package:screenshots/src/base/file_system.dart';
+import 'package:screenshots/src/base/terminal.dart';
+import 'package:screenshots/src/context_runner.dart';
 import 'package:screenshots/src/base/logger.dart';
 import 'package:test/test.dart';
 
 import 'fake_process_manager.dart';
+
+/// Return the test logger. This assumes that the current Logger is a BufferLogger.
+BufferLogger get testLogger => context.get<Logger>();
 
 typedef ContextInitializer = void Function(AppContext testContext);
 
@@ -46,9 +50,11 @@ void testUsingContext(
       return context.run<dynamic>(
         name: 'mocks',
         overrides: <Type, Generator>{
-//          DeviceManager: () => MockDeviceManager(),
+          Logger: () => BufferLogger(),
+          OutputPreferences: () => OutputPreferences(showColor: false),
           ProcessManager: () => FakeProcessManager(),
-          Logger: () => initDefaultLogger(),
+          FileSystem: () => LocalFileSystemBlockingSetCurrentDirectory(),
+          TimeoutConfiguration: () => const TimeoutConfiguration(),
         },
         body: () {
 //          final String flutterRoot = getFlutterRoot();
@@ -97,5 +103,15 @@ void tryToDelete(Directory directory) {
     directory.deleteSync(recursive: true);
   } on FileSystemException catch (error) {
     print('Failed to delete ${directory.path}: $error');
+  }
+}
+
+class LocalFileSystemBlockingSetCurrentDirectory extends LocalFileSystem {
+  @override
+  set currentDirectory(dynamic value) {
+    throw 'fs.currentDirectory should not be set on the local file system during '
+        'tests as this can cause race conditions with concurrent tests. '
+        'Consider using a MemoryFileSystem for testing if possible or refactor '
+        'code to not require setting fs.currentDirectory.';
   }
 }

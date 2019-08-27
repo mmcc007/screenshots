@@ -10,13 +10,23 @@ import 'statusbar_color_test.dart' as statusbar_color_test;
 import 'regression/issue_29.dart' as regression_issue_29_test;
 import 'regression/regression_test.dart' as regression_regression_test;
 import 'run_test.dart' as run_test;
-import 'base/process_test.dart' as base_process_test;
+import 'base/all_tests.dart' as base_all_tests;
+import 'src/all_tests.dart' as src_all_tests;
+import 'image_magick_test.dart' as image_magick_test;
+import 'resources_test.dart' as resources_test;
+import 'fastlane_test.dart' as fastlane_test;
+//import 'dummy_test.dart' as dummy_test;
 
 void main() {
   isCI() ? print('running in CI') : print('not running in CI');
 
+//  dummy_test.main();
+  src_all_tests.main();
   run_test.main();
-  base_process_test.main();
+  base_all_tests.main();
+  image_magick_test.main();
+  resources_test.main();
+  fastlane_test.main();
   screenshots_test.main();
   daemon_test.main();
   env_test.main();

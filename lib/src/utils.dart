@@ -1,17 +1,18 @@
 import 'dart:async';
 import 'dart:convert' as cnv;
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:path/path.dart' as p;
 import 'package:process/process.dart';
+import 'package:screenshots/src/base/file_system.dart';
 import 'package:yaml/yaml.dart';
+import 'base/platform.dart';
 import 'base/process.dart';
 import 'globals.dart';
 
 /// Parse a yaml file.
 Map parseYamlFile(String yamlPath) =>
-    jsonDecode(jsonEncode(loadYaml(File(yamlPath).readAsStringSync())));
+    jsonDecode(jsonEncode(loadYaml(fs.file(yamlPath).readAsStringSync())));
 
 /// Parse a yaml string.
 Map parseYamlStr(String yamlString) =>
@@ -21,10 +22,10 @@ Map parseYamlStr(String yamlString) =>
 ///
 /// If dstDir does not exist, it is created.
 void moveFiles(String srcDir, String dstDir) {
-  if (!Directory(dstDir).existsSync()) {
-    Directory(dstDir).createSync(recursive: true);
+  if (!fs.directory(dstDir).existsSync()) {
+    fs.directory(dstDir).createSync(recursive: true);
   }
-  Directory(srcDir).listSync().forEach((file) {
+  fs.directory(srcDir).listSync().forEach((file) {
     file.renameSync('$dstDir/${p.basename(file.path)}');
   });
 }
@@ -129,7 +130,7 @@ String getHighestAVD(String deviceName) {
 /// Adds prefix to all files in a directory
 Future prefixFilesInDir(String dirPath, String prefix) async {
   await for (final file
-      in Directory(dirPath).list(recursive: false, followLinks: false)) {
+      in fs.directory(dirPath).list(recursive: false, followLinks: false)) {
     await file
         .rename(p.dirname(file.path) + '/' + prefix + p.basename(file.path));
   }
@@ -160,7 +161,7 @@ String getAndroidDeviceLocale(String deviceId) {
 
 /// Returns locale of simulator with udid [udId].
 String getIosSimulatorLocale(String udId) {
-  final env = Platform.environment;
+  final env = platform.environment;
   final settingsPath =
       '${env['HOME']}/Library/Developer/CoreSimulator/Devices/$udId/data/Library/Preferences/.GlobalPreferences.plist';
   final localeInfo = cnv
@@ -267,7 +268,8 @@ Future<String> waitSysLogMsg(
   cmd(['adb', '-s', deviceId, 'logcat', '-c']);
   await Future.delayed(Duration(milliseconds: 1000)); // wait for log to clear
   // -b main ContactsDatabaseHelper:I '*:S'
-  final delegate = await Process.start('adb', [
+  final delegate = await runCommand([
+    'adb',
     '-s',
     deviceId,
     'logcat',
@@ -307,11 +309,11 @@ RunMode getRunModeEnum(String runMode) {
 
 /// Test for recordings in [recordDir].
 Future<bool> isRecorded(String recordDir) async =>
-    !(await Directory(recordDir).list().isEmpty);
+    !(await fs.directory(recordDir).list().isEmpty);
 
 /// Test for CI environment.
 bool isCI() {
-  return Platform.environment['CI'] == 'true';
+  return platform.environment['CI'] == 'true';
 }
 
 /// Convert a posix path to platform path (windows/posix).

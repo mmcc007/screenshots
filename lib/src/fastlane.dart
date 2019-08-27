@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'base/file_system.dart';
 import 'screens.dart';
 import 'package:path/path.dart' as p;
 import 'globals.dart';
@@ -74,13 +75,13 @@ String getAndroidModelType(Map screenProps) {
 /// Clears files matching a pattern in a directory.
 /// Creates directory if none exists.
 void deleteMatchingFiles(String dirPath, RegExp pattern) {
-  if (Directory(dirPath).existsSync()) {
-    Directory(dirPath).listSync().toList().forEach((e) {
+  if (fs.directory(dirPath).existsSync()) {
+    fs.directory(dirPath).listSync().toList().forEach((e) {
       if (pattern.hasMatch(p.basename(e.path))) {
-        File(e.path).deleteSync();
+        fs.file(e.path).deleteSync();
       }
     });
   } else {
-    Directory(dirPath).createSync(recursive: true);
+    fs.directory(dirPath).createSync(recursive: true);
   }
 }
