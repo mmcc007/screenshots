@@ -86,14 +86,16 @@ sudo zypper install imagemagick
 
 pub global activate screenshots
 ````
+Note: on linux ImageMagick is often already installed.
 
 On windows:
 ````bash
 choco install imagemagick.app
 pub global activate screenshots
 ````
+Note: ImageMagick v7 or later is recommended on windows.
 
-Note:  
+
 If `pub` is not found, add to PATH using:
 
 On macOS/Linux:  
@@ -106,8 +108,6 @@ set PATH=<path to flutter installation directory>\flutter\bin\cache\dart-sdk\bin
 ```
 
 Note: if running on Windows or Linux, can only run android devices/emulators. To also run on macOS use a CI that supports macOS.
-
-Note: ImageMagick v7 or later is recommended on windows.
 
 # Usage
 
