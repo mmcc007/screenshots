@@ -168,7 +168,7 @@ jobs:
         # Download a pinned version of the emulator since upgrades can cause issues
         - ${ANDROID_HOME}/emulator/emulator -version
         - emulator_version=5264690 # 29.0.9.0 (build_id 5537588) ==> 28.0.23.0 (build_id 5264690)
-        - curl -fo emulator.zip "https://dl.google.com/android/repository/emulator-darwin-$emulator_version.zip"
+        - curl -fo emulator.zip "https://dl.google.com/android/repository/emulator-$OS-$emulator_version.zip"
         - rm -rf "${ANDROID_HOME}/emulator"
         - unzip -q emulator.zip -d "${ANDROID_HOME}"
         - rm -f emulator.zip
