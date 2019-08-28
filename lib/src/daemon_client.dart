@@ -2,6 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:meta/meta.dart';
+
+import 'base/platform.dart';
 import 'base/process.dart';
 
 enum EventType { deviceRemoved }
@@ -25,6 +28,8 @@ class DaemonClient {
   Completer _waitForResponse;
   Completer _waitForEvent = Completer<String>();
   List _iosDevices; // contains model of device, used by screenshots
+  StreamSubscription _stdOutListener;
+  StreamSubscription _stdErrListener;
 
   /// Start flutter tools daemon.
   Future<void> get start async {
@@ -34,13 +39,17 @@ class DaemonClient {
       _listen();
       _waitForConnection = Completer<bool>();
       _connected = await _waitForConnection.future;
-      // enable device discovery
-      await _sendCommandWaitResponse(
-          <String, dynamic>{'method': 'device.enable'});
-      if (Platform.isMacOS) _iosDevices = getIosDevices();
+      await enableDeviceDiscovery();
+      if (platform.isMacOS) _iosDevices = getIosDevices();
       // wait for device discovery
       await Future.delayed(Duration(milliseconds: 100));
     }
+  }
+
+  @visibleForTesting
+  Future enableDeviceDiscovery() async {
+    await _sendCommandWaitResponse(
+        <String, dynamic>{'method': 'device.enable'});
   }
 
   /// List installed emulators (not including iOS simulators).
@@ -62,7 +71,9 @@ class DaemonClient {
     // wait for expected device-added-emulator event
     final results = await Future.wait(
         <Future>[_waitForResponse.future, _waitForEvent.future]);
+    // process the response
     _processResponse(results[0], command);
+    // process the event
     final event = results[1];
     final eventInfo = jsonDecode(event);
     if (eventInfo.length != 1 ||
@@ -112,16 +123,18 @@ class DaemonClient {
 
   /// Stop daemon.
   Future<int> get stop async {
-    if (!_connected) return _exitCode;
+    if (!_connected) throw 'Error: not connected to daemon.';
     await _sendCommandWaitResponse(
         <String, dynamic>{'method': 'daemon.shutdown'});
     _connected = false;
     _exitCode = await _process.exitCode;
+    await _stdOutListener?.cancel();
+    await _stdErrListener?.cancel();
     return _exitCode;
   }
 
   void _listen() {
-    _process.stdout
+    _stdOutListener = _process.stdout
         .transform<String>(utf8.decoder)
         .transform<String>(const LineSplitter())
         .listen((String line) async {
@@ -149,7 +162,8 @@ class DaemonClient {
         }
       }
     });
-    _process.stderr.listen((dynamic data) => stderr.add(data));
+    _stdErrListener =
+        _process.stderr.listen((dynamic data) => stderr.add(data));
   }
 
   void _sendCommand(Map<String, dynamic> command) {
@@ -166,7 +180,9 @@ class DaemonClient {
 
   Future<List> _sendCommandWaitResponse(Map<String, dynamic> command) async {
     _sendCommand(command);
+//    print('waiting for response: $command');
     final String response = await _waitForResponse.future;
+//    print('response: $response');
     return _processResponse(response, command);
   }
 
