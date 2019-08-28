@@ -529,19 +529,16 @@ Future<String> shutdownAndroidEmulator(
 Future _startAndroidEmulatorOnCI(String emulatorId, String stagingDir) async {
   // testing on CI/CD requires starting emulator in a specific way
   final androidHome = Platform.environment['ANDROID_HOME'];
-  await streamCmd(
-    [
-      '$androidHome/emulator/emulator',
-      '-avd',
-      emulatorId,
-      '-no-audio',
-      '-no-window',
-      '-no-snapshot',
-      '-gpu',
-      'swiftshader',
-    ],
-//      ProcessStartMode.detached
-  );
+  await streamCmd([
+    '$androidHome/emulator/emulator',
+    '-avd',
+    emulatorId,
+    '-no-audio',
+    '-no-window',
+    '-no-snapshot',
+    '-gpu',
+    'swiftshader',
+  ], mode: ProcessStartMode.detached);
   // wait for emulator to start
   await streamCmd(['$stagingDir/resources/script/android-wait-for-emulator']);
 }
