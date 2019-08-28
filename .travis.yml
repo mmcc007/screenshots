@@ -8,14 +8,14 @@ env:
 jobs:
 #  fast_finish: true
   include:
-#  allow_failures:
-#    - env:
-#        - Run screenshots on Android
-#        - OS=linux
+  allow_failures:
+    - env:
+        - Run screenshots on Android
+        - OS=linux
 
     - stage: Testing
       env:
-#        - Unit tests
+        - Unit tests
         - OS=linux
       os: linux
 #      language: dart
@@ -31,22 +31,8 @@ jobs:
 
       install:
         - flutter doctor -v
-#        - sudo apt-get install imagemagick
-#        - sudo apt-get update
-#        - sudo apt-get install --only-upgrade imagemagick
-#        - sudo apt-get install build-essential checkinstall
-#        - sudo apt-get build-dep imagemagick -y
-#        - wget http://www.imagemagick.org/download/ImageMagick.tar.gz
-#        - tar xzvf ImageMagick.tar.gz > /dev/null
-#        - cd ImageMagick*
-#        - ./configure > /dev/null
-#        - make
-#        - sudo make install
-#        - sudo ldconfig /usr/local/lib
-        - which convert || echo "ignore exit($?)"
-        - which magick || echo "ignore exit($?)"
-        - convert -version || echo "ignore exit($?)"
-        - magick -version || echo "ignore exit($?)"
+
+        # install image magick (already installed)
         # install coverage tool
         - pub global activate coverage
         # install most current (released or unreleased) Screenshots
@@ -59,7 +45,7 @@ jobs:
 
     - stage: Testing
       env:
-#        - Run screenshots on iOS
+        - Run screenshots on iOS
         - OS=macos
       os: osx
       #osx_image: xcode10.2 # macOS 10.14, JDK 12+33
@@ -158,7 +144,7 @@ jobs:
         #      - export SDKMANAGER_OPTS="--add-modules java.se.ee"
         # - export JAVA_OPTS='-XX:+IgnoreUnrecognizedVMOptions --add-modules java.se.ee'
         # Accept licenses before installing components, no need to echo y for each component
-        - yes | sdkmanager --licenses
+        - yes | sdkmanager --licenses > /dev/null
         # Platform tools
         - sdkmanager "emulator" "tools" "platform-tools" > /dev/null
         - sdkmanager --list | head -15
@@ -189,13 +175,11 @@ jobs:
         - echo "hw.device.manufacturer=Google" >> ~/.android/avd/$EMULATOR_NAME.avd/config.ini
         - echo "avd.ini.displayname=Nexus 6P API 28" >> ~/.android/avd/$EMULATOR_NAME.avd/config.ini
 
-        # Install image magick
-        - which convert || echo "ignore exit($?)"
-        - which magick || echo "ignore exit($?)"
-        - convert -version || echo "ignore exit($?)"
-        - magick -version || echo "ignore exit($?)"
-#        - sudo apt-get install imagemagick
-#        - magick || echo 'ignore exit(1)'
+        # Install android sdk dependencies required by flutter
+        # (not used but installing anyway)
+        - sdkmanager "platforms;android-28" "build-tools;28.0.3"
+
+        # Install image magick (already installed)
 
       install: *install_flutter_linux
 
