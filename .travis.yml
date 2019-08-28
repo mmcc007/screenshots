@@ -6,7 +6,7 @@ env:
     - FLUTTER_VERSION=1.7.8+hotfix.4-${FLUTTER_CHANNEL}
 
 jobs:
-#  fast_finish: true
+  fast_finish: true
   include:
   allow_failures:
     - env:
