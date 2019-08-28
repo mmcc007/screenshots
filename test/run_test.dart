@@ -167,6 +167,7 @@ main() {
       final result =
           await runScreenshots(configStr: configStr, client: mockDaemonClient);
       expect(result, isTrue);
+//      fakeProcessManager.verifyCalls(processCalls.keys.toList());
     }, overrides: <Type, Generator>{ProcessManager: () => fakeProcessManager});
   });
 }
