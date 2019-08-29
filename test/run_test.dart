@@ -25,63 +25,32 @@ main() {
   });
 
   group('run', () {
-    testUsingContext('run', () async {
+    testUsingContext(
+        'android only run with no started devices or emulators and no locales',
+        () async {
       final emulatorName = 'Nexus 6P';
       // fake process responses
-      final Map<String, List<ProcessResult>> processCalls = {
-        'sh -c ios-deploy -c || echo "no attached devices"': [
-          ProcessResult(0, 0, 'no attached devices', ''),
-        ],
-        'chmod u+x /tmp/screenshots/resources/script/android-wait-for-emulator':
-            null,
-        'chmod u+x /tmp/screenshots/resources/script/android-wait-for-emulator-to-stop':
-            null,
-        'chmod u+x /tmp/screenshots/resources/script/simulator-controller':
-            null,
-        'chmod u+x /tmp/screenshots/resources/script/sim_orientation.scpt':
-            null,
-        'emulator -list-avds': [
-          ProcessResult(0, 0, '$emulatorName\nanother emulator', '')
-        ],
-        'xcrun simctl list devices --json': [
-          ProcessResult(
-              0,
-              0,
-              '''
-                {
-                  "devices" : {
-                    "iOS 11.2" : [
-                      {
-                        "state" : "Shutdown",
-                        "availability" : "(available)",
-                        "name" : "iPhone 7 Plus",
-                        "udid" : "1DD6DBF1-846F-4644-8E97-76175788B9A5"
-                      }
-                    ],
-                    "iOS 11.1" : [
-                      {
-                        "state" : "Shutdown",
-                        "availability" : "(available)",
-                        "name" : "iPhone X",
-                        "udid" : "6B3B1AD9-EFD3-49AB-9CE9-D43CE1A47446"
-                      }
-                    ]
-                  }
-                }
-                ''',
-              ''),
-        ],
-        'adb -s emulator-5554 emu avd name': [
-          ProcessResult(0, 0, 'Nexus_6P_API_28', '')
-        ],
-        'adb -s emulator-5554 shell getprop persist.sys.locale': [
-          ProcessResult(0, 0, 'en-US', ''),
-          ProcessResult(0, 0, 'en-US', '')
-        ],
-        'flutter -d emulator-5554 drive example/test_driver/main.dart':
-            <ProcessResult>[ProcessResult(0, 0, 'drive output', '')],
-      };
-      fakeProcessManager.fakeResults = processCalls;
+      final List<Call> calls = [
+        Call(
+            'chmod u+x /tmp/screenshots/resources/script/android-wait-for-emulator',
+            null),
+        Call(
+            'chmod u+x /tmp/screenshots/resources/script/android-wait-for-emulator-to-stop',
+            null),
+        Call('chmod u+x /tmp/screenshots/resources/script/simulator-controller',
+            null),
+        Call('chmod u+x /tmp/screenshots/resources/script/sim_orientation.scpt',
+            null),
+        Call('adb -s emulator-5554 emu avd name',
+            ProcessResult(0, 0, 'Nexus_6P_API_28', '')),
+        Call('adb -s emulator-5554 shell getprop persist.sys.locale',
+            ProcessResult(0, 0, 'en-US', '')),
+        Call('adb -s emulator-5554 shell getprop persist.sys.locale',
+            ProcessResult(0, 0, 'en-US', '')),
+        Call('flutter -d emulator-5554 drive example/test_driver/main.dart',
+            ProcessResult(0, 0, 'drive output', '')),
+      ];
+      fakeProcessManager.calls = calls;
 
       final devices = [
         {
@@ -106,38 +75,102 @@ main() {
       ];
       final emulators = [
         {
-          'id': 'Nexus_5X_API_27',
-          'name': 'Nexus 5X',
-          'category': 'mobile',
-          'platformType': 'android'
-        },
-        {
           'id': 'Nexus_6P_API_28',
           'name': 'Nexus 6P',
           'category': 'mobile',
           'platformType': 'android'
         },
+      ];
+      when(mockDaemonClient.devices).thenAnswer((_) => Future.value(devices));
+      when(mockDaemonClient.emulators)
+          .thenAnswer((_) => Future.value(emulators));
+
+      // screenshots config
+      final configStr = '''
+      tests:
+        - example/test_driver/main.dart
+      staging: /tmp/screenshots
+      locales:
+        - en-US
+      devices:
+        android:
+          $emulatorName:
+      frame: true
+      ''';
+      final result =
+          await runScreenshots(configStr: configStr, client: mockDaemonClient);
+      expect(result, isTrue);
+      fakeProcessManager.verifyCalls();
+    }, overrides: <Type, Generator>{ProcessManager: () => fakeProcessManager});
+
+    testUsingContext(
+        'android and ios run with no started devices or emulators and multiple locales',
+        () async {
+      final emulatorName = 'Nexus 6P';
+      // fake process responses
+      final List<Call> calls = [
+        Call(
+            'chmod u+x /tmp/screenshots/resources/script/android-wait-for-emulator',
+            null),
+        Call(
+            'chmod u+x /tmp/screenshots/resources/script/android-wait-for-emulator-to-stop',
+            null),
+        Call('chmod u+x /tmp/screenshots/resources/script/simulator-controller',
+            null),
+        Call('chmod u+x /tmp/screenshots/resources/script/sim_orientation.scpt',
+            null),
+        Call('adb -s emulator-5554 emu avd name',
+            ProcessResult(0, 0, 'Nexus_6P_API_28', '')),
+        Call('adb -s emulator-5554 shell getprop persist.sys.locale',
+            ProcessResult(0, 0, 'en-US', '')),
+        Call('adb -s emulator-5554 shell getprop persist.sys.locale',
+            ProcessResult(0, 0, 'en-US', '')),
+        Call('flutter -d emulator-5554 drive example/test_driver/main.dart',
+            ProcessResult(0, 0, 'drive output', '')),
+        Call('adb -s emulator-5554 shell getprop persist.sys.locale',
+            ProcessResult(0, 0, 'en-US', '')),
+        Call('adb -s emulator-5554 root', null),
+        Call(
+            'adb -s emulator-5554 shell setprop persist.sys.locale fr-CA ; setprop ctl.restart zygote',
+            null),
+        Call('adb -s emulator-5554 logcat -c', null),
+        Call(
+            'adb -s emulator-5554 logcat -b main *:S ContactsDatabaseHelper:I ContactsProvider:I -e fr_CA',
+            ProcessResult(
+                0,
+                0,
+                '08-28 14:25:11.994  5294  5417 I ContactsProvider: Locale has changed from [en_US] to [fr_CA]',
+                '')),
+        Call('flutter -d emulator-5554 drive example/test_driver/main.dart',
+            null),
+      ];
+      fakeProcessManager.calls = calls;
+
+      final devices = [
         {
-          'id': 'Nexus_6_API_28',
-          'name': 'Nexus 6',
+          'id': 'emulator-5554',
+          'name': 'Android SDK built for x86',
+          'platform': 'android-x86',
+          'emulator': true,
           'category': 'mobile',
-          'platformType': 'android'
+          'platformType': 'android',
+          'ephemeral': true
         },
         {
-          'id': 'Nexus_9_API_28',
-          'name': 'Nexus 9',
+          'id': '3b3455019e329e007e67239d9b897148244b5053',
+          'name': 'Maurice’s iPhone',
+          'platform': 'ios',
+          'emulator': false,
           'category': 'mobile',
-          'platformType': 'android'
-        },
+          'platformType': 'ios',
+          'ephemeral': true,
+          'model': 'iPhone 5c (GSM)'
+        }
+      ];
+      final emulators = [
         {
-          'id': 'Nexus_test_6P_API_30',
-          'name': 'Nexus test 6P',
-          'category': 'mobile',
-          'platformType': 'android'
-        },
-        {
-          'id': 'test',
-          'name': null,
+          'id': 'Nexus_6P_API_28',
+          'name': 'Nexus 6P',
           'category': 'mobile',
           'platformType': 'android'
         },
@@ -159,6 +192,7 @@ main() {
       staging: /tmp/screenshots
       locales:
         - en-US
+        - fr-CA
       devices:
         android:
           $emulatorName:
@@ -167,7 +201,7 @@ main() {
       final result =
           await runScreenshots(configStr: configStr, client: mockDaemonClient);
       expect(result, isTrue);
-//      fakeProcessManager.verifyCalls(processCalls.keys.toList());
+      fakeProcessManager.verifyCalls();
     }, overrides: <Type, Generator>{ProcessManager: () => fakeProcessManager});
   });
 }

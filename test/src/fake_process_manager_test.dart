@@ -10,7 +10,7 @@ import 'package:test/test.dart';
 import 'fake_process_manager.dart';
 
 void main() {
-  group('ArchivePublisher', () {
+  group('fake process manager', () {
     FakeProcessManager processManager;
     final List<String> stdinCaptured = <String>[];
 
@@ -25,92 +25,130 @@ void main() {
     tearDown(() async {});
 
     test('start works', () async {
-      final Map<String, List<ProcessResult>> calls =
-          <String, List<ProcessResult>>{
-        'gsutil acl get gs://flutter_infra/releases/releases.json':
-            <ProcessResult>[
-          ProcessResult(0, 0, 'output1', ''),
-        ],
-        'gsutil cat gs://flutter_infra/releases/releases.json': <ProcessResult>[
-          ProcessResult(0, 0, 'output2', ''),
-        ],
-      };
-      processManager.fakeResults = calls;
-      for (String key in calls.keys) {
+      final calls = [
+        Call('gsutil acl get gs://flutter_infra/releases/releases.json',
+            ProcessResult(0, 0, 'output1', '')),
+        Call('gsutil cat gs://flutter_infra/releases/releases.json',
+            ProcessResult(0, 0, 'output2', '')),
+      ];
+      processManager.calls = calls;
+      for (var call in calls) {
+        final key = call.command;
         final Process process = await processManager.start(key.split(' '));
         String output = '';
         process.stdout.listen((List<int> item) {
           output += utf8.decode(item);
         });
         await process.exitCode;
-        expect(output, equals(calls[key][0].stdout));
+        expect(output, equals(call.result.stdout));
       }
-      processManager.verifyCalls(calls.keys.toList());
+      processManager.verifyCalls();
     });
 
     test('run works', () async {
-      final Map<String, List<ProcessResult>> calls =
-          <String, List<ProcessResult>>{
-        'gsutil acl get gs://flutter_infra/releases/releases.json':
-            <ProcessResult>[
-          ProcessResult(0, 0, 'output1', ''),
-        ],
-        'gsutil cat gs://flutter_infra/releases/releases.json': <ProcessResult>[
-          ProcessResult(0, 0, 'output2', ''),
-        ],
-      };
-      processManager.fakeResults = calls;
-      for (String key in calls.keys) {
+      final calls = [
+        Call('gsutil acl get gs://flutter_infra/releases/releases.json',
+            ProcessResult(0, 0, 'output1', '')),
+        Call('gsutil cat gs://flutter_infra/releases/releases.json',
+            ProcessResult(0, 0, 'output2', '')),
+      ];
+      processManager.calls = calls;
+      for (var call in calls) {
+        final key = call.command;
         final ProcessResult result = await processManager.run(key.split(' '));
-        expect(result.stdout, equals(calls[key][0].stdout));
+        expect(result.stdout, equals(call.result.stdout));
       }
-      processManager.verifyCalls(calls.keys.toList());
+      processManager.verifyCalls();
     });
 
     test('runSync works', () async {
-      final Map<String, List<ProcessResult>> calls =
-          <String, List<ProcessResult>>{
-        'gsutil acl get gs://flutter_infra/releases/releases.json':
-            <ProcessResult>[
-          ProcessResult(0, 0, 'output1', ''),
-        ],
-        'gsutil cat gs://flutter_infra/releases/releases.json': <ProcessResult>[
-          ProcessResult(0, 0, 'output2', ''),
-        ],
-      };
-      processManager.fakeResults = calls;
-      for (String key in calls.keys) {
+      final calls = [
+        Call('gsutil acl get gs://flutter_infra/releases/releases.json',
+            ProcessResult(0, 0, 'output1', '')),
+        Call('gsutil cat gs://flutter_infra/releases/releases.json',
+            ProcessResult(0, 0, 'output2', '')),
+      ];
+      processManager.calls = calls;
+      for (var call in calls) {
+        final key = call.command;
         final ProcessResult result = processManager.runSync(key.split(' '));
-        expect(result.stdout, equals(calls[key][0].stdout));
+        expect(result.stdout, equals(call.result.stdout));
       }
-      processManager.verifyCalls(calls.keys.toList());
+      processManager.verifyCalls();
     });
 
     test('captures stdin', () async {
-      final Map<String, List<ProcessResult>> calls =
-          <String, List<ProcessResult>>{
-        'gsutil acl get gs://flutter_infra/releases/releases.json':
-            <ProcessResult>[
-          ProcessResult(0, 0, 'output1', ''),
-        ],
-        'gsutil cat gs://flutter_infra/releases/releases.json': <ProcessResult>[
-          ProcessResult(0, 0, 'output2', ''),
-        ],
-      };
-      processManager.fakeResults = calls;
-      for (String key in calls.keys) {
+      final calls = [
+        Call('gsutil acl get gs://flutter_infra/releases/releases.json',
+            ProcessResult(0, 0, 'output1', '')),
+        Call('gsutil cat gs://flutter_infra/releases/releases.json',
+            ProcessResult(0, 0, 'output2', '')),
+      ];
+      processManager.calls = calls;
+      for (var call in calls) {
+        final key = call.command;
         final Process process = await processManager.start(key.split(' '));
         String output = '';
         process.stdout.listen((List<int> item) {
           output += utf8.decode(item);
         });
-        final String testInput = '${calls[key][0].stdout} input';
+        final String testInput = '${call.result.stdout} input';
         process.stdin.add(testInput.codeUnits);
         await process.exitCode;
-        expect(output, equals(calls[key][0].stdout));
+        expect(output, equals(call.result.stdout));
         expect(stdinCaptured.last, equals(testInput));
       }
-      processManager.verifyCalls(calls.keys.toList());
+      processManager.verifyCalls();
+    });
+  });
+
+  group('additional fake process manager tests', () {
+    FakeProcessManager processManager;
+
+    setUp(() async {
+      processManager = FakeProcessManager();
+    });
+
+    test('repeated calls', () async {
+      final calls = [
+        Call('gsutil acl get gs://flutter_infra/releases/releases.json',
+            ProcessResult(0, 0, 'output1', '')),
+        Call('gsutil acl get gs://flutter_infra/releases/releases.json',
+            ProcessResult(0, 0, 'output2', '')),
+      ];
+      processManager.calls = calls;
+      for (var call in calls) {
+        final key = call.command;
+        final ProcessResult result = processManager.runSync(key.split(' '));
+        expect(result.stdout, equals(call.result.stdout));
+      }
+      processManager.verifyCalls();
+    });
+
+    test('unused calls', () async {
+      final calls = [
+        Call('gsutil acl get gs://flutter_infra/releases/releases.json',
+            ProcessResult(0, 0, 'output1', '')),
+        Call('gsutil cat gs://flutter_infra/releases/releases.json',
+            ProcessResult(0, 0, 'output2', '')),
+      ];
+      processManager.calls = calls;
+      final key = calls[0].command;
+      processManager.runSync(key.split(' '));
+//      expect(() => processManager.verifyCalls(), throwsA(TestFailure));
+    });
+
+    test('out of sequence calls', () async {
+      final calls = [
+        Call('gsutil acl get gs://flutter_infra/releases/releases.json',
+            ProcessResult(0, 0, 'output1', '')),
+        Call('gsutil cat gs://flutter_infra/releases/releases.json',
+            ProcessResult(0, 0, 'output2', '')),
+      ];
+      processManager.calls = calls;
+
+      final key = calls[1].command;
+//      processManager.runSync(key.split(' '));
     });
   });
 }

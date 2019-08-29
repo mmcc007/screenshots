@@ -26,41 +26,49 @@ class FakeProcessManager extends Mock implements ProcessManager {
   /// a call.
   final StringReceivedCallback stdinResults;
 
-  /// The list of results that will be sent back, organized by the command line
-  /// that will produce them. Each command line has a list of returned stdout
-  /// output that will be returned on each successive call.
-  Map<String, List<ProcessResult>> _fakeResults =
-      <String, List<ProcessResult>>{};
-  Map<String, List<ProcessResult>> get fakeResults => _fakeResults;
-  set fakeResults(Map<String, List<ProcessResult>> value) {
-    _fakeResults = <String, List<ProcessResult>>{};
-    for (String key in value.keys) {
-      _fakeResults[key] = <ProcessResult>[]
-        ..addAll(value[key] ?? <ProcessResult>[ProcessResult(0, 0, '', '')]);
-    }
+  /// The list of calls in sequence and results that will be sent back.
+  /// Each command line has a stdout output that will be returned.
+  List<Call> _calls = <Call>[];
+  List<Call> get calls => _calls;
+  set calls(List<Call> calls) {
+    _calls = List<Call>.from(calls);
+    _origCalls = calls;
   }
+
+  /// Use for later verification.
+  List<Call> _origCalls;
+
+  String _getCommand(List<String> params) => params.join(' ');
 
   /// The list of invocations that occurred, in the order they occurred.
   List<Invocation> invocations = <Invocation>[];
 
   /// Verify that the given command lines were called, in the given order, and that the
   /// parameters were in the same order.
-  void verifyCalls(List<String> calls) {
-    int index = 0;
-    for (String call in calls) {
-      expect(call.split(' '),
-          orderedEquals(invocations[index].positionalArguments[0]));
-      index++;
+  void verifyCalls() {
+    // unused calls
+    expect(calls, isEmpty);
+    expect(invocations.length, equals(_origCalls.length));
+
+    // replay invocations and compare to orig
+    for (int i = 0; i < invocations.length; i++) {
+      final command = _getCommand(invocations[i].positionalArguments[0]);
+      expect(command, equals(_origCalls[i].command));
+      // check parameter positions
+      expect(_origCalls[i].command.split(' '),
+          orderedEquals(invocations[i].positionalArguments[0]));
     }
-    expect(invocations.length, equals(calls.length));
   }
 
   ProcessResult _popResult(List<String> command) {
+    // 1. Pop off call list
+    // 2. Confirm correct command
+    // 3. Return process result
+    expect(calls, isNotEmpty, reason: 'command=$command');
+    final call = calls.removeAt(0);
     final String key = command.join(' ');
-    expect(fakeResults, isNotEmpty);
-    expect(fakeResults, contains(key));
-    expect(fakeResults[key], isNotEmpty);
-    return fakeResults[key].removeAt(0);
+    expect(call.command, equals(key));
+    return call.result;
   }
 
   FakeProcess _popProcess(List<String> command) =>
@@ -194,5 +202,41 @@ class StringStreamConsumer implements StreamConsumer<List<int>> {
     streams.clear();
     subscriptions.clear();
     return Future<dynamic>.value(null);
+  }
+}
+
+/// parse command (not currently used)
+List<String> splitCommand(String command, [bool verbose = false]) {
+  final regExp = RegExp(r'("([^"]|"")*")|\S*');
+  assert(regExp.hasMatch(command), isTrue);
+  final matches = regExp.allMatches(command);
+  final result = <String>[];
+  for (final match in matches) {
+    final groupCount = match.groupCount;
+    assert(groupCount > 0);
+    if (verbose) {
+      for (int i = 0; i < groupCount; i++) {
+        print('match.group($i)= ${match.group(i)}');
+      }
+    }
+    final group0 = match.group(0);
+    if (group0.isNotEmpty) {
+//      result.add(match.group(0).replaceAll('"', ''));
+      result.add(match.group(0));
+    }
+  }
+  return result;
+}
+
+class Call {
+  final String command;
+  final ProcessResult result;
+
+  Call(this.command, ProcessResult result)
+      : this.result = result ?? ProcessResult(0, 0, '', '');
+
+  @override
+  String toString() {
+    return 'call: $command, results:$result';
   }
 }
