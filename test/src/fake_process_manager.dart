@@ -47,7 +47,7 @@ class FakeProcessManager extends Mock implements ProcessManager {
   /// parameters were in the same order.
   void verifyCalls() {
     // unused calls
-    expect(calls, isEmpty);
+    expect(calls, isEmpty, reason: 'Remove calls from end of call list.');
     expect(invocations.length, equals(_origCalls.length));
 
     // replay invocations and compare to orig
@@ -64,11 +64,13 @@ class FakeProcessManager extends Mock implements ProcessManager {
     // 1. Pop off call list
     // 2. Confirm correct command
     // 3. Return process result
-    expect(calls, isNotEmpty,
-        reason: 'All calls have been executed. Add call for command=$command');
-    final call = calls.removeAt(0);
     final String key = command.join(' ');
-    expect(call.command, equals(key));
+    expect(calls, isNotEmpty,
+        reason: 'All calls have been executed. Add call for command \'$key\'');
+    final call = calls.removeAt(0);
+    expect(call.command, equals(key),
+        reason:
+            'Incorrect call in sequence. Add \'$key\' to calls before \'${call.command}\' at position ${_origCalls.length - calls.length}');
     return call.result;
   }
 
@@ -238,6 +240,6 @@ class Call {
 
   @override
   String toString() {
-    return 'call: $command, results:$result';
+    return 'call: $command';
   }
 }
