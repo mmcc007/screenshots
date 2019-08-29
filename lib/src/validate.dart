@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'base/platform.dart';
 import 'config.dart';
 import 'globals.dart';
 import 'image_processor.dart';
@@ -176,7 +177,7 @@ void generateConfigGuide(Screens screens, List devices) {
   stdout.write('\nGuide:');
   _reportAttachedDevices(devices);
   _reportInstalledEmulators(utils.getAvdNames());
-  if (Platform.isMacOS) _reportInstalledSimulators(utils.getIosSimulators());
+  if (platform.isMacOS) _reportInstalledSimulators(utils.getIosSimulators());
   _reportSupportedDevices(screens);
   stdout.write(
       '\n  Each device listed in screenshots.yaml with framing required must'
@@ -205,7 +206,7 @@ void _checkScreenAvailable(
 void _reportSupportedDevices(Screens screens) {
   stdout.write('\n  Devices with supported screens:\n');
   screens.screens.forEach((os, v) {
-    if (!(!Platform.isMacOS && os == 'ios')) {
+    if (!(!platform.isMacOS && os == 'ios')) {
       stdout.write('    $os:\n');
       v.forEach((screenNum, screenProps) {
         for (String device in screenProps['devices']) {

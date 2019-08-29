@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:intl/intl.dart';
 
 import 'archive.dart';
+import 'base/platform.dart';
 import 'base/process.dart';
 import 'config.dart';
 import 'context_runner.dart';
@@ -73,7 +74,7 @@ Future<bool> runScreenshots(
   final stagingDir = configInfo['staging'];
   await Directory(path.join(stagingDir, kTestScreenshotsDir))
       .create(recursive: true);
-  if (!Platform.isWindows) await resources.unpackScripts(stagingDir);
+  if (!platform.isWindows) await resources.unpackScripts(stagingDir);
   Archive archive = Archive(configInfo['archive']);
   if (runMode == RunMode.archive) {
     print('Archiving screenshots to ${archive.archiveDirPrefix}...');
@@ -528,7 +529,7 @@ Future<String> shutdownAndroidEmulator(
 /// Start android emulator in a CI environment.
 Future _startAndroidEmulatorOnCI(String emulatorId, String stagingDir) async {
   // testing on CI/CD requires starting emulator in a specific way
-  final androidHome = Platform.environment['ANDROID_HOME'];
+  final androidHome = platform.environment['ANDROID_HOME'];
   await streamCmd([
     '$androidHome/emulator/emulator',
     '-avd',
@@ -569,7 +570,7 @@ DeviceType getDeviceType(Map configInfo, String deviceName) {
 void checkImageMagicInstalled() {
   runInContext<void>(() async {
     bool isInstalled = false;
-    if (Platform.isWindows) {
+    if (platform.isWindows) {
       isInstalled = cmd([
         'magick',
       ]).isNotEmpty;
