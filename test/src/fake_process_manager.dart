@@ -64,7 +64,8 @@ class FakeProcessManager extends Mock implements ProcessManager {
     // 1. Pop off call list
     // 2. Confirm correct command
     // 3. Return process result
-    expect(calls, isNotEmpty, reason: 'command=$command');
+    expect(calls, isNotEmpty,
+        reason: 'All calls have been executed. Add call for command=$command');
     final call = calls.removeAt(0);
     final String key = command.join(' ');
     expect(call.command, equals(key));
