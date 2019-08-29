@@ -189,7 +189,7 @@ void generateConfigGuide(Screens screens, List devices) {
 // check screen is available for device
 void _checkScreenAvailable(
     Screens screens, String deviceName, String configPath) {
-  if (screens.screenProps(deviceName) == null) {
+  if (screens.getScreen(deviceName) == null) {
     stderr.write(
         'Error: screen not available for device \'$deviceName\' in $configPath.\n');
     stderr.flush();

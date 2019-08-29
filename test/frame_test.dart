@@ -11,7 +11,7 @@ main() {
   test('frame Nexus 9', () async {
     final Screens screens = Screens();
     await screens.init();
-    Map screen = screens.screenProps('Nexus 9');
+    Map screen = screens.getScreen('Nexus 9');
     final Config config = Config(configPath: 'test/screenshots_test.yaml');
     Map appConfig = config.configInfo;
 

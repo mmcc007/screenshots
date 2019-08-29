@@ -19,7 +19,7 @@ class Screens {
   Map get screens => _screens;
 
   /// Get screen properties for [deviceName].
-  Map screenProps(String deviceName) {
+  Map getScreen(String deviceName) {
     Map screenProps;
     screens.values.forEach((osScreens) {
       osScreens.values.forEach((_screenProps) {

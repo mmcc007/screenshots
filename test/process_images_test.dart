@@ -25,7 +25,7 @@ main() {
     for (final String deviceName in devices.keys) {
       final screenshotName = devices[deviceName];
       print('deviceName=$deviceName, screenshotName=$screenshotName');
-      Map screen = screens.screenProps(deviceName);
+      Map screen = screens.getScreen(deviceName);
 
       final Map screenResources = screen['resources'];
       await resources.unpackImages(screenResources, '/tmp/screenshots');

@@ -41,7 +41,7 @@ void main() {
     };
     final screens = Screens();
     await screens.init();
-    final screen = screens.screenProps('Nexus 5X');
+    final screen = screens.getScreen('Nexus 5X');
     expect(screen, expected);
   });
 
@@ -60,14 +60,14 @@ void main() {
     };
     final screens = Screens();
     await screens.init();
-    final screen = screens.screenProps('iPhone X');
+    final screen = screens.getScreen('iPhone X');
     expect(screen, expected);
   });
 
   test('overlay statusbar', () async {
     final Screens screens = Screens();
     await screens.init();
-    final screen = screens.screenProps('Nexus 6P');
+    final screen = screens.getScreen('Nexus 6P');
     final Config config = Config(configPath: 'test/screenshots_test.yaml');
     final configInfo = config.configInfo;
     final Map scrnResources = screen['resources'];
@@ -86,7 +86,7 @@ void main() {
   test('append navbar', () async {
     final Screens screens = Screens();
     await screens.init();
-    final screen = screens.screenProps('Nexus 9');
+    final screen = screens.getScreen('Nexus 9');
     final Config config = Config(configPath: 'test/screenshots_test.yaml');
     final configInfo = config.configInfo;
     final Map scrnResources = screen['resources'];
@@ -105,7 +105,7 @@ void main() {
   test('frame screenshot', () async {
     final Screens screens = Screens();
     await screens.init();
-    final screen = screens.screenProps('Nexus 9');
+    final screen = screens.getScreen('Nexus 9');
     final Config config = Config(configPath: 'test/screenshots_test.yaml');
     final configInfo = config.configInfo;
     final Map scrnResources = screen['resources'];
