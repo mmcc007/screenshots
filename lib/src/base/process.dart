@@ -17,8 +17,8 @@ import 'file_system.dart';
 /// If [silent] is false, output to stdout.
 String cmd(List<String> cmd,
     {String workingDirectory = '.', bool silent = true}) {
-//  print(
-//      'cmd=\'${cmd.join(" ")}\', workingDirectory=$workingDirectory, silent=$silent');
+  print(
+      'cmd=\'${cmd.join(" ")}\', workingDirectory=$workingDirectory, silent=$silent');
   final result = processManager.runSync(cmd,
       workingDirectory: workingDirectory, runInShell: true);
   _traceCommand(cmd, workingDirectory: workingDirectory);
@@ -33,13 +33,17 @@ String cmd(List<String> cmd,
 
 /// Execute command with arguments [cmd] in a separate process
 /// and stream stdout/stderr.
-Future<void> streamCmd(List<String> cmd,
-    {String workingDirectory = '.'}) async {
-//  print('streamCmd=\'${cmd.join(" ")}\', workingDirectory=$workingDirectory');
-  final exitCode =
-      await runCommandAndStreamOutput(cmd, workingDirectory: workingDirectory);
-  if (exitCode != 0) {
-    throw 'command failed: exitcode=$exitCode, cmd=\'${cmd.join(" ")}\', workingDirectory=$workingDirectory';
+Future<void> streamCmd(
+  List<String> cmd, {
+  String workingDirectory = '.',
+  ProcessStartMode mode = ProcessStartMode.normal,
+}) async {
+  print(
+      'streamCmd=\'${cmd.join(" ")}\', workingDirectory=$workingDirectory, mode=$mode');
+  final exitCode = await runCommandAndStreamOutput(cmd,
+      workingDirectory: workingDirectory, mode: mode);
+  if (exitCode != 0 && mode != ProcessStartMode.detached) {
+    throw 'command failed: exitcode=$exitCode, cmd=\'${cmd.join(" ")}\', workingDirectory=$workingDirectory, mode=$mode';
   }
 }
 
@@ -57,6 +61,7 @@ Future<Process> runCommand(
   List<String> cmd, {
   String workingDirectory,
   Map<String, String> environment,
+  ProcessStartMode mode = ProcessStartMode.normal,
 }) {
   _traceCommand(cmd, workingDirectory: workingDirectory);
   return processManager.start(
@@ -64,6 +69,7 @@ Future<Process> runCommand(
     workingDirectory: workingDirectory,
     environment: environment,
     runInShell: true,
+    mode: mode,
   );
 }
 
@@ -83,47 +89,52 @@ Future<int> runCommandAndStreamOutput(
   RegExp filter,
   StringConverter mapFunction,
   Map<String, String> environment,
+  ProcessStartMode mode = ProcessStartMode.normal,
 }) async {
   final Process process = await runCommand(
     cmd,
     workingDirectory: workingDirectory,
     environment: environment,
+    mode: mode,
   );
-  final StreamSubscription<String> stdoutSubscription = process.stdout
-      .transform<String>(utf8.decoder)
-      .transform<String>(const LineSplitter())
-      .where((String line) => filter == null ? true : filter.hasMatch(line))
-      .listen((String line) {
-    if (mapFunction != null) line = mapFunction(line);
-    if (line != null) {
-      final String message = '$prefix$line';
-      if (trace)
-        printTrace(message); // ignore: curly_braces_in_flow_control_structures
-      else
-        printStatus(message,
-            wrap: false); // ignore: curly_braces_in_flow_control_structures
-    }
-  });
-  final StreamSubscription<String> stderrSubscription = process.stderr
-      .transform<String>(utf8.decoder)
-      .transform<String>(const LineSplitter())
-      .where((String line) => filter == null ? true : filter.hasMatch(line))
-      .listen((String line) {
-    if (mapFunction != null) line = mapFunction(line);
-    if (line != null) printError('$prefix$line', wrap: false);
-  });
+  if (mode != ProcessStartMode.detached) {
+    final StreamSubscription<String> stdoutSubscription = process.stdout
+        .transform<String>(utf8.decoder)
+        .transform<String>(const LineSplitter())
+        .where((String line) => filter == null ? true : filter.hasMatch(line))
+        .listen((String line) {
+      if (mapFunction != null) line = mapFunction(line);
+      if (line != null) {
+        final String message = '$prefix$line';
+        if (trace)
+          printTrace(
+              message); // ignore: curly_braces_in_flow_control_structures
+        else
+          printStatus(message,
+              wrap: false); // ignore: curly_braces_in_flow_control_structures
+      }
+    });
+    final StreamSubscription<String> stderrSubscription = process.stderr
+        .transform<String>(utf8.decoder)
+        .transform<String>(const LineSplitter())
+        .where((String line) => filter == null ? true : filter.hasMatch(line))
+        .listen((String line) {
+      if (mapFunction != null) line = mapFunction(line);
+      if (line != null) printError('$prefix$line', wrap: false);
+    });
 
-  // Wait for stdout to be fully processed
-  // because process.exitCode may complete first causing flaky tests.
-  await waitGroup<void>(<Future<void>>[
-    stdoutSubscription.asFuture<void>(),
-    stderrSubscription.asFuture<void>(),
-  ]);
+    // Wait for stdout to be fully processed
+    // because process.exitCode may complete first causing flaky tests.
+    await waitGroup<void>(<Future<void>>[
+      stdoutSubscription.asFuture<void>(),
+      stderrSubscription.asFuture<void>(),
+    ]);
 
-  await waitGroup<void>(<Future<void>>[
-    stdoutSubscription.cancel(),
-    stderrSubscription.cancel(),
-  ]);
+    await waitGroup<void>(<Future<void>>[
+      stdoutSubscription.cancel(),
+      stderrSubscription.cancel(),
+    ]);
+  }
 
   return await process.exitCode;
 }

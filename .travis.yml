@@ -5,17 +5,19 @@ env:
     - FLUTTER_CHANNEL=stable
     - FLUTTER_VERSION=1.7.8+hotfix.4-${FLUTTER_CHANNEL}
 
+matrix:
+  fast_finish: true
+
 jobs:
-#  fast_finish: true
+  allow_failures:
+    - env:
+        - Run screenshots on Android
+        - OS=linux
   include:
-#  allow_failures:
-#    - env:
-#        - Run screenshots on Android
-#        - OS=linux
 
     - stage: Testing
       env:
-#        - Unit tests
+        - Unit tests
         - OS=linux
       os: linux
 #      language: dart
@@ -31,22 +33,8 @@ jobs:
 
       install:
         - flutter doctor -v
-#        - sudo apt-get install imagemagick
-#        - sudo apt-get update
-#        - sudo apt-get install --only-upgrade imagemagick
-#        - sudo apt-get install build-essential checkinstall
-#        - sudo apt-get build-dep imagemagick -y
-#        - wget http://www.imagemagick.org/download/ImageMagick.tar.gz
-#        - tar xzvf ImageMagick.tar.gz > /dev/null
-#        - cd ImageMagick*
-#        - ./configure > /dev/null
-#        - make
-#        - sudo make install
-#        - sudo ldconfig /usr/local/lib
-        - which convert || echo "ignore exit($?)"
-        - which magick || echo "ignore exit($?)"
-        - convert -version || echo "ignore exit($?)"
-        - magick -version || echo "ignore exit($?)"
+
+        # install image magick (already installed)
         # install coverage tool
         - pub global activate coverage
         # install most current (released or unreleased) Screenshots
@@ -59,7 +47,7 @@ jobs:
 
     - stage: Testing
       env:
-#        - Run screenshots on iOS
+        - Run screenshots on iOS
         - OS=macos
       os: osx
       #osx_image: xcode10.2 # macOS 10.14, JDK 12+33
@@ -130,74 +118,77 @@ jobs:
         on:
           tags: true
 
-#    - stage: Testing
-#      env:
-#        - Run screenshots on Android
-#        - OS=linux
-#      os: linux
-#
-#      # run on master or PRs
-#      if: branch = master
-#
-#      before_install:
-#
-#        # Install android tools
-#        - ANDROID_TOOLS=4333796 # android-28
-#        - export ANDROID_HOME=~/android-sdk
-#        - wget -q "https://dl.google.com/android/repository/sdk-tools-$OS-$ANDROID_TOOLS.zip" -O android-sdk-tools.zip
-#        - unzip -q android-sdk-tools.zip -d ${ANDROID_HOME}
-#        - rm android-sdk-tools.zip
-#        #      - PATH=${PATH}:${ANDROID_HOME}/tools:${ANDROID_HOME}/tools/bin:${ANDROID_HOME}/platform-tools
-#        - PATH=${PATH}:${ANDROID_HOME}/emulator:${ANDROID_HOME}/tools/bin:${ANDROID_HOME}/platform-tools
-#        # Silence warning.
-#        - mkdir -p ~/.android
-#        - touch ~/.android/repositories.cfg
-#
-#        # Add missing java module used by sdkmanager, etc...
-#        #      - export SDKMANAGER_OPTS="--add-modules java.se.ee"
-#        - export JAVA_OPTS='-XX:+IgnoreUnrecognizedVMOptions --add-modules java.se.ee'
-#        # Accept licenses before installing components, no need to echo y for each component
-#        - yes | sdkmanager --licenses
-#        # Platform tools
-#        - sdkmanager "emulator" "tools" "platform-tools" > /dev/null
-#        - sdkmanager --list | head -15
-#        # install older build tools (for emulator)
-#        - sdkmanager "build-tools;25.0.2" "platforms;android-25" > /dev/null
-#
-#        # Download a pinned version of the emulator since upgrades can cause issues
-#        - ${ANDROID_HOME}/emulator/emulator -version
-#        - emulator_version=5264690 # 29.0.9.0 (build_id 5537588) ==> 28.0.23.0 (build_id 5264690)
-#        - curl -fo emulator.zip "https://dl.google.com/android/repository/emulator-darwin-$emulator_version.zip"
-#        - rm -rf "${ANDROID_HOME}/emulator"
-#        - unzip -q emulator.zip -d "${ANDROID_HOME}"
-#        - rm -f emulator.zip
-#        - ${ANDROID_HOME}/emulator/emulator -version
-#
-#        # Create emulator
-#        - EMULATOR_API_LEVEL=22
-#        - ABI="default;armeabi-v7a"
-#        - EMULATOR_NAME='Nexus_6P_API_28'
-#        - sdkmanager "system-images;android-$EMULATOR_API_LEVEL;$ABI" > /dev/null
-#        - sdkmanager --list | head -15
-#        - echo no | avdmanager create avd -n $EMULATOR_NAME -k "system-images;android-$EMULATOR_API_LEVEL;$ABI"
-#        #      - cat ~/.android/avd/$EMULATOR_NAME.ini
-#        #      - cat ~/.android/avd/$EMULATOR_NAME.avd/config.ini
-#        - echo "hw.lcd.width=1440" >> ~/.android/avd/$EMULATOR_NAME.avd/config.ini
-#        - echo "hw.lcd.height=2560" >> ~/.android/avd/$EMULATOR_NAME.avd/config.ini
-#        - echo "hw.device.name=Nexus 6P" >> ~/.android/avd/$EMULATOR_NAME.avd/config.ini
-#        - echo "hw.device.manufacturer=Google" >> ~/.android/avd/$EMULATOR_NAME.avd/config.ini
-#        - echo "avd.ini.displayname=Nexus 6P API 28" >> ~/.android/avd/$EMULATOR_NAME.avd/config.ini
-#
-#        # Install image magick
-#        - sudo apt-get install imagemagick
-#        - magick || echo 'ignore exit(1)'
-#
-#      install: *install_flutter_linux
-#
-#      before_script:
-#        - flutter doctor -v
-#        # install most current (released or unreleased) Screenshots
-#        - pub global activate --source path .
-#
-#      script:
-#        - cd example; screenshots -c screenshots_android.yaml
+    - stage: Testing
+      env:
+        - Run screenshots on Android
+        - OS=linux
+      dist: trusty # defaults to java 1.8
+      os: linux
+
+      # run on master or PRs
+      if: branch = master
+
+      before_install:
+
+        # Install android tools
+        - ANDROID_TOOLS=4333796 # android-28
+        - export ANDROID_HOME=~/android-sdk
+        - wget -q "https://dl.google.com/android/repository/sdk-tools-$OS-$ANDROID_TOOLS.zip" -O android-sdk-tools.zip
+        - unzip -q android-sdk-tools.zip -d ${ANDROID_HOME}
+        - rm android-sdk-tools.zip
+        #      - PATH=${PATH}:${ANDROID_HOME}/tools:${ANDROID_HOME}/tools/bin:${ANDROID_HOME}/platform-tools
+        - PATH=${PATH}:${ANDROID_HOME}/emulator:${ANDROID_HOME}/tools/bin:${ANDROID_HOME}/platform-tools
+        # Silence warning.
+        - mkdir -p ~/.android
+        - touch ~/.android/repositories.cfg
+
+        # Add missing java module used by sdkmanager, etc...
+        #      - export SDKMANAGER_OPTS="--add-modules java.se.ee"
+        # - export JAVA_OPTS='-XX:+IgnoreUnrecognizedVMOptions --add-modules java.se.ee'
+        # Accept licenses before installing components, no need to echo y for each component
+        - yes | sdkmanager --licenses > /dev/null
+        # Platform tools
+        - sdkmanager "emulator" "tools" "platform-tools" > /dev/null
+        - sdkmanager --list | head -15
+        # install older build tools (for emulator)
+        - sdkmanager "build-tools;25.0.2" "platforms;android-25" > /dev/null
+
+        # Download a pinned version of the emulator since upgrades can cause issues
+        - ${ANDROID_HOME}/emulator/emulator -version
+        - emulator_version=5264690 # 29.0.9.0 (build_id 5537588) ==> 28.0.23.0 (build_id 5264690)
+        - curl -fo emulator.zip "https://dl.google.com/android/repository/emulator-$OS-$emulator_version.zip"
+        - rm -rf "${ANDROID_HOME}/emulator"
+        - unzip -q emulator.zip -d "${ANDROID_HOME}"
+        - rm -f emulator.zip
+        - ${ANDROID_HOME}/emulator/emulator -version
+
+        # Create emulator
+        - EMULATOR_API_LEVEL=22
+        - ABI="default;armeabi-v7a"
+        - EMULATOR_NAME='Nexus_6P_API_28'
+        - sdkmanager "system-images;android-$EMULATOR_API_LEVEL;$ABI" > /dev/null
+        - sdkmanager --list | head -15
+        - echo no | avdmanager create avd -n $EMULATOR_NAME -k "system-images;android-$EMULATOR_API_LEVEL;$ABI"
+        #      - cat ~/.android/avd/$EMULATOR_NAME.ini
+        #      - cat ~/.android/avd/$EMULATOR_NAME.avd/config.ini
+        - echo "hw.lcd.width=1440" >> ~/.android/avd/$EMULATOR_NAME.avd/config.ini
+        - echo "hw.lcd.height=2560" >> ~/.android/avd/$EMULATOR_NAME.avd/config.ini
+        - echo "hw.device.name=Nexus 6P" >> ~/.android/avd/$EMULATOR_NAME.avd/config.ini
+        - echo "hw.device.manufacturer=Google" >> ~/.android/avd/$EMULATOR_NAME.avd/config.ini
+        - echo "avd.ini.displayname=Nexus 6P API 28" >> ~/.android/avd/$EMULATOR_NAME.avd/config.ini
+
+        # Install android sdk dependencies required by flutter
+        # (not used but installing anyway)
+        - sdkmanager "platforms;android-28" "build-tools;28.0.3" > /dev/null
+
+        # Install image magick (already installed)
+
+      install: *install_flutter_linux
+
+      before_script:
+        - flutter doctor -v
+        # install most current (released or unreleased) Screenshots
+        - pub global activate --source path .
+
+      script:
+        - cd example; screenshots -c screenshots_android.yaml

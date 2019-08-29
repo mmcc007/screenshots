@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:path/path.dart' as p;
+import 'base/platform.dart';
 import 'base/process.dart';
 
 class ImageMagick {
@@ -134,7 +135,7 @@ class ImageMagick {
   /// ImageMagick command
   String _cmd(String imCmd, List imCmdArgs) {
     // windows uses ImageMagick v7 or later
-    if (Platform.isWindows) {
+    if (platform.isWindows) {
       return cmd([
         ...['magick'],
         ...[imCmd],

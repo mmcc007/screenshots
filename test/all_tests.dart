@@ -16,11 +16,13 @@ import 'image_magick_test.dart' as image_magick_test;
 import 'resources_test.dart' as resources_test;
 import 'fastlane_test.dart' as fastlane_test;
 //import 'dummy_test.dart' as dummy_test;
+import 'daemon_client_test.dart' as daemon_client_test;
 
 void main() {
   isCI() ? print('running in CI') : print('not running in CI');
 
 //  dummy_test.main();
+  daemon_client_test.main();
   src_all_tests.main();
   run_test.main();
   base_all_tests.main();

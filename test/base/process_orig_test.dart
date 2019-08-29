@@ -18,13 +18,8 @@ main() {
   setUp(() async {
     mockLogger = BufferLogger();
     fakeProcessManager = FakeProcessManager();
-    final Map<String, List<ProcessResult>> calls =
-        <String, List<ProcessResult>>{
-      testCmd.join(' '): <ProcessResult>[
-        ProcessResult(0, 0, expected, ''),
-      ],
-    };
-    fakeProcessManager.fakeResults = calls;
+    final calls = [Call(testCmd.join(' '), ProcessResult(0, 0, expected, ''))];
+    fakeProcessManager.calls = calls;
   });
 
   group('process', () {

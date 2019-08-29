@@ -150,7 +150,7 @@ String getAndroidDeviceLocale(String deviceId) {
 // ro.product.locale is available on first boot but does not update,
 // persist.sys.locale is empty on first boot but updates with locale changes
   String locale =
-      cmd(['adb', '-s', deviceId, 'shell', 'getprop persist.sys.locale'])
+      cmd(['adb', '-s', deviceId, 'shell', 'getprop', 'persist.sys.locale'])
           .trim();
   if (locale.isEmpty) {
     locale = cmd(['adb', '-s', deviceId, 'shell', 'getprop ro.product.locale'])
