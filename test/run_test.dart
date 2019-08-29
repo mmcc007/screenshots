@@ -4,6 +4,7 @@ import 'package:mockito/mockito.dart';
 import 'package:platform/platform.dart';
 import 'package:process/process.dart';
 import 'package:screenshots/src/base/context.dart';
+import 'package:screenshots/src/base/platform.dart';
 import 'package:screenshots/src/daemon_client.dart';
 import 'package:screenshots/src/run.dart';
 import 'package:test/test.dart';
@@ -209,6 +210,12 @@ main() {
                 }
                 ''',
               ''));
+      final callPlutilEnUS = Call(
+          'plutil -convert json -o - ${LocalPlatform().environment['HOME']}/Library/Developer/CoreSimulator/Devices/6B3B1AD9-EFD3-49AB-9CE9-D43CE1A47446/data/Library/Preferences/.GlobalPreferences.plist',
+          ProcessResult(0, 0, '{"AppleLocale":"en_US"}', ''));
+      final callPlutilFrCA = Call(
+          'plutil -convert json -o - ${LocalPlatform().environment['HOME']}/Library/Developer/CoreSimulator/Devices/6B3B1AD9-EFD3-49AB-9CE9-D43CE1A47446/data/Library/Preferences/.GlobalPreferences.plist',
+          ProcessResult(0, 0, '{"AppleLocale":"fr_CA"}', ''));
       final List<Call> calls = [
         callListIosDevices,
         Call(
@@ -259,22 +266,14 @@ main() {
                 '')),
         Call('adb -s emulator-5554 emu kill', null),
         callListIosDevices,
-        Call(
-            'plutil -convert json -o - /Users/jenkins/Library/Developer/CoreSimulator/Devices/6B3B1AD9-EFD3-49AB-9CE9-D43CE1A47446/data/Library/Preferences/.GlobalPreferences.plist',
-            ProcessResult(0, 0, '{"AppleLocale":"en_US"}', '')),
+        callPlutilEnUS,
         Call('xcrun simctl boot 6B3B1AD9-EFD3-49AB-9CE9-D43CE1A47446', null),
-        Call(
-            'plutil -convert json -o - /Users/jenkins/Library/Developer/CoreSimulator/Devices/6B3B1AD9-EFD3-49AB-9CE9-D43CE1A47446/data/Library/Preferences/.GlobalPreferences.plist',
-            ProcessResult(0, 0, '{"AppleLocale":"en_US"}', '')),
-        Call(
-            'plutil -convert json -o - /Users/jenkins/Library/Developer/CoreSimulator/Devices/6B3B1AD9-EFD3-49AB-9CE9-D43CE1A47446/data/Library/Preferences/.GlobalPreferences.plist',
-            ProcessResult(0, 0, '{"AppleLocale":"en_US"}', '')),
+        callPlutilEnUS,
+        callPlutilEnUS,
         Call(
             'flutter -d 6B3B1AD9-EFD3-49AB-9CE9-D43CE1A47446 drive example/test_driver/main.dart',
             null),
-        Call(
-            'plutil -convert json -o - /Users/jenkins/Library/Developer/CoreSimulator/Devices/6B3B1AD9-EFD3-49AB-9CE9-D43CE1A47446/data/Library/Preferences/.GlobalPreferences.plist',
-            ProcessResult(0, 0, '{"AppleLocale":"en_US"}', '')),
+        callPlutilEnUS,
         Call(
             '/tmp/screenshots/resources/script/simulator-controller 6B3B1AD9-EFD3-49AB-9CE9-D43CE1A47446 locale fr-CA',
             null),
@@ -284,9 +283,7 @@ main() {
         Call(
             'flutter -d 6B3B1AD9-EFD3-49AB-9CE9-D43CE1A47446 drive example/test_driver/main.dart',
             null),
-        Call(
-            'plutil -convert json -o - /Users/jenkins/Library/Developer/CoreSimulator/Devices/6B3B1AD9-EFD3-49AB-9CE9-D43CE1A47446/data/Library/Preferences/.GlobalPreferences.plist',
-            ProcessResult(0, 0, '{"AppleLocale":"fr-CA"}', '')),
+        callPlutilFrCA,
         Call(
             '/tmp/screenshots/resources/script/simulator-controller 6B3B1AD9-EFD3-49AB-9CE9-D43CE1A47446 locale en_US',
             null),
@@ -374,7 +371,10 @@ main() {
     }, skip: false, overrides: <Type, Generator>{
       ProcessManager: () => fakeProcessManager,
       Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
-        ..environment = {'CI': 'false'},
+        ..environment = {
+          'CI': 'false',
+          'HOME': LocalPlatform().environment['HOME']
+        },
     });
   });
 }
