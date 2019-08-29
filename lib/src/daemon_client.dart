@@ -224,6 +224,8 @@ Future waitForEmulatorToStart(
     DaemonClient daemonClient, String deviceId) async {
   bool started = false;
   while (!started) {
+//    print(
+//        'waiting for emulator/simulator with device id \'$deviceId\' to start...');
     final devices = await daemonClient.devices;
     final device = devices.firstWhere(
         (device) => device['id'] == deviceId && device['emulator'],
