@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:meta/meta.dart';
 
 import 'archive.dart';
+import 'base/file_system.dart';
 import 'screens.dart';
 import 'fastlane.dart' as fastlane;
 import 'resources.dart' as resources;
@@ -52,7 +53,7 @@ class ImageProcessor {
 
         // add status and nav bar and frame for each screenshot
         final screenshots =
-            Directory('$staging/$kTestScreenshotsDir').listSync();
+            fs.directory('$staging/$kTestScreenshotsDir').listSync();
         for (final screenshotPath in screenshots) {
           // add status bar for each screenshot
 //    print('overlaying status bar over screenshot at $screenshotPath');
@@ -118,8 +119,9 @@ class ImageProcessor {
   Future<Map> compareImages(
       String deviceName, String recordingDir, String comparisonDir) async {
     Map failedCompare = {};
-    final recordedImages = Directory(recordingDir).listSync();
-    Directory(comparisonDir)
+    final recordedImages = fs.directory(recordingDir).listSync();
+    fs
+        .directory(comparisonDir)
         .listSync()
         .where((screenshot) =>
             p.basename(screenshot.path).contains(deviceName) &&

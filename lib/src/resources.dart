@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:resource/resource.dart';
-import 'utils.dart' as utils;
+import 'base/process.dart';
 
 ///
 /// Copy resource images for a screen from package to files.
@@ -18,7 +18,7 @@ Future unpackImages(Map screenResources, String dstDir) async {
 }
 
 /// Read scripts from resources and install in staging area.
-Future<void> unpackScripts(String dstDir) async {
+Future unpackScripts(String dstDir) async {
   await unpackScript(
     'resources/script/android-wait-for-emulator',
     dstDir,
@@ -44,7 +44,7 @@ Future unpackScript(String srcPath, String dstDir) async {
   final file = await File('$dstDir/$srcPath').create(recursive: true);
   await file.writeAsString(script, flush: true);
   // make executable
-  utils.cmd('chmod', ['u+x', '$dstDir/$srcPath']);
+  cmd(['chmod', 'u+x', '$dstDir/$srcPath']);
 }
 
 /// Read an image from resources.

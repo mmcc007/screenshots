@@ -1,10 +1,11 @@
+import 'package:screenshots/src/base/process.dart';
 import 'package:screenshots/src/config.dart';
+import 'package:screenshots/src/context_runner.dart';
 import 'package:screenshots/src/globals.dart';
 import 'package:screenshots/src/image_processor.dart';
 import 'package:screenshots/src/resources.dart' as resources;
 import 'package:screenshots/src/screens.dart';
 import 'package:test/test.dart';
-import 'package:screenshots/src/utils.dart' as utils;
 
 main() {
   test('process screenshots for iPhone X and iPhone XS Max', () async {
@@ -37,9 +38,9 @@ main() {
         'screenshotPath': screenshotPath,
         'statusbarPath': statusbarPath,
       };
-//      print('options=$options');
-      await im.convert('overlay', options);
-
+      await runInContext<void>(() async {
+        return im.convert('overlay', options);
+      });
       final framePath = appConfig['staging'] + '/' + screenResources['frame'];
       final size = screen['size'];
       final resize = screen['resize'];
@@ -52,11 +53,14 @@ main() {
         'screenshotPath': screenshotPath,
         'backgroundColor': ImageProcessor.kDefaultAndroidBackground,
       };
-//      print('options=$options');
-      await im.convert('frame', options);
+      await runInContext<void>(() async {
+        return im.convert('frame', options);
+      });
     }
     for (var deviceName in devices.values) {
-      utils.cmd('git', ['checkout', '$imageDir/$deviceName']);
+      await runInContext<void>(() async {
+        return cmd(['git', 'checkout', '$imageDir/$deviceName']);
+      });
     }
   });
 }
