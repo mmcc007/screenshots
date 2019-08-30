@@ -38,7 +38,7 @@ class ImageProcessor {
   Future<void> process(DeviceType deviceType, String deviceName, String locale,
       RunMode runMode, Archive archive) async {
     final Map screenProps = _screens.getScreen(deviceName);
-    final String tmpDir = _config['tmpDir'];
+    final String tmpDir = _config['staging'];
     if (screenProps == null) {
       print('Warning: \'$deviceName\' images will not be processed');
     } else {
