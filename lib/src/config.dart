@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:meta/meta.dart';
+import 'package:screenshots/src/orientation.dart';
 
 import 'screens.dart';
 import 'utils.dart' as utils;
@@ -23,6 +24,18 @@ class Config {
   final String configPath;
   Map _configInfo;
   Map _screenshotsEnv; // current screenshots env
+
+  List<String> get tests => _processList(_configInfo['tests']);
+  String get stagingDir => _configInfo['staging'];
+  List<String> get locales => _processList(_configInfo['locales']);
+  Map<String, ConfigDevice> get devices =>
+      _processDevices(configInfo['devices'], isFrameEnabled);
+  bool get isFrameEnabled => _configInfo['frame'];
+  String get recordingPath => _configInfo['recording'];
+  String get archivePath => _configInfo['archive'];
+
+  ConfigDevice getDevice(String deviceName) =>
+      devices.values.firstWhere((device) => device.name == deviceName);
 
   /// Get configuration information for supported devices
   Map get configInfo => _configInfo;
@@ -59,4 +72,52 @@ class Config {
   Future<void> _retrieveEnv() async {
     _screenshotsEnv = json.decode(await _envStore.readAsString());
   }
+
+  List<String> _processList(List list) {
+    return list.map((item) {
+      return item.toString();
+    }).toList();
+  }
+
+  Map<String, ConfigDevice> _processDevices(
+      Map devices, bool isFramingEnabled) {
+    return devices.map((deviceType, device) {
+      return MapEntry(
+          deviceType,
+          device.map((deviceName, deviceProps) {
+            return MapEntry(
+                'key',
+                ConfigDevice(
+                    deviceName,
+                    utils.getEnumFromString(DeviceType.values, deviceType),
+                    deviceProps['frame'] ??
+                        isFramingEnabled, // device frame overrides global frame
+                    utils.getEnumFromString(
+                        Orientation.values, deviceProps['orientation'])));
+          })['key']);
+    });
+  }
+}
+
+/// Describe a config device
+class ConfigDevice {
+  final String name;
+  final DeviceType deviceType;
+  final bool isFramed;
+  final Orientation orientation;
+
+  ConfigDevice(this.name, this.deviceType, this.isFramed, this.orientation);
+
+  @override
+  bool operator ==(other) {
+    return other is ConfigDevice &&
+        other.name == name &&
+        other.isFramed == isFramed &&
+        other.orientation == orientation &&
+        other.deviceType == deviceType;
+  }
+
+  @override
+  String toString() =>
+      'name: $name, deviceType: ${utils.getStringFromEnum(deviceType)}, isFramed: $isFramed, orientation: ${utils.getStringFromEnum(orientation)}';
 }

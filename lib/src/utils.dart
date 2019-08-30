@@ -155,7 +155,8 @@ String getStringFromEnum(dynamic _enum) => _enum.toString().split('.').last;
 /// Converts [String] to [enum].
 T getEnumFromString<T>(List<T> values, String value) {
   return values.firstWhere((type) => getStringFromEnum(type) == value,
-      orElse: () => null);
+      orElse: () =>
+          throw 'Fatal: \'$value\' is not a valid enum value for $values.');
 }
 
 /// Returns locale of currently attached android device.
