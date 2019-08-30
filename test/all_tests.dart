@@ -16,7 +16,7 @@ import 'image_magick_test.dart' as image_magick_test;
 import 'resources_test.dart' as resources_test;
 import 'fastlane_test.dart' as fastlane_test;
 import 'daemon_client_test.dart' as daemon_client_test;
-import 'src/config_test.dart' as config_test;
+import 'config_test.dart' as config_test;
 
 void main() {
   isCI() ? print('running in CI') : print('not running in CI');

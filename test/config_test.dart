@@ -54,17 +54,78 @@ main() {
       expect(config.tests, [expectedTest]);
       expect(config.stagingDir, expectedStaging);
       expect(config.locales, [expectedLocale]);
-      expect(config.devices, {
-        'android': expectedAndroidDevice,
-        'ios': expectedIosDevice,
-      });
-      expect(config.devices['android'], equals(expectedAndroidDevice));
-      expect(config.devices['ios'], isNot(equals(expectedAndroidDevice)));
+      expect(config.androidDevices, equals([expectedAndroidDevice]));
+      expect(config.iosDevices, equals([expectedIosDevice]));
+      expect(config.iosDevices, isNot(equals([expectedAndroidDevice])));
       expect(config.isFrameEnabled, expectedGlobalFrame);
       expect(config.recordingPath, expectedRecording);
       expect(config.archivePath, expectedArchive);
       expect(config.getDevice(expectedAndroidName), expectedAndroidDevice);
       expect(config.getDevice(expectedAndroidName), isNot(expectedIosDevice));
+    });
+
+    group('methods', () {
+      test('active run type', () {
+        final configIosOnly = '''
+        devices:
+          ios:
+            iPhone X:
+      ''';
+        final configAndroidOnly = '''
+        devices:
+          ios: # check for empty devices
+          android:
+            Nexus 6P:
+      ''';
+        final configBoth = '''
+        devices:
+          ios:
+            iPhone X:
+          android:
+            Nexus 6P:
+      ''';
+        final configNeither = '''
+        devices:
+          ios:
+          android:
+      ''';
+//      Map config = utils.parseYamlStr(configIosOnly);
+        Config config = Config(configStr: configIosOnly);
+        expect(config.isRunTypeActive(DeviceType.ios), isTrue);
+        expect(config.isRunTypeActive(DeviceType.android), isFalse);
+
+        config = Config(configStr: configAndroidOnly);
+        expect(config.isRunTypeActive(DeviceType.ios), isFalse);
+        expect(config.isRunTypeActive(DeviceType.android), isTrue);
+
+        config = Config(configStr: configBoth);
+        expect(config.isRunTypeActive(DeviceType.ios), isTrue);
+        expect(config.isRunTypeActive(DeviceType.android), isTrue);
+
+        config = Config(configStr: configNeither);
+        expect(config.isRunTypeActive(DeviceType.ios), isFalse);
+        expect(config.isRunTypeActive(DeviceType.android), isFalse);
+      });
+
+      test('isFrameRequired', () {
+        String configStr = '''
+        devices:
+          android:
+            Nexus 6P:
+        frame: true
+        ''';
+        Config config = Config(configStr: configStr);
+        expect(config.isFrameRequired('Nexus 6P'), isTrue);
+        configStr = '''
+        devices:
+          android:
+            Nexus 6P:
+              frame: false
+        frame: true
+        ''';
+        config = Config(configStr: configStr);
+        expect(config.isFrameRequired('Nexus 6P'), isFalse);
+      });
     });
   });
 }

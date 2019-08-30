@@ -28,14 +28,33 @@ class Config {
   List<String> get tests => _processList(_configInfo['tests']);
   String get stagingDir => _configInfo['staging'];
   List<String> get locales => _processList(_configInfo['locales']);
-  Map<String, ConfigDevice> get devices =>
+  List<ConfigDevice> get devices =>
       _processDevices(configInfo['devices'], isFrameEnabled);
+  List<ConfigDevice> get iosDevices =>
+      devices.where((device) => device.deviceType == DeviceType.ios).toList();
+  List<ConfigDevice> get androidDevices => devices
+      .where((device) => device.deviceType == DeviceType.android)
+      .toList();
   bool get isFrameEnabled => _configInfo['frame'];
   String get recordingPath => _configInfo['recording'];
   String get archivePath => _configInfo['archive'];
 
   ConfigDevice getDevice(String deviceName) =>
-      devices.values.firstWhere((device) => device.name == deviceName);
+      devices.firstWhere((device) => device.name == deviceName);
+
+  /// Check for active run type.
+  /// Runs can only be one of [DeviceType].
+  isRunTypeActive(DeviceType runType) {
+    final deviceType = utils.getStringFromEnum(runType);
+    return _configInfo['devices'][deviceType] != null;
+  }
+
+  /// Check if frame is required for [deviceName].
+  bool isFrameRequired(String deviceName) {
+    final device = devices.firstWhere((device) => device.name == deviceName,
+        orElse: () => throw 'Error: device \'$deviceName\' not found');
+    return device.isFramed;
+  }
 
   /// Get configuration information for supported devices
   Map get configInfo => _configInfo;
@@ -79,23 +98,28 @@ class Config {
     }).toList();
   }
 
-  Map<String, ConfigDevice> _processDevices(
-      Map devices, bool isFramingEnabled) {
-    return devices.map((deviceType, device) {
-      return MapEntry(
-          deviceType,
-          device.map((deviceName, deviceProps) {
-            return MapEntry(
-                'key',
-                ConfigDevice(
-                    deviceName,
-                    utils.getEnumFromString(DeviceType.values, deviceType),
-                    deviceProps['frame'] ??
-                        isFramingEnabled, // device frame overrides global frame
-                    utils.getEnumFromString(
+  List<ConfigDevice> _processDevices(Map devices, bool globalFraming) {
+    List<ConfigDevice> configDevices = [];
+
+    devices.forEach((deviceType, device) {
+      device.forEach((deviceName, deviceProps) {
+        configDevices.add(ConfigDevice(
+            deviceName,
+            utils.getEnumFromString(DeviceType.values, deviceType),
+            deviceProps == null
+                ? globalFraming
+                : deviceProps['frame'] ??
+                    globalFraming, // device frame overrides global frame
+            deviceProps == null
+                ? null
+                : deviceProps['orientation'] == null
+                    ? null
+                    : utils.getEnumFromString(
                         Orientation.values, deviceProps['orientation'])));
-          })['key']);
+      });
     });
+
+    return configDevices;
   }
 }
 
@@ -106,7 +130,11 @@ class ConfigDevice {
   final bool isFramed;
   final Orientation orientation;
 
-  ConfigDevice(this.name, this.deviceType, this.isFramed, this.orientation);
+  const ConfigDevice(
+      this.name, this.deviceType, this.isFramed, this.orientation)
+      : assert(name != null),
+        assert(deviceType != null),
+        assert(isFramed != null);
 
   @override
   bool operator ==(other) {
