@@ -6,11 +6,12 @@ import 'package:screenshots/src/globals.dart';
 import 'package:screenshots/src/image_processor.dart';
 import 'package:screenshots/src/resources.dart';
 import 'package:screenshots/src/screens.dart';
+import 'package:screenshots/src/utils.dart';
 
 const usage = 'usage: frame [-h] [-s <screenshot file> -d <device name>]';
 const sampleUsage = 'sample usage: frame -s screenshot.png -d \'Nexus 6P\'';
 
-const kTmpDir = '/tmp/frame_test';
+const kFrameTestTmpDir = '/tmp/frame_test';
 const kRunMode = RunMode.normal;
 
 main(List<String> arguments) async {
@@ -63,26 +64,28 @@ Future runFrame(String screenshotPath, String deviceName) async {
   }
   final deviceType = screens.getDeviceType(deviceName);
 
-  final framedScreenshotPath = '$kTmpDir/framed_screenshot.png';
+  clearDirectory(kFrameTestTmpDir);
+
+  final framedScreenshotPath = '$kFrameTestTmpDir/framed_screenshot.png';
   await File(screenshotPath).copy(framedScreenshotPath);
 
   final screenResources = screen['resources'];
-  await unpackImages(screenResources, kTmpDir);
+  await unpackImages(screenResources, kFrameTestTmpDir);
 
   await runInContext<void>(() async {
     // overlay status bar
     await ImageProcessor.overlay(
-        kTmpDir, screenResources, framedScreenshotPath);
+        kFrameTestTmpDir, screenResources, framedScreenshotPath);
 
     // append navigation bar (if android)
     if (deviceType == DeviceType.android) {
       await ImageProcessor.append(
-          kTmpDir, screenResources, framedScreenshotPath);
+          kFrameTestTmpDir, screenResources, framedScreenshotPath);
     }
 
     // frame
     await ImageProcessor.frame(
-        kTmpDir, screen, framedScreenshotPath, deviceType, kRunMode);
+        kFrameTestTmpDir, screen, framedScreenshotPath, deviceType, kRunMode);
   });
   print('Framed screenshot created: $framedScreenshotPath');
 }

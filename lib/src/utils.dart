@@ -18,8 +18,21 @@ Map parseYamlFile(String yamlPath) =>
 Map parseYamlStr(String yamlString) =>
     jsonDecode(jsonEncode(loadYaml(yamlString)));
 
+/// Clear a named directory if it exists.
+/// Create directory if none exists.
+void clearDirectory(String dir) {
+  _deleteDir(dir);
+  fs.directory(dir).createSync(recursive: true);
+}
+
+/// Delete a directory if it exists.
+void _deleteDir(String dir) {
+  if (fs.directory(dir).existsSync()) {
+    fs.directory(dir).deleteSync(recursive: true);
+  }
+}
+
 /// Move files from [srcDir] to [dstDir].
-///
 /// If dstDir does not exist, it is created.
 void moveFiles(String srcDir, String dstDir) {
   if (!fs.directory(dstDir).existsSync()) {
