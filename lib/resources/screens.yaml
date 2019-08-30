@@ -143,3 +143,19 @@ android:
     destName: tenInch
     devices:
       - Nexus 9
+  # placeholder for android device type (phone/tenInch/sevenInch)
+  # used when framing is off to generate fastlane path
+  # (avoids warning about using 'phone' as default)
+  default phone:
+    destName: phone
+    devices:
+      - default phone
+      - Nexus 6
+  default sevenInch:
+    destName: sevenInch
+    devices:
+      - default seven inch
+  default tenInch:
+    destName: tenInch
+    devices:
+      - default ten inch

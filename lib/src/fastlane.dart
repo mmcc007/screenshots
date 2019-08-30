@@ -44,6 +44,9 @@ Future _clearFastlaneDir(Screens screens, String deviceName, String locale,
   }
 }
 
+const kFastlanePhone = 'phone';
+const kFastlaneSevenInch = 'sevenInch';
+const kFastlaneTenInch = 'tenInch';
 // ios/fastlane/screenshots/en-US/*[iPad|iPhone]*
 // android/fastlane/metadata/android/en-US/images/phoneScreenshots
 // android/fastlane/metadata/android/en-US/images/tenInchScreenshots
@@ -67,8 +70,13 @@ String getDirPath(
 
 /// Get android model type (phone or tablet screen size).
 String getAndroidModelType(Map screenProps) {
-  String androidDeviceType;
-  if (screenProps != null) androidDeviceType = screenProps['destName'];
+  String androidDeviceType = kFastlanePhone;
+  if (screenProps == null) {
+    print(
+        'Warning: using default value \'$kFastlanePhone\' in fastlane directory.');
+  } else {
+    androidDeviceType = screenProps['destName'];
+  }
   return androidDeviceType;
 }
 

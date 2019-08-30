@@ -189,7 +189,8 @@ void generateConfigGuide(Screens screens, List devices) {
 // check screen is available for device
 void _checkScreenAvailable(
     Screens screens, String deviceName, String configPath) {
-  if (screens.getScreen(deviceName) == null) {
+  final screenProps = screens.screenProps(deviceName);
+  if (screenProps == null || _isAndroidModelTypeScreen(screenProps)) {
     stderr.write(
         'Error: screen not available for device \'$deviceName\' in $configPath.\n');
     stderr.flush();
@@ -206,16 +207,24 @@ void _checkScreenAvailable(
 void _reportSupportedDevices(Screens screens) {
   stdout.write('\n  Devices with supported screens:\n');
   screens.screens.forEach((os, v) {
+    // omit ios devices if not on mac
     if (!(!platform.isMacOS && os == 'ios')) {
       stdout.write('    $os:\n');
-      v.forEach((screenNum, screenProps) {
-        for (String device in screenProps['devices']) {
-          stdout.write('      $device\n');
+      v.forEach((screenId, screenProps) {
+        // omit devices that have screens that are
+        // only used to identify android model type
+        if (!_isAndroidModelTypeScreen(screenProps)) {
+          for (String device in screenProps['devices']) {
+            stdout.write('      $device\n');
+          }
         }
       });
     }
   });
 }
+
+/// Test for screen used for identifying android model type
+bool _isAndroidModelTypeScreen(screenProps) => screenProps['size'] == null;
 
 void _reportAttachedDevices(List devices) {
   stdout.write('\n  Attached devices:\n');
