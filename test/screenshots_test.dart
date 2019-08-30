@@ -7,6 +7,7 @@ import 'package:screenshots/src/base/process.dart';
 import 'package:screenshots/src/config.dart';
 import 'package:screenshots/src/context_runner.dart';
 import 'package:screenshots/src/daemon_client.dart';
+import 'package:screenshots/src/fastlane.dart';
 import 'package:screenshots/src/globals.dart';
 import 'package:screenshots/src/image_processor.dart';
 import 'package:screenshots/src/orientation.dart' as orient;
@@ -627,7 +628,7 @@ devices:
   });
 
   group('fastlane dirs', () {
-    test('delete files matching a pattern', () {
+    test('delete files matching a pattern', () async {
       final dirPath = 'test/resources/test';
       final deviceId = 'Nexus 6P';
       final pattern = RegExp('$deviceId.*.$kImageExtension');
@@ -636,10 +637,12 @@ devices:
           .toList()
           .where((e) => pattern.hasMatch(p.basename(e.path)));
       expect(filesPresent(dirPath, pattern).length, 2);
-      fastlane.deleteMatchingFiles(dirPath, pattern);
+      deleteMatchingFiles(dirPath, pattern);
       expect(filesPresent(dirPath, pattern), isEmpty);
       // restore deleted files
-      cmd(['git', 'checkout', dirPath]);
+      await runInContext<String>(() async {
+        return cmd(['git', 'checkout', dirPath]);
+      });
     });
 
     test('get android model type', () async {
@@ -648,31 +651,30 @@ devices:
       final defaultTenInch = 'default ten inch';
       final unknownDevice = 'unknown device';
       final phones = {
-        defaultPhone: fastlane.kFastlanePhone,
-        unknownDevice: fastlane.kFastlanePhone,
-        'Nexus 5X': fastlane.kFastlanePhone,
-        'Nexus 6': fastlane.kFastlanePhone,
-        'Nexus 6P': fastlane.kFastlanePhone,
+        defaultPhone: kFastlanePhone,
+        unknownDevice: kFastlanePhone,
+        'Nexus 5X': kFastlanePhone,
+        'Nexus 6': kFastlanePhone,
+        'Nexus 6P': kFastlanePhone,
       };
-      final sevenInches = {defaultSevenInch: fastlane.kFastlaneSevenInch};
+      final sevenInches = {defaultSevenInch: kFastlaneSevenInch};
       final tenInches = {
-        defaultTenInch: fastlane.kFastlaneTenInch,
-        'Nexus 9': fastlane.kFastlaneTenInch
+        defaultTenInch: kFastlaneTenInch,
+        'Nexus 9': kFastlaneTenInch
       };
       final androidDeviceNames = phones..addAll(sevenInches)..addAll(tenInches);
       final screens = Screens();
       await screens.init();
       for (final androidDeviceName in androidDeviceNames.keys) {
         final screenProps = screens.screenProps(androidDeviceName);
-        expect(fastlane.getAndroidModelType(screenProps),
+        expect(getAndroidModelType(screenProps),
             androidDeviceNames[androidDeviceName]);
       }
 
       // confirm handling of unknown device
       final screenProps = screens.screenProps(unknownDevice);
       expect(screenProps, isNull);
-      expect(
-          fastlane.getAndroidModelType(screenProps), fastlane.kFastlanePhone);
+      expect(getAndroidModelType(screenProps), kFastlanePhone);
     });
   });
 
