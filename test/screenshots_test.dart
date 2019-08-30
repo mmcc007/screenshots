@@ -7,6 +7,7 @@ import 'package:screenshots/src/base/process.dart';
 import 'package:screenshots/src/config.dart';
 import 'package:screenshots/src/context_runner.dart';
 import 'package:screenshots/src/daemon_client.dart';
+import 'package:screenshots/src/fastlane.dart';
 import 'package:screenshots/src/globals.dart';
 import 'package:screenshots/src/image_processor.dart';
 import 'package:screenshots/src/orientation.dart' as orient;
@@ -624,6 +625,57 @@ devices:
           mode: utils.getStringFromEnum(RunMode.archive));
       Directory.current = origDir;
     }, timeout: Timeout(Duration(seconds: 180)), skip: utils.isCI());
+  });
+
+  group('fastlane dirs', () {
+    test('delete files matching a pattern', () async {
+      final dirPath = 'test/resources/test';
+      final deviceId = 'Nexus 6P';
+      final pattern = RegExp('$deviceId.*.$kImageExtension');
+      final filesPresent = (dirPath, pattern) => Directory(dirPath)
+          .listSync()
+          .toList()
+          .where((e) => pattern.hasMatch(p.basename(e.path)));
+      expect(filesPresent(dirPath, pattern).length, 2);
+      deleteMatchingFiles(dirPath, pattern);
+      expect(filesPresent(dirPath, pattern), isEmpty);
+      // restore deleted files
+      await runInContext<String>(() async {
+        return cmd(['git', 'checkout', dirPath]);
+      });
+    });
+
+    test('get android model type', () async {
+      final defaultPhone = 'default phone';
+      final defaultSevenInch = 'default seven inch';
+      final defaultTenInch = 'default ten inch';
+      final unknownDevice = 'unknown device';
+      final phones = {
+        defaultPhone: kFastlanePhone,
+        unknownDevice: kFastlanePhone,
+        'Nexus 5X': kFastlanePhone,
+        'Nexus 6': kFastlanePhone,
+        'Nexus 6P': kFastlanePhone,
+      };
+      final sevenInches = {defaultSevenInch: kFastlaneSevenInch};
+      final tenInches = {
+        defaultTenInch: kFastlaneTenInch,
+        'Nexus 9': kFastlaneTenInch
+      };
+      final androidDeviceNames = phones..addAll(sevenInches)..addAll(tenInches);
+      final screens = Screens();
+      await screens.init();
+      for (final androidDeviceName in androidDeviceNames.keys) {
+        final screenProps = screens.screenProps(androidDeviceName);
+        expect(getAndroidModelType(screenProps),
+            androidDeviceNames[androidDeviceName]);
+      }
+
+      // confirm handling of unknown device
+      final screenProps = screens.screenProps(unknownDevice);
+      expect(screenProps, isNull);
+      expect(getAndroidModelType(screenProps), kFastlanePhone);
+    });
   });
 
   group('adb path', () {
