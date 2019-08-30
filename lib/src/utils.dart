@@ -253,14 +253,6 @@ List getAndroidDevices(List devices) {
   return iosDevices;
 }
 
-/// Get all configured android and ios device names for this test run.
-List getAllConfiguredDeviceNames(Map configInfo) {
-  final androidDeviceNames = configInfo['devices']['android']?.keys ?? [];
-  final iosDeviceNames = configInfo['devices']['ios']?.keys ?? [];
-  final deviceNames = [...androidDeviceNames, ...iosDeviceNames];
-  return deviceNames;
-}
-
 /// Get device for deviceName from list of devices.
 Map getDevice(List devices, String deviceName) {
   return devices.firstWhere(

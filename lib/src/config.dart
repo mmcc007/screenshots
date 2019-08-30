@@ -29,7 +29,7 @@ class Config {
   String get stagingDir => _configInfo['staging'];
   List<String> get locales => _processList(_configInfo['locales']);
   List<ConfigDevice> get devices =>
-      _processDevices(configInfo['devices'], isFrameEnabled);
+      _processDevices(_configInfo['devices'], isFrameEnabled);
   List<ConfigDevice> get iosDevices =>
       devices.where((device) => device.deviceType == DeviceType.ios).toList();
   List<ConfigDevice> get androidDevices => devices
@@ -38,6 +38,9 @@ class Config {
   bool get isFrameEnabled => _configInfo['frame'];
   String get recordingPath => _configInfo['recording'];
   String get archivePath => _configInfo['archive'];
+
+  /// Get all android and ios device names.
+  List<String> get deviceNames => devices.map((device) => device.name).toList();
 
   ConfigDevice getDevice(String deviceName) =>
       devices.firstWhere((device) => device.name == deviceName);
@@ -67,7 +70,7 @@ class Config {
   }
 
   File get _envStore {
-    return File(configInfo['staging'] + '/' + kEnvFileName);
+    return File(_configInfo['staging'] + '/' + kEnvFileName);
   }
 
   /// Records screenshots environment before start of each test
@@ -102,6 +105,8 @@ class Config {
     List<ConfigDevice> configDevices = [];
 
     devices.forEach((deviceType, device) {
+//      print('deviceName=$deviceNames');
+//      print('device=$device');
       device.forEach((deviceName, deviceProps) {
         configDevices.add(ConfigDevice(
             deviceName,

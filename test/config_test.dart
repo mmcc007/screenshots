@@ -62,6 +62,8 @@ main() {
       expect(config.archivePath, expectedArchive);
       expect(config.getDevice(expectedAndroidName), expectedAndroidDevice);
       expect(config.getDevice(expectedAndroidName), isNot(expectedIosDevice));
+      expect(
+          config.deviceNames, equals([expectedAndroidName, expectedIosName]));
     });
 
     group('methods', () {

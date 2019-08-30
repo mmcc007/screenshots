@@ -15,21 +15,21 @@ Future<bool> validate(
   final configPath = config.configPath;
   final configInfo = config.configInfo;
   // validate params
-  final deviceNames = utils.getAllConfiguredDeviceNames(configInfo);
+  final deviceNames = config.deviceNames;
   for (final devName in deviceNames) {
-    final deviceInfo = findDeviceInfo(configInfo, devName);
-    if (deviceInfo != null) {
-      final orientation = deviceInfo['orientation'];
-      if (orientation != null && !isValidOrientation(orientation)) {
-        stderr.writeln(
-            'Invalid value for \'orientation\' for device \'$devName\': $orientation');
-        stderr.writeln('Valid values:');
-        for (final orientation in Orientation.values) {
-          stderr.writeln('  ${utils.getStringFromEnum(orientation)}');
-        }
-        exit(1);
-      }
-      final frame = deviceInfo['frame'];
+    final configDevice = findDeviceInfo(config, devName);
+    if (configDevice != null) {
+//      final orientation = configDevice.orientation;
+//      if (orientation != null && !isValidOrientation(orientation)) {
+//        stderr.writeln(
+//            'Invalid value for \'orientation\' for device \'$devName\': $orientation');
+//        stderr.writeln('Valid values:');
+//        for (final orientation in Orientation.values) {
+//          stderr.writeln('  ${utils.getStringFromEnum(orientation)}');
+//        }
+//        exit(1);
+//      }
+      final frame = configDevice.isFramed;
       if (frame != null && !isValidFrame(frame)) {
         stderr.writeln(
             'Invalid value for \'frame\' for device \'$devName\': $frame');
@@ -259,14 +259,6 @@ bool isValidFrame(dynamic frame) {
 }
 
 /// Find device info in config for device name.
-Map findDeviceInfo(Map configInfo, String deviceName) {
-  Map deviceInfo;
-  configInfo['devices'].forEach((deviceType, devices) {
-    if (devices != null) {
-      devices.forEach((_deviceName, _deviceInfo) {
-        if (_deviceName == deviceName) deviceInfo = _deviceInfo;
-      });
-    }
-  });
-  return deviceInfo;
+ConfigDevice findDeviceInfo(Config configInfo, String deviceName) {
+  return configInfo.getDevice(deviceName);
 }

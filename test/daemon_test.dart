@@ -175,8 +175,7 @@ main() {
     final configInfo = config.configInfo;
     final androidInfo = configInfo['devices']['android'];
     print('androidInfo=$androidInfo');
-    List deviceNames = utils.getAllConfiguredDeviceNames(configInfo);
-//    final deviceNames = []..addAll(androidDeviceNames)??[]..addAll(iosDeviceNames);
+    List deviceNames = config.deviceNames;
     print('deviceNames=$deviceNames');
   });
 

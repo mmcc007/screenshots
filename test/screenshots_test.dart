@@ -768,18 +768,22 @@ devices:
           android device 1:
           android device 2:
         fuschia:
+      frame: true
       ''';
-      final configInfo = loadYaml(params);
-      final deviceNames = utils.getAllConfiguredDeviceNames(configInfo);
+      final configInfo = Config(configStr: params);
+      final deviceNames = configInfo.deviceNames;
       for (final devName in deviceNames) {
         final deviceInfo = validate.findDeviceInfo(configInfo, devName);
         print('devName=$devName');
         print('deviceInfo=$deviceInfo');
         if (deviceInfo != null) {
-          expect(deviceInfo['orientation'], orientation);
-          expect(validate.isValidOrientation(orientation), isTrue);
-          expect(validate.isValidOrientation('bad orientation'), isFalse);
-          expect(deviceInfo['frame'], frame);
+          if (deviceInfo.name == deviceName) {
+            expect(deviceInfo.orientation,
+                utils.getEnumFromString(Orientation.values, orientation));
+            expect(validate.isValidOrientation(orientation), isTrue);
+            expect(validate.isValidOrientation('bad orientation'), isFalse);
+          }
+          expect(deviceInfo.isFramed, frame);
           expect(validate.isValidFrame(frame), isTrue);
           expect(validate.isValidFrame('bad frame'), isFalse);
         }

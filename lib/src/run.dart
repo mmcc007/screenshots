@@ -143,7 +143,7 @@ Future runTestsOnAll(
   final locales = configInfo['locales'];
   final stagingDir = configInfo['staging'];
   final testPaths = configInfo['tests'];
-  final configDeviceNames = utils.getAllConfiguredDeviceNames(configInfo);
+  final configDeviceNames = config.deviceNames;
   final imageProcessor = ImageProcessor(screens, config);
 
   final recordingDir = configInfo['recording'];
