@@ -809,47 +809,6 @@ devices:
   });
 
   group('run across platforms', () {
-    test('active run type', () {
-      final configIosOnly = '''
-        devices:
-          ios:
-            iPhone X:
-      ''';
-      final configAndroidOnly = '''
-        devices:
-          ios: # check for empty devices
-          android:
-            Nexus 6P:
-      ''';
-      final configBoth = '''
-        devices:
-          ios:
-            iPhone X:
-          android:
-            Nexus 6P:
-      ''';
-      final configNeither = '''
-        devices:
-          ios:
-          android:
-      ''';
-      Map configInfo = utils.parseYamlStr(configIosOnly);
-      expect(run.isRunTypeActive(configInfo, DeviceType.ios), isTrue);
-      expect(run.isRunTypeActive(configInfo, DeviceType.android), isFalse);
-
-      configInfo = utils.parseYamlStr(configAndroidOnly);
-      expect(run.isRunTypeActive(configInfo, DeviceType.ios), isFalse);
-      expect(run.isRunTypeActive(configInfo, DeviceType.android), isTrue);
-
-      configInfo = utils.parseYamlStr(configBoth);
-      expect(run.isRunTypeActive(configInfo, DeviceType.ios), isTrue);
-      expect(run.isRunTypeActive(configInfo, DeviceType.android), isTrue);
-
-      configInfo = utils.parseYamlStr(configNeither);
-      expect(run.isRunTypeActive(configInfo, DeviceType.ios), isFalse);
-      expect(run.isRunTypeActive(configInfo, DeviceType.android), isFalse);
-    });
-
     test('ios only', () async {
       final configIosOnly = '''
         tests:

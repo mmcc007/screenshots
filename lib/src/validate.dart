@@ -46,8 +46,7 @@ Future<bool> validate(
   if (configInfo['devices']['android'] != null) {
     final devices = utils.getAndroidDevices(allDevices);
     for (String deviceName in configInfo['devices']['android'].keys) {
-      if (ImageProcessor.isFrameRequired(
-          configInfo, DeviceType.android, deviceName)) {
+      if (config.isFrameRequired(deviceName)) {
         // check screen available for this device
         _checkScreenAvailable(screens, deviceName, configPath);
       }
@@ -67,8 +66,7 @@ Future<bool> validate(
     final devices = utils.getIosDevices(allDevices);
     final Map simulators = utils.getIosSimulators();
     for (String deviceName in configInfo['devices']['ios'].keys) {
-      if (ImageProcessor.isFrameRequired(
-          configInfo, DeviceType.ios, deviceName)) {
+      if (config.isFrameRequired(deviceName)) {
         // check screen available for this device
         _checkScreenAvailable(screens, deviceName, configPath);
       }

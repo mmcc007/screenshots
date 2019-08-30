@@ -68,18 +68,16 @@ Future<bool> runScreenshots(
   final config = Config(configPath: configPath, configStr: configStr);
   // validate config file
   await validate(config, screens, devices, emulators);
-  final configInfo = config.configInfo;
 
   // init
-  final stagingDir = configInfo['staging'];
-  await Directory(path.join(stagingDir, kTestScreenshotsDir))
+  await Directory(path.join(config.stagingDir, kTestScreenshotsDir))
       .create(recursive: true);
-  if (!platform.isWindows) await resources.unpackScripts(stagingDir);
-  Archive archive = Archive(configInfo['archive']);
+  if (!platform.isWindows) await resources.unpackScripts(config.stagingDir);
+  Archive archive = Archive(config.archivePath);
   if (runMode == RunMode.archive) {
     print('Archiving screenshots to ${archive.archiveDirPrefix}...');
   } else {
-    await fastlane.clearFastlaneDirs(configInfo, screens, runMode);
+    await fastlane.clearFastlaneDirs(config, screens, runMode);
   }
   // run integration tests in each real device (or emulator/simulator) for
   // each locale and process screenshots
@@ -90,15 +88,14 @@ Future<bool> runScreenshots(
 
   print('\n\nScreen images are available in:');
   if (runMode == RunMode.recording) {
-    final recordingDir = configInfo['recording'];
-    printScreenshotDirs(configInfo, recordingDir);
+    printScreenshotDirs(config, config.recordingPath);
   } else {
     if (runMode == RunMode.archive) {
       print('  ${archive.archiveDirPrefix}');
     } else {
-      printScreenshotDirs(configInfo, null);
-      final isIosActive = isRunTypeActive(configInfo, DeviceType.ios);
-      final isAndroidActive = isRunTypeActive(configInfo, DeviceType.android);
+      printScreenshotDirs(config, null);
+      final isIosActive = config.isRunTypeActive(DeviceType.ios);
+      final isAndroidActive = config.isRunTypeActive(DeviceType.android);
       if (isIosActive && isAndroidActive) {
         print('for upload to both Apple and Google consoles.');
       }
@@ -116,12 +113,12 @@ Future<bool> runScreenshots(
   return true;
 }
 
-void printScreenshotDirs(Map configInfo, String dirPrefix) {
+void printScreenshotDirs(Config config, String dirPrefix) {
   final prefix = dirPrefix == null ? '' : '${dirPrefix}/';
-  if (isRunTypeActive(configInfo, DeviceType.ios)) {
+  if (config.isRunTypeActive(DeviceType.ios)) {
     print('  ${prefix}ios/fastlane/screenshots');
   }
-  if (isRunTypeActive(configInfo, DeviceType.android)) {
+  if (config.isRunTypeActive(DeviceType.android)) {
     print('  ${prefix}android/fastlane/metadata/android');
   }
 }
@@ -147,7 +144,7 @@ Future runTestsOnAll(
   final stagingDir = configInfo['staging'];
   final testPaths = configInfo['tests'];
   final configDeviceNames = utils.getAllConfiguredDeviceNames(configInfo);
-  final imageProcessor = ImageProcessor(screens, configInfo);
+  final imageProcessor = ImageProcessor(screens, config);
 
   final recordingDir = configInfo['recording'];
   final archiveDir = configInfo['archive'];
@@ -593,13 +590,4 @@ void checkImageMagicInstalled() {
       exit(1);
     }
   });
-}
-
-/// Check for active run type.
-/// Runs can only be one of [DeviceType].
-isRunTypeActive(Map config, DeviceType runType) {
-  final Map devices = config['devices'];
-  final deviceType = utils.getStringFromEnum(runType);
-  final isActive = devices.keys.contains(deviceType);
-  return isActive && devices[deviceType] != null;
 }

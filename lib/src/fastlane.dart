@@ -2,26 +2,24 @@ import 'dart:async';
 import 'dart:io';
 
 import 'base/file_system.dart';
+import 'config.dart';
 import 'screens.dart';
 import 'package:path/path.dart' as p;
 import 'globals.dart';
 
 /// clear configured fastlane directories.
-Future clearFastlaneDirs(Map config, Screens screens, RunMode runMode) async {
-  if (config['devices']['android'] != null) {
-    for (String deviceName in config['devices']['android'].keys) {
-      for (final locale in config['locales']) {
-        await _clearFastlaneDir(
-            screens, deviceName, locale, DeviceType.android, runMode);
-      }
+Future clearFastlaneDirs(
+    Config config, Screens screens, RunMode runMode) async {
+  for (ConfigDevice device in config.androidDevices) {
+    for (final locale in config.locales) {
+      await _clearFastlaneDir(
+          screens, device.name, locale, DeviceType.android, runMode);
     }
   }
-  if (config['devices']['ios'] != null) {
-    for (String deviceName in config['devices']['ios'].keys) {
-      for (final locale in config['locales']) {
-        await _clearFastlaneDir(
-            screens, deviceName, locale, DeviceType.ios, runMode);
-      }
+  for (ConfigDevice device in config.iosDevices) {
+    for (final locale in config.locales) {
+      await _clearFastlaneDir(
+          screens, device.name, locale, DeviceType.ios, runMode);
     }
   }
 }

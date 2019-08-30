@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:meta/meta.dart';
+import 'package:screenshots/src/config.dart';
 
 import 'archive.dart';
 import 'base/file_system.dart';
@@ -14,14 +15,15 @@ import 'package:path/path.dart' as p;
 import 'globals.dart';
 
 class ImageProcessor {
-  static const kDefaultIosBackground = 'xc:white';
+  static const _kDefaultIosBackground = 'xc:white';
+  @visibleForTesting // for now
   static const kDefaultAndroidBackground = 'xc:none'; // transparent
-  static const kCrop =
+  static const _kCrop =
       '1000x40+0+0'; // default sample size and location to test for brightness
 
   final Screens _screens;
-  final Map _config;
-  ImageProcessor(Screens screens, Map config)
+  final Config _config;
+  ImageProcessor(Screens screens, Config config)
       : _screens = screens,
         _config = config;
 
@@ -38,36 +40,34 @@ class ImageProcessor {
   Future<void> process(DeviceType deviceType, String deviceName, String locale,
       RunMode runMode, Archive archive) async {
     final Map screenProps = _screens.getScreen(deviceName);
-    final String tmpDir = _config['staging'];
     if (screenProps == null) {
       print('Warning: \'$deviceName\' images will not be processed');
     } else {
       // add frame if required
-      if (isFrameRequired(_config, deviceType, deviceName)) {
+      if (_config.isFrameRequired(deviceName)) {
         final Map screenResources = screenProps['resources'];
-//  print('screenResources=$screenResources');
         print('Processing screenshots from test...');
 
         // unpack images for screen from package to local tmpDir area
-        await resources.unpackImages(screenResources, tmpDir);
+        await resources.unpackImages(screenResources, _config.stagingDir);
 
         // add status and nav bar and frame for each screenshot
-        final screenshots =
-            fs.directory('$tmpDir/$kTestScreenshotsDir').listSync();
+        final screenshots = fs
+            .directory('${_config.stagingDir}/$kTestScreenshotsDir')
+            .listSync();
         for (final screenshotPath in screenshots) {
           // add status bar for each screenshot
-//    print('overlaying status bar over screenshot at $screenshotPath');
-          await overlay(tmpDir, screenResources, screenshotPath.path);
+          await overlay(
+              _config.stagingDir, screenResources, screenshotPath.path);
 
           if (deviceType == DeviceType.android) {
             // add nav bar for each screenshot
-//      print('appending navigation bar to screenshot at $screenshotPath');
-            await append(tmpDir, screenResources, screenshotPath.path);
+            await append(
+                _config.stagingDir, screenResources, screenshotPath.path);
           }
 
-//      print('placing $screenshotPath in frame');
-          await frame(
-              tmpDir, screenProps, screenshotPath.path, deviceType, runMode);
+          await frame(_config.stagingDir, screenProps, screenshotPath.path,
+              deviceType, runMode);
         }
       } else {
         print('Warning: framing is not enabled');
@@ -75,11 +75,11 @@ class ImageProcessor {
     }
 
     // move to final destination for upload to stores via fastlane
-    final srcDir = '$tmpDir/$kTestScreenshotsDir';
+    final srcDir = '${_config.stagingDir}/$kTestScreenshotsDir';
     final androidModelType = fastlane.getAndroidModelType(screenProps);
     String dstDir = fastlane.getDirPath(deviceType, locale, androidModelType);
     runMode == RunMode.recording
-        ? dstDir = '${_config['recording']}/$dstDir'
+        ? dstDir = '${_config.recordingPath}/$dstDir'
         : null;
     runMode == RunMode.archive
         ? dstDir = archive.dstDir(deviceType, locale)
@@ -92,7 +92,7 @@ class ImageProcessor {
     utils.moveFiles(srcDir, dstDir);
 
     if (runMode == RunMode.comparison) {
-      final recordingDir = '${_config['recording']}/$dstDir';
+      final recordingDir = '${_config.recordingPath}/$dstDir';
       print(
           'Running comparison with recorded screenshots in $recordingDir ...');
       final failedCompare =
@@ -158,7 +158,7 @@ class ImageProcessor {
     String statusbarPath;
     // select black or white status bar based on brightness of area to be overlaid
     // todo: add black and white status bars
-    if (im.thresholdExceeded(screenshotPath, kCrop)) {
+    if (im.thresholdExceeded(screenshotPath, _kCrop)) {
       // use black status bar
       statusbarPath = '$tmpDir/${screenResources['statusbar black']}';
     } else {
@@ -184,27 +184,6 @@ class ImageProcessor {
     await im.convert('append', options);
   }
 
-  /// Checks if frame is required for [deviceName].
-  static bool isFrameRequired(
-      Map config, DeviceType deviceType, String deviceName) {
-    final devices = config['devices'][utils.getStringFromEnum(deviceType)];
-    final deviceKey =
-        devices.keys.firstWhere((key) => key == deviceName, orElse: () => null);
-    if (deviceKey == null) throw 'Error: device \'$deviceName\' not found';
-    final device = devices[deviceName];
-    bool isFrameRequired = config['frame'];
-    if (device != null) {
-      final isDeviceFrameRequired = device['frame'];
-      // device frame over-rides global frame
-      isDeviceFrameRequired != null
-          ? isFrameRequired = isDeviceFrameRequired
-          : null;
-      // orientation over-rides global and device frame setting
-      device['orientation'] != null ? isFrameRequired = false : null;
-    }
-    return isFrameRequired;
-  }
-
   /// Frame a screenshot with image of device.
   ///
   /// Resulting image is scaled to fit dimensions required by stores.
@@ -220,7 +199,7 @@ class ImageProcessor {
     // set the default background color
     String backgroundColor;
     (deviceType == DeviceType.ios && runMode != RunMode.archive)
-        ? backgroundColor = kDefaultIosBackground
+        ? backgroundColor = _kDefaultIosBackground
         : backgroundColor = kDefaultAndroidBackground;
 
     final options = {

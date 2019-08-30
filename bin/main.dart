@@ -60,7 +60,7 @@ void main(List<String> arguments) async {
 
   // check adb is found
   final config = Config(configPath: argResults[configArg]);
-  if (isRunTypeActive(config.configInfo, DeviceType.android)) {
+  if (config.isRunTypeActive(DeviceType.android)) {
     getAdbPath();
   }
 

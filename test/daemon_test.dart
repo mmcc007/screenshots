@@ -195,7 +195,7 @@ main() {
     await Directory(stagingDir + '/$kTestScreenshotsDir')
         .create(recursive: true);
     await resources.unpackScripts(stagingDir);
-    await fastlane.clearFastlaneDirs(configInfo, screens, RunMode.normal);
+    await fastlane.clearFastlaneDirs(config, screens, RunMode.normal);
 
     final daemonClient = DaemonClient();
     await daemonClient.start;
