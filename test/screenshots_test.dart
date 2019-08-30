@@ -573,15 +573,14 @@ devices:
         }
       };
 
-      final imageProcessor = ImageProcessor(null, null);
       final failedCompare = await runInContext<Map>(() async {
-        return await imageProcessor.compareImages(
+        return await ImageProcessor.compareImages(
             deviceName, recordingDir, comparisonDir);
       });
       expect(failedCompare, expected);
       // show diffs
       if (failedCompare.isNotEmpty) {
-        imageProcessor.showFailedCompare(failedCompare);
+        ImageProcessor.showFailedCompare(failedCompare);
       }
     });
 

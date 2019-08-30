@@ -37,37 +37,37 @@ class ImageProcessor {
   /// After processing, screenshots are handed off for upload via fastlane.
   Future<void> process(DeviceType deviceType, String deviceName, String locale,
       RunMode runMode, Archive archive) async {
-    final Map screenProps = _screens.screenProps(deviceName);
+    final Map screenProps = _screens.getScreen(deviceName);
+    final String tmpDir = _config['tmpDir'];
     if (screenProps == null) {
       print('Warning: \'$deviceName\' images will not be processed');
     } else {
       // add frame if required
       if (isFrameRequired(_config, deviceType, deviceName)) {
         final Map screenResources = screenProps['resources'];
-        final staging = _config['staging'];
 //  print('screenResources=$screenResources');
         print('Processing screenshots from test...');
 
-        // unpack images for screen from package to local staging area
-        await resources.unpackImages(screenResources, staging);
+        // unpack images for screen from package to local tmpDir area
+        await resources.unpackImages(screenResources, tmpDir);
 
         // add status and nav bar and frame for each screenshot
         final screenshots =
-            fs.directory('$staging/$kTestScreenshotsDir').listSync();
+            fs.directory('$tmpDir/$kTestScreenshotsDir').listSync();
         for (final screenshotPath in screenshots) {
           // add status bar for each screenshot
 //    print('overlaying status bar over screenshot at $screenshotPath');
-          await overlay(_config, screenResources, screenshotPath.path);
+          await overlay(tmpDir, screenResources, screenshotPath.path);
 
           if (deviceType == DeviceType.android) {
             // add nav bar for each screenshot
 //      print('appending navigation bar to screenshot at $screenshotPath');
-            await append(_config, screenResources, screenshotPath.path);
+            await append(tmpDir, screenResources, screenshotPath.path);
           }
 
 //      print('placing $screenshotPath in frame');
           await frame(
-              _config, screenProps, screenshotPath.path, deviceType, runMode);
+              tmpDir, screenProps, screenshotPath.path, deviceType, runMode);
         }
       } else {
         print('Warning: framing is not enabled');
@@ -75,7 +75,7 @@ class ImageProcessor {
     }
 
     // move to final destination for upload to stores via fastlane
-    final srcDir = '${_config['staging']}/$kTestScreenshotsDir';
+    final srcDir = '$tmpDir/$kTestScreenshotsDir';
     final androidModelType = fastlane.getAndroidModelType(screenProps);
     String dstDir = fastlane.getDirPath(deviceType, locale, androidModelType);
     runMode == RunMode.recording
@@ -105,7 +105,7 @@ class ImageProcessor {
   }
 
   @visibleForTesting
-  void showFailedCompare(Map failedCompare) {
+  static void showFailedCompare(Map failedCompare) {
     stderr.writeln('Error: comparison failed:');
 
     failedCompare.forEach((screenshotName, result) {
@@ -116,7 +116,7 @@ class ImageProcessor {
   }
 
   @visibleForTesting
-  Future<Map> compareImages(
+  static Future<Map> compareImages(
       String deviceName, String recordingDir, String comparisonDir) async {
     Map failedCompare = {};
     final recordedImages = fs.directory(recordingDir).listSync();
@@ -145,7 +145,8 @@ class ImageProcessor {
   }
 
   /// Overlay status bar over screenshot.
-  Future overlay(Map config, Map screenResources, String screenshotPath) async {
+  static Future<void> overlay(
+      String tmpDir, Map screenResources, String screenshotPath) async {
     // if no status bar skip
     // todo: get missing status bars
     if (screenResources['statusbar'] == null) {
@@ -159,12 +160,10 @@ class ImageProcessor {
     // todo: add black and white status bars
     if (im.thresholdExceeded(screenshotPath, kCrop)) {
       // use black status bar
-      statusbarPath =
-          '${config['staging']}/${screenResources['statusbar black']}';
+      statusbarPath = '$tmpDir/${screenResources['statusbar black']}';
     } else {
       // use white status bar
-      statusbarPath =
-          '${config['staging']}/${screenResources['statusbar white']}';
+      statusbarPath = '$tmpDir/${screenResources['statusbar white']}';
     }
 
     final options = {
@@ -175,9 +174,9 @@ class ImageProcessor {
   }
 
   /// Append android navigation bar to screenshot.
-  Future append(Map config, Map screenResources, String screenshotPath) async {
-    final screenshotNavbarPath =
-        '${config['staging']}/${screenResources['navbar']}';
+  static Future<void> append(
+      String tmpDir, Map screenResources, String screenshotPath) async {
+    final screenshotNavbarPath = '$tmpDir/${screenResources['navbar']}';
     final options = {
       'screenshotPath': screenshotPath,
       'screenshotNavbarPath': screenshotNavbarPath,
@@ -209,11 +208,11 @@ class ImageProcessor {
   /// Frame a screenshot with image of device.
   ///
   /// Resulting image is scaled to fit dimensions required by stores.
-  void frame(Map config, Map screen, String screenshotPath,
+  static Future<void> frame(String tmpDir, Map screen, String screenshotPath,
       DeviceType deviceType, RunMode runMode) async {
     final Map resources = screen['resources'];
 
-    final framePath = config['staging'] + '/' + resources['frame'];
+    final framePath = tmpDir + '/' + resources['frame'];
     final size = screen['size'];
     final resize = screen['resize'];
     final offset = screen['offset'];
