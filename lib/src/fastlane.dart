@@ -29,7 +29,7 @@ Future clearFastlaneDirs(Map config, Screens screens, RunMode runMode) async {
 /// Clear images destination.
 Future _clearFastlaneDir(Screens screens, String deviceName, String locale,
     DeviceType deviceType, RunMode runMode) async {
-  final Map screenProps = screens.screenProps(deviceName);
+  final Map screenProps = screens.getScreen(deviceName);
   String androidModelType = getAndroidModelType(screenProps);
 
   final dirPath = getDirPath(deviceType, locale, androidModelType);

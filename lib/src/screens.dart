@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:resource/resource.dart';
+import 'globals.dart';
 import 'utils.dart' as utils;
 
 /// Manage screens file.
@@ -19,7 +20,7 @@ class Screens {
   Map get screens => _screens;
 
   /// Get screen properties for [deviceName].
-  Map screenProps(String deviceName) {
+  Map getScreen(String deviceName) {
     Map screenProps;
     screens.values.forEach((osScreens) {
       osScreens.values.forEach((_screenProps) {
@@ -29,5 +30,18 @@ class Screens {
       });
     });
     return screenProps;
+  }
+
+  /// Get [DeviceType] for [deviceName].
+  DeviceType getDeviceType(String deviceName) {
+    DeviceType deviceType;
+    screens.forEach((_deviceType, osScreens) {
+      osScreens.values.forEach((osScreen) {
+        if (osScreen['devices'].contains(deviceName)) {
+          deviceType = utils.getEnumFromString(DeviceType.values, _deviceType);
+        }
+      });
+    });
+    return deviceType;
   }
 }

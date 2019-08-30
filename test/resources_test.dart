@@ -38,7 +38,7 @@ main() {
       test('unpack screen resource images', () async {
         final Screens screens = Screens();
         await screens.init();
-        final screen = screens.screenProps('iPhone 7 Plus');
+        final screen = screens.getScreen('iPhone 7 Plus');
         final Map screenResources = screen['resources'];
         await unpackImages(screenResources, tmpDir);
       });
