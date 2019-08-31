@@ -25,6 +25,7 @@ class Config {
   Map _configInfo;
   Map _screenshotsEnv; // current screenshots env
 
+  // Getters
   List<String> get tests => _processList(_configInfo['tests']);
   String get stagingDir => _configInfo['staging'];
   List<String> get locales => _processList(_configInfo['locales']);
@@ -105,9 +106,7 @@ class Config {
     List<ConfigDevice> configDevices = [];
 
     devices.forEach((deviceType, device) {
-//      print('deviceName=$deviceNames');
-//      print('device=$device');
-      device.forEach((deviceName, deviceProps) {
+      device?.forEach((deviceName, deviceProps) {
         configDevices.add(ConfigDevice(
             deviceName,
             utils.getEnumFromString(DeviceType.values, deviceType),
