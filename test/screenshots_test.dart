@@ -869,7 +869,10 @@ void main() {
         'ephemeral': true,
         'model': 'iPhone 5c (GSM)'
       };
-      final runningDevices = [androidDevice, iosDevice];
+      final runningDevices = [
+        loadDaemonDevice(androidDevice),
+        loadDaemonDevice(iosDevice)
+      ];
       final installedEmulators = [
         {
           'id': 'Nexus_6P_API_28',
@@ -890,7 +893,7 @@ void main() {
           'platformType': 'ios'
         }
       ];
-      Map deviceInfo = run.findRunningDevice(
+      DaemonDevice deviceInfo = run.findRunningDevice(
           runningDevices, installedEmulators, androidDeviceName);
       expect(deviceInfo, androidDevice);
       deviceInfo = run.findRunningDevice(

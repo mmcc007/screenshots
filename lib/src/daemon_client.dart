@@ -34,7 +34,6 @@ class DaemonClient {
   /// Start flutter tools daemon.
   Future<void> get start async {
     if (!_connected) {
-//      _process = await Process.start('flutter', ['daemon'], runInShell: true);
       _process = await runCommand(['flutter', 'daemon']);
       _listen();
       _waitForConnection = Completer<bool>();
@@ -53,9 +52,17 @@ class DaemonClient {
   }
 
   /// List installed emulators (not including iOS simulators).
-  Future<List> get emulators async {
-    return _sendCommandWaitResponse(
+  Future<List<DaemonEmulator>> get emulators async {
+    final List emulators = await _sendCommandWaitResponse(
         <String, dynamic>{'method': 'emulator.getEmulators'});
+//    print('emulators=$emulators');
+    final daemonEmulators = <DaemonEmulator>[];
+    for (var emulator in emulators) {
+      final daemonEmulator = loadDaemonEmulator(emulator);
+//      print('daemonEmulator=$daemonEmulator');
+      daemonEmulators.add(daemonEmulator);
+    }
+    return daemonEmulators;
   }
 
   /// Launch an emulator and return device id.
@@ -86,7 +93,7 @@ class DaemonClient {
   }
 
   /// List running real devices and booted emulators/simulators.
-  Future<List> get devices async {
+  Future<List<DaemonDevice>> get devices async {
     final devices = await _sendCommandWaitResponse(
         <String, dynamic>{'method': 'device.getDevices'});
     return Future.value(devices.map((device) {
@@ -98,7 +105,7 @@ class DaemonClient {
                 throw 'Error: could not find model name for real ios device: ${device['name']}');
         device['model'] = iosDevice['model'];
       }
-      return device;
+      return loadDaemonDevice(device);
     }).toList());
   }
 
@@ -228,9 +235,60 @@ Future waitForEmulatorToStart(
 //        'waiting for emulator/simulator with device id \'$deviceId\' to start...');
     final devices = await daemonClient.devices;
     final device = devices.firstWhere(
-        (device) => device['id'] == deviceId && device['emulator'],
+        (device) => device.id == deviceId && device.emulator,
         orElse: () => null);
     started = device != null;
     await Future.delayed(Duration(milliseconds: 1000));
   }
+}
+
+abstract class BaseDevice {
+  final String id;
+  final String name;
+  final String category;
+  final String platformType;
+
+  BaseDevice(this.id, this.name, this.category, this.platformType);
+
+  @override
+  String toString() {
+    return 'id: $id, name: $name, category: $category, platformType: $platformType';
+  }
+}
+
+/// Describe an emulator.
+class DaemonEmulator extends BaseDevice {
+  DaemonEmulator(String id, String name, String category, String platformType)
+      : super(id, name, category, platformType);
+}
+
+/// Describe a device.
+class DaemonDevice extends BaseDevice {
+  final String platform;
+  final bool emulator;
+  final bool ephemeral;
+  final String iosModel; //  iOS model
+  DaemonDevice(String id, String name, String category, String platformType,
+      this.platform, this.emulator, this.ephemeral,
+      {this.iosModel})
+      : super(id, name, category, platformType);
+}
+
+DaemonEmulator loadDaemonEmulator(emulator) {
+  final flutterEmulator = DaemonEmulator(emulator['id'], emulator['name'],
+      emulator['category'], emulator['platformType']);
+  return flutterEmulator;
+}
+
+DaemonDevice loadDaemonDevice(device) {
+  final flutterDevice = DaemonDevice(
+      device['id'],
+      device['name'],
+      device['category'],
+      device['platformType'],
+      device['platform'],
+      device['emulator'],
+      device['ephemeral'],
+      iosModel: device['model']);
+  return flutterDevice;
 }

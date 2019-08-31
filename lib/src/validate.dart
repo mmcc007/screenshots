@@ -1,9 +1,10 @@
 import 'dart:io';
 
+import 'package:screenshots/src/daemon_client.dart';
+
 import 'base/platform.dart';
 import 'config.dart';
 import 'globals.dart';
-import 'image_processor.dart';
 import 'orientation.dart';
 import 'screens.dart';
 import 'utils.dart' as utils;
@@ -127,18 +128,17 @@ bool isValidTestPaths(String driverArgs) {
 }
 
 /// Check if an emulator is installed.
-bool isEmulatorInstalled(List emulators, String deviceName) {
+bool isEmulatorInstalled(List<DaemonEmulator> emulators, String deviceName) {
   final emulator = utils.findEmulator(emulators, deviceName);
   final isEmulatorInstalled = emulator != null;
 
   // check for device installed with multiple avd versions
   if (isEmulatorInstalled) {
     final matchingEmulators =
-        emulators.where((emulator) => emulator['name'] == deviceName);
+        emulators.where((emulator) => emulator.name == deviceName);
     if (matchingEmulators != null && matchingEmulators.length > 1) {
       print('Warning: \'$deviceName\' has multiple avd versions.');
-      print(
-          '       : Using \'$deviceName\' with avd version ${emulator['id']}.');
+      print('       : Using \'$deviceName\' with avd version ${emulator.id}.');
     }
   }
   return isEmulatorInstalled;

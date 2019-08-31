@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:path/path.dart' as p;
 import 'package:process/process.dart';
 import 'package:screenshots/src/base/file_system.dart';
+import 'package:screenshots/src/daemon_client.dart';
 import 'package:yaml/yaml.dart';
 import 'base/platform.dart';
 import 'base/process.dart';
@@ -247,9 +248,9 @@ List getIosDevices(List devices) {
 }
 
 /// Filters a list of devices to get real android devices.
-List getAndroidDevices(List devices) {
+List<DaemonDevice> getAndroidDevices(List<DaemonDevice> devices) {
   final iosDevices = devices
-      .where((device) => device['platform'] != 'ios' && !device['emulator'])
+      .where((device) => device.platform != 'ios' && !device.emulator)
       .toList();
   return iosDevices;
 }
@@ -300,14 +301,16 @@ Future<String> waitSysLogMsg(
 }
 
 /// Find the emulator info of an named emulator available to boot.
-Map findEmulator(List emulators, String emulatorName) {
+DaemonEmulator findEmulator(
+    List<DaemonEmulator> emulators, String emulatorName) {
   // find highest by avd version number
   emulators.sort(emulatorComparison);
-  return emulators.lastWhere((emulator) => emulator['name'] == emulatorName,
+  return emulators.lastWhere((emulator) => emulator.name == emulatorName,
       orElse: () => null);
 }
 
-int emulatorComparison(a, b) => a['id'].compareTo(b['id']);
+int emulatorComparison(DaemonEmulator a, DaemonEmulator b) =>
+    a.id.compareTo(b.id);
 
 /// Get [RunMode] from [String].
 RunMode getRunModeEnum(String runMode) {

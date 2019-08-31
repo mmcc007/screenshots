@@ -62,7 +62,7 @@ Future<bool> runScreenshots(
   // get all available unstarted android emulators
   // note: unstarted simulators are not properly included in this list
   //       so have to be handled separately
-  final emulators = (await daemonClient.emulators);
+  final List<DaemonEmulator> emulators = await daemonClient.emulators;
   emulators.sort(utils.emulatorComparison);
 
   final config = Config(configPath: configPath, configStr: configStr);
@@ -175,19 +175,18 @@ Future runTestsOnAll(
         findRunningDevice(runningDevices, emulators, configDeviceName);
 
     String deviceId;
-    Map emulator;
+    DaemonEmulator emulator;
     Map simulator;
     bool pendingIosLocaleChangeAtStart = false;
     if (device != null) {
-      deviceId = device['id'];
+      deviceId = device.id;
     } else {
       // if no matching device, look for matching android emulator
       // and start it
       emulator = utils.findEmulator(emulators, configDeviceName);
       if (emulator != null) {
         print('Starting $configDeviceName...');
-        deviceId =
-            await _startEmulator(daemonClient, emulator['id'], stagingDir);
+        deviceId = await _startEmulator(daemonClient, emulator.id, stagingDir);
       } else {
         // if no matching android emulator, look for matching ios simulator
         // and start it
@@ -215,7 +214,7 @@ Future runTestsOnAll(
 
     // set locale and run tests
     final deviceType = getDeviceType(config, configDeviceName);
-    if (device != null && !device['emulator']) {
+    if (device != null && !device.emulator) {
       // device is real
       final defaultLocale = 'en_US'; // todo: need actual locale of real device
       print('Warning: the locale of a real device cannot be changed.');
@@ -226,8 +225,9 @@ Future runTestsOnAll(
       // device is emulated
 
       // Function to check for a running android device or emulator.
-      bool isRunningAndroidDeviceOrEmulator(Map device, Map emulator) {
-        return (device != null && device['platform'] != 'ios') ||
+      bool isRunningAndroidDeviceOrEmulator(
+          DaemonDevice device, DaemonEmulator emulator) {
+        return (device != null && device.platform != 'ios') ||
             (device == null && emulator != null);
       }
 
@@ -238,14 +238,14 @@ Future runTestsOnAll(
       }
 
       // Function to check for a running ios device or simulator.
-      bool isRunningIosDeviceOrSimulator(Map device, Map emulator) {
-        return (device != null && device['platform'] == 'ios') ||
+      bool isRunningIosDeviceOrSimulator(DaemonDevice device) {
+        return (device != null && device.platform == 'ios') ||
             (device == null && simulator != null);
       }
 
       // save original ios locale for reverting later if necessary
       String origIosLocale;
-      if (isRunningIosDeviceOrSimulator(device, emulator)) {
+      if (isRunningIosDeviceOrSimulator(device)) {
         origIosLocale = utils.getIosSimulatorLocale(deviceId);
       }
 
@@ -255,9 +255,7 @@ Future runTestsOnAll(
           await setEmulatorLocale(deviceId, locale, configDeviceName);
         }
         // set locale if ios simulator
-        if ((device != null &&
-                device['platform'] == 'ios' &&
-                device['emulator']) ||
+        if ((device != null && device.platform == 'ios' && device.emulator) ||
             (device == null &&
                 simulator != null &&
                 !pendingIosLocaleChangeAtStart)) {
@@ -400,30 +398,30 @@ Future<String> _startEmulator(
 
 /// Find a real device or running emulator/simulator for [deviceName].
 /// Note: flutter daemon handles devices and running emulators/simulators as devices.
-Map findRunningDevice(List devices, List emulators, String deviceName) {
+DaemonDevice findRunningDevice(
+    List<DaemonDevice> devices, List emulators, String deviceName) {
   final device = devices.firstWhere((device) {
-    if (device['platform'] == 'ios') {
-      if (device['emulator']) {
+    if (device.platform == 'ios') {
+      if (device.emulator) {
         // running ios simulator
-        return device['name'] == deviceName;
+        return device.name == deviceName;
       } else {
         // real ios device
-        return device['model'].contains(deviceName);
+        return device.iosModel.contains(deviceName);
       }
     } else {
       // platform is android
       // check if ephemeral is present
       // note: sometimes a running emulator has device['emulator'] of false
       //       so using ephemeral for now (may not work for real devices)
-      final isEphemeral =
-          device['ephemeral'] == null ? false : device['ephemeral'];
-      if (isEphemeral || device['emulator']) {
+      final isEphemeral = device.ephemeral == null ? false : device.ephemeral;
+      if (isEphemeral || device.emulator) {
         // running android emulator ??
-        return _findDeviceNameOfRunningEmulator(emulators, device['id']) ==
+        return _findDeviceNameOfRunningEmulator(emulators, device.id) ==
             deviceName;
       } else {
         // real android device
-        return device['name'] == deviceName;
+        return device.name == deviceName;
       }
     }
   }, orElse: () => null);
@@ -538,12 +536,12 @@ Future _startAndroidEmulatorOnCI(String emulatorId, String stagingDir) async {
 }
 
 /// Find the device name of a running emulator.
-String _findDeviceNameOfRunningEmulator(List emulators, String deviceId) {
+String _findDeviceNameOfRunningEmulator(
+    List<DaemonEmulator> emulators, String deviceId) {
   final emulatorId = utils.getAndroidEmulatorId(deviceId);
-  final emulator = emulators.firstWhere(
-      (emulator) => emulator['id'] == emulatorId,
+  final emulator = emulators.firstWhere((emulator) => emulator.id == emulatorId,
       orElse: () => null);
-  return emulator == null ? null : emulator['name'];
+  return emulator == null ? null : emulator.name;
 }
 
 /// Get device type from config info

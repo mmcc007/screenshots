@@ -65,6 +65,8 @@ main() {
           'ephemeral': true
         },
       ];
+      final daemonDevice = loadDaemonDevice(devices[0]);
+
       final emulators = [
         {
           'id': 'Nexus_6P_API_28',
@@ -73,9 +75,11 @@ main() {
           'platformType': 'android'
         },
       ];
-      when(mockDaemonClient.devices).thenAnswer((_) => Future.value(devices));
+      final daemonEmulator = loadDaemonEmulator(emulators[0]);
+      when(mockDaemonClient.devices)
+          .thenAnswer((_) => Future.value([daemonDevice]));
       when(mockDaemonClient.emulators)
-          .thenAnswer((_) => Future.value(emulators));
+          .thenAnswer((_) => Future.value([daemonEmulator]));
 
       // screenshots config
       final configStr = '''
@@ -137,8 +141,8 @@ main() {
           'ephemeral': true
         },
       ];
-      final devicesSequence = [[]];
-      int devicesSeqIndex = 0;
+      final daemonDevice = loadDaemonDevice(devices[0]);
+
       final emulators = [
         {
           'id': 'Nexus_6P_API_28',
@@ -147,9 +151,12 @@ main() {
           'platformType': 'android'
         },
       ];
-      when(mockDaemonClient.devices).thenAnswer((_) => Future.value(devices));
+      final daemonEmulator = loadDaemonEmulator(emulators[0]);
+
+      when(mockDaemonClient.devices)
+          .thenAnswer((_) => Future.value([daemonDevice]));
       when(mockDaemonClient.emulators)
-          .thenAnswer((_) => Future.value(emulators));
+          .thenAnswer((_) => Future.value([daemonEmulator]));
       when(mockDaemonClient.launchEmulator('Nexus_6P_API_28'))
           .thenAnswer((_) => Future.value('emulator-5554'));
       when(mockDaemonClient.waitForEvent(EventType.deviceRemoved))
@@ -323,6 +330,8 @@ main() {
           'model': 'iPhone 5c (GSM)'
         }
       ];
+      final daemonDevices =
+          devices.map((device) => loadDaemonDevice(device)).toList();
 
       final emulators = [
         {
@@ -338,12 +347,20 @@ main() {
           'platformType': 'ios'
         }
       ];
+      final daemonEmulators = [
+        loadDaemonEmulator(emulators[0]),
+        loadDaemonEmulator(emulators[1])
+      ];
+      final List<List<DaemonDevice>> devicesResponses = [
+        [],
+        daemonDevices,
+        daemonDevices
+      ];
 
-      final devicesResponses = [[], devices, devices];
       when(mockDaemonClient.devices)
           .thenAnswer((_) => Future.value(devicesResponses.removeAt(0)));
       when(mockDaemonClient.emulators)
-          .thenAnswer((_) => Future.value(emulators));
+          .thenAnswer((_) => Future.value(daemonEmulators));
       when(mockDaemonClient.launchEmulator('Nexus_6P_API_28'))
           .thenAnswer((_) => Future.value('emulator-5554'));
       when(mockDaemonClient.waitForEvent(EventType.deviceRemoved))
