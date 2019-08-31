@@ -149,14 +149,15 @@ Future prefixFilesInDir(String dirPath, String prefix) async {
   }
 }
 
-/// Converts [enum] value to [String].
+/// Converts [_enum] value to [String].
 String getStringFromEnum(dynamic _enum) => _enum.toString().split('.').last;
 
 /// Converts [String] to [enum].
-T getEnumFromString<T>(List<T> values, String value) {
+T getEnumFromString<T>(List<T> values, String value, {bool allowNull = false}) {
   return values.firstWhere((type) => getStringFromEnum(type) == value,
-      orElse: () =>
-          throw 'Fatal: \'$value\' is not a valid enum value for $values.');
+      orElse: () => allowNull
+          ? null
+          : throw 'Fatal: \'$value\' is not a valid enum value for $values.');
 }
 
 /// Returns locale of currently attached android device.

@@ -770,7 +770,7 @@ void main() {
       final configInfo = Config(configStr: params);
       final deviceNames = configInfo.deviceNames;
       for (final devName in deviceNames) {
-        final deviceInfo = validate.findDeviceInfo(configInfo, devName);
+        final deviceInfo = configInfo.getDevice(devName);
         print('devName=$devName');
         print('deviceInfo=$deviceInfo');
         if (deviceInfo != null) {

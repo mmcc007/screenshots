@@ -16,12 +16,12 @@ Future<bool> validate(
   // validate params
   final deviceNames = config.deviceNames;
   for (final devName in deviceNames) {
-    final configDevice = findDeviceInfo(config, devName);
+    final configDevice = config.getDevice(devName);
     if (configDevice != null) {
-      final orientation = configDevice.orientation;
-      if (orientation != null && !isValidOrientation(orientation)) {
+      if (configDevice.orientationStr != null &&
+          !isValidOrientation(configDevice.orientationStr)) {
         stderr.writeln(
-            'Invalid value for \'orientation\' for device \'$devName\': $orientation');
+            'Invalid value for \'orientation\' for device \'$devName\': $configDevice.orientationStr');
         stderr.writeln('Valid values:');
         for (final orientation in Orientation.values) {
           stderr.writeln('  ${utils.getStringFromEnum(orientation)}');
@@ -256,9 +256,4 @@ bool isValidOrientation(String orientation) {
 
 bool isValidFrame(dynamic frame) {
   return frame != null && (frame == true || frame == false);
-}
-
-/// Find device info in config for device name.
-ConfigDevice findDeviceInfo(Config configInfo, String deviceName) {
-  return configInfo.getDevice(deviceName);
 }

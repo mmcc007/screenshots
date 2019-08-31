@@ -20,6 +20,7 @@ main() {
         DeviceType.ios,
         expectedIosFrame,
         orientation,
+        null,
       );
       final expectedAndroidName = 'Nexus 6P';
       final expectedGlobalFrame = true;
@@ -28,6 +29,7 @@ main() {
         DeviceType.android,
         expectedGlobalFrame,
         orientation,
+        null,
       );
       final expectedRecording = '/tmp/screenshots_record';
       final expectedArchive = '/tmp/screenshots_archive';

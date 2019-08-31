@@ -107,18 +107,21 @@ class Config {
     devices.forEach((deviceType, device) {
       device?.forEach((deviceName, deviceProps) {
         configDevices.add(ConfigDevice(
-            deviceName,
-            utils.getEnumFromString(DeviceType.values, deviceType),
-            deviceProps == null
-                ? globalFraming
-                : deviceProps['frame'] ??
-                    globalFraming, // device frame overrides global frame
-            deviceProps == null
-                ? null
-                : deviceProps['orientation'] == null
-                    ? null
-                    : utils.getEnumFromString(
-                        Orientation.values, deviceProps['orientation'])));
+          deviceName,
+          utils.getEnumFromString(DeviceType.values, deviceType),
+          deviceProps == null
+              ? globalFraming
+              : deviceProps['frame'] ??
+                  globalFraming, // device frame overrides global frame
+          deviceProps == null
+              ? null
+              : deviceProps['orientation'] == null
+                  ? null
+                  : utils.getEnumFromString(
+                      Orientation.values, deviceProps['orientation'],
+                      allowNull: true),
+          deviceProps == null ? null : deviceProps['orientation'],
+        ));
       });
     });
 
@@ -132,9 +135,10 @@ class ConfigDevice {
   final DeviceType deviceType;
   final bool isFramed;
   final Orientation orientation;
+  final String orientationStr; // for validation
 
-  const ConfigDevice(
-      this.name, this.deviceType, this.isFramed, this.orientation)
+  ConfigDevice(this.name, this.deviceType, this.isFramed, this.orientation,
+      this.orientationStr)
       : assert(name != null),
         assert(deviceType != null),
         assert(isFramed != null);
