@@ -65,6 +65,8 @@ main() {
           'ephemeral': true
         },
       ];
+      final daemonDevice = loadDaemonDevice(devices[0]);
+
       final emulators = [
         {
           'id': 'Nexus_6P_API_28',
@@ -74,7 +76,8 @@ main() {
         },
       ];
       final daemonEmulator = loadDaemonEmulator(emulators[0]);
-      when(mockDaemonClient.devices).thenAnswer((_) => Future.value(devices));
+      when(mockDaemonClient.devices)
+          .thenAnswer((_) => Future.value([daemonDevice]));
       when(mockDaemonClient.emulators)
           .thenAnswer((_) => Future.value([daemonEmulator]));
 
@@ -138,8 +141,8 @@ main() {
           'ephemeral': true
         },
       ];
-      final devicesSequence = [[]];
-      int devicesSeqIndex = 0;
+      final daemonDevice = loadDaemonDevice(devices[0]);
+
       final emulators = [
         {
           'id': 'Nexus_6P_API_28',
@@ -150,7 +153,8 @@ main() {
       ];
       final daemonEmulator = loadDaemonEmulator(emulators[0]);
 
-      when(mockDaemonClient.devices).thenAnswer((_) => Future.value(devices));
+      when(mockDaemonClient.devices)
+          .thenAnswer((_) => Future.value([daemonDevice]));
       when(mockDaemonClient.emulators)
           .thenAnswer((_) => Future.value([daemonEmulator]));
       when(mockDaemonClient.launchEmulator('Nexus_6P_API_28'))
@@ -326,6 +330,8 @@ main() {
           'model': 'iPhone 5c (GSM)'
         }
       ];
+      final daemonDevices =
+          devices.map((device) => loadDaemonDevice(device)).toList();
 
       final emulators = [
         {
@@ -345,8 +351,12 @@ main() {
         loadDaemonEmulator(emulators[0]),
         loadDaemonEmulator(emulators[1])
       ];
+      final List<List<DaemonDevice>> devicesResponses = [
+        [],
+        daemonDevices,
+        daemonDevices
+      ];
 
-      final devicesResponses = [[], devices, devices];
       when(mockDaemonClient.devices)
           .thenAnswer((_) => Future.value(devicesResponses.removeAt(0)));
       when(mockDaemonClient.emulators)

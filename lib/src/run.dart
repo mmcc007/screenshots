@@ -179,7 +179,7 @@ Future runTestsOnAll(
     Map simulator;
     bool pendingIosLocaleChangeAtStart = false;
     if (device != null) {
-      deviceId = device['id'];
+      deviceId = device.id;
     } else {
       // if no matching device, look for matching android emulator
       // and start it
@@ -214,7 +214,7 @@ Future runTestsOnAll(
 
     // set locale and run tests
     final deviceType = getDeviceType(config, configDeviceName);
-    if (device != null && !device['emulator']) {
+    if (device != null && !device.emulator) {
       // device is real
       final defaultLocale = 'en_US'; // todo: need actual locale of real device
       print('Warning: the locale of a real device cannot be changed.');
@@ -226,8 +226,8 @@ Future runTestsOnAll(
 
       // Function to check for a running android device or emulator.
       bool isRunningAndroidDeviceOrEmulator(
-          Map device, DaemonEmulator emulator) {
-        return (device != null && device['platform'] != 'ios') ||
+          DaemonDevice device, DaemonEmulator emulator) {
+        return (device != null && device.platform != 'ios') ||
             (device == null && emulator != null);
       }
 
@@ -238,8 +238,8 @@ Future runTestsOnAll(
       }
 
       // Function to check for a running ios device or simulator.
-      bool isRunningIosDeviceOrSimulator(Map device) {
-        return (device != null && device['platform'] == 'ios') ||
+      bool isRunningIosDeviceOrSimulator(DaemonDevice device) {
+        return (device != null && device.platform == 'ios') ||
             (device == null && simulator != null);
       }
 
@@ -255,9 +255,7 @@ Future runTestsOnAll(
           await setEmulatorLocale(deviceId, locale, configDeviceName);
         }
         // set locale if ios simulator
-        if ((device != null &&
-                device['platform'] == 'ios' &&
-                device['emulator']) ||
+        if ((device != null && device.platform == 'ios' && device.emulator) ||
             (device == null &&
                 simulator != null &&
                 !pendingIosLocaleChangeAtStart)) {
@@ -400,30 +398,30 @@ Future<String> _startEmulator(
 
 /// Find a real device or running emulator/simulator for [deviceName].
 /// Note: flutter daemon handles devices and running emulators/simulators as devices.
-Map findRunningDevice(List devices, List emulators, String deviceName) {
+DaemonDevice findRunningDevice(
+    List<DaemonDevice> devices, List emulators, String deviceName) {
   final device = devices.firstWhere((device) {
-    if (device['platform'] == 'ios') {
-      if (device['emulator']) {
+    if (device.platform == 'ios') {
+      if (device.emulator) {
         // running ios simulator
-        return device['name'] == deviceName;
+        return device.name == deviceName;
       } else {
         // real ios device
-        return device['model'].contains(deviceName);
+        return device.iosModel.contains(deviceName);
       }
     } else {
       // platform is android
       // check if ephemeral is present
       // note: sometimes a running emulator has device['emulator'] of false
       //       so using ephemeral for now (may not work for real devices)
-      final isEphemeral =
-          device['ephemeral'] == null ? false : device['ephemeral'];
-      if (isEphemeral || device['emulator']) {
+      final isEphemeral = device.ephemeral == null ? false : device.ephemeral;
+      if (isEphemeral || device.emulator) {
         // running android emulator ??
-        return _findDeviceNameOfRunningEmulator(emulators, device['id']) ==
+        return _findDeviceNameOfRunningEmulator(emulators, device.id) ==
             deviceName;
       } else {
         // real android device
-        return device['name'] == deviceName;
+        return device.name == deviceName;
       }
     }
   }, orElse: () => null);

@@ -147,13 +147,7 @@ main() {
         if (devices is List) {
           final flutterDevices = [];
           for (var device in devices) {
-            final flutterDevice = DaemonDevice(
-              device['id'],
-              device['name'],
-              device['category'],
-              device['platformType'],
-              device['ephemeral'],
-            );
+            DaemonDevice flutterDevice = loadDaemonDevice(device);
             print('flutterDevice=$flutterDevice');
             flutterDevices.add(flutterDevice);
           }

@@ -146,12 +146,12 @@ main() {
     final devices = await daemonClient.devices;
     print('devices=$devices');
     final device = devices.firstWhere(
-        (device) => device['model'].contains(deviceName),
+        (device) => device.iosModel.contains(deviceName),
         orElse: () => null);
     // clear existing screenshots from staging area
 //    clearDirectory('$stagingDir/test');
     // run the test
-    await streamCmd(['flutter', '-d', device['id'], 'drive', testPath],
+    await streamCmd(['flutter', '-d', device.id, 'drive', testPath],
         workingDirectory: 'example');
   }, timeout: Timeout(Duration(minutes: 2)), skip: utils.isCI());
 

@@ -248,9 +248,9 @@ List getIosDevices(List devices) {
 }
 
 /// Filters a list of devices to get real android devices.
-List getAndroidDevices(List devices) {
+List<DaemonDevice> getAndroidDevices(List<DaemonDevice> devices) {
   final iosDevices = devices
-      .where((device) => device['platform'] != 'ios' && !device['emulator'])
+      .where((device) => device.platform != 'ios' && !device.emulator)
       .toList();
   return iosDevices;
 }
