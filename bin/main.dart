@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:args/args.dart';
 import 'package:screenshots/screenshots.dart';
-import 'package:path/path.dart' as path;
 
 const usage =
     'usage: screenshots [-h] [-c <config file>] [-m <normal|recording|comparison|archive>] [-f <flavor>]';
@@ -58,13 +57,14 @@ void main(List<String> arguments) async {
     _handleError(argParser, "File not found: ${argResults[configArg]}");
   }
 
-  // check adb is found
   final config = Config(configPath: argResults[configArg]);
   if (config.isRunTypeActive(DeviceType.android)) {
-    getAdbPath();
+    // check required executables for android
+    getAdbPath() == null ? exit(1) : Null;
+    getEmulatorPath() == null ? exit(1) : Null;
   }
 
-  final success = await run(
+  final success = await screenshots(
       configPath: argResults[configArg],
       mode: argResults[modeArg],
       flavor: argResults[flavorArg]);
@@ -81,31 +81,4 @@ void _showUsage(ArgParser argParser) {
   print('\n$sampleUsage\n');
   print(argParser.usage);
   exit(2);
-}
-
-/// Path to the `adb` executable.
-String getAdbPath() {
-  final String androidHome = Platform.environment['ANDROID_HOME'] ??
-      Platform.environment['ANDROID_SDK_ROOT'];
-  if (androidHome == null) {
-    stderr.writeln(
-        'The ANDROID_SDK_ROOT and ANDROID_HOME environment variables are '
-        'missing. At least one of these variables must point to the Android '
-        'SDK directory containing platform-tools.');
-    exit(1);
-  }
-  final adbName = Platform.isWindows ? 'adb.exe' : 'adb';
-  final String adbPath = path.join(androidHome, 'platform-tools/${adbName}');
-  final absPath = path.absolute(adbPath);
-  if (!File(adbPath).existsSync()) {
-    stderr.write(
-        '#############################################################\n');
-    stderr.write("# 'adb' must be in the PATH to use Screenshots\n");
-    stderr.write("# You can usually add it to the PATH using\n"
-        "# export PATH='\$HOME/Library/Android/sdk/platform-tools:\$PATH'  \n");
-    stderr.write(
-        '#############################################################\n');
-    exit(1);
-  }
-  return absPath;
 }

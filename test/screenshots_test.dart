@@ -523,7 +523,7 @@ void main() {
       final origDir = Directory.current;
       Directory.current = 'example';
       final configPath = 'screenshots.yaml';
-      await run.run(
+      await run.screenshots(
           configPath: configPath,
           mode: utils.getStringFromEnum(RunMode.recording));
       final config = Config(configPath: configPath);
@@ -589,7 +589,7 @@ void main() {
       final config = Config(configPath: configPath);
       final recordingDir = config.recordingDir;
       expect(await utils.isRecorded(recordingDir), isTrue);
-      await run.run(
+      await run.screenshots(
           configPath: configPath,
           mode: utils.getStringFromEnum(RunMode.comparison));
       Directory.current = origDir;
@@ -616,7 +616,7 @@ void main() {
       final origDir = Directory.current;
       Directory.current = 'example';
       final configPath = 'screenshots.yaml';
-      await run.run(
+      await run.screenshots(
           configPath: configPath,
           mode: utils.getStringFromEnum(RunMode.archive));
       Directory.current = origDir;
@@ -801,7 +801,7 @@ void main() {
       final origDir = Directory.current;
       Directory.current = 'flavors';
       final configPath = 'screenshots.yaml';
-      await run.run(
+      await run.screenshots(
           configPath: configPath,
           mode: utils.getStringFromEnum(RunMode.normal),
           flavor: flavor);

@@ -26,7 +26,7 @@ void changeDeviceOrientation(DeviceType deviceType, Orientation orientation,
   switch (deviceType) {
     case DeviceType.android:
       cmd([
-        'adb',
+        utils.getAdbPath(),
         '-s',
         deviceId,
         'shell',

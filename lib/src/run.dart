@@ -20,7 +20,8 @@ import 'validate.dart';
 import 'package:path/path.dart' as path;
 
 /// Run screenshots
-Future<bool> run({String configPath, String mode, String flavor}) async {
+Future<bool> screenshots(
+    {String configPath, String mode, String flavor}) async {
   // run in context
   return runInContext<bool>(() async {
     return runScreenshots(configPath: configPath, mode: mode, flavor: flavor);
@@ -288,7 +289,7 @@ Future runTestsOnAll(
               : null;
           switch (deviceType) {
             case DeviceType.android:
-              if (currentDevice['emulator']) {
+              if (currentDevice.emulator) {
                 orient.changeDeviceOrientation(
                     deviceType, configDevice.orientation,
                     deviceId: deviceId);
@@ -298,7 +299,7 @@ Future runTestsOnAll(
               }
               break;
             case DeviceType.ios:
-              if (currentDevice['emulator']) {
+              if (currentDevice.emulator) {
                 orient.changeDeviceOrientation(
                     deviceType, configDevice.orientation,
                     scriptDir: '$stagingDir/resources/script');
@@ -469,7 +470,7 @@ Future<void> setEmulatorLocale(String deviceId, testLocale, deviceName) async {
 /// Change local of real android device or running emulator.
 void changeAndroidLocale(
     String deviceId, String deviceLocale, String testLocale) {
-  if (cmd(['adb', '-s', deviceId, 'root']) ==
+  if (cmd([utils.getAdbPath(), '-s', deviceId, 'root']) ==
       'adbd cannot run as root in production builds\n') {
     stdout.write(
         'Warning: locale will not be changed. Running in locale \'$deviceLocale\'.\n');
@@ -480,7 +481,7 @@ void changeAndroidLocale(
   }
   // adb shell "setprop persist.sys.locale fr_CA; setprop ctl.restart zygote"
   cmd([
-    'adb',
+    utils.getAdbPath(),
     '-s',
     deviceId,
     'shell',
@@ -508,7 +509,7 @@ Future _changeSimulatorLocale(
 /// Shutdown an android emulator.
 Future<String> shutdownAndroidEmulator(
     DaemonClient daemonClient, String deviceId) async {
-  cmd(['adb', '-s', deviceId, 'emu', 'kill']);
+  cmd([utils.getAdbPath(), '-s', deviceId, 'emu', 'kill']);
 //  await waitAndroidEmulatorShutdown(deviceId);
   final device = await daemonClient.waitForEvent(EventType.deviceRemoved);
   if (device['id'] != deviceId) {

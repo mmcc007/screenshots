@@ -125,7 +125,7 @@ String getHighestIosVersion(Map iOSVersions) {
 
 /// Create list of avds,
 List<String> getAvdNames() {
-  return cmd(['emulator', '-list-avds']).split('\n');
+  return cmd([getEmulatorPath(), '-list-avds']).split('\n');
 }
 
 /// Get the highest available avd version for the android emulator.
@@ -165,12 +165,22 @@ T getEnumFromString<T>(List<T> values, String value, {bool allowNull = false}) {
 String getAndroidDeviceLocale(String deviceId) {
 // ro.product.locale is available on first boot but does not update,
 // persist.sys.locale is empty on first boot but updates with locale changes
-  String locale =
-      cmd(['adb', '-s', deviceId, 'shell', 'getprop', 'persist.sys.locale'])
-          .trim();
+  String locale = cmd([
+    getAdbPath(),
+    '-s',
+    deviceId,
+    'shell',
+    'getprop',
+    'persist.sys.locale'
+  ]).trim();
   if (locale.isEmpty) {
-    locale = cmd(['adb', '-s', deviceId, 'shell', 'getprop ro.product.locale'])
-        .trim();
+    locale = cmd([
+      getAdbPath(),
+      '-s',
+      deviceId,
+      'shell',
+      'getprop ro.product.locale'
+    ]).trim();
   }
   return locale;
 }
@@ -190,7 +200,7 @@ String getIosSimulatorLocale(String udId) {
 /// Returns emulator id as [String].
 String getAndroidEmulatorId(String deviceId) {
   // get name of avd of running emulator
-  return cmd(['adb', '-s', deviceId, 'emu', 'avd', 'name'])
+  return cmd([getAdbPath(), '-s', deviceId, 'emu', 'avd', 'name'])
       .split('\r\n')
       .map((line) => line.trim())
       .first;
@@ -208,7 +218,7 @@ String findAndroidDeviceId(String emulatorId) {
 
 /// Get the list of running android devices by id.
 List<String> getAndroidDeviceIds() {
-  return cmd(['adb', 'devices'])
+  return cmd([getAdbPath(), 'devices'])
       .trim()
       .split('\n')
       .sublist(1) // remove first line
@@ -218,7 +228,7 @@ List<String> getAndroidDeviceIds() {
 
 /// Stop an android emulator.
 Future stopAndroidEmulator(String deviceId, String stagingDir) async {
-  cmd(['adb', '-s', deviceId, 'emu', 'kill']);
+  cmd([getAdbPath(), '-s', deviceId, 'emu', 'kill']);
   // wait for emulator to stop
   await streamCmd([
     '$stagingDir/resources/script/android-wait-for-emulator-to-stop',
@@ -240,9 +250,9 @@ Future<String> waitAndroidLocaleChange(String deviceId, String toLocale) async {
 }
 
 /// Filters a list of devices to get real ios devices.
-List getIosDevices(List devices) {
+List<DaemonDevice> getIosDevices(List<DaemonDevice> devices) {
   final iosDevices = devices
-      .where((device) => device['platform'] == 'ios' && !device['emulator'])
+      .where((device) => device.platform == 'ios' && !device.emulator)
       .toList();
   return iosDevices;
 }
@@ -265,19 +275,19 @@ Map getDevice(List devices, String deviceName) {
 }
 
 /// Get device for deviceId from list of devices.
-Map getDeviceFromId(List devices, String deviceId) {
-  return devices.firstWhere((device) => device['id'] == deviceId,
+DaemonDevice getDeviceFromId(List<DaemonDevice> devices, String deviceId) {
+  return devices.firstWhere((device) => device.id == deviceId,
       orElse: () => null);
 }
 
 /// Wait for message to appear in sys log and return first matching line
 Future<String> waitSysLogMsg(
     String deviceId, RegExp regExp, String locale) async {
-  cmd(['adb', '-s', deviceId, 'logcat', '-c']);
+  cmd([getAdbPath(), '-s', deviceId, 'logcat', '-c']);
   await Future.delayed(Duration(milliseconds: 1000)); // wait for log to clear
   // -b main ContactsDatabaseHelper:I '*:S'
   final delegate = await runCommand([
-    'adb',
+    getAdbPath(),
     '-s',
     deviceId,
     'logcat',
@@ -335,4 +345,47 @@ String toPlatformPath(String posixPath, {p.Context context}) {
     return context.joinAll(splitPath);
   }
   return p.joinAll(splitPath);
+}
+
+/// Path to the `adb` executable.
+String getAdbPath() {
+  String androidHome = getAndroidHome();
+  final adbName = platform.isWindows ? 'adb.exe' : 'adb';
+  final String adbPath = p.join(androidHome, 'platform-tools/${adbName}');
+  final absPath = p.absolute(adbPath);
+  if (!fs.file(adbPath).existsSync()) {
+    print('#############################################################\n');
+    print("# 'adb' must be in the PATH to use Screenshots\n");
+    print("# You can usually add it to the PATH using\n"
+        "# export PATH='\$HOME/Library/Android/sdk/platform-tools:\$PATH'  \n");
+    print('#############################################################\n');
+  }
+  return absPath;
+}
+
+/// Path to the `emulator` executable.
+String getEmulatorPath() {
+  String androidHome = getAndroidHome();
+  final emulatorName = platform.isWindows ? 'emulator.exe' : 'emulator';
+  final String emulatorPath = p.join(androidHome, 'emulator/${emulatorName}');
+  final absPath = p.absolute(emulatorPath);
+  if (!fs.file(emulatorPath).existsSync()) {
+    print('#############################################################\n');
+    print("# 'emulator' must be in the PATH to use Screenshots\n");
+    print("# You can usually add it to the PATH using\n"
+        "# export PATH='\$HOME/Library/Android/sdk/emulator:\$PATH'  \n");
+    print('#############################################################\n');
+  }
+  return absPath;
+}
+
+String getAndroidHome() {
+  final String androidHome = platform.environment['ANDROID_HOME'] ??
+      platform.environment['ANDROID_SDK_ROOT'];
+  if (androidHome == null) {
+    print('The ANDROID_SDK_ROOT and ANDROID_HOME environment variables are '
+        'missing. At least one of these variables must point to the Android '
+        'SDK directory.');
+  }
+  return androidHome;
 }
