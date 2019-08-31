@@ -215,9 +215,13 @@ Individual devices can be configured in `screenshots.yaml` by specifying per dev
 |orientation|Portrait \| LandscapeRight \| PortraitUpsideDown \| LandscapeLeft|optional|Controls orientation of device during test. Currently disables framing resulting in a raw screenshot. Ignored for real devices.
 
 
-Note: images generated for those devices where framing is disabled are probably not suitable for upload, but can be used for local review.
+_frame_ parameter notes:
+- images generated for devices where framing is disabled may not be suitable for upload.
+- set this to true for devices unknown to _screenshots_.
 
-Note: orientation on iOS simulators is implemented using an AppleScript script which requires granting permission on first use.
+_orientation_ parameter notes:
+- orientation on iOS simulators is implemented using an AppleScript script which requires granting permission on first use.
+
 
 ## Test Options
 In addition to using the default flutter driver mode, tests can also be specified using flutter driver parameters. For example:
