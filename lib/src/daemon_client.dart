@@ -34,7 +34,6 @@ class DaemonClient {
   /// Start flutter tools daemon.
   Future<void> get start async {
     if (!_connected) {
-//      _process = await Process.start('flutter', ['daemon'], runInShell: true);
       _process = await runCommand(['flutter', 'daemon']);
       _listen();
       _waitForConnection = Completer<bool>();
@@ -53,9 +52,17 @@ class DaemonClient {
   }
 
   /// List installed emulators (not including iOS simulators).
-  Future<List> get emulators async {
-    return _sendCommandWaitResponse(
+  Future<List<DaemonEmulator>> get emulators async {
+    final List emulators = await _sendCommandWaitResponse(
         <String, dynamic>{'method': 'emulator.getEmulators'});
+//    print('emulators=$emulators');
+    final daemonEmulators = <DaemonEmulator>[];
+    for (var emulator in emulators) {
+      final daemonEmulator = loadDaemonEmulator(emulator);
+//      print('daemonEmulator=$daemonEmulator');
+      daemonEmulators.add(daemonEmulator);
+    }
+    return daemonEmulators;
   }
 
   /// Launch an emulator and return device id.
@@ -233,4 +240,40 @@ Future waitForEmulatorToStart(
     started = device != null;
     await Future.delayed(Duration(milliseconds: 1000));
   }
+}
+
+abstract class BaseDevice {
+  final String id;
+  final String name;
+  final String category;
+  final String platformType;
+
+  BaseDevice(this.id, this.name, this.category, this.platformType);
+
+  @override
+  String toString() {
+    return 'id: $id, name: $name, category: $category, platformType: $platformType';
+  }
+}
+
+/// Describe an emulator.
+class DaemonEmulator extends BaseDevice {
+  DaemonEmulator(String id, String name, String category, String platformType)
+      : super(id, name, category, platformType);
+}
+
+/// Describe a device.
+class DaemonDevice extends BaseDevice {
+  final bool ephemeral;
+  final String iosModel; //  iOS model
+  DaemonDevice(String id, String name, String category, String platformType,
+      this.ephemeral,
+      {this.iosModel})
+      : super(id, name, category, platformType);
+}
+
+DaemonEmulator loadDaemonEmulator(emulator) {
+  final flutterEmulator = DaemonEmulator(emulator['id'], emulator['name'],
+      emulator['category'], emulator['platformType']);
+  return flutterEmulator;
 }

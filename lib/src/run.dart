@@ -62,7 +62,7 @@ Future<bool> runScreenshots(
   // get all available unstarted android emulators
   // note: unstarted simulators are not properly included in this list
   //       so have to be handled separately
-  final emulators = (await daemonClient.emulators);
+  final List<DaemonEmulator> emulators = await daemonClient.emulators;
   emulators.sort(utils.emulatorComparison);
 
   final config = Config(configPath: configPath, configStr: configStr);
@@ -175,7 +175,7 @@ Future runTestsOnAll(
         findRunningDevice(runningDevices, emulators, configDeviceName);
 
     String deviceId;
-    Map emulator;
+    DaemonEmulator emulator;
     Map simulator;
     bool pendingIosLocaleChangeAtStart = false;
     if (device != null) {
@@ -186,8 +186,7 @@ Future runTestsOnAll(
       emulator = utils.findEmulator(emulators, configDeviceName);
       if (emulator != null) {
         print('Starting $configDeviceName...');
-        deviceId =
-            await _startEmulator(daemonClient, emulator['id'], stagingDir);
+        deviceId = await _startEmulator(daemonClient, emulator.id, stagingDir);
       } else {
         // if no matching android emulator, look for matching ios simulator
         // and start it
@@ -226,7 +225,8 @@ Future runTestsOnAll(
       // device is emulated
 
       // Function to check for a running android device or emulator.
-      bool isRunningAndroidDeviceOrEmulator(Map device, Map emulator) {
+      bool isRunningAndroidDeviceOrEmulator(
+          Map device, DaemonEmulator emulator) {
         return (device != null && device['platform'] != 'ios') ||
             (device == null && emulator != null);
       }
@@ -238,14 +238,14 @@ Future runTestsOnAll(
       }
 
       // Function to check for a running ios device or simulator.
-      bool isRunningIosDeviceOrSimulator(Map device, Map emulator) {
+      bool isRunningIosDeviceOrSimulator(Map device) {
         return (device != null && device['platform'] == 'ios') ||
             (device == null && simulator != null);
       }
 
       // save original ios locale for reverting later if necessary
       String origIosLocale;
-      if (isRunningIosDeviceOrSimulator(device, emulator)) {
+      if (isRunningIosDeviceOrSimulator(device)) {
         origIosLocale = utils.getIosSimulatorLocale(deviceId);
       }
 
@@ -538,12 +538,12 @@ Future _startAndroidEmulatorOnCI(String emulatorId, String stagingDir) async {
 }
 
 /// Find the device name of a running emulator.
-String _findDeviceNameOfRunningEmulator(List emulators, String deviceId) {
+String _findDeviceNameOfRunningEmulator(
+    List<DaemonEmulator> emulators, String deviceId) {
   final emulatorId = utils.getAndroidEmulatorId(deviceId);
-  final emulator = emulators.firstWhere(
-      (emulator) => emulator['id'] == emulatorId,
+  final emulator = emulators.firstWhere((emulator) => emulator.id == emulatorId,
       orElse: () => null);
-  return emulator == null ? null : emulator['name'];
+  return emulator == null ? null : emulator.name;
 }
 
 /// Get device type from config info

@@ -73,9 +73,10 @@ main() {
           'platformType': 'android'
         },
       ];
+      final daemonEmulator = loadDaemonEmulator(emulators[0]);
       when(mockDaemonClient.devices).thenAnswer((_) => Future.value(devices));
       when(mockDaemonClient.emulators)
-          .thenAnswer((_) => Future.value(emulators));
+          .thenAnswer((_) => Future.value([daemonEmulator]));
 
       // screenshots config
       final configStr = '''
@@ -147,9 +148,11 @@ main() {
           'platformType': 'android'
         },
       ];
+      final daemonEmulator = loadDaemonEmulator(emulators[0]);
+
       when(mockDaemonClient.devices).thenAnswer((_) => Future.value(devices));
       when(mockDaemonClient.emulators)
-          .thenAnswer((_) => Future.value(emulators));
+          .thenAnswer((_) => Future.value([daemonEmulator]));
       when(mockDaemonClient.launchEmulator('Nexus_6P_API_28'))
           .thenAnswer((_) => Future.value('emulator-5554'));
       when(mockDaemonClient.waitForEvent(EventType.deviceRemoved))
@@ -338,12 +341,16 @@ main() {
           'platformType': 'ios'
         }
       ];
+      final daemonEmulators = [
+        loadDaemonEmulator(emulators[0]),
+        loadDaemonEmulator(emulators[1])
+      ];
 
       final devicesResponses = [[], devices, devices];
       when(mockDaemonClient.devices)
           .thenAnswer((_) => Future.value(devicesResponses.removeAt(0)));
       when(mockDaemonClient.emulators)
-          .thenAnswer((_) => Future.value(emulators));
+          .thenAnswer((_) => Future.value(daemonEmulators));
       when(mockDaemonClient.launchEmulator('Nexus_6P_API_28'))
           .thenAnswer((_) => Future.value('emulator-5554'));
       when(mockDaemonClient.waitForEvent(EventType.deviceRemoved))
