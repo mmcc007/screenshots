@@ -3,6 +3,7 @@ import 'package:mockito/mockito.dart';
 import 'package:process/process.dart';
 import 'package:screenshots/src/base/file_system.dart';
 import 'package:screenshots/src/base/io.dart';
+import 'package:screenshots/src/config.dart';
 import 'package:screenshots/src/fastlane.dart';
 import 'package:screenshots/src/globals.dart';
 import 'package:screenshots/src/screens.dart';
@@ -70,12 +71,13 @@ main() {
         locales:
           - locale1
           - locale2
+        frame: true
         ''';
-        final configInfo = parseYamlStr(configStr);
+        final config = Config(configStr: configStr);
         final screens = Screens();
         await screens.init();
         final runMode = RunMode.normal;
-        await clearFastlaneDirs(configInfo, screens, runMode);
+        await clearFastlaneDirs(config, screens, runMode);
       });
     });
   });

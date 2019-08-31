@@ -149,13 +149,15 @@ Future prefixFilesInDir(String dirPath, String prefix) async {
   }
 }
 
-/// Converts [enum] value to [String].
+/// Converts [_enum] value to [String].
 String getStringFromEnum(dynamic _enum) => _enum.toString().split('.').last;
 
 /// Converts [String] to [enum].
-T getEnumFromString<T>(List<T> values, String value) {
+T getEnumFromString<T>(List<T> values, String value, {bool allowNull = false}) {
   return values.firstWhere((type) => getStringFromEnum(type) == value,
-      orElse: () => null);
+      orElse: () => allowNull
+          ? null
+          : throw 'Fatal: \'$value\' is not a valid enum value for $values.');
 }
 
 /// Returns locale of currently attached android device.
@@ -250,14 +252,6 @@ List getAndroidDevices(List devices) {
       .where((device) => device['platform'] != 'ios' && !device['emulator'])
       .toList();
   return iosDevices;
-}
-
-/// Get all configured android and ios device names for this test run.
-List getAllConfiguredDeviceNames(Map configInfo) {
-  final androidDeviceNames = configInfo['devices']['android']?.keys ?? [];
-  final iosDeviceNames = configInfo['devices']['ios']?.keys ?? [];
-  final deviceNames = [...androidDeviceNames, ...iosDeviceNames];
-  return deviceNames;
 }
 
 /// Get device for deviceName from list of devices.

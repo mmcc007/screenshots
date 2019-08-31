@@ -13,23 +13,22 @@ import 'utils.dart' as utils;
 Future<bool> validate(
     Config config, Screens screens, List allDevices, List allEmulators) async {
   final configPath = config.configPath;
-  final configInfo = config.configInfo;
   // validate params
-  final deviceNames = utils.getAllConfiguredDeviceNames(configInfo);
+  final deviceNames = config.deviceNames;
   for (final devName in deviceNames) {
-    final deviceInfo = findDeviceInfo(configInfo, devName);
-    if (deviceInfo != null) {
-      final orientation = deviceInfo['orientation'];
-      if (orientation != null && !isValidOrientation(orientation)) {
+    final configDevice = config.getDevice(devName);
+    if (configDevice != null) {
+      if (configDevice.orientationStr != null &&
+          !isValidOrientation(configDevice.orientationStr)) {
         stderr.writeln(
-            'Invalid value for \'orientation\' for device \'$devName\': $orientation');
+            'Invalid value for \'orientation\' for device \'$devName\': $configDevice.orientationStr');
         stderr.writeln('Valid values:');
         for (final orientation in Orientation.values) {
           stderr.writeln('  ${utils.getStringFromEnum(orientation)}');
         }
         exit(1);
       }
-      final frame = deviceInfo['frame'];
+      final frame = configDevice.isFramed;
       if (frame != null && !isValidFrame(frame)) {
         stderr.writeln(
             'Invalid value for \'frame\' for device \'$devName\': $frame');
@@ -43,48 +42,47 @@ Future<bool> validate(
 
   final isDeviceAttached = (device) => device != null;
 
-  if (configInfo['devices']['android'] != null) {
-    final devices = utils.getAndroidDevices(allDevices);
-    for (String deviceName in configInfo['devices']['android'].keys) {
-      if (ImageProcessor.isFrameRequired(
-          configInfo, DeviceType.android, deviceName)) {
+  if (config.isRunTypeActive(DeviceType.android)) {
+    final androidDevices = utils.getAndroidDevices(allDevices);
+    for (ConfigDevice configDevice in config.androidDevices) {
+      if (config.isFrameRequired(configDevice.name)) {
         // check screen available for this device
-        _checkScreenAvailable(screens, deviceName, configPath);
+        _checkScreenAvailable(screens, configDevice.name, configPath);
       }
 
       // check emulator installed
-      if (!isDeviceAttached(utils.getDevice(devices, deviceName)) &&
-          !isEmulatorInstalled(allEmulators, deviceName)) {
+      if (!isDeviceAttached(
+              utils.getDevice(androidDevices, configDevice.name)) &&
+          !isEmulatorInstalled(allEmulators, configDevice.name)) {
         stderr.write('Error: no device attached or emulator installed for '
-            'device \'$deviceName\' in $configPath.\n');
+            'device \'$configDevice.name\' in $configPath.\n');
         generateConfigGuide(screens, allDevices);
         exit(1);
       }
     }
   }
 
-  if (configInfo['devices']['ios'] != null) {
-    final devices = utils.getIosDevices(allDevices);
+  if (config.isRunTypeActive(DeviceType.ios)) {
+    final iosDevices = utils.getIosDevices(allDevices);
     final Map simulators = utils.getIosSimulators();
-    for (String deviceName in configInfo['devices']['ios'].keys) {
-      if (ImageProcessor.isFrameRequired(
-          configInfo, DeviceType.ios, deviceName)) {
+    for (ConfigDevice configDevice in config.iosDevices) {
+      if (config.isFrameRequired(configDevice.name)) {
         // check screen available for this device
-        _checkScreenAvailable(screens, deviceName, configPath);
+        _checkScreenAvailable(screens, configDevice.name, configPath);
       }
 
       // check simulator installed
-      if (!isDeviceAttached(utils.getDevice(devices, deviceName)) &&
-          !_isSimulatorInstalled(simulators, deviceName)) {
+      if (!isDeviceAttached(utils.getDevice(iosDevices, configDevice.name)) &&
+          !_isSimulatorInstalled(simulators, configDevice.name)) {
         stderr.write('Error: no device attached or simulator installed for '
-            'device \'$deviceName\' in $configPath.\n');
+            'device \'$configDevice.name\' in $configPath.\n');
         generateConfigGuide(screens, allDevices);
         exit(1);
       }
     }
   }
 
-  for (String test in configInfo['tests']) {
+  for (String test in config.tests) {
     if (!isValidTestPaths(test)) {
       stderr.writeln('Invalid config: $test in $configPath');
       exit(1);
@@ -258,17 +256,4 @@ bool isValidOrientation(String orientation) {
 
 bool isValidFrame(dynamic frame) {
   return frame != null && (frame == true || frame == false);
-}
-
-/// Find device info in config for device name.
-Map findDeviceInfo(Map configInfo, String deviceName) {
-  Map deviceInfo;
-  configInfo['devices'].forEach((deviceType, devices) {
-    if (devices != null) {
-      devices.forEach((_deviceName, _deviceInfo) {
-        if (_deviceName == deviceName) deviceInfo = _deviceInfo;
-      });
-    }
-  });
-  return deviceInfo;
 }

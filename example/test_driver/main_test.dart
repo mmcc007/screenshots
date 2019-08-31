@@ -13,7 +13,7 @@ void main() {
   group('end-to-end test', () {
     FlutterDriver driver;
     Map localizations;
-    final config = Config().configInfo;
+    final config = Config();
 
     setUpAll(() async {
       // Connect to a running Flutter application instance.

@@ -70,11 +70,9 @@ void main() {
     await screens.init();
     final screen = screens.getScreen('Nexus 6P');
     final Config config = Config(configPath: 'test/screenshots_test.yaml');
-    final configInfo = config.configInfo;
     final Map scrnResources = screen['resources'];
     await resources.unpackImages(scrnResources, '/tmp/screenshots');
-    final statusbarPath =
-        '${configInfo['staging']}/${scrnResources['statusbar']}';
+    final statusbarPath = '${config.stagingDir}/${scrnResources['statusbar']}';
     final screenshotPath = 'test/resources/0.png';
     final options = {
       'screenshotPath': screenshotPath,
@@ -89,11 +87,10 @@ void main() {
     await screens.init();
     final screen = screens.getScreen('Nexus 9');
     final Config config = Config(configPath: 'test/screenshots_test.yaml');
-    final configInfo = config.configInfo;
     final Map scrnResources = screen['resources'];
     await resources.unpackImages(scrnResources, '/tmp/screenshots');
     final screenshotNavbarPath =
-        '${configInfo['staging']}/${scrnResources['navbar']}';
+        '${config.stagingDir}/${scrnResources['navbar']}';
     final screenshotPath = 'test/resources/nexus_9_0.png';
     final options = {
       'screenshotPath': screenshotPath,
@@ -108,10 +105,9 @@ void main() {
     await screens.init();
     final screen = screens.getScreen('Nexus 9');
     final Config config = Config(configPath: 'test/screenshots_test.yaml');
-    final configInfo = config.configInfo;
     final Map scrnResources = screen['resources'];
     await resources.unpackImages(scrnResources, '/tmp/screenshots');
-    final framePath = configInfo['staging'] + '/' + scrnResources['frame'];
+    final framePath = config.stagingDir + '/' + scrnResources['frame'];
     final size = screen['size'];
     final resize = screen['resize'];
     final offset = screen['offset'];
@@ -439,14 +435,15 @@ void main() {
     final deviceName = 'Nexus 9P';
     final expected = DeviceType.android;
     final config = '''
-devices:
-  ios:
-    iPhone X:
-  android:
-    $deviceName:
-''';
+      devices:
+        ios:
+          iPhone X:
+        android:
+          $deviceName:
+      frame: true
+      ''';
 
-    final configInfo = loadYaml(config);
+    final configInfo = Config(configStr: config);
     DeviceType deviceType = run.getDeviceType(configInfo, deviceName);
     expect(deviceType, expected);
   });
@@ -529,8 +526,8 @@ devices:
       await run.run(
           configPath: configPath,
           mode: utils.getStringFromEnum(RunMode.recording));
-      final configInfo = Config(configPath: configPath).configInfo;
-      final recordingDir = configInfo['recording'];
+      final config = Config(configPath: configPath);
+      final recordingDir = config.recordingDir;
       expect(await utils.isRecorded(recordingDir), isTrue);
       Directory.current = origDir;
     }, timeout: Timeout(Duration(seconds: 180)), skip: utils.isCI());
@@ -589,8 +586,8 @@ devices:
       final origDir = Directory.current;
       Directory.current = 'example';
       final configPath = 'screenshots.yaml';
-      final configInfo = Config(configPath: configPath).configInfo;
-      final recordingDir = configInfo['recording'];
+      final config = Config(configPath: configPath);
+      final recordingDir = config.recordingDir;
       expect(await utils.isRecorded(recordingDir), isTrue);
       await run.run(
           configPath: configPath,
@@ -768,18 +765,22 @@ devices:
           android device 1:
           android device 2:
         fuschia:
+      frame: true
       ''';
-      final configInfo = loadYaml(params);
-      final deviceNames = utils.getAllConfiguredDeviceNames(configInfo);
+      final configInfo = Config(configStr: params);
+      final deviceNames = configInfo.deviceNames;
       for (final devName in deviceNames) {
-        final deviceInfo = validate.findDeviceInfo(configInfo, devName);
+        final deviceInfo = configInfo.getDevice(devName);
         print('devName=$devName');
         print('deviceInfo=$deviceInfo');
         if (deviceInfo != null) {
-          expect(deviceInfo['orientation'], orientation);
-          expect(validate.isValidOrientation(orientation), isTrue);
-          expect(validate.isValidOrientation('bad orientation'), isFalse);
-          expect(deviceInfo['frame'], frame);
+          if (deviceInfo.name == deviceName) {
+            expect(deviceInfo.orientation,
+                utils.getEnumFromString(Orientation.values, orientation));
+            expect(validate.isValidOrientation(orientation), isTrue);
+            expect(validate.isValidOrientation('bad orientation'), isFalse);
+          }
+          expect(deviceInfo.isFramed, frame);
           expect(validate.isValidFrame(frame), isTrue);
           expect(validate.isValidFrame('bad frame'), isFalse);
         }
@@ -809,47 +810,6 @@ devices:
   });
 
   group('run across platforms', () {
-    test('active run type', () {
-      final configIosOnly = '''
-        devices:
-          ios:
-            iPhone X:
-      ''';
-      final configAndroidOnly = '''
-        devices:
-          ios: # check for empty devices
-          android:
-            Nexus 6P:
-      ''';
-      final configBoth = '''
-        devices:
-          ios:
-            iPhone X:
-          android:
-            Nexus 6P:
-      ''';
-      final configNeither = '''
-        devices:
-          ios:
-          android:
-      ''';
-      Map configInfo = utils.parseYamlStr(configIosOnly);
-      expect(run.isRunTypeActive(configInfo, DeviceType.ios), isTrue);
-      expect(run.isRunTypeActive(configInfo, DeviceType.android), isFalse);
-
-      configInfo = utils.parseYamlStr(configAndroidOnly);
-      expect(run.isRunTypeActive(configInfo, DeviceType.ios), isFalse);
-      expect(run.isRunTypeActive(configInfo, DeviceType.android), isTrue);
-
-      configInfo = utils.parseYamlStr(configBoth);
-      expect(run.isRunTypeActive(configInfo, DeviceType.ios), isTrue);
-      expect(run.isRunTypeActive(configInfo, DeviceType.android), isTrue);
-
-      configInfo = utils.parseYamlStr(configNeither);
-      expect(run.isRunTypeActive(configInfo, DeviceType.ios), isFalse);
-      expect(run.isRunTypeActive(configInfo, DeviceType.android), isFalse);
-    });
-
     test('ios only', () async {
       final configIosOnly = '''
         tests:
