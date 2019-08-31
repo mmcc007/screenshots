@@ -1,5 +1,8 @@
 import 'package:screenshots/src/config.dart';
+import 'package:screenshots/src/globals.dart';
+import 'package:screenshots/src/orientation.dart';
 import 'package:screenshots/src/screens.dart';
+import 'package:screenshots/src/utils.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -7,7 +10,7 @@ void main() {
     final Config config = Config(configPath: 'test/screenshots_test.yaml');
     final screens = await Screens();
     await screens.init();
-    final orientation='orientation';
+    final orientation = 'Portrait';
 
     final env = {
       'screen_size': '1440x2560',
@@ -19,7 +22,11 @@ void main() {
 
     // called by screenshots before test
     await config.storeEnv(
-        screens, env['device_name'], env['locale'], env['device_type'], orientation );
+        screens,
+        env['device_name'],
+        env['locale'],
+        getEnumFromString(DeviceType.values, env['device_type']),
+        getEnumFromString(Orientation.values, orientation));
 
     // called by test
     final Config testConfig = Config(configPath: 'test/screenshots_test.yaml');

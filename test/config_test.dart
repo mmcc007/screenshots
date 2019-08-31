@@ -58,8 +58,8 @@ main() {
       expect(config.iosDevices, equals([expectedIosDevice]));
       expect(config.iosDevices, isNot(equals([expectedAndroidDevice])));
       expect(config.isFrameEnabled, expectedGlobalFrame);
-      expect(config.recordingPath, expectedRecording);
-      expect(config.archivePath, expectedArchive);
+      expect(config.recordingDir, expectedRecording);
+      expect(config.archiveDir, expectedArchive);
       expect(config.getDevice(expectedAndroidName), expectedAndroidDevice);
       expect(config.getDevice(expectedAndroidName), isNot(expectedIosDevice));
       expect(

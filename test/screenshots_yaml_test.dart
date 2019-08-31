@@ -68,26 +68,6 @@ void main() {
     expect(screenshotsConfig, expected);
   });
 
-  test('config info for app from file', () {
-    final expected = {
-      'tests': ['test_driver/main.dart'],
-      'locales': ['en-US'],
-      'frame': true,
-      'devices': {
-        'android': {'Nexus 6P': null},
-        'ios': {
-          'iPhone X': null,
-          'iPhone 5c': {'frame': false}
-        }
-      },
-      'staging': '/tmp/screenshots'
-    };
-
-    final Config config = Config(configPath: 'test/screenshots_test.yaml');
-    Map appConfig = config.configInfo;
-    expect(appConfig, expected);
-  });
-
   test('validate test paths', () async {
     final mainPath = 'example/test_driver/main.dart';
     final testPath = 'example/test_driver/main_test.dart';

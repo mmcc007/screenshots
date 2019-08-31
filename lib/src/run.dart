@@ -73,7 +73,7 @@ Future<bool> runScreenshots(
   await Directory(path.join(config.stagingDir, kTestScreenshotsDir))
       .create(recursive: true);
   if (!platform.isWindows) await resources.unpackScripts(config.stagingDir);
-  Archive archive = Archive(config.archivePath);
+  Archive archive = Archive(config.archiveDir);
   if (runMode == RunMode.archive) {
     print('Archiving screenshots to ${archive.archiveDirPrefix}...');
   } else {
@@ -88,7 +88,7 @@ Future<bool> runScreenshots(
 
   print('\n\nScreen images are available in:');
   if (runMode == RunMode.recording) {
-    printScreenshotDirs(config, config.recordingPath);
+    printScreenshotDirs(config, config.recordingDir);
   } else {
     if (runMode == RunMode.archive) {
       print('  ${archive.archiveDirPrefix}');
@@ -139,15 +139,15 @@ Future runTestsOnAll(
     RunMode runMode,
     Archive archive,
     String flavor) async {
-  final configInfo = config.configInfo;
-  final locales = configInfo['locales'];
-  final stagingDir = configInfo['staging'];
-  final testPaths = configInfo['tests'];
+//  final configInfo = config.configInfo;
+  final locales = config.locales;
+  final stagingDir = config.stagingDir;
+  final testPaths = config.tests;
   final configDeviceNames = config.deviceNames;
   final imageProcessor = ImageProcessor(screens, config);
 
-  final recordingDir = configInfo['recording'];
-  final archiveDir = configInfo['archive'];
+  final recordingDir = config.recordingDir;
+  final archiveDir = config.archiveDir;
   switch (runMode) {
     case RunMode.normal:
       break;
@@ -214,7 +214,7 @@ Future runTestsOnAll(
         : Null;
 
     // set locale and run tests
-    final deviceType = getDeviceType(configInfo, configDeviceName);
+    final deviceType = getDeviceType(config, configDeviceName);
     if (device != null && !device['emulator']) {
       // device is real
       final defaultLocale = 'en_US'; // todo: need actual locale of real device
@@ -281,14 +281,8 @@ Future runTestsOnAll(
         }
 
         // Change orientation if required
-        final deviceInfo = configInfo['devices']
-            [utils.getStringFromEnum(deviceType)][configDeviceName];
-        String deviceOrientation;
-        deviceInfo != null
-            ? deviceOrientation = deviceInfo['orientation']
-            : null;
-        if (deviceOrientation != null) {
-          final orientation = orient.getOrientationEnum(deviceOrientation);
+        final configDevice = config.getDevice(configDeviceName);
+        if (configDevice.orientation != null) {
           final currentDevice =
               utils.getDeviceFromId(await daemonClient.devices, deviceId);
           currentDevice == null
@@ -297,7 +291,8 @@ Future runTestsOnAll(
           switch (deviceType) {
             case DeviceType.android:
               if (currentDevice['emulator']) {
-                orient.changeDeviceOrientation(deviceType, orientation,
+                orient.changeDeviceOrientation(
+                    deviceType, configDevice.orientation,
                     deviceId: deviceId);
               } else {
                 print(
@@ -306,7 +301,8 @@ Future runTestsOnAll(
               break;
             case DeviceType.ios:
               if (currentDevice['emulator']) {
-                orient.changeDeviceOrientation(deviceType, orientation,
+                orient.changeDeviceOrientation(
+                    deviceType, configDevice.orientation,
                     scriptDir: '$stagingDir/resources/script');
               } else {
                 print(
@@ -318,8 +314,8 @@ Future runTestsOnAll(
 
         // store env for later use by tests
         // ignore: invalid_use_of_visible_for_testing_member
-        await config.storeEnv(screens, configDeviceName, locale,
-            utils.getStringFromEnum(deviceType), deviceOrientation);
+        await config.storeEnv(screens, configDeviceName, locale, deviceType,
+            configDevice.orientation);
 
         // run tests and process images
         await runProcessTests(configDeviceName, locale, deviceType, testPaths,
@@ -551,16 +547,8 @@ String _findDeviceNameOfRunningEmulator(List emulators, String deviceId) {
 }
 
 /// Get device type from config info
-DeviceType getDeviceType(Map configInfo, String deviceName) {
-  final androidDeviceNames = configInfo['devices']['android']?.keys ?? [];
-  final iosDeviceNames = configInfo['devices']['ios']?.keys ?? [];
-  // search in both
-  DeviceType deviceType =
-      androidDeviceNames.contains(deviceName) ? DeviceType.android : null;
-  deviceType = deviceType == null
-      ? iosDeviceNames.contains(deviceName) ? DeviceType.ios : null
-      : deviceType;
-  return deviceType;
+DeviceType getDeviceType(Config config, String deviceName) {
+  return config.getDevice(deviceName).deviceType;
 }
 
 /// Check Image Magick is installed.

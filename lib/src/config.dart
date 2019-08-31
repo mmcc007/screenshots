@@ -37,20 +37,22 @@ class Config {
       .where((device) => device.deviceType == DeviceType.android)
       .toList();
   bool get isFrameEnabled => _configInfo['frame'];
-  String get recordingPath => _configInfo['recording'];
-  String get archivePath => _configInfo['archive'];
+  String get recordingDir => _configInfo['recording'];
+  String get archiveDir => _configInfo['archive'];
 
   /// Get all android and ios device names.
   List<String> get deviceNames => devices.map((device) => device.name).toList();
 
-  ConfigDevice getDevice(String deviceName) =>
-      devices.firstWhere((device) => device.name == deviceName);
+  ConfigDevice getDevice(String deviceName) => devices.firstWhere(
+      (device) => device.name == deviceName,
+      orElse: () => throw 'Error: no device configured for \'$deviceName\'');
 
   /// Check for active run type.
   /// Runs can only be one of [DeviceType].
   isRunTypeActive(DeviceType runType) {
     final deviceType = utils.getStringFromEnum(runType);
-    return _configInfo['devices'][deviceType] != null;
+    return !(_configInfo['devices'][deviceType] == null ||
+        _configInfo['devices'][deviceType].length == 0);
   }
 
   /// Check if frame is required for [deviceName].
@@ -59,9 +61,6 @@ class Config {
         orElse: () => throw 'Error: device \'$deviceName\' not found');
     return device.isFramed;
   }
-
-  /// Get configuration information for supported devices
-  Map get configInfo => _configInfo;
 
   /// Current screenshots runtime environment
   /// (updated before start of each test)
@@ -78,7 +77,7 @@ class Config {
   /// (called by screenshots)
   @visibleForTesting
   Future<void> storeEnv(Screens screens, String emulatorName, String locale,
-      String deviceType, String orientation) async {
+      DeviceType deviceType, Orientation orientation) async {
     // store env for later use by tests
     final screenProps = screens.getScreen(emulatorName);
     final screenSize = screenProps == null ? null : screenProps['size'];
@@ -86,8 +85,8 @@ class Config {
       'screen_size': screenSize,
       'locale': locale,
       'device_name': emulatorName,
-      'device_type': deviceType,
-      'orientation': orientation
+      'device_type': utils.getStringFromEnum(deviceType),
+      'orientation': utils.getStringFromEnum(orientation)
     };
     await _envStore.writeAsString(json.encode(currentEnv));
   }

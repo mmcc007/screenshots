@@ -13,7 +13,6 @@ main() {
     final Screens screens = Screens();
     await screens.init();
     final Config config = Config(configPath: 'test/screenshots_test.yaml');
-    Map appConfig = config.configInfo;
 
     final Map devices = {
       'iPhone X': 'iphone_x_1.png',
@@ -32,7 +31,7 @@ main() {
 
       final screenshotPath = '$imageDir/$screenshotName';
       final statusbarPath =
-          '${appConfig['staging']}/${screenResources['statusbar']}';
+          '${config.stagingDir}/${screenResources['statusbar']}';
 
       var options = {
         'screenshotPath': screenshotPath,
@@ -41,7 +40,7 @@ main() {
       await runInContext<void>(() async {
         return im.convert('overlay', options);
       });
-      final framePath = appConfig['staging'] + '/' + screenResources['frame'];
+      final framePath = config.stagingDir + '/' + screenResources['frame'];
       final size = screen['size'];
       final resize = screen['resize'];
       final offset = screen['offset'];

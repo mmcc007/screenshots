@@ -13,14 +13,13 @@ main() {
     await screens.init();
     Map screen = screens.getScreen('Nexus 9');
     final Config config = Config(configPath: 'test/screenshots_test.yaml');
-    Map appConfig = config.configInfo;
 
     final Map ScreenResources = screen['resources'];
     await resources.unpackImages(ScreenResources, '/tmp/screenshots');
 
     final screenshotPath = './test/resources/nexus_9_0.png';
     final statusbarPath =
-        '${appConfig['staging']}/${ScreenResources['statusbar']}';
+        '${config.stagingDir}/${ScreenResources['statusbar']}';
 
     var options = {
       'screenshotPath': screenshotPath,
@@ -31,7 +30,7 @@ main() {
       return im.convert('overlay', options);
     });
     final screenshotNavbarPath =
-        '${appConfig['staging']}/${ScreenResources['navbar']}';
+        '${config.stagingDir}/${ScreenResources['navbar']}';
     options = {
       'screenshotPath': screenshotPath,
       'screenshotNavbarPath': screenshotNavbarPath,
@@ -40,7 +39,7 @@ main() {
     await runInContext<void>(() async {
       return im.convert('append', options);
     });
-    final framePath = appConfig['staging'] + '/' + ScreenResources['frame'];
+    final framePath = config.stagingDir + '/' + ScreenResources['frame'];
     final size = screen['size'];
     final resize = screen['resize'];
     final offset = screen['offset'];

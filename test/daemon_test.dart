@@ -172,8 +172,7 @@ main() {
   test('join devices', () {
     final configPath = 'test/screenshots_test.yaml';
     final config = Config(configPath: configPath);
-    final configInfo = config.configInfo;
-    final androidInfo = configInfo['devices']['android'];
+    final androidInfo = config.androidDevices;
     print('androidInfo=$androidInfo');
     List deviceNames = config.deviceNames;
     print('deviceNames=$deviceNames');
@@ -185,12 +184,9 @@ main() {
     await screens.init();
 
     final config = Config(configPath: configPath);
-    // validate config file
-//    await config.validate(screens);
-    final configInfo = config.configInfo;
 
     // init
-    final stagingDir = configInfo['staging'];
+    final stagingDir = config.stagingDir;
     await Directory(stagingDir + '/$kTestScreenshotsDir')
         .create(recursive: true);
     await resources.unpackScripts(stagingDir);

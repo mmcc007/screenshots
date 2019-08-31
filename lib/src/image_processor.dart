@@ -79,7 +79,7 @@ class ImageProcessor {
     final androidModelType = fastlane.getAndroidModelType(screenProps);
     String dstDir = fastlane.getDirPath(deviceType, locale, androidModelType);
     runMode == RunMode.recording
-        ? dstDir = '${_config.recordingPath}/$dstDir'
+        ? dstDir = '${_config.recordingDir}/$dstDir'
         : null;
     runMode == RunMode.archive
         ? dstDir = archive.dstDir(deviceType, locale)
@@ -92,7 +92,7 @@ class ImageProcessor {
     utils.moveFiles(srcDir, dstDir);
 
     if (runMode == RunMode.comparison) {
-      final recordingDir = '${_config.recordingPath}/$dstDir';
+      final recordingDir = '${_config.recordingDir}/$dstDir';
       print(
           'Running comparison with recorded screenshots in $recordingDir ...');
       final failedCompare =
