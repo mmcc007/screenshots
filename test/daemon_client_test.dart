@@ -62,7 +62,7 @@ main() {
 
     testUsingContext('start', () async {
       final daemonClient = DaemonClient();
-      daemonClient.verbose = true;
+//      daemonClient.verbose = true;
 
       fakePlatform.operatingSystem = 'linux';
       when(mockProcess.stdout).thenAnswer((Invocation invocation) {

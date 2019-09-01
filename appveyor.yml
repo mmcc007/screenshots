@@ -141,4 +141,4 @@ test_script:
   # run screenshots
   - echo Run screenshots
   - cd example
-  - screenshots -c screenshots_android.yaml
+  - screenshots -c screenshots_android.yaml -v

@@ -230,7 +230,7 @@ void main() {
     final emulatorName = 'Nexus 6P';
     final emulatorId = 'Nexus_6P_API_28';
     final daemonClient = DaemonClient();
-    daemonClient.verbose = true;
+//    daemonClient.verbose = true;
     await daemonClient.start;
     final deviceId = await daemonClient.launchEmulator(emulatorId);
     final devices = await daemonClient.devices;
@@ -248,7 +248,7 @@ void main() {
     final newLocale = 'fr_CA';
     final daemonClient = DaemonClient();
     await daemonClient.start;
-    daemonClient.verbose = true;
+//    daemonClient.verbose = true;
     final deviceId = await daemonClient.launchEmulator(emulatorId);
     print('switching to $newLocale locale');
     run.changeAndroidLocale(deviceId, deviceName, newLocale);
@@ -267,7 +267,7 @@ void main() {
         utils.getHighestIosSimulator(utils.getIosSimulators(), simulatorName);
     final deviceId = simulatorInfo['udid'];
     final daemonClient = DaemonClient();
-    daemonClient.verbose = true;
+//    daemonClient.verbose = true;
     await daemonClient.start;
     await run.startSimulator(daemonClient, deviceId);
     await run.shutdownSimulator(deviceId);
@@ -709,7 +709,7 @@ void main() {
           utils.getHighestIosSimulator(utils.getIosSimulators(), simulatorName);
       final deviceId = simulatorInfo['udid'];
       final daemonClient = DaemonClient();
-      daemonClient.verbose = true;
+//      daemonClient.verbose = true;
       await daemonClient.start;
       await run.startSimulator(daemonClient, deviceId);
       await Future.delayed(Duration(milliseconds: 5000)); // finish booting
@@ -749,7 +749,8 @@ void main() {
       await screens.init();
       final daemonClient = DaemonClient();
       await daemonClient.start;
-      validate.generateConfigGuide(screens, await daemonClient.devices);
+      validate.generateConfigGuide(
+          screens, await daemonClient.devices, 'screenshots.yaml');
     }, skip: utils.isCI());
 
     test('validate device params', () {

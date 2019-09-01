@@ -4,7 +4,7 @@ import 'package:args/args.dart';
 import 'package:screenshots/screenshots.dart';
 
 const usage =
-    'usage: screenshots [-h] [-c <config file>] [-m <normal|recording|comparison|archive>] [-f <flavor>]';
+    'usage: screenshots [-h] [-c <config file>] [-m <normal|recording|comparison|archive>] [-f <flavor>] [-v]';
 const sampleUsage = 'sample usage: screenshots';
 
 void main(List<String> arguments) async {
@@ -14,6 +14,7 @@ void main(List<String> arguments) async {
   final modeArg = 'mode';
   final flavorArg = 'flavor';
   final helpArg = 'help';
+  final verboseArg = 'verbose';
   final ArgParser argParser = ArgParser(allowTrailingOptions: false)
     ..addOption(configArg,
         abbr: 'c',
@@ -29,6 +30,10 @@ void main(List<String> arguments) async {
         valueHelp: 'normal|recording|comparison|archive')
     ..addOption(flavorArg,
         abbr: 'f', help: 'Flavor name.', valueHelp: 'flavor name')
+    ..addFlag(verboseArg,
+        abbr: 'v',
+        help: 'Noisy logging, including all shell commands executed.',
+        negatable: false)
     ..addFlag(helpArg,
         abbr: 'h', help: 'Display this help information.', negatable: false);
   try {
@@ -65,9 +70,11 @@ void main(List<String> arguments) async {
   }
 
   final success = await screenshots(
-      configPath: argResults[configArg],
-      mode: argResults[modeArg],
-      flavor: argResults[flavorArg]);
+    configPath: argResults[configArg],
+    mode: argResults[modeArg],
+    flavor: argResults[flavorArg],
+    verbose: argResults.wasParsed(verboseArg) ? true : false,
+  );
   exit(success ? 0 : 1);
 }
 
