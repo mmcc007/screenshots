@@ -60,7 +60,7 @@ void main(List<String> arguments) async {
   final config = Config(configPath: argResults[configArg]);
   if (config.isRunTypeActive(DeviceType.android)) {
     // check required executables for android
-    getAdbPath() == null ? exit(1) : Null;
+    checkAdbPath() == null ? exit(1) : Null;
     getEmulatorPath() == null ? exit(1) : Null;
   }
 

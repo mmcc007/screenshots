@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:intl/intl.dart';
 
+import 'android/android_sdk.dart';
 import 'archive.dart';
 import 'base/platform.dart';
 import 'base/process.dart';
@@ -470,7 +471,7 @@ Future<void> setEmulatorLocale(String deviceId, testLocale, deviceName) async {
 /// Change local of real android device or running emulator.
 void changeAndroidLocale(
     String deviceId, String deviceLocale, String testLocale) {
-  if (cmd([utils.getAdbPath(), '-s', deviceId, 'root']) ==
+  if (cmd([getAdbPath(androidSdk), '-s', deviceId, 'root']) ==
       'adbd cannot run as root in production builds\n') {
     stdout.write(
         'Warning: locale will not be changed. Running in locale \'$deviceLocale\'.\n');
@@ -481,7 +482,7 @@ void changeAndroidLocale(
   }
   // adb shell "setprop persist.sys.locale fr_CA; setprop ctl.restart zygote"
   cmd([
-    utils.getAdbPath(),
+    getAdbPath(androidSdk),
     '-s',
     deviceId,
     'shell',
@@ -509,7 +510,7 @@ Future _changeSimulatorLocale(
 /// Shutdown an android emulator.
 Future<String> shutdownAndroidEmulator(
     DaemonClient daemonClient, String deviceId) async {
-  cmd([utils.getAdbPath(), '-s', deviceId, 'emu', 'kill']);
+  cmd([getAdbPath(androidSdk), '-s', deviceId, 'emu', 'kill']);
 //  await waitAndroidEmulatorShutdown(deviceId);
   final device = await daemonClient.waitForEvent(EventType.deviceRemoved);
   if (device['id'] != deviceId) {

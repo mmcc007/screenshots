@@ -1,18 +1,28 @@
 import 'dart:io';
 
+import 'package:file/file.dart';
+import 'package:file/memory.dart';
 import 'package:mockito/mockito.dart';
 import 'package:platform/platform.dart';
 import 'package:process/process.dart';
+import 'package:screenshots/src/base/config.dart';
 import 'package:screenshots/src/base/context.dart';
 import 'package:screenshots/src/base/platform.dart';
 import 'package:screenshots/src/daemon_client.dart';
+import 'package:screenshots/src/globals.dart';
 import 'package:screenshots/src/run.dart';
 import 'package:test/test.dart';
 
+import 'src/common_tools.dart';
 import 'src/context.dart';
 import 'src/fake_process_manager.dart';
+import 'src/mocks.dart';
 
 main() {
+  final stagingDir = '/tmp/screenshots';
+  MemoryFileSystem fs;
+  Directory sdkDir;
+
   FakeProcessManager fakeProcessManager;
   MockDaemonClient mockDaemonClient;
   final List<String> stdinCaptured = <String>[];
@@ -22,15 +32,32 @@ main() {
   }
 
   setUp(() async {
+    fs = MemoryFileSystem();
     fakeProcessManager = FakeProcessManager(stdinResults: _captureStdin);
     mockDaemonClient = MockDaemonClient();
+    // create screenshot dir
+    fs
+        .directory('$stagingDir/$kTestScreenshotsDir')
+        .createSync(recursive: true);
+  });
+
+  tearDown(() {
+    if (sdkDir != null) {
+      tryToDelete(sdkDir);
+      sdkDir = null;
+    }
   });
 
   group('run', () {
     testUsingContext(
         'android only run with running emulator and no locales and no frames',
         () async {
+      sdkDir = MockAndroidSdk.createSdkDirectory();
+      Config.instance.setValue('android-sdk', sdkDir.path);
+      final adbPath = '${sdkDir.path}/platform-tools/adb';
+
       final emulatorName = 'Nexus 6P';
+
       // fake process responses
       final List<Call> calls = [
         Call(
@@ -43,11 +70,11 @@ main() {
             null),
         Call('chmod u+x /tmp/screenshots/resources/script/sim_orientation.scpt',
             null),
-        Call('adb -s emulator-5554 emu avd name',
+        Call('$adbPath -s emulator-5554 emu avd name',
             ProcessResult(0, 0, 'Nexus_6P_API_28', '')),
-        Call('adb -s emulator-5554 shell getprop persist.sys.locale',
+        Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
             ProcessResult(0, 0, 'en-US', '')),
-        Call('adb -s emulator-5554 shell getprop persist.sys.locale',
+        Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
             ProcessResult(0, 0, 'en-US', '')),
         Call('flutter -d emulator-5554 drive example/test_driver/main.dart',
             ProcessResult(0, 0, 'drive output', '')),
@@ -85,7 +112,7 @@ main() {
       final configStr = '''
       tests:
         - example/test_driver/main.dart
-      staging: /tmp/screenshots
+      staging: $stagingDir
       locales:
         - en-US
       devices:
@@ -98,14 +125,20 @@ main() {
       expect(result, isTrue);
       fakeProcessManager.verifyCalls();
     }, skip: false, overrides: <Type, Generator>{
+      FileSystem: () => fs,
       ProcessManager: () => fakeProcessManager,
       Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
-        ..environment = {'CI': 'false'},
+        ..environment = {'CI': 'false'}
+//        ..environment = {'ANDROID_HOME': 'path_to_android_sdk'},
     });
 
     testUsingContext(
         'android only run with no running devices or emulators and no locales',
         () async {
+      sdkDir = MockAndroidSdk.createSdkDirectory();
+      Config.instance.setValue('android-sdk', sdkDir.path);
+      final adbPath = '${sdkDir.path}/platform-tools/adb';
+
       final emulatorName = 'Nexus 6P';
       // fake process responses
       final List<Call> calls = [
@@ -119,11 +152,11 @@ main() {
             null),
         Call('chmod u+x /tmp/screenshots/resources/script/sim_orientation.scpt',
             null),
-        Call('adb -s emulator-5554 emu avd name',
+        Call('$adbPath -s emulator-5554 emu avd name',
             ProcessResult(0, 0, 'Nexus_6P_API_28', '')),
-        Call('adb -s emulator-5554 shell getprop persist.sys.locale',
+        Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
             ProcessResult(0, 0, 'en-US', '')),
-        Call('adb -s emulator-5554 shell getprop persist.sys.locale',
+        Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
             ProcessResult(0, 0, 'en-US', '')),
         Call('flutter -d emulator-5554 drive example/test_driver/main.dart',
             ProcessResult(0, 0, 'drive output', '')),
@@ -166,7 +199,7 @@ main() {
       final configStr = '''
       tests:
         - example/test_driver/main.dart
-      staging: /tmp/screenshots
+      staging: $stagingDir
       locales:
         - en-US
       devices:
@@ -187,6 +220,10 @@ main() {
     testUsingContext(
         'android and ios run with no started devices or emulators and multiple locales',
         () async {
+      sdkDir = MockAndroidSdk.createSdkDirectory();
+      Config.instance.setValue('android-sdk', sdkDir.path);
+      final adbPath = '${sdkDir.path}/platform-tools/adb';
+
       final emulatorName = 'Nexus 6P';
       // fake process responses
       final callListIosDevices = Call(
@@ -235,21 +272,21 @@ main() {
             null),
         Call('chmod u+x /tmp/screenshots/resources/script/sim_orientation.scpt',
             null),
-        Call('adb -s emulator-5554 shell getprop persist.sys.locale',
+        Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
             ProcessResult(0, 0, 'en-US', '')),
-        Call('adb -s emulator-5554 shell getprop persist.sys.locale',
+        Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
             ProcessResult(0, 0, 'en-US', '')),
         Call('flutter -d emulator-5554 drive example/test_driver/main.dart',
             ProcessResult(0, 0, 'drive output', '')),
-        Call('adb -s emulator-5554 shell getprop persist.sys.locale',
+        Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
             ProcessResult(0, 0, 'en-US', '')),
-        Call('adb -s emulator-5554 root', null),
+        Call('$adbPath -s emulator-5554 root', null),
         Call(
-            'adb -s emulator-5554 shell setprop persist.sys.locale fr-CA ; setprop ctl.restart zygote',
+            '$adbPath -s emulator-5554 shell setprop persist.sys.locale fr-CA ; setprop ctl.restart zygote',
             null),
-        Call('adb -s emulator-5554 logcat -c', null),
+        Call('$adbPath -s emulator-5554 logcat -c', null),
         Call(
-            'adb -s emulator-5554 logcat -b main *:S ContactsDatabaseHelper:I ContactsProvider:I -e fr_CA',
+            '$adbPath -s emulator-5554 logcat -b main *:S ContactsDatabaseHelper:I ContactsProvider:I -e fr_CA',
             ProcessResult(
                 0,
                 0,
@@ -257,21 +294,21 @@ main() {
                 '')),
         Call('flutter -d emulator-5554 drive example/test_driver/main.dart',
             null),
-        Call('adb -s emulator-5554 shell getprop persist.sys.locale',
+        Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
             ProcessResult(0, 0, 'fr-CA', '')),
-        Call('adb -s emulator-5554 root', null),
+        Call('$adbPath -s emulator-5554 root', null),
         Call(
-            'adb -s emulator-5554 shell setprop persist.sys.locale en-US ; setprop ctl.restart zygote',
+            '$adbPath -s emulator-5554 shell setprop persist.sys.locale en-US ; setprop ctl.restart zygote',
             null),
-        Call('adb -s emulator-5554 logcat -c', null),
+        Call('$adbPath -s emulator-5554 logcat -c', null),
         Call(
-            'adb -s emulator-5554 logcat -b main *:S ContactsDatabaseHelper:I ContactsProvider:I -e en_US',
+            '$adbPath -s emulator-5554 logcat -b main *:S ContactsDatabaseHelper:I ContactsProvider:I -e en_US',
             ProcessResult(
                 0,
                 0,
                 '08-28 14:25:11.994  5294  5417 I ContactsProvider: Locale has changed from [fr_CA] to [en_US]',
                 '')),
-        Call('adb -s emulator-5554 emu kill', null),
+        Call('$adbPath -s emulator-5554 emu kill', null),
         callListIosDevices,
         callPlutilEnUS,
         Call('xcrun simctl boot 6B3B1AD9-EFD3-49AB-9CE9-D43CE1A47446', null),
@@ -370,7 +407,7 @@ main() {
       final configStr = '''
       tests:
         - example/test_driver/main.dart
-      staging: /tmp/screenshots
+      staging: $stagingDir
       locales:
         - en-US
         - fr-CA

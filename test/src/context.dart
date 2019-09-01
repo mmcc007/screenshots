@@ -1,15 +1,19 @@
 import 'dart:async';
-import 'dart:io';
+import 'dart:io' as io;
 
 import 'package:meta/meta.dart';
 import 'package:process/process.dart';
+import 'package:screenshots/src/base/config.dart';
 import 'package:screenshots/src/base/context.dart';
 import 'package:screenshots/src/base/file_system.dart';
+import 'package:screenshots/src/base/io.dart';
+import 'package:screenshots/src/base/os.dart';
 import 'package:screenshots/src/base/terminal.dart';
 import 'package:screenshots/src/context_runner.dart';
 import 'package:screenshots/src/base/logger.dart';
 import 'package:test/test.dart';
 
+import 'common_tools.dart';
 import 'fake_process_manager.dart';
 
 /// Return the test logger. This assumes that the current Logger is a BufferLogger.
@@ -37,22 +41,24 @@ void testUsingContext(
       configDir = null;
     }
   });
-//  Config buildConfig(FileSystem fs) {
-//    configDir = fs.systemTempDirectory.createTempSync('flutter_config_dir_test.');
-//    final File settingsFile = fs.file(
-//        fs.path.join(configDir.path, '.flutter_settings')
-//    );
-//    return Config(settingsFile);
-//  }
+  Config buildConfig(FileSystem fs) {
+    configDir =
+        fs.systemTempDirectory.createTempSync('flutter_config_dir_test.');
+    final File settingsFile =
+        fs.file(fs.path.join(configDir.path, '.flutter_settings'));
+    return Config(settingsFile);
+  }
 
   test(description, () async {
     await runInContext<dynamic>(() {
       return context.run<dynamic>(
         name: 'mocks',
         overrides: <Type, Generator>{
+          Config: () => buildConfig(fs),
           Logger: () => BufferLogger(),
+          OperatingSystemUtils: () => MockOperatingSystemUtils(),
           OutputPreferences: () => OutputPreferences(showColor: false),
-          ProcessManager: () => FakeProcessManager(),
+//          ProcessManager: () => FakeProcessManager(),
           FileSystem: () => LocalFileSystemBlockingSetCurrentDirectory(),
           TimeoutConfiguration: () => const TimeoutConfiguration(),
         },
@@ -95,15 +101,42 @@ void testUsingContext(
       skip: skip);
 }
 
-void tryToDelete(Directory directory) {
-  // This should not be necessary, but it turns out that
-  // on Windows it's common for deletions to fail due to
-  // bogus (we think) "access denied" errors.
-  try {
-    directory.deleteSync(recursive: true);
-  } on FileSystemException catch (error) {
-    print('Failed to delete ${directory.path}: $error');
-  }
+class MockOperatingSystemUtils implements OperatingSystemUtils {
+  @override
+  ProcessResult makeExecutable(File file) => null;
+
+  @override
+  File which(String execName) => null;
+
+  @override
+  List<File> whichAll(String execName) => <File>[];
+
+  @override
+  File makePipe(String path) => null;
+
+  @override
+  void zip(Directory data, File zipFile) {}
+
+  @override
+  void unzip(File file, Directory targetDirectory) {}
+
+  @override
+  bool verifyZip(File file) => true;
+
+  @override
+  void unpack(File gzippedTarFile, Directory targetDirectory) {}
+
+  @override
+  bool verifyGzip(File gzippedFile) => true;
+
+  @override
+  String get name => 'fake OS name and version';
+
+  @override
+  String get pathVarSeparator => ';';
+
+  @override
+  Future<int> findFreePort({bool ipv6 = false}) async => 12345;
 }
 
 class LocalFileSystemBlockingSetCurrentDirectory extends LocalFileSystem {

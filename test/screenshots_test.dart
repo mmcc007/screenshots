@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:process/process.dart';
 import 'package:screenshots/screenshots.dart';
+import 'package:screenshots/src/android/android_sdk.dart';
 import 'package:screenshots/src/base/process.dart';
 import 'package:screenshots/src/config.dart';
 import 'package:screenshots/src/context_runner.dart';
@@ -676,7 +677,7 @@ void main() {
 
   group('adb path', () {
     test('find adb path', () async {
-      final _adbPath = getAdbPath();
+      final _adbPath = getAdbPath(androidSdk);
       print('adbPath=$_adbPath');
     }, skip: utils.isCI());
   });

@@ -7,6 +7,7 @@ import 'package:process/process.dart';
 import 'package:screenshots/src/base/file_system.dart';
 import 'package:screenshots/src/daemon_client.dart';
 import 'package:yaml/yaml.dart';
+import 'android/android_sdk.dart';
 import 'base/platform.dart';
 import 'base/process.dart';
 import 'globals.dart';
@@ -125,7 +126,7 @@ String getHighestIosVersion(Map iOSVersions) {
 
 /// Create list of avds,
 List<String> getAvdNames() {
-  return cmd([getEmulatorPath(), '-list-avds']).split('\n');
+  return cmd([getAdbPath(androidSdk), '-list-avds']).split('\n');
 }
 
 /// Get the highest available avd version for the android emulator.
@@ -348,33 +349,47 @@ String toPlatformPath(String posixPath, {p.Context context}) {
 }
 
 /// Path to the `adb` executable.
-String getAdbPath() {
-  String androidHome = getAndroidHome();
-  final adbName = platform.isWindows ? 'adb.exe' : 'adb';
-  final String adbPath = p.join(androidHome, 'platform-tools/${adbName}');
-  final absPath = p.absolute(adbPath);
-  if (!fs.file(adbPath).existsSync()) {
+String checkAdbPath() {
+  void printAdbPathError() {
     print('#############################################################\n');
     print("# 'adb' must be in the PATH to use Screenshots\n");
     print("# You can usually add it to the PATH using\n"
         "# export PATH='\$HOME/Library/Android/sdk/platform-tools:\$PATH'  \n");
     print('#############################################################\n');
   }
+
+  String androidHome = getAndroidHome();
+  if (androidHome == null) {
+    return null;
+  }
+  final adbName = platform.isWindows ? 'adb.exe' : 'adb';
+  final String adbPath = p.join(androidHome, 'platform-tools/${adbName}');
+  final absPath = p.absolute(adbPath);
+  if (!fs.file(adbPath).existsSync()) {
+    printAdbPathError();
+  }
   return absPath;
 }
 
 /// Path to the `emulator` executable.
 String getEmulatorPath() {
-  String androidHome = getAndroidHome();
-  final emulatorName = platform.isWindows ? 'emulator.exe' : 'emulator';
-  final String emulatorPath = p.join(androidHome, 'emulator/${emulatorName}');
-  final absPath = p.absolute(emulatorPath);
-  if (!fs.file(emulatorPath).existsSync()) {
+  void printEmulatorPathError() {
     print('#############################################################\n');
     print("# 'emulator' must be in the PATH to use Screenshots\n");
     print("# You can usually add it to the PATH using\n"
         "# export PATH='\$HOME/Library/Android/sdk/emulator:\$PATH'  \n");
     print('#############################################################\n');
+  }
+
+  String androidHome = getAndroidHome();
+  if (androidHome == null) {
+    return null;
+  }
+  final emulatorName = platform.isWindows ? 'emulator.exe' : 'emulator';
+  final String emulatorPath = p.join(androidHome, 'emulator/${emulatorName}');
+  final absPath = p.absolute(emulatorPath);
+  if (!fs.file(emulatorPath).existsSync()) {
+    printEmulatorPathError();
   }
   return absPath;
 }
