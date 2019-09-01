@@ -413,15 +413,15 @@ void main() {
   }, skip: utils.isCI());
 
   test('get devices', () {
-    final expected = {
+    final expected = loadDaemonDevice({
       'id': '3b3455019e329e007e67239d9b897148244b5053',
       'name': 'Maurice’s iPhone',
       'platform': 'ios',
       'emulator': false,
       'model': 'iPhone 5c (GSM)'
-    };
+    });
     String deviceName = 'iPhone 5c';
-    Map device = utils.getDevice([expected], deviceName);
+    DaemonDevice device = utils.getDevice([expected], deviceName);
     expect(device, expected);
     final isDeviceAttached = (device) => device != null;
     expect(isDeviceAttached(device), true);

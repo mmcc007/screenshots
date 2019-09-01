@@ -256,11 +256,11 @@ List<DaemonDevice> getAndroidDevices(List<DaemonDevice> devices) {
 }
 
 /// Get device for deviceName from list of devices.
-Map getDevice(List devices, String deviceName) {
+DaemonDevice getDevice(List<DaemonDevice> devices, String deviceName) {
   return devices.firstWhere(
-      (device) => device['model'] == null
-          ? device['name'] == deviceName
-          : device['model'].contains(deviceName),
+      (device) => device.iosModel == null
+          ? device.name == deviceName
+          : device.iosModel.contains(deviceName),
       orElse: () => null);
 }
 
