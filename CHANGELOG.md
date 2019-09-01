@@ -1,3 +1,18 @@
+## 2.0.0
+- Added support for running on linux and windows #97 #96 #106
+- Removed dependency on Yaml objects #98 #100
+- Added support for driver params in config of test #101
+- Added support for runtime/test contexts (from flutter tools) #104
+- Added logger, platform and filesystem from flutter tools to context #105
+- Added support for unknown devices (without framing) #102 #110
+- Created utility to test framing when adding new screens #111
+- Refactored Config to remove access to raw map #114  
+    - Breaking change in calling screenshots in tests!!
+- Refactored daemon client to remove access to raw map #115
+- Added getters for adb and emulator paths #116
+Included adding more components from flutter tools (AndroidSdk, Config, OperatingSystemUtils, etc...).
+- Added verbose mode #109 #117
+
 ## 1.3.0
 - Added support for landscape screenshots #66
 - Added support for flavors #55
