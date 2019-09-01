@@ -171,7 +171,7 @@ bool _isSimulatorInstalled(Map simulators, String deviceName) {
 }
 
 /// Generate a guide for configuring Screenshots in current environment.
-void generateConfigGuide(Screens screens, List devices) {
+void generateConfigGuide(Screens screens, List<DaemonDevice> devices) {
   stdout.write('\nGuide:');
   _reportAttachedDevices(devices);
   _reportInstalledEmulators(utils.getAvdNames());
@@ -224,13 +224,13 @@ void _reportSupportedDevices(Screens screens) {
 /// Test for screen used for identifying android model type
 bool _isAndroidModelTypeScreen(screenProps) => screenProps['size'] == null;
 
-void _reportAttachedDevices(List devices) {
+void _reportAttachedDevices(List<DaemonDevice> devices) {
   stdout.write('\n  Attached devices:\n');
   for (final device in devices) {
-    if (device['emulator'] == false) {
-      device['platform'] == 'ios'
-          ? stdout.write('    ${device['model']}\n')
-          : stdout.write('    ${device['name']}\n');
+    if (device.emulator == false) {
+      device.platform == 'ios'
+          ? stdout.write('    ${device.iosModel}\n')
+          : stdout.write('    ${device.name}\n');
     }
   }
 }
