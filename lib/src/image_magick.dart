@@ -7,7 +7,7 @@ import 'base/process.dart';
 
 class ImageMagick {
   static const _kThreshold = 0.76;
-  final diffSuffix = '-diff';
+  static const kDiffSuffix = '-diff';
 //const kThreshold = 0.5;
 
   // singleton
@@ -119,7 +119,7 @@ class ImageMagick {
     final diffName = p.dirname(comparisonImage) +
         '/' +
         p.basenameWithoutExtension(comparisonImage) +
-        diffSuffix +
+        kDiffSuffix +
         p.extension(comparisonImage);
     return diffName;
   }
@@ -128,7 +128,7 @@ class ImageMagick {
     Directory(dirPath)
         .listSync()
         .where((fileSysEntity) =>
-            p.basename(fileSysEntity.path).contains(diffSuffix))
+            p.basename(fileSysEntity.path).contains(kDiffSuffix))
         .forEach((diffImage) => File(diffImage.path).deleteSync());
   }
 

@@ -10,6 +10,7 @@ import 'package:screenshots/src/context_runner.dart';
 import 'package:screenshots/src/daemon_client.dart';
 import 'package:screenshots/src/fastlane.dart';
 import 'package:screenshots/src/globals.dart';
+import 'package:screenshots/src/image_magick.dart';
 import 'package:screenshots/src/image_processor.dart';
 import 'package:screenshots/src/orientation.dart' as orient;
 import 'package:screenshots/src/orientation.dart';
@@ -414,15 +415,15 @@ void main() {
   }, skip: utils.isCI());
 
   test('get devices', () {
-    final expected = {
+    final expected = loadDaemonDevice({
       'id': '3b3455019e329e007e67239d9b897148244b5053',
       'name': 'Maurice’s iPhone',
       'platform': 'ios',
       'emulator': false,
       'model': 'iPhone 5c (GSM)'
-    };
+    });
     String deviceName = 'iPhone 5c';
-    Map device = utils.getDevice([expected], deviceName);
+    DaemonDevice device = utils.getDevice([expected], deviceName);
     expect(device, expected);
     final isDeviceAttached = (device) => device != null;
     expect(isDeviceAttached(device), true);
@@ -602,12 +603,12 @@ void main() {
           (fsEntity) => File(im.getDiffName(fsEntity.path)).createSync());
       expect(
           Directory(fastlaneDir).listSync().where((fileSysEntity) =>
-              p.basename(fileSysEntity.path).contains(im.diffSuffix)),
+              p.basename(fileSysEntity.path).contains(ImageMagick.kDiffSuffix)),
           isNotEmpty);
       im.deleteDiffs(fastlaneDir);
       expect(
           Directory(fastlaneDir).listSync().where((fileSysEntity) =>
-              p.basename(fileSysEntity.path).contains(im.diffSuffix)),
+              p.basename(fileSysEntity.path).contains(ImageMagick.kDiffSuffix)),
           isEmpty);
     });
   });

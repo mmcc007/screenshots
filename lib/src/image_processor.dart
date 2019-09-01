@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:meta/meta.dart';
 import 'package:screenshots/src/config.dart';
+import 'package:screenshots/src/image_magick.dart';
 
 import 'archive.dart';
 import 'base/file_system.dart';
@@ -125,7 +126,7 @@ class ImageProcessor {
         .listSync()
         .where((screenshot) =>
             p.basename(screenshot.path).contains(deviceName) &&
-            !p.basename(screenshot.path).contains(im.diffSuffix))
+            !p.basename(screenshot.path).contains(ImageMagick.kDiffSuffix))
         .forEach((screenshot) {
       final screenshotName = p.basename(screenshot.path);
       final recordedImageEntity = recordedImages.firstWhere(
