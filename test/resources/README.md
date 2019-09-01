@@ -25,3 +25,5 @@ dart frame.dart -s screenshot_Nexus_6P.png -d 'Nexus 6P'
 ```
 
 After framing is working create a PR.
+
+Please include a description of how you sourced the images used. If you are the author of the images, please include the source files (preferably in Sketch format) you used to create the images in the [assets](https://github.com/mmcc007/screenshots/tree/master/assets) directory.
