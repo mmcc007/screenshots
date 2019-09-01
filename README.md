@@ -292,8 +292,16 @@ For each selected device:
 2. Add device to the list of devices in screenshots.yaml.  
 3. Confirm a real device is attached, or install an emulator/simulator for device.   
 
+If your device is not found in screens.yaml but matches a screen size in screens.yaml, please create an issue or PR to add the device to screens.yaml.
+
 ## Config validation
 _Screenshots_ will check your configuration before running for any errors and provide a guide on how to resolve.
+
+# Adding new screens
+
+If your device does not have a screen in screens.yaml please create an issue to request a new screen.
+
+If you want to submit a new screen please see related [README](https://github.com/mmcc007/screenshots/blob/master/test/resources/README.md).
 
 # Upgrading
 To upgrade, simply re-issue the install command
