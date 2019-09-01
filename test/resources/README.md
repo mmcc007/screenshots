@@ -15,14 +15,23 @@ The images for the navigation and status bars have to be created or sourced on w
 
 Once all the images are in place, a new screen can be configured in screens.yaml. Then can experiment with parameters in screens.yaml, by running [frame.dart](frame.dart), until the screenshot is correct.
 
-Get new flutter screenshot, add new images to lib/resources, add new screen to lib/resources/screens.yaml. Then run frame.dart to see the result of framing.
-
+The steps for adding a new screen:
+1. Add new images to lib/resources for status bar, navigation bar(if android) and frame
+1. Add new screen to lib/resources/screens.yaml
+1. Get new flutter screenshot from a device matching the new screen
+1. Repeat calls to frame.dart to generate new frame until screen fits frame. 
+    1. Adjust new screen parameters in screens.yaml to fit screen into device frame
+    1. May need to modify images for status bar and navigation bar.
+1. Commit new images and screen config
+ 
 Sample run of frame.dart:
 ```
 pub run frame.dart -s screenshot_Nexus_6P.png -d 'Nexus 6P'
 or 
 dart frame.dart -s screenshot_Nexus_6P.png -d 'Nexus 6P'
 ```
+where screenshot_Nexus_6P.png is a flutter screenshot from a device/emulator/simulator matching the new screen size and 'Nexus 6P' is a device that matches the size of the newly entered screen in screens.yaml.  
+This utility can be used to fine-tune the parameters in screens.yaml to get the correct fit for screenshot, status bar, and navigation bar (if android) in device frame.
 
 After framing is working create a PR.
 
