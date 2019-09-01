@@ -42,12 +42,12 @@ class ImageProcessor {
       RunMode runMode, Archive archive) async {
     final Map screenProps = _screens.getScreen(deviceName);
     if (screenProps == null) {
-      print('Warning: \'$deviceName\' images will not be processed');
+      printStatus('Warning: \'$deviceName\' images will not be processed');
     } else {
       // add frame if required
       if (_config.isFrameRequired(deviceName)) {
         final Map screenResources = screenProps['resources'];
-        print('Processing screenshots from test...');
+        printStatus('Processing screenshots from test...');
 
         // unpack images for screen from package to local tmpDir area
         await resources.unpackImages(screenResources, _config.stagingDir);
@@ -71,7 +71,7 @@ class ImageProcessor {
               deviceType, runMode);
         }
       } else {
-        print('Warning: framing is not enabled');
+        printStatus('Warning: framing is not enabled');
       }
     }
 
@@ -89,12 +89,12 @@ class ImageProcessor {
     // (useful for uploading to apple via fastlane)
     await utils.prefixFilesInDir(srcDir, '$deviceName-');
 
-    print('Moving screenshots to $dstDir');
+    printStatus('Moving screenshots to $dstDir');
     utils.moveFiles(srcDir, dstDir);
 
     if (runMode == RunMode.comparison) {
       final recordingDir = '${_config.recordingDir}/$dstDir';
-      print(
+      printStatus(
           'Running comparison with recorded screenshots in $recordingDir ...');
       final failedCompare =
           await compareImages(deviceName, recordingDir, dstDir);
@@ -151,7 +151,7 @@ class ImageProcessor {
     // if no status bar skip
     // todo: get missing status bars
     if (screenResources['statusbar'] == null) {
-      print(
+      printStatus(
           'error: image ${p.basename(screenshotPath)} is missing status bar.');
       return Future.value(null);
     }

@@ -33,7 +33,7 @@ Future _clearFastlaneDir(Screens screens, String deviceName, String locale,
 
   final dirPath = getDirPath(deviceType, locale, androidModelType);
 
-  print('Clearing images in $dirPath for \'$deviceName\'...');
+  printStatus('Clearing images in $dirPath for \'$deviceName\'...');
   // delete images ending with .kImageExtension
   // for compatibility with FrameIt
   // (see https://github.com/mmcc007/screenshots/issues/61)
@@ -73,7 +73,7 @@ String getDirPath(
 String getAndroidModelType(Map screenProps) {
   String androidDeviceType = kFastlanePhone;
   if (screenProps == null) {
-    print(
+    printStatus(
         'Warning: using default value \'$kFastlanePhone\' in fastlane directory.');
   } else {
     androidDeviceType = screenProps['destName'];

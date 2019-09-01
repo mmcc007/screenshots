@@ -23,7 +23,7 @@ void changeDeviceOrientation(DeviceType deviceType, Orientation orientation,
   };
   const sim_orientation_script = 'sim_orientation.scpt';
   final _orientation = utils.getStringFromEnum(orientation);
-  print('Setting orientation to $_orientation');
+  printStatus('Setting orientation to $_orientation');
   switch (deviceType) {
     case DeviceType.android:
       cmd([

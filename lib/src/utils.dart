@@ -113,11 +113,9 @@ Map getHighestIosSimulator(Map iosSims, String simName) {
 String getHighestIosVersion(Map iOSVersions) {
   // sort keys in iOS version order
   final iosVersionNames = iOSVersions.keys.toList();
-//  print('keys=$iosVersionKeys');
   iosVersionNames.sort((v1, v2) {
     return v1.compareTo(v2);
   });
-//  print('keys (sorted)=$iosVersionKeys');
 
   // get the highest iOS version
   final iOSVersionName = iosVersionNames.last;
@@ -126,7 +124,7 @@ String getHighestIosVersion(Map iOSVersions) {
 
 /// Create list of avds,
 List<String> getAvdNames() {
-  return cmd([getAdbPath(androidSdk), '-list-avds']).split('\n');
+  return cmd(['emulator', '-list-avds']).split('\n');
 }
 
 /// Get the highest available avd version for the android emulator.
@@ -306,7 +304,7 @@ Future<String> waitSysLogMsg(
       .transform<String>(cnv.Utf8Decoder(allowMalformed: true))
       .transform<String>(const cnv.LineSplitter())
       .firstWhere((line) {
-    print(line);
+    printTrace(line);
     return regExp.hasMatch(line);
   }, orElse: () => null);
 }

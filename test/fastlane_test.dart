@@ -10,7 +10,6 @@ import 'package:screenshots/src/screens.dart';
 import 'package:screenshots/src/utils.dart';
 import 'package:test/test.dart';
 
-//import 'src/common_tools.dart';
 import 'src/context.dart';
 
 class PlainMockProcessManager extends Mock implements ProcessManager {}
@@ -78,7 +77,7 @@ main() {
         await screens.init();
         final runMode = RunMode.normal;
         await clearFastlaneDirs(config, screens, runMode);
-      });
+      }, skip: isCI());
     });
   });
 }

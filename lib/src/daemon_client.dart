@@ -6,6 +6,7 @@ import 'package:meta/meta.dart';
 
 import 'base/platform.dart';
 import 'base/process.dart';
+import 'globals.dart';
 
 enum EventType { deviceRemoved }
 
@@ -19,7 +20,7 @@ class DaemonClient {
 
   DaemonClient._internal();
 
-  bool verbose = false;
+//  bool verbose = false;
 
   Process _process;
   int _messageId = 0;
@@ -55,11 +56,10 @@ class DaemonClient {
   Future<List<DaemonEmulator>> get emulators async {
     final List emulators = await _sendCommandWaitResponse(
         <String, dynamic>{'method': 'emulator.getEmulators'});
-//    print('emulators=$emulators');
     final daemonEmulators = <DaemonEmulator>[];
     for (var emulator in emulators) {
       final daemonEmulator = loadDaemonEmulator(emulator);
-//      print('daemonEmulator=$daemonEmulator');
+      printTrace('daemonEmulator=$daemonEmulator');
       daemonEmulators.add(daemonEmulator);
     }
     return daemonEmulators;
@@ -105,7 +105,9 @@ class DaemonClient {
                 throw 'Error: could not find model name for real ios device: ${device['name']}');
         device['model'] = iosDevice['model'];
       }
-      return loadDaemonDevice(device);
+      final daemonDevice = loadDaemonDevice(device);
+      printTrace('daemonDevice=$daemonDevice');
+      return daemonDevice;
     }).toList());
   }
 
@@ -145,7 +147,7 @@ class DaemonClient {
         .transform<String>(utf8.decoder)
         .transform<String>(const LineSplitter())
         .listen((String line) async {
-      if (verbose) print('<== $line');
+      printTrace('<== $line');
       if (line.contains('daemon.connected')) {
         _waitForConnection.complete(true);
       } else {
@@ -158,7 +160,7 @@ class DaemonClient {
           // get event
           if (line.contains('[{"event":')) {
             if (line.contains('"event":"daemon.logMessage"')) {
-              print('Warning: ignoring log message: $line');
+              printTrace('Warning: ignoring log message: $line');
             } else {
               _waitForEvent.complete(line);
               _waitForEvent = Completer<String>(); // enable wait for next event
@@ -179,7 +181,7 @@ class DaemonClient {
       command['id'] = _messageId++;
       final String str = '[${json.encode(command)}]';
       _process.stdin.writeln(str);
-      if (verbose) print('==> $str');
+      printTrace('==> $str');
     } else {
       throw 'Error: not connected to daemon.';
     }
@@ -187,9 +189,9 @@ class DaemonClient {
 
   Future<List> _sendCommandWaitResponse(Map<String, dynamic> command) async {
     _sendCommand(command);
-//    print('waiting for response: $command');
+    printTrace('waiting for response: $command');
     final String response = await _waitForResponse.future;
-//    print('response: $response');
+//    printTrace('response: $response');
     return _processResponse(response, command);
   }
 
@@ -231,8 +233,8 @@ Future waitForEmulatorToStart(
     DaemonClient daemonClient, String deviceId) async {
   bool started = false;
   while (!started) {
-//    print(
-//        'waiting for emulator/simulator with device id \'$deviceId\' to start...');
+    printTrace(
+        'waiting for emulator/simulator with device id \'$deviceId\' to start...');
     final devices = await daemonClient.devices;
     final device = devices.firstWhere(
         (device) => device.id == deviceId && device.emulator,
@@ -272,6 +274,12 @@ class DaemonDevice extends BaseDevice {
       this.platform, this.emulator, this.ephemeral,
       {this.iosModel})
       : super(id, name, category, platformType);
+
+  @override
+  String toString() {
+    return super.toString() +
+        ' platform: $platform, emulator: $emulator, ephemeral: $ephemeral, iosModel: $iosModel';
+  }
 }
 
 DaemonEmulator loadDaemonEmulator(emulator) {

@@ -79,10 +79,14 @@ void main() {
     expect(isValidTestPaths('--driver=$testPath --target=$mainPath '), isTrue);
     expect(isValidTestPaths('--driver $testPath --target $mainPath '), isTrue);
 
-    expect(isValidTestPaths(bogusPath), isFalse);
-    expect(isValidTestPaths('--target=$bogusPath'), isFalse);
-    expect(isValidTestPaths('--target=$bogusPath --driver=$mainPath'), isFalse);
-    expect(isValidTestPaths('--target=$mainPath --driver=$bogusPath'), isFalse);
+    if (!utils.isCI()) {
+      expect(isValidTestPaths(bogusPath), isFalse);
+      expect(isValidTestPaths('--target=$bogusPath'), isFalse);
+      expect(
+          isValidTestPaths('--target=$bogusPath --driver=$mainPath'), isFalse);
+      expect(
+          isValidTestPaths('--target=$mainPath --driver=$bogusPath'), isFalse);
+    }
   });
 
   test('validate config file', () async {
@@ -111,7 +115,7 @@ void main() {
     await screens.init();
     final config = Config(configStr: screenshotsYaml);
     await fastlane.clearFastlaneDirs(config, screens, RunMode.normal);
-  });
+  }, skip: utils.isCI());
 
   test('check if frame is needed', () {
     final config = Config(configStr: screenshotsYaml);

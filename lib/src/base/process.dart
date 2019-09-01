@@ -427,8 +427,6 @@ class RunResult {
 
 String cmd(List<String> cmd,
     {String workingDirectory = '.', bool silent = true}) {
-  print(
-      'cmd=\'${cmd.join(" ")}\', workingDirectory=$workingDirectory, silent=$silent');
   final result = processManager.runSync(cmd,
       workingDirectory: workingDirectory, runInShell: true);
   _traceCommand(cmd, workingDirectory: workingDirectory);
@@ -448,8 +446,7 @@ Future<void> streamCmd(
   String workingDirectory = '.',
   ProcessStartMode mode = ProcessStartMode.normal,
 }) async {
-  print(
-      'streamCmd=\'${cmd.join(" ")}\', workingDirectory=$workingDirectory, mode=$mode');
+//  _traceCommand(cmd, workingDirectory: workingDirectory);
   final exitCode = await runCommandAndStreamOutput(cmd,
       workingDirectory: workingDirectory, mode: mode);
   if (exitCode != 0 && mode != ProcessStartMode.detached) {

@@ -21,21 +21,21 @@ Future<bool> validate(
     if (configDevice != null) {
       if (configDevice.orientationStr != null &&
           !isValidOrientation(configDevice.orientationStr)) {
-        stderr.writeln(
+        printError(
             'Invalid value for \'orientation\' for device \'$devName\': $configDevice.orientationStr');
-        stderr.writeln('Valid values:');
+        printStatus('Valid values:');
         for (final orientation in Orientation.values) {
-          stderr.writeln('  ${utils.getStringFromEnum(orientation)}');
+          printStatus('  ${utils.getStringFromEnum(orientation)}');
         }
         exit(1);
       }
       final frame = configDevice.isFramed;
       if (frame != null && !isValidFrame(frame)) {
-        stderr.writeln(
+        printError(
             'Invalid value for \'frame\' for device \'$devName\': $frame');
-        stderr.writeln('Valid values:');
-        stderr.writeln('  true');
-        stderr.writeln('  false');
+        printStatus('Valid values:');
+        printStatus('  true');
+        printStatus('  false');
         exit(1);
       }
     }
@@ -55,9 +55,9 @@ Future<bool> validate(
       if (!isDeviceAttached(
               utils.getDevice(androidDevices, configDevice.name)) &&
           !isEmulatorInstalled(allEmulators, configDevice.name)) {
-        stderr.write('Error: no device attached or emulator installed for '
+        printError('No device attached or emulator installed for '
             'device \'$configDevice.name\' in $configPath.\n');
-        generateConfigGuide(screens, allDevices);
+        generateConfigGuide(screens, allDevices, configPath);
         exit(1);
       }
     }
@@ -75,9 +75,9 @@ Future<bool> validate(
       // check simulator installed
       if (!isDeviceAttached(utils.getDevice(iosDevices, configDevice.name)) &&
           !_isSimulatorInstalled(simulators, configDevice.name)) {
-        stderr.write('Error: no device attached or simulator installed for '
-            'device \'$configDevice.name\' in $configPath.\n');
-        generateConfigGuide(screens, allDevices);
+        printError('No device attached or simulator installed for '
+            'device \'${configDevice.name}\' in $configPath.');
+        generateConfigGuide(screens, allDevices, configPath);
         exit(1);
       }
     }
@@ -85,7 +85,7 @@ Future<bool> validate(
 
   for (String test in config.tests) {
     if (!isValidTestPaths(test)) {
-      stderr.writeln('Invalid config: $test in $configPath');
+      printError('Invalid config: $test in $configPath');
       exit(1);
     }
   }
@@ -102,8 +102,7 @@ bool isValidTestPaths(String driverArgs) {
 
   bool pathExists(String path) {
     if (!File(path).existsSync()) {
-      stderr
-          .write('File \'$path\' for test config \'$driverArgs\' not found.\n');
+      printError('File \'$path\' for test config \'$driverArgs\' not found.\n');
       return false;
     }
     return true;
@@ -137,8 +136,9 @@ bool isEmulatorInstalled(List<DaemonEmulator> emulators, String deviceName) {
     final matchingEmulators =
         emulators.where((emulator) => emulator.name == deviceName);
     if (matchingEmulators != null && matchingEmulators.length > 1) {
-      print('Warning: \'$deviceName\' has multiple avd versions.');
-      print('       : Using \'$deviceName\' with avd version ${emulator.id}.');
+      printStatus('Warning: \'$deviceName\' has multiple avd versions.');
+      printStatus(
+          '       : Using \'$deviceName\' with avd version ${emulator.id}.');
     }
   }
   return isEmulatorInstalled;
@@ -149,18 +149,15 @@ bool _isSimulatorInstalled(Map simulators, String deviceName) {
   // check simulator installed
   bool isSimulatorInstalled = false;
   simulators.forEach((simulatorName, iOSVersions) {
-    //          print('device=$device, simulator=$simulator');
     if (simulatorName == deviceName) {
       // check for duplicate installs
-      //            print('os=$os');
-
       final iOSVersionName = utils.getHighestIosVersion(iOSVersions);
       final udid = iOSVersions[iOSVersionName][0]['udid'];
       // check for device present with multiple os's
       // or with duplicate name
       if (iOSVersions.length > 1 || iOSVersions[iOSVersionName].length > 1) {
-        print('Warning: \'$deviceName\' has multiple iOS versions.');
-        print(
+        printStatus('Warning: \'$deviceName\' has multiple iOS versions.');
+        printStatus(
             '       : Using \'$deviceName\' with iOS version $iOSVersionName (ID: $udid).');
       }
 
@@ -171,17 +168,17 @@ bool _isSimulatorInstalled(Map simulators, String deviceName) {
 }
 
 /// Generate a guide for configuring Screenshots in current environment.
-void generateConfigGuide(Screens screens, List devices) {
-  stdout.write('\nGuide:');
+void generateConfigGuide(
+    Screens screens, List<DaemonDevice> devices, String configPath) {
+  printStatus('\nGuide:');
   _reportAttachedDevices(devices);
   _reportInstalledEmulators(utils.getAvdNames());
   if (platform.isMacOS) _reportInstalledSimulators(utils.getIosSimulators());
   _reportSupportedDevices(screens);
-  stdout.write(
-      '\n  Each device listed in screenshots.yaml with framing required must'
+  printStatus('\n  Each device listed in $configPath with framing required must'
       '\n    1. have a supported screen'
       '\n    2. have an attached device or an installed emulator/simulator.'
-      '\n  To bypass requirement #1 add \'frame: false\' after device in screenshots.yaml\n\n');
+      '\n  To bypass requirement #1 add \'frame: false\' after device in $configPath');
 }
 
 // check screen is available for device
@@ -189,31 +186,30 @@ void _checkScreenAvailable(
     Screens screens, String deviceName, String configPath) {
   final screenProps = screens.getScreen(deviceName);
   if (screenProps == null || _isAndroidModelTypeScreen(screenProps)) {
-    stderr.write(
-        'Error: screen not available for device \'$deviceName\' in $configPath.\n');
-    stderr.flush();
-    stdout.write(
+    printError(
+        'Screen not available for device \'$deviceName\' in $configPath.');
+    printStatus(
         '\n  Use a supported device or set \'frame: false\' for device in $configPath.\n\n'
         '  If framing for device is required, request screen support by\n'
         '  creating an issue in:\n'
-        '  https://github.com/mmcc007/screenshots/issues.\n\n');
+        '  https://github.com/mmcc007/screenshots/issues.');
     _reportSupportedDevices(screens);
     exit(1);
   }
 }
 
 void _reportSupportedDevices(Screens screens) {
-  stdout.write('\n  Devices with supported screens:\n');
+  printStatus('\n  Devices with supported screens:');
   screens.screens.forEach((os, v) {
     // omit ios devices if not on mac
     if (!(!platform.isMacOS && os == 'ios')) {
-      stdout.write('    $os:\n');
+      printStatus('    $os:');
       v.forEach((screenId, screenProps) {
         // omit devices that have screens that are
         // only used to identify android model type
         if (!_isAndroidModelTypeScreen(screenProps)) {
           for (String device in screenProps['devices']) {
-            stdout.write('      $device\n');
+            printStatus('      $device');
           }
         }
       });
@@ -224,27 +220,27 @@ void _reportSupportedDevices(Screens screens) {
 /// Test for screen used for identifying android model type
 bool _isAndroidModelTypeScreen(screenProps) => screenProps['size'] == null;
 
-void _reportAttachedDevices(List devices) {
-  stdout.write('\n  Attached devices:\n');
+void _reportAttachedDevices(List<DaemonDevice> devices) {
+  printStatus('\n  Attached devices:');
   for (final device in devices) {
-    if (device['emulator'] == false) {
-      device['platform'] == 'ios'
-          ? stdout.write('    ${device['model']}\n')
-          : stdout.write('    ${device['name']}\n');
+    if (device.emulator == false) {
+      device.platform == 'ios'
+          ? printStatus('    ${device.iosModel}')
+          : printStatus('    ${device.name}');
     }
   }
 }
 
 void _reportInstalledEmulators(List emulators) {
-  stdout.write('\n  Installed emulators:\n');
+  printStatus('\n  Installed emulators:');
   for (final emulator in emulators) {
-    stdout.write('    $emulator\n');
+    printStatus('    $emulator');
   }
 }
 
 void _reportInstalledSimulators(Map simulators) {
-  stdout.write('  Installed simulators:\n');
-  simulators.forEach((simulator, _) => stdout.write('    $simulator\n'));
+  printStatus('  Installed simulators:');
+  simulators.forEach((simulator, _) => printStatus('    $simulator'));
 }
 
 bool isValidOrientation(String orientation) {

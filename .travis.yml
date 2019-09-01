@@ -101,7 +101,7 @@ jobs:
         - pub global activate --source path .
 
       script:
-        - cd example; screenshots -c screenshots_ios.yaml
+        - cd example; screenshots -c screenshots_ios.yaml -v
 
       before_deploy:
         # copy artifacts to cache for later deploy
@@ -191,4 +191,4 @@ jobs:
         - pub global activate --source path .
 
       script:
-        - cd example; screenshots -c screenshots_android.yaml
+        - cd example; screenshots -c screenshots_android.yaml -v
