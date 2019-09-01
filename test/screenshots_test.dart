@@ -9,6 +9,7 @@ import 'package:screenshots/src/context_runner.dart';
 import 'package:screenshots/src/daemon_client.dart';
 import 'package:screenshots/src/fastlane.dart';
 import 'package:screenshots/src/globals.dart';
+import 'package:screenshots/src/image_magick.dart';
 import 'package:screenshots/src/image_processor.dart';
 import 'package:screenshots/src/orientation.dart' as orient;
 import 'package:screenshots/src/orientation.dart';
@@ -601,12 +602,12 @@ void main() {
           (fsEntity) => File(im.getDiffName(fsEntity.path)).createSync());
       expect(
           Directory(fastlaneDir).listSync().where((fileSysEntity) =>
-              p.basename(fileSysEntity.path).contains(im.diffSuffix)),
+              p.basename(fileSysEntity.path).contains(ImageMagick.kDiffSuffix)),
           isNotEmpty);
       im.deleteDiffs(fastlaneDir);
       expect(
           Directory(fastlaneDir).listSync().where((fileSysEntity) =>
-              p.basename(fileSysEntity.path).contains(im.diffSuffix)),
+              p.basename(fileSysEntity.path).contains(ImageMagick.kDiffSuffix)),
           isEmpty);
     });
   });

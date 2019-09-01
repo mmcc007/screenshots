@@ -1,5 +1,6 @@
 import 'dart:async';
-import 'dart:io';
+
+import 'package:screenshots/src/image_magick.dart';
 
 import 'base/file_system.dart';
 import 'config.dart';
@@ -38,7 +39,9 @@ Future _clearFastlaneDir(Screens screens, String deviceName, String locale,
   // (see https://github.com/mmcc007/screenshots/issues/61)
   deleteMatchingFiles(dirPath, RegExp('$deviceName.*.$kImageExtension'));
   if (runMode == RunMode.normal) {
-    im.deleteDiffs(dirPath);
+    // delete all diff files (if any)
+    deleteMatchingFiles(
+        dirPath, RegExp('.*${ImageMagick.kDiffSuffix}.$kImageExtension'));
   }
 }
 
