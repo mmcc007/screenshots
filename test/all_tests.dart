@@ -17,10 +17,12 @@ import 'resources_test.dart' as resources_test;
 import 'fastlane_test.dart' as fastlane_test;
 import 'daemon_client_test.dart' as daemon_client_test;
 import 'config_test.dart' as config_test;
+import 'android/android_sdk_test.dart' as android_android_sdk_test;
 
 void main() {
   isCI() ? print('running in CI') : print('not running in CI');
 
+  android_android_sdk_test.main();
   config_test.main();
   daemon_client_test.main();
   src_all_tests.main();

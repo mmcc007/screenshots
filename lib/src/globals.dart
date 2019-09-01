@@ -1,3 +1,4 @@
+import 'base/config.dart';
 import 'image_magick.dart';
 import 'base/context.dart';
 import 'base/logger.dart';
@@ -27,7 +28,11 @@ ImageMagick get im => ImageMagick();
 /// No flavor
 const String kNoFlavor = 'no flavor';
 
+/// Flutter tools below here ...
+///
+///
 Logger get logger => context.get<Logger>();
+Config get config => Config.instance;
 
 /// Display an error level message to the user. Commands should use this if they
 /// fail in some way.

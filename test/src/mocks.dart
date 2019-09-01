@@ -5,7 +5,110 @@ import 'dart:io';
 
 import 'package:mockito/mockito.dart';
 import 'package:process/process.dart';
+import 'package:screenshots/src/android/android_sdk.dart';
+import 'package:screenshots/src/base/file_system.dart';
 import 'package:screenshots/src/base/io.dart';
+import 'package:screenshots/src/base/platform.dart';
+
+/// An SDK installation with several SDK levels (19, 22, 23).
+class MockAndroidSdk extends Mock implements AndroidSdk {
+  static Directory createSdkDirectory({
+    bool withAndroidN = false,
+    String withNdkDir,
+    int ndkVersion = 16,
+    bool withNdkSysroot = false,
+    bool withSdkManager = true,
+    bool withPlatformTools = true,
+    bool withBuildTools = true,
+  }) {
+    final Directory dir =
+        fs.systemTempDirectory.createTempSync('flutter_mock_android_sdk.');
+    final String exe = platform.isWindows ? '.exe' : '';
+    final String bat = platform.isWindows ? '.bat' : '';
+
+    _createDir(dir, 'licenses');
+
+    if (withPlatformTools) {
+      _createSdkFile(dir, 'platform-tools/adb$exe');
+    }
+
+    if (withBuildTools) {
+      _createSdkFile(dir, 'build-tools/19.1.0/aapt$exe');
+      _createSdkFile(dir, 'build-tools/22.0.1/aapt$exe');
+      _createSdkFile(dir, 'build-tools/23.0.2/aapt$exe');
+      if (withAndroidN)
+        _createSdkFile(dir, 'build-tools/24.0.0-preview/aapt$exe');
+    }
+
+    _createSdkFile(dir, 'platforms/android-22/android.jar');
+    _createSdkFile(dir, 'platforms/android-23/android.jar');
+    if (withAndroidN) {
+      _createSdkFile(dir, 'platforms/android-N/android.jar');
+      _createSdkFile(dir, 'platforms/android-N/build.prop',
+          contents: _buildProp);
+    }
+
+    if (withSdkManager) _createSdkFile(dir, 'tools/bin/sdkmanager$bat');
+
+    if (withNdkDir != null) {
+      final String ndkToolchainBin = fs.path.join(
+        'ndk-bundle',
+        'toolchains',
+        'arm-linux-androideabi-4.9',
+        'prebuilt',
+        withNdkDir,
+        'bin',
+      );
+      final String ndkCompiler = fs.path.join(
+        ndkToolchainBin,
+        'arm-linux-androideabi-gcc',
+      );
+      final String ndkLinker = fs.path.join(
+        ndkToolchainBin,
+        'arm-linux-androideabi-ld',
+      );
+      _createSdkFile(dir, ndkCompiler);
+      _createSdkFile(dir, ndkLinker);
+      _createSdkFile(dir, fs.path.join('ndk-bundle', 'source.properties'),
+          contents: '''
+Pkg.Desc = Android NDK[]
+Pkg.Revision = $ndkVersion.1.5063045
+
+''');
+    }
+    if (withNdkSysroot) {
+      final String armPlatform = fs.path.join(
+        'ndk-bundle',
+        'platforms',
+        'android-9',
+        'arch-arm',
+      );
+      _createDir(dir, armPlatform);
+    }
+
+    return dir;
+  }
+
+  static void _createSdkFile(Directory dir, String filePath,
+      {String contents}) {
+    final File file = dir.childFile(filePath);
+    file.createSync(recursive: true);
+    if (contents != null) {
+      file.writeAsStringSync(contents, flush: true);
+    }
+  }
+
+  static void _createDir(Directory dir, String path) {
+    final Directory directory = fs.directory(fs.path.join(dir.path, path));
+    directory.createSync(recursive: true);
+  }
+
+  static const String _buildProp = r'''
+ro.build.version.incremental=1624448
+ro.build.version.sdk=24
+ro.build.version.codename=REL
+''';
+}
 
 /// A strategy for creating Process objects from a list of commands.
 typedef ProcessFactory = Process Function(List<String> command);

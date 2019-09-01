@@ -6,9 +6,12 @@ import 'dart:async';
 
 import 'package:process/process.dart';
 
+import 'android/android_sdk.dart';
+import 'base/config.dart';
 import 'base/context.dart';
 import 'base/io.dart';
 import 'base/logger.dart';
+import 'base/os.dart';
 import 'base/platform.dart';
 import 'base/utils.dart';
 
@@ -21,11 +24,14 @@ Future<T> runInContext<T>(
     body: runner,
     overrides: overrides,
     fallbacks: <Type, Generator>{
+      AndroidSdk: AndroidSdk.locateAndroidSdk,
       BotDetector: () => const BotDetector(),
+      Config: () => Config(),
       Logger: () => platform.isWindows ? WindowsStdoutLogger() : StdoutLogger(),
+      OperatingSystemUtils: () => OperatingSystemUtils(),
       ProcessManager: () => LocalProcessManager(),
-      TimeoutConfiguration: () => const TimeoutConfiguration(),
       Stdio: () => const Stdio(),
+      TimeoutConfiguration: () => const TimeoutConfiguration(),
     },
   );
 }

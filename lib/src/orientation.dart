@@ -1,3 +1,4 @@
+import 'android/android_sdk.dart';
 import 'base/process.dart';
 import 'globals.dart';
 import 'utils.dart' as utils;
@@ -26,7 +27,7 @@ void changeDeviceOrientation(DeviceType deviceType, Orientation orientation,
   switch (deviceType) {
     case DeviceType.android:
       cmd([
-        'adb',
+        getAdbPath(androidSdk),
         '-s',
         deviceId,
         'shell',
