@@ -76,7 +76,7 @@ Future<bool> runScreenshots(
   }
 //  daemonClient.verbose = true;
   await daemonClient.start;
-  status.stop();
+  status?.stop();
 
   // get all attached devices and running emulators/simulators
   final devices = await daemonClient.devices;

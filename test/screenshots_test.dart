@@ -673,7 +673,7 @@ void main() {
       final screenProps = screens.getScreen(unknownDevice);
       expect(screenProps, isNull);
       expect(getAndroidModelType(screenProps), kFastlanePhone);
-    });
+    }, skip: utils.isCI());
   });
 
   group('adb path', () {
