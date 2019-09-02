@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:process/process.dart';
 import 'package:screenshots/screenshots.dart';
-import 'package:screenshots/src/android/android_sdk.dart';
 import 'package:screenshots/src/config.dart';
 import 'package:screenshots/src/context_runner.dart';
 import 'package:screenshots/src/daemon_client.dart';
@@ -21,6 +20,7 @@ import 'package:screenshots/src/utils.dart';
 import 'package:screenshots/src/validate.dart' as validate;
 import 'package:test/test.dart';
 import 'package:path/path.dart' as p;
+import 'package:tool_mobile/tool_mobile.dart';
 
 import 'src/common.dart';
 

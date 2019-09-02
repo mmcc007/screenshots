@@ -6,8 +6,7 @@ import 'dart:async';
 
 import 'package:process/process.dart';
 import 'package:tool_base/tool_base.dart';
-
-import 'android/android_sdk.dart';
+import 'package:tool_mobile/tool_mobile.dart';
 
 Future<T> runInContext<T>(
   FutureOr<T> runner(), {

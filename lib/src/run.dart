@@ -3,8 +3,8 @@ import 'dart:io';
 
 import 'package:intl/intl.dart';
 import 'package:tool_base/tool_base.dart' hide Config;
+import 'package:tool_mobile/tool_mobile.dart';
 
-import 'android/android_sdk.dart';
 import 'archive.dart';
 import 'config.dart';
 import 'context_runner.dart';

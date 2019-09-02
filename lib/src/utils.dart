@@ -6,8 +6,8 @@ import 'package:path/path.dart' as p;
 import 'package:process/process.dart';
 import 'package:screenshots/src/daemon_client.dart';
 import 'package:tool_base/tool_base.dart';
+import 'package:tool_mobile/tool_mobile.dart';
 import 'package:yaml/yaml.dart';
-import 'android/android_sdk.dart';
 import 'globals.dart';
 
 /// Parse a yaml file.
