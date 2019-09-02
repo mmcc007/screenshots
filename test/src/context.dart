@@ -1,20 +1,11 @@
 import 'dart:async';
-import 'dart:io' as io;
 
 import 'package:meta/meta.dart';
-import 'package:process/process.dart';
-import 'package:screenshots/src/base/config.dart';
-import 'package:screenshots/src/base/context.dart';
-import 'package:screenshots/src/base/file_system.dart';
-import 'package:screenshots/src/base/io.dart';
-import 'package:screenshots/src/base/os.dart';
-import 'package:screenshots/src/base/terminal.dart';
 import 'package:screenshots/src/context_runner.dart';
-import 'package:screenshots/src/base/logger.dart';
 import 'package:test/test.dart';
+import 'package:tool_base/tool_base.dart';
 
 import 'common_tools.dart';
-import 'fake_process_manager.dart';
 
 /// Return the test logger. This assumes that the current Logger is a BufferLogger.
 BufferLogger get testLogger => context.get<Logger>();

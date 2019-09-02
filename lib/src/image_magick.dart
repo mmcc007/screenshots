@@ -1,9 +1,8 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:path/path.dart' as p;
-import 'base/platform.dart';
-import 'base/process.dart';
+import 'package:screenshots/src/utils.dart';
+import 'package:tool_base/tool_base.dart';
 
 class ImageMagick {
   static const _kThreshold = 0.76;
@@ -111,7 +110,7 @@ class ImageMagick {
       return false;
     }
     // delete no-diff diff
-    File(diffImage).deleteSync();
+    fs.file(diffImage).deleteSync();
     return true;
   }
 
@@ -125,11 +124,12 @@ class ImageMagick {
   }
 
   void deleteDiffs(String dirPath) {
-    Directory(dirPath)
+    fs
+        .directory(dirPath)
         .listSync()
         .where((fileSysEntity) =>
             p.basename(fileSysEntity.path).contains(kDiffSuffix))
-        .forEach((diffImage) => File(diffImage.path).deleteSync());
+        .forEach((diffImage) => fs.file(diffImage.path).deleteSync());
   }
 
   /// ImageMagick command

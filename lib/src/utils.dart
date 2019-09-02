@@ -4,12 +4,10 @@ import 'dart:convert';
 
 import 'package:path/path.dart' as p;
 import 'package:process/process.dart';
-import 'package:screenshots/src/base/file_system.dart';
 import 'package:screenshots/src/daemon_client.dart';
+import 'package:tool_base/tool_base.dart';
 import 'package:yaml/yaml.dart';
 import 'android/android_sdk.dart';
-import 'base/platform.dart';
-import 'base/process.dart';
 import 'globals.dart';
 
 /// Parse a yaml file.
@@ -248,8 +246,8 @@ Future<String> waitAndroidLocaleChange(String deviceId, String toLocale) async {
   return line;
 }
 
-/// Filters a list of devices to get real ios devices.
-List<DaemonDevice> getIosDevices(List<DaemonDevice> devices) {
+/// Filters a list of devices to get real ios devices. (only used in test??)
+List<DaemonDevice> getIosDaemonDevices(List<DaemonDevice> devices) {
   final iosDevices = devices
       .where((device) => device.platform == 'ios' && !device.emulator)
       .toList();
@@ -401,4 +399,48 @@ String getAndroidHome() {
         'SDK directory.');
   }
   return androidHome;
+}
+
+String cmd(List<String> cmd,
+    {String workingDirectory = '.', bool silent = true}) {
+  void _traceCommand(List<String> args, {String workingDirectory}) {
+    final String argsText = args.join(' ');
+    if (workingDirectory == null) {
+      printTrace('executing: $argsText');
+    } else {
+      printTrace(
+          'executing: [$workingDirectory${fs.path.separator}] $argsText');
+    }
+  }
+
+  final result = processManager.runSync(cmd,
+      workingDirectory: workingDirectory, runInShell: true);
+  _traceCommand(cmd, workingDirectory: workingDirectory);
+  if (!silent) stdout.write(result.stdout);
+  if (result.exitCode != 0) {
+    stderr.write(result.stderr);
+    throw 'command failed: exitcode=${result.exitCode}, cmd=\'${cmd.join(" ")}\', workingDir=$workingDirectory';
+  }
+  // return stdout
+  return result.stdout;
+}
+
+/// Execute command with arguments [cmd] in a separate process
+/// and stream stdout/stderr.
+Future<void> streamCmd(
+  List<String> cmd, {
+  String workingDirectory = '.',
+  ProcessStartMode mode = ProcessStartMode.normal,
+}) async {
+  if (mode == ProcessStartMode.normal) {
+    int exitCode = await runCommandAndStreamOutput(cmd,
+        workingDirectory: workingDirectory);
+    if (exitCode != 0 && mode == ProcessStartMode.normal) {
+      throw 'command failed: exitcode=$exitCode, cmd=\'${cmd.join(" ")}\', workingDirectory=$workingDirectory, mode=$mode';
+    }
+  } else {
+//    final process = await runDetached(cmd);
+//    exitCode = await process.exitCode;
+    unawaited(runDetached(cmd));
+  }
 }

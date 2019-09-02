@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:screenshots/src/daemon_client.dart';
+import 'package:tool_base/tool_base.dart' hide Config;
 
-import 'base/platform.dart';
 import 'config.dart';
 import 'globals.dart';
 import 'orientation.dart';
@@ -64,7 +64,7 @@ Future<bool> validate(
   }
 
   if (config.isRunTypeActive(DeviceType.ios)) {
-    final iosDevices = utils.getIosDevices(allDevices);
+    final iosDevices = utils.getIosDaemonDevices(allDevices);
     final Map simulators = utils.getIosSimulators();
     for (ConfigDevice configDevice in config.iosDevices) {
       if (config.isFrameRequired(configDevice.name)) {
@@ -101,7 +101,7 @@ bool isValidTestPaths(String driverArgs) {
   final regExps = [driverPathRegExp, targetPathRegExp];
 
   bool pathExists(String path) {
-    if (!File(path).existsSync()) {
+    if (!fs.file(path).existsSync()) {
       printError('File \'$path\' for test config \'$driverArgs\' not found.\n');
       return false;
     }

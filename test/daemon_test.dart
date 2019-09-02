@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:path/path.dart';
-import 'package:screenshots/src/base/process.dart';
 import 'package:screenshots/src/daemon_client.dart';
 import 'package:screenshots/src/fastlane.dart' as fastlane;
 import 'package:screenshots/src/globals.dart';
@@ -15,7 +14,7 @@ import 'package:test/test.dart';
 
 main() {
   test('start shipped daemon client', () async {
-    final flutterHome = dirname(dirname((cmd(['which', 'flutter']))));
+    final flutterHome = dirname(dirname((utils.cmd(['which', 'flutter']))));
     final flutterToolsHome = '$flutterHome/packages/flutter_tools';
     print('flutterToolsHome=$flutterToolsHome');
     final daemonClient = await Process.start(
@@ -151,7 +150,7 @@ main() {
     // clear existing screenshots from staging area
 //    clearDirectory('$stagingDir/test');
     // run the test
-    await streamCmd(['flutter', '-d', device.id, 'drive', testPath],
+    await utils.streamCmd(['flutter', '-d', device.id, 'drive', testPath],
         workingDirectory: 'example');
   }, timeout: Timeout(Duration(minutes: 2)), skip: utils.isCI());
 

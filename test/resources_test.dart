@@ -1,9 +1,9 @@
 import 'package:mockito/mockito.dart';
 import 'package:process/process.dart';
-import 'package:screenshots/src/base/io.dart';
 import 'package:screenshots/src/resources.dart';
 import 'package:screenshots/src/screens.dart';
 import 'package:test/test.dart';
+import 'package:tool_base/tool_base.dart';
 
 //import 'src/common_tools.dart';
 import 'src/context.dart';

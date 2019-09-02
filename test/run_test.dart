@@ -5,13 +5,11 @@ import 'package:file/memory.dart';
 import 'package:mockito/mockito.dart';
 import 'package:platform/platform.dart';
 import 'package:process/process.dart';
-import 'package:screenshots/src/base/config.dart';
-import 'package:screenshots/src/base/context.dart';
-import 'package:screenshots/src/base/platform.dart';
 import 'package:screenshots/src/daemon_client.dart';
 import 'package:screenshots/src/globals.dart';
 import 'package:screenshots/src/run.dart';
 import 'package:test/test.dart';
+import 'package:tool_base/tool_base.dart';
 
 import 'src/common_tools.dart';
 import 'src/context.dart';
@@ -50,7 +48,7 @@ main() {
 
   group('run', () {
     testUsingContext(
-        'android only run with running emulator and no locales and no frames',
+        'android only with running emulator and no locales and no frames',
         () async {
       sdkDir = MockAndroidSdk.createSdkDirectory();
       Config.instance.setValue('android-sdk', sdkDir.path);
@@ -124,16 +122,17 @@ main() {
           await runScreenshots(configStr: configStr, client: mockDaemonClient);
       expect(result, isTrue);
       fakeProcessManager.verifyCalls();
-    }, skip: false, overrides: <Type, Generator>{
+    }, skip: true, overrides: <Type, Generator>{
       FileSystem: () => fs,
       ProcessManager: () => fakeProcessManager,
       Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
-        ..environment = {'CI': 'false'}
+        ..environment = {'CI': 'false'},
 //        ..environment = {'ANDROID_HOME': 'path_to_android_sdk'},
+      Logger: () => VerboseLogger(StdoutLogger()),
     });
 
     testUsingContext(
-        'android only run with no running devices or emulators and no locales',
+        'android only with no running devices or emulators and no locales',
         () async {
       sdkDir = MockAndroidSdk.createSdkDirectory();
       Config.instance.setValue('android-sdk', sdkDir.path);
@@ -215,10 +214,11 @@ main() {
       ProcessManager: () => fakeProcessManager,
       Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
         ..environment = {'CI': 'false'},
+      Logger: () => VerboseLogger(StdoutLogger()),
     });
 
     testUsingContext(
-        'android and ios run with no started devices or emulators and multiple locales',
+        'android and ios with no started devices or emulators and multiple locales',
         () async {
       sdkDir = MockAndroidSdk.createSdkDirectory();
       Config.instance.setValue('android-sdk', sdkDir.path);
@@ -429,6 +429,7 @@ main() {
           'CI': 'false',
           'HOME': LocalPlatform().environment['HOME']
         },
+      Logger: () => VerboseLogger(StdoutLogger()),
     });
   });
 }

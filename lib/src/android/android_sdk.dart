@@ -3,19 +3,7 @@
 // found in the LICENSE file.
 
 import 'package:meta/meta.dart';
-
-import '../base/common.dart';
-import '../base/context.dart';
-import '../base/file_system.dart';
-import '../base/io.dart' show ProcessResult;
-import '../base/os.dart';
-import '../base/platform.dart';
-import '../base/process.dart';
-import '../base/process_manager.dart';
-import '../base/version.dart';
-import '../convert.dart';
-import '../globals.dart';
-//import 'android_studio.dart' as android_studio;
+import 'package:tool_base/tool_base.dart';
 
 AndroidSdk get androidSdk => context.get<AndroidSdk>();
 

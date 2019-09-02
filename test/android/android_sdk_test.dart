@@ -4,16 +4,11 @@
 
 import 'package:file/memory.dart';
 import 'package:screenshots/src/android/android_sdk.dart';
-import 'package:screenshots/src/base/config.dart';
-import 'package:screenshots/src/base/context.dart';
-import 'package:screenshots/src/base/file_system.dart';
-import 'package:screenshots/src/base/io.dart' show ProcessResult;
-import 'package:screenshots/src/base/platform.dart';
 import 'package:mockito/mockito.dart';
 import 'package:process/process.dart';
 import 'package:test/test.dart';
+import 'package:tool_base/tool_base.dart';
 
-import '../src/common.dart';
 import '../src/common_tools.dart';
 import '../src/context.dart';
 import '../src/mocks.dart';

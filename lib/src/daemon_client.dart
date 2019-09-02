@@ -3,10 +3,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:meta/meta.dart';
-
-import 'base/platform.dart';
-import 'base/process.dart';
-import 'globals.dart';
+import 'package:screenshots/src/utils.dart';
+import 'package:tool_base/tool_base.dart';
 
 enum EventType { deviceRemoved }
 

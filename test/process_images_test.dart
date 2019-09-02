@@ -1,10 +1,10 @@
-import 'package:screenshots/src/base/process.dart';
 import 'package:screenshots/src/config.dart';
 import 'package:screenshots/src/context_runner.dart';
 import 'package:screenshots/src/globals.dart';
 import 'package:screenshots/src/image_processor.dart';
 import 'package:screenshots/src/resources.dart' as resources;
 import 'package:screenshots/src/screens.dart';
+import 'package:screenshots/src/utils.dart';
 import 'package:test/test.dart';
 
 main() {

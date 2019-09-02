@@ -1,8 +1,7 @@
-import 'package:screenshots/src/base/common.dart';
-import 'package:screenshots/src/base/file_system.dart';
 import 'package:test/test.dart';
 //import 'package:test_api/test_api.dart' hide TypeMatcher, isInstanceOf;
 import 'package:test_api/test_api.dart' as test_package show TypeMatcher;
+import 'package:tool_base/tool_base.dart';
 //export 'package:test_api/test_api.dart'
 //    hide TypeMatcher, isInstanceOf; // Defines a 'package:test' shim.
 

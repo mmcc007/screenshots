@@ -2,7 +2,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:resource/resource.dart';
-import 'base/process.dart';
+
+import 'utils.dart';
 
 ///
 /// Copy resource images for a screen from package to files.

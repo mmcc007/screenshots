@@ -1,12 +1,11 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:meta/meta.dart';
 import 'package:screenshots/src/config.dart';
 import 'package:screenshots/src/image_magick.dart';
+import 'package:tool_base/tool_base.dart' hide Config;
 
 import 'archive.dart';
-import 'base/file_system.dart';
 import 'screens.dart';
 import 'fastlane.dart' as fastlane;
 import 'resources.dart' as resources;
@@ -107,12 +106,12 @@ class ImageProcessor {
 
   @visibleForTesting
   static void showFailedCompare(Map failedCompare) {
-    stderr.writeln('Error: comparison failed:');
+    printError('Comparison failed:');
 
     failedCompare.forEach((screenshotName, result) {
-      stderr.writeln(
-          'Error: ${result['comparison']} is not equal to ${result['recording']}');
-      stderr.writeln('       Differences can be found in ${result['diff']}');
+      printError(
+          '${result['comparison']} is not equal to ${result['recording']}');
+      printError('       Differences can be found in ${result['diff']}');
     });
   }
 
