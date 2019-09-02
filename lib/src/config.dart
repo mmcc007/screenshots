@@ -48,7 +48,7 @@ class Config {
       orElse: () => throw 'Error: no device configured for \'$deviceName\'');
 
   /// Check for active run type.
-  /// Runs can only be one of [DeviceType].
+  /// Run types can only be one of [DeviceType].
   isRunTypeActive(DeviceType runType) {
     final deviceType = utils.getStringFromEnum(runType);
     return !(_configInfo['devices'][deviceType] == null ||

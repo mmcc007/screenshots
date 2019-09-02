@@ -45,6 +45,7 @@ class DaemonClient {
       _waitForConnection = Completer<bool>();
       _connected = await _waitForConnection.future;
       await enableDeviceDiscovery();
+      // maybe should check if iOS run type is active
       if (platform.isMacOS) _iosDevices = getIosDevices();
       // wait for device discovery
       await Future.delayed(Duration(milliseconds: 100));
