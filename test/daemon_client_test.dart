@@ -4,9 +4,9 @@ import 'dart:io';
 import 'package:mockito/mockito.dart';
 import 'package:platform/platform.dart';
 import 'package:process/process.dart';
-import 'package:screenshots/src/base/context.dart';
 import 'package:screenshots/src/daemon_client.dart';
 import 'package:test/test.dart';
+import 'package:tool_base/tool_base.dart';
 
 import 'src/context.dart';
 
@@ -43,8 +43,8 @@ main() {
       mockProcess = MockProcess();
       fakePlatform = FakePlatform.fromPlatform(const LocalPlatform());
 
-      when(mockProcessManager.start(any,
-              environment: null, workingDirectory: null, runInShell: true))
+      when(mockProcessManager.start(any))
+//              environment: null, workingDirectory: null, runInShell: true))
           .thenAnswer((Invocation invocation) {
         final MockStdIn mockStdIn = MockStdIn();
         when(mockProcess.stdin).thenReturn(mockStdIn);

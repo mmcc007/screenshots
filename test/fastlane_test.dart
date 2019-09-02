@@ -1,14 +1,13 @@
 import 'package:file/memory.dart';
 import 'package:mockito/mockito.dart';
 import 'package:process/process.dart';
-import 'package:screenshots/src/base/file_system.dart';
-import 'package:screenshots/src/base/io.dart';
 import 'package:screenshots/src/config.dart';
 import 'package:screenshots/src/fastlane.dart';
 import 'package:screenshots/src/globals.dart';
 import 'package:screenshots/src/screens.dart';
 import 'package:screenshots/src/utils.dart';
 import 'package:test/test.dart';
+import 'package:tool_base/tool_base.dart' hide Config;
 
 import 'src/context.dart';
 

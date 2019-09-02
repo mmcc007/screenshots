@@ -2,13 +2,10 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:intl/intl.dart';
+import 'package:tool_base/tool_base.dart' hide Config;
 
 import 'android/android_sdk.dart';
 import 'archive.dart';
-import 'base/context.dart';
-import 'base/logger.dart';
-import 'base/platform.dart';
-import 'base/process.dart';
 import 'config.dart';
 import 'context_runner.dart';
 import 'daemon_client.dart';
@@ -19,6 +16,7 @@ import 'orientation.dart' as orient;
 import 'resources.dart' as resources;
 import 'screens.dart';
 import 'utils.dart' as utils;
+import 'utils.dart';
 import 'validate.dart';
 import 'package:path/path.dart' as path;
 
@@ -91,7 +89,8 @@ Future<bool> runScreenshots(
   await validate(config, screens, devices, emulators);
 
   // init
-  await Directory(path.join(config.stagingDir, kTestScreenshotsDir))
+  await fs
+      .directory(path.join(config.stagingDir, kTestScreenshotsDir))
       .create(recursive: true);
   if (!platform.isWindows) await resources.unpackScripts(config.stagingDir);
   Archive archive = Archive(config.archiveDir);

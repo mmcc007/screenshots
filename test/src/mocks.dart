@@ -6,9 +6,7 @@ import 'dart:io';
 import 'package:mockito/mockito.dart';
 import 'package:process/process.dart';
 import 'package:screenshots/src/android/android_sdk.dart';
-import 'package:screenshots/src/base/file_system.dart';
-import 'package:screenshots/src/base/io.dart';
-import 'package:screenshots/src/base/platform.dart';
+import 'package:tool_base/tool_base.dart';
 
 /// An SDK installation with several SDK levels (19, 22, 23).
 class MockAndroidSdk extends Mock implements AndroidSdk {

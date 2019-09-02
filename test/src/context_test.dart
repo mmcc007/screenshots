@@ -4,10 +4,10 @@
 
 import 'dart:async';
 
-import 'package:screenshots/src/base/context.dart';
 import 'package:test/test.dart';
+import 'package:tool_base/tool_base.dart';
 
-import 'common_tools.dart' as common show isInstanceOf;
+//import 'common_tools.dart' as common show isInstanceOf;
 
 void main() {
   group('AppContext', () {

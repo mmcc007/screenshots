@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:meta/meta.dart';
 import 'package:path/path.dart' as p;
-import 'package:screenshots/src/base/process.dart';
+import 'package:screenshots/src/utils.dart';
 
 /// Copy files from [srcDir] to [dstDir].
 /// If dstDir does not exist, it is created.
