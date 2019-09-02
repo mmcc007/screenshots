@@ -51,30 +51,24 @@ Future<bool> screenshots(
 /// 3. Process the screenshots including adding a frame if required.
 /// 4. Move processed screenshots to fastlane destination for upload to stores.
 /// 5. If not a real device, stop emulator/simulator.
-Future<bool> runScreenshots(
-    {String configPath = kConfigFileName,
-    String configStr,
-    String mode = 'normal',
-    String flavor = kNoFlavor,
-    DaemonClient client}) async {
+Future<bool> runScreenshots({
+  String configPath = kConfigFileName,
+  String configStr,
+  String mode = 'normal',
+  String flavor = kNoFlavor,
+}) async {
   final runMode = utils.getRunModeEnum(mode);
 
   final screens = Screens();
   await screens.init();
 
-  DaemonClient daemonClient;
+  // start flutter daemon
   Status status;
-  if (client == null) {
-    // start flutter daemon
-    status = logger.startProgress('Starting flutter daemon...',
-        timeout: Duration(milliseconds: 10000));
-    daemonClient = DaemonClient();
-  } else {
-    daemonClient = client;
-  }
-//  daemonClient.verbose = true;
+  status = logger.startProgress('Starting flutter daemon...',
+      timeout: Duration(milliseconds: 10000));
+  //  daemonClient.verbose = true;
   await daemonClient.start;
-  status?.stop();
+  status.stop();
 
   // get all attached devices and running emulators/simulators
   final devices = await daemonClient.devices;

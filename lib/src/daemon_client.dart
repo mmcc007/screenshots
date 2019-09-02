@@ -6,6 +6,13 @@ import 'package:meta/meta.dart';
 import 'package:screenshots/src/utils.dart';
 import 'package:tool_base/tool_base.dart';
 
+final DaemonClient _kDaemonClient = DaemonClient();
+
+/// Currently active implementation of the daemon client.
+///
+/// Override this in tests with a fake/mocked daemon flient.
+DaemonClient get daemonClient => context.get<DaemonClient>() ?? _kDaemonClient;
+
 enum EventType { deviceRemoved }
 
 /// Starts and communicates with flutter daemon.
@@ -146,6 +153,7 @@ class DaemonClient {
         .transform<String>(const LineSplitter())
         .listen((String line) async {
       printTrace('<== $line');
+      // todo: decode json
       if (line.contains('daemon.connected')) {
         _waitForConnection.complete(true);
       } else {
@@ -215,8 +223,9 @@ List getIosDevices() {
           .trim()
           .split('\n')
           .sublist(1);
-  if (iosDeployDevices.isEmpty || iosDeployDevices[0] == noAttachedDevices)
+  if (iosDeployDevices.isEmpty || iosDeployDevices[0] == noAttachedDevices) {
     return [];
+  }
   return iosDeployDevices.map((line) {
     final matches = regExp.firstMatch(line);
     final device = {};

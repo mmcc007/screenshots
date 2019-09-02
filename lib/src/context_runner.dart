@@ -5,6 +5,7 @@
 import 'dart:async';
 
 import 'package:process/process.dart';
+import 'package:screenshots/src/daemon_client.dart';
 import 'package:tool_base/tool_base.dart';
 import 'package:tool_mobile/tool_mobile.dart';
 
@@ -20,6 +21,7 @@ Future<T> runInContext<T>(
       AndroidSdk: AndroidSdk.locateAndroidSdk,
       BotDetector: () => const BotDetector(),
       Config: () => Config(),
+      DaemonClient: () => DaemonClient(),
       Logger: () => platform.isWindows ? WindowsStdoutLogger() : StdoutLogger(),
       OperatingSystemUtils: () => OperatingSystemUtils(),
       ProcessManager: () => LocalProcessManager(),

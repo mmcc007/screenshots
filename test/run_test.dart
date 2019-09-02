@@ -34,9 +34,9 @@ main() {
     fakeProcessManager = FakeProcessManager(stdinResults: _captureStdin);
     mockDaemonClient = MockDaemonClient();
     // create screenshot dir
-    fs
-        .directory('$stagingDir/$kTestScreenshotsDir')
-        .createSync(recursive: true);
+//    fs
+//        .directory('$stagingDir/$kTestScreenshotsDir')
+//        .createSync(recursive: true);
   });
 
   tearDown(() {
@@ -118,12 +118,12 @@ main() {
           $emulatorName:
       frame: false
       ''';
-      final result =
-          await runScreenshots(configStr: configStr, client: mockDaemonClient);
+      final result = await runScreenshots(configStr: configStr);
       expect(result, isTrue);
       fakeProcessManager.verifyCalls();
-    }, skip: true, overrides: <Type, Generator>{
-      FileSystem: () => fs,
+    }, skip: false, overrides: <Type, Generator>{
+      DaemonClient: () => mockDaemonClient,
+//      FileSystem: () => fs,
       ProcessManager: () => fakeProcessManager,
       Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
         ..environment = {'CI': 'false'},
@@ -204,13 +204,13 @@ main() {
       devices:
         android:
           $emulatorName:
-      frame: true
+      frame: false
       ''';
-      final result =
-          await runScreenshots(configStr: configStr, client: mockDaemonClient);
+      final result = await runScreenshots(configStr: configStr);
       expect(result, isTrue);
       fakeProcessManager.verifyCalls();
     }, skip: false, overrides: <Type, Generator>{
+      DaemonClient: () => mockDaemonClient,
       ProcessManager: () => fakeProcessManager,
       Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
         ..environment = {'CI': 'false'},
@@ -418,11 +418,11 @@ main() {
           iPhone X:
       frame: false
       ''';
-      final result =
-          await runScreenshots(configStr: configStr, client: mockDaemonClient);
+      final result = await runScreenshots(configStr: configStr);
       expect(result, isTrue);
       fakeProcessManager.verifyCalls();
     }, skip: false, overrides: <Type, Generator>{
+      DaemonClient: () => mockDaemonClient,
       ProcessManager: () => fakeProcessManager,
       Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
         ..environment = {
