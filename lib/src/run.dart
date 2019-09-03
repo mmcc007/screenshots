@@ -89,7 +89,9 @@ Future<bool> runScreenshots({
 
   final config = Config(configPath: configPath, configStr: configStr);
   // validate config file
-  await validate(config, screens, devices, emulators);
+  if (!await validate(config, screens, devices, emulators)) {
+    return false;
+  }
 
   // init
   await fs
@@ -578,18 +580,7 @@ DeviceType getDeviceType(Config config, String deviceName) {
 /// Check Image Magick is installed.
 Future<bool> isImageMagicInstalled() async {
   return await runInContext<bool>(() {
-    bool isInstalled = false;
-    if (platform.isWindows) {
-      isInstalled = cmd([
-        'magick',
-      ]).isNotEmpty;
-    } else {
-      isInstalled = cmd([
-        'sh',
-        '-c',
-        'which convert && echo convert || echo not installed'
-      ]).toString().contains('convert');
-    }
-    return isInstalled;
+    final cmd = platform.isWindows ? 'magick' : 'convert';
+    return processManager.runSync(<String>[cmd]).exitCode == 0;
   });
 }
