@@ -6,7 +6,8 @@ import 'package:screenshots/src/globals.dart';
 import 'package:screenshots/src/image_processor.dart';
 import 'package:screenshots/src/resources.dart';
 import 'package:screenshots/src/screens.dart';
-import 'package:screenshots/src/utils.dart';
+
+import '../src/common.dart';
 
 const usage = 'usage: frame [-h] [-s <screenshot file> -d <device name>]';
 const sampleUsage = 'sample usage: frame -s screenshot.png -d \'Nexus 6P\'';

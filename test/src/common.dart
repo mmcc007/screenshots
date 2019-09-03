@@ -18,6 +18,20 @@ void copyFiles(String srcDir, String dstDir) {
   });
 }
 
+/// Clear a named directory if it exists.
+/// Create directory if none exists.
+void clearDirectory(String dir) {
+  _deleteDir(dir);
+  Directory(dir).createSync(recursive: true);
+}
+
+/// Delete a directory if it exists.
+void _deleteDir(String dir) {
+  if (Directory(dir).existsSync()) {
+    Directory(dir).deleteSync(recursive: true);
+  }
+}
+
 /// Get device properties
 Map getDeviceProps(String deviceId) {
   final props = {};

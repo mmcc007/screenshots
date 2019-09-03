@@ -55,8 +55,8 @@ class FakeProcessManager extends Mock implements ProcessManager {
       final command = _getCommand(invocations[i].positionalArguments[0]);
       expect(command, equals(_origCalls[i].command));
       // check parameter positions
-      expect(_origCalls[i].command.split(' '),
-          orderedEquals(invocations[i].positionalArguments[0]));
+//      expect(_origCalls[i].command.split(' '),
+//          orderedEquals(invocations[i].positionalArguments[0]));
     }
   }
 

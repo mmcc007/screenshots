@@ -23,21 +23,30 @@ import 'package:path/path.dart' as path;
 /// Run screenshots
 Future<bool> screenshots(
     {String configPath,
-    String mode,
-    String flavor,
+    String configStr,
+    String mode = 'normal',
+    String flavor = kNoFlavor,
     bool verbose = false}) async {
   // run in context
   if (verbose) {
     Logger verboseLogger = VerboseLogger(
         platform.isWindows ? WindowsStdoutLogger() : StdoutLogger());
     return runInContext<bool>(() async {
-      return runScreenshots(configPath: configPath, mode: mode, flavor: flavor);
+      return runScreenshots(
+          configPath: configPath,
+          configStr: configStr,
+          mode: mode,
+          flavor: flavor);
     }, overrides: <Type, Generator>{
       Logger: () => verboseLogger,
     });
   } else {
     return runInContext<bool>(() async {
-      return runScreenshots(configPath: configPath, mode: mode, flavor: flavor);
+      return runScreenshots(
+          configPath: configPath,
+          configStr: configStr,
+          mode: mode,
+          flavor: flavor);
     });
   }
 }
@@ -478,7 +487,8 @@ Future<void> setEmulatorLocale(String deviceId, testLocale, deviceName) async {
     //          daemonClient.verbose = false;
     await utils.waitAndroidLocaleChange(deviceId, testLocale);
     // allow additional time before orientation change
-    await Future.delayed(Duration(milliseconds: 5000));
+//    await Future.delayed(Duration(milliseconds: 5000));
+    await Future.delayed(Duration(milliseconds: 1000));
   }
 }
 
@@ -566,8 +576,8 @@ DeviceType getDeviceType(Config config, String deviceName) {
 }
 
 /// Check Image Magick is installed.
-void checkImageMagicInstalled() {
-  runInContext<void>(() async {
+Future<bool> isImageMagicInstalled() async {
+  return await runInContext<bool>(() {
     bool isInstalled = false;
     if (platform.isWindows) {
       isInstalled = cmd([
@@ -580,16 +590,6 @@ void checkImageMagicInstalled() {
         'which convert && echo convert || echo not installed'
       ]).toString().contains('convert');
     }
-    if (!isInstalled) {
-      stderr.write(
-          '#############################################################\n');
-      stderr.write("# You have to install ImageMagick to use Screenshots\n");
-      stderr.write(
-          "# Install it using 'brew update && brew install imagemagick'\n");
-      stderr.write("# If you don't have homebrew: goto http://brew.sh\n");
-      stderr.write(
-          '#############################################################\n');
-      exit(1);
-    }
+    return isInstalled;
   });
 }

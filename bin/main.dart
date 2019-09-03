@@ -55,7 +55,17 @@ void main(List<String> arguments) async {
   }
 
   // check imagemagick is installed
-  checkImageMagicInstalled();
+  if (await isImageMagicInstalled()) {
+    stderr.writeln(
+        '#############################################################\n');
+    stderr.writeln("# You have to install ImageMagick to use Screenshots\n");
+    stderr.writeln(
+        "# Install it using 'brew update && brew install imagemagick'\n");
+    stderr.writeln("# If you don't have homebrew: goto http://brew.sh\n");
+    stderr.writeln(
+        '#############################################################\n');
+    exit(1);
+  }
 
   // validate args
   if (!await File(argResults[configArg]).exists()) {

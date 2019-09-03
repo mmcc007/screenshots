@@ -18,20 +18,6 @@ Map parseYamlFile(String yamlPath) =>
 Map parseYamlStr(String yamlString) =>
     jsonDecode(jsonEncode(loadYaml(yamlString)));
 
-/// Clear a named directory if it exists.
-/// Create directory if none exists.
-void clearDirectory(String dir) {
-  _deleteDir(dir);
-  fs.directory(dir).createSync(recursive: true);
-}
-
-/// Delete a directory if it exists.
-void _deleteDir(String dir) {
-  if (fs.directory(dir).existsSync()) {
-    fs.directory(dir).deleteSync(recursive: true);
-  }
-}
-
 /// Move files from [srcDir] to [dstDir].
 /// If dstDir does not exist, it is created.
 void moveFiles(String srcDir, String dstDir) {
@@ -125,18 +111,18 @@ List<String> getAvdNames() {
   return cmd(['emulator', '-list-avds']).split('\n');
 }
 
-/// Get the highest available avd version for the android emulator.
-String getHighestAVD(String deviceName) {
-  final emulatorName = deviceName.replaceAll(' ', '_');
-  final avds =
-      getAvdNames().where((name) => name.contains(emulatorName)).toList();
-  // sort list in android API order
-  avds.sort((v1, v2) {
-    return v1.compareTo(v2);
-  });
-
-  return avds.last;
-}
+///// Get the highest available avd version for the android emulator.
+//String getHighestAVD(String deviceName) {
+//  final emulatorName = deviceName.replaceAll(' ', '_');
+//  final avds =
+//      getAvdNames().where((name) => name.contains(emulatorName)).toList();
+//  // sort list in android API order
+//  avds.sort((v1, v2) {
+//    return v1.compareTo(v2);
+//  });
+//
+//  return avds.last;
+//}
 
 /// Adds prefix to all files in a directory
 Future prefixFilesInDir(String dirPath, String prefix) async {
@@ -206,6 +192,16 @@ String getAndroidEmulatorId(String deviceId) {
 /// Find android device id with matching [emulatorId].
 /// Returns matching android device id as [String].
 String findAndroidDeviceId(String emulatorId) {
+  /// Get the list of running android devices by id.
+  List<String> getAndroidDeviceIds() {
+    return cmd([getAdbPath(), 'devices'])
+        .trim()
+        .split('\n')
+        .sublist(1) // remove first line
+        .map((device) => device.split('\t').first)
+        .toList();
+  }
+
   final devicesIds = getAndroidDeviceIds();
   if (devicesIds.isEmpty) return null;
   return devicesIds.firstWhere(
@@ -213,25 +209,15 @@ String findAndroidDeviceId(String emulatorId) {
       orElse: () => null);
 }
 
-/// Get the list of running android devices by id.
-List<String> getAndroidDeviceIds() {
-  return cmd([getAdbPath(), 'devices'])
-      .trim()
-      .split('\n')
-      .sublist(1) // remove first line
-      .map((device) => device.split('\t').first)
-      .toList();
-}
-
-/// Stop an android emulator.
-Future stopAndroidEmulator(String deviceId, String stagingDir) async {
-  cmd([getAdbPath(), '-s', deviceId, 'emu', 'kill']);
-  // wait for emulator to stop
-  await streamCmd([
-    '$stagingDir/resources/script/android-wait-for-emulator-to-stop',
-    deviceId
-  ]);
-}
+///// Stop an android emulator.
+//Future stopAndroidEmulator(String deviceId, String stagingDir) async {
+//  cmd([getAdbPath(), '-s', deviceId, 'emu', 'kill']);
+//  // wait for emulator to stop
+//  await streamCmd([
+//    '$stagingDir/resources/script/android-wait-for-emulator-to-stop',
+//    deviceId
+//  ]);
+//}
 
 /// Wait for android device/emulator locale to change.
 Future<String> waitAndroidLocaleChange(String deviceId, String toLocale) async {
@@ -281,7 +267,8 @@ DaemonDevice getDeviceFromId(List<DaemonDevice> devices, String deviceId) {
 Future<String> waitSysLogMsg(
     String deviceId, RegExp regExp, String locale) async {
   cmd([getAdbPath(), '-s', deviceId, 'logcat', '-c']);
-  await Future.delayed(Duration(milliseconds: 1000)); // wait for log to clear
+//  await Future.delayed(Duration(milliseconds: 1000)); // wait for log to clear
+  await Future.delayed(Duration(milliseconds: 500)); // wait for log to clear
   // -b main ContactsDatabaseHelper:I '*:S'
   final delegate = await runCommand([
     getAdbPath(),

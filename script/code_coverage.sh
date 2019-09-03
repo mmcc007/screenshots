@@ -42,6 +42,7 @@ requires coverage package
 # run tests with code coverage
 runTests () {
   local test_path="test/all_tests.dart"
+#  local test_path="test/run_test.dart"
   local coverage_dir="coverage"
   # clear coverage directory
   rm -rf "$coverage_dir"
