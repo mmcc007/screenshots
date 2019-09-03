@@ -89,7 +89,7 @@ Future<bool> runScreenshots({
 
   final config = Config(configPath: configPath, configStr: configStr);
   // validate config file
-  if (!await validate(config, screens, devices, emulators)) {
+  if (!await isValidConfig(config, screens, devices, emulators)) {
     return false;
   }
 
