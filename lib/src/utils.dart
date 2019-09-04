@@ -109,7 +109,7 @@ String getHighestIosVersion(Map iOSVersions) {
 
 /// Create list of avds,
 List<String> getAvdNames() {
-  return cmd(['emulator', '-list-avds']).split('\n');
+  return cmd([getEmulatorPath(androidSdk), '-list-avds']).split('\n');
 }
 
 ///// Get the highest available avd version for the android emulator.
@@ -150,7 +150,7 @@ String getAndroidDeviceLocale(String deviceId) {
 // ro.product.locale is available on first boot but does not update,
 // persist.sys.locale is empty on first boot but updates with locale changes
   String locale = cmd([
-    getAdbPath(),
+    getAdbPath(androidSdk),
     '-s',
     deviceId,
     'shell',
@@ -159,7 +159,7 @@ String getAndroidDeviceLocale(String deviceId) {
   ]).trim();
   if (locale.isEmpty) {
     locale = cmd([
-      getAdbPath(),
+      getAdbPath(androidSdk),
       '-s',
       deviceId,
       'shell',
@@ -184,7 +184,7 @@ String getIosSimulatorLocale(String udId) {
 /// Returns emulator id as [String].
 String getAndroidEmulatorId(String deviceId) {
   // get name of avd of running emulator
-  return cmd([getAdbPath(), '-s', deviceId, 'emu', 'avd', 'name'])
+  return cmd([getAdbPath(androidSdk), '-s', deviceId, 'emu', 'avd', 'name'])
       .split('\r\n')
       .map((line) => line.trim())
       .first;
@@ -195,7 +195,7 @@ String getAndroidEmulatorId(String deviceId) {
 String findAndroidDeviceId(String emulatorId) {
   /// Get the list of running android devices by id.
   List<String> getAndroidDeviceIds() {
-    return cmd([getAdbPath(), 'devices'])
+    return cmd([getAdbPath(androidSdk), 'devices'])
         .trim()
         .split('\n')
         .sublist(1) // remove first line
@@ -267,12 +267,12 @@ DaemonDevice getDeviceFromId(List<DaemonDevice> devices, String deviceId) {
 /// Wait for message to appear in sys log and return first matching line
 Future<String> waitSysLogMsg(
     String deviceId, RegExp regExp, String locale) async {
-  cmd([getAdbPath(), '-s', deviceId, 'logcat', '-c']);
+  cmd([getAdbPath(androidSdk), '-s', deviceId, 'logcat', '-c']);
 //  await Future.delayed(Duration(milliseconds: 1000)); // wait for log to clear
   await Future.delayed(Duration(milliseconds: 500)); // wait for log to clear
   // -b main ContactsDatabaseHelper:I '*:S'
   final delegate = await runCommand([
-    getAdbPath(),
+    getAdbPath(androidSdk),
     '-s',
     deviceId,
     'logcat',
