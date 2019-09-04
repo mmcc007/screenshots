@@ -422,7 +422,8 @@ main() {
           ..environment = {
             'CI': 'false',
             'HOME': LocalPlatform().environment['HOME']
-          },
+          }
+          ..operatingSystem = 'macos',
         Logger: () => VerboseLogger(StdoutLogger()),
       });
     });
