@@ -55,15 +55,17 @@ void main(List<String> arguments) async {
   }
 
   // check imagemagick is installed
-  if (await isImageMagicInstalled()) {
+  if (!await isImageMagicInstalled()) {
     stderr.writeln(
-        '#############################################################\n');
-    stderr.writeln("# You have to install ImageMagick to use Screenshots\n");
+        '#############################################################');
+    stderr.writeln("# You have to install ImageMagick to use Screenshots");
+    if (Platform.isMacOS) {
+      stderr.writeln(
+          "# Install it using 'brew update && brew install imagemagick'");
+      stderr.writeln("# If you don't have homebrew: goto http://brew.sh");
+    }
     stderr.writeln(
-        "# Install it using 'brew update && brew install imagemagick'\n");
-    stderr.writeln("# If you don't have homebrew: goto http://brew.sh\n");
-    stderr.writeln(
-        '#############################################################\n');
+        '#############################################################');
     exit(1);
   }
 

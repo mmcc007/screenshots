@@ -394,9 +394,9 @@ String cmd(List<String> cmd,
   final result = processManager.runSync(cmd,
       workingDirectory: workingDirectory, runInShell: true);
   traceCommand(cmd, workingDirectory: workingDirectory);
-  if (!silent) stdout.write(result.stdout);
+  if (!silent) printStatus(result.stdout);
   if (result.exitCode != 0) {
-    stderr.write(result.stderr);
+    printError(result.stderr);
     throw 'command failed: exitcode=${result.exitCode}, cmd=\'${cmd.join(" ")}\', workingDir=$workingDirectory';
   }
   // return stdout
@@ -414,9 +414,19 @@ void traceCommand(List<String> args, {String workingDirectory}) {
 }
 
 /// Run command and return exit code.
-int runCmd(List<String> cmd) {
+int runCmd(List<String> cmd, {bool verbose = false}) {
   traceCommand(cmd);
-  return processManager.runSync(cmd).exitCode;
+  final result = processManager.runSync(cmd);
+  if (result.exitCode != 0) {
+    if (verbose) {
+      printError(result.stdout);
+      printError(result.stderr);
+    } else {
+      printTrace(result.stdout);
+      printTrace(result.stderr);
+    }
+  }
+  return result.exitCode;
 }
 
 /// Execute command with arguments [cmd] in a separate process

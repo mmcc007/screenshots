@@ -580,7 +580,8 @@ DeviceType getDeviceType(Config config, String deviceName) {
 /// Check Image Magick is installed.
 Future<bool> isImageMagicInstalled() async {
   return await runInContext<bool>(() {
-    final cmd = platform.isWindows ? 'magick' : 'convert';
-    return processManager.runSync(<String>[cmd]).exitCode == 0;
+    final cmd =
+        platform.isWindows ? ['magick', '-version'] : ['convert', '-version'];
+    return runCmd(cmd) == 0;
   });
 }

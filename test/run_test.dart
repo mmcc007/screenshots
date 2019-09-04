@@ -119,7 +119,7 @@ main() {
         fakeProcessManager.verifyCalls();
         verify(mockDaemonClient.devices).called(1);
         verify(mockDaemonClient.emulators).called(1);
-      }, skip: true, overrides: <Type, Generator>{
+      }, skip: false, overrides: <Type, Generator>{
         DaemonClient: () => mockDaemonClient,
 //      FileSystem: () => fs,
         ProcessManager: () => fakeProcessManager,
@@ -430,18 +430,18 @@ main() {
 
   group('image magick', () {
     testUsingContext('is installed on macOS/linux', () async {
-      fakeProcessManager.calls = [Call('convert', null)];
+      fakeProcessManager.calls = [Call('convert -version', null)];
       final isInstalled = await isImageMagicInstalled();
       expect(isInstalled, isTrue);
       fakeProcessManager.verifyCalls();
     }, overrides: <Type, Generator>{
       ProcessManager: () => fakeProcessManager,
       Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
-        ..operatingSystem = 'macOS',
+        ..operatingSystem = 'macos',
     });
 
     testUsingContext('is installed on windows', () async {
-      fakeProcessManager.calls = [Call('magick', null)];
+      fakeProcessManager.calls = [Call('magick -version', null)];
       final isInstalled = await isImageMagicInstalled();
       expect(isInstalled, isTrue);
       fakeProcessManager.verifyCalls();
@@ -452,7 +452,9 @@ main() {
     });
 
     testUsingContext('is not installed on windows', () async {
-      fakeProcessManager.calls = [Call('magick', ProcessResult(0, 1, '', ''))];
+      fakeProcessManager.calls = [
+        Call('magick -version', ProcessResult(0, 1, '', ''))
+      ];
       final isInstalled = await isImageMagicInstalled();
       expect(isInstalled, isFalse);
       fakeProcessManager.verifyCalls();

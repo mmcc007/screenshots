@@ -40,9 +40,11 @@ main() {
                 }
                 ''',
             ''));
+
     setUp(() {
       fakeProcessManager = FakeProcessManager();
     });
+
     testUsingContext('pass', () async {
       final configStr = '''
           tests:
@@ -79,7 +81,9 @@ main() {
       expect(isValid, isTrue);
     }, skip: false, overrides: <Type, Generator>{
       ProcessManager: () => fakeProcessManager,
-      Logger: () => VerboseLogger(StdoutLogger())
+      Logger: () => VerboseLogger(StdoutLogger()),
+      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
+        ..operatingSystem = 'macos',
     });
 
     testUsingContext('fail', () async {
