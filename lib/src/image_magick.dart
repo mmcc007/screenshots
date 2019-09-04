@@ -92,9 +92,9 @@ class ImageMagick {
       '-colorspace',
       'gray',
       '-format',
-      '"%[fx:(mean>$threshold)?1:0]"',
+      '""%[fx:(mean>$threshold)?1:0]""',
       'info:'
-    ])).replaceAll('"', ''); // remove quotes "0"
+    ])).replaceAll('"', ''); // remove quotes ""0""
     return result == '1';
   }
 
