@@ -6,7 +6,6 @@ import 'env_test.dart' as env_test;
 import 'frame_test.dart' as frame_test;
 import 'image_processor_test.dart' as image_processor_test;
 import 'screenshots_yaml_test.dart' as screenshots_yaml_test;
-import 'statusbar_color_test.dart' as statusbar_color_test;
 import 'regression/issue_29.dart' as regression_issue_29_test;
 import 'regression/regression_test.dart' as regression_regression_test;
 import 'run_test.dart' as run_test;
@@ -37,7 +36,6 @@ void main() {
   frame_test.main();
   image_processor_test.main();
   screenshots_yaml_test.main();
-  statusbar_color_test.main();
   regression_issue_29_test.main();
   regression_regression_test.main();
 }

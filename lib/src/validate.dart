@@ -48,26 +48,36 @@ Future<bool> isValidConfig(
     }
   }
 
-  // validate ios device
-  if (config.isRunTypeActive(DeviceType.ios)) {
-    final iosDevices = utils.getIosDaemonDevices(allDevices);
-    final Map simulators = utils.getIosSimulators();
-    for (ConfigDevice configDevice in config.iosDevices) {
-      if (config.isFrameRequired(configDevice.name)) {
-        // check screen available for this device
-        if (!_isScreenAvailable(screens, configDevice.name, configPath)) {
+  // validate macOS
+  if (platform.isMacOS) {
+    // validate ios device
+    if (config.isRunTypeActive(DeviceType.ios)) {
+      final iosDevices = utils.getIosDaemonDevices(allDevices);
+      final Map simulators = utils.getIosSimulators();
+      for (ConfigDevice configDevice in config.iosDevices) {
+        if (config.isFrameRequired(configDevice.name)) {
+          // check screen available for this device
+          if (!_isScreenAvailable(screens, configDevice.name, configPath)) {
+            isValid = false;
+          }
+        }
+
+        // check device attached or simulator installed
+        if (!isDeviceAttached(utils.getDevice(iosDevices, configDevice.name)) &&
+            !_isSimulatorInstalled(simulators, configDevice.name)) {
+          printError('No device attached or simulator installed for '
+              'device \'${configDevice.name}\' in $configPath.');
+          showGuide = true;
           isValid = false;
         }
       }
-
-      // check device attached or simulator installed
-      if (!isDeviceAttached(utils.getDevice(iosDevices, configDevice.name)) &&
-          !_isSimulatorInstalled(simulators, configDevice.name)) {
-        printError('No device attached or simulator installed for '
-            'device \'${configDevice.name}\' in $configPath.');
-        showGuide = true;
-        isValid = false;
-      }
+    }
+  } else {
+    // if not macOS
+    if (config.isRunTypeActive(DeviceType.ios)) {
+      printError(
+          'An iOS run cannot be configured on a non-macOS platform. Please modify $configPath');
+      isValid = false;
     }
   }
 

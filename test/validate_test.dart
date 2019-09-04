@@ -1,3 +1,4 @@
+import 'package:process/process.dart';
 import 'package:screenshots/src/config.dart';
 import 'package:screenshots/src/daemon_client.dart';
 import 'package:screenshots/src/screens.dart';
@@ -5,9 +6,43 @@ import 'package:screenshots/src/validate.dart';
 import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart' hide Config;
 import 'src/context.dart';
+import 'src/fake_process_manager.dart';
 
 main() {
   group('validate', () {
+    FakeProcessManager fakeProcessManager;
+
+    final callListIosDevices = Call(
+        'xcrun simctl list devices --json',
+        ProcessResult(
+            0,
+            0,
+            '''
+                {
+                  "devices" : {
+                    "iOS 11.2" : [
+                      {
+                        "state" : "Shutdown",
+                        "availability" : "(available)",
+                        "name" : "iPhone 7 Plus",
+                        "udid" : "1DD6DBF1-846F-4644-8E97-76175788B9A5"
+                      }
+                    ],
+                    "iOS 11.1" : [
+                      {
+                        "state" : "Shutdown",
+                        "availability" : "(available)",
+                        "name" : "iPhone X",
+                        "udid" : "6B3B1AD9-EFD3-49AB-9CE9-D43CE1A47446"
+                      }
+                    ]
+                  }
+                }
+                ''',
+            ''));
+    setUp(() {
+      fakeProcessManager = FakeProcessManager();
+    });
     testUsingContext('pass', () async {
       final configStr = '''
           tests:
@@ -36,10 +71,14 @@ main() {
       };
       final allEmulators = <DaemonEmulator>[loadDaemonEmulator(emulator)];
       final allDevices = <DaemonDevice>[];
+
+      fakeProcessManager.calls = [callListIosDevices];
+
       final isValid =
           await isValidConfig(config, screens, allDevices, allEmulators);
       expect(isValid, isTrue);
     }, skip: false, overrides: <Type, Generator>{
+      ProcessManager: () => fakeProcessManager,
       Logger: () => VerboseLogger(StdoutLogger())
     });
 
@@ -75,10 +114,16 @@ main() {
       };
       final allEmulators = <DaemonEmulator>[loadDaemonEmulator(emulator)];
       final allDevices = <DaemonDevice>[];
+
+      fakeProcessManager.calls = [callListIosDevices, callListIosDevices];
+
       final isValid =
           await isValidConfig(config, screens, allDevices, allEmulators);
       expect(isValid, isFalse);
-    }, skip: false, overrides: <Type, Generator>{Logger: () => StdoutLogger()});
+    }, skip: false, overrides: <Type, Generator>{
+      ProcessManager: () => fakeProcessManager,
+      Logger: () => StdoutLogger()
+    });
 
     testUsingContext('show guide', () async {
       final screens = Screens();
