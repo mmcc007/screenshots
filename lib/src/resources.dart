@@ -1,9 +1,11 @@
 import 'dart:async';
-import 'dart:io';
+//import 'dart:io';
 
 import 'package:resource/resource.dart';
 
 import 'utils.dart';
+
+import 'package:tool_base/tool_base.dart';
 
 ///
 /// Copy resource images for a screen from package to files.
@@ -42,7 +44,7 @@ Future unpackScripts(String dstDir) async {
 Future unpackScript(String srcPath, String dstDir) async {
   final resource = Resource('package:screenshots/$srcPath');
   final String script = await resource.readAsString();
-  final file = await File('$dstDir/$srcPath').create(recursive: true);
+  final file = await fs.file('$dstDir/$srcPath').create(recursive: true);
   await file.writeAsString(script, flush: true);
   // make executable
   cmd(['chmod', 'u+x', '$dstDir/$srcPath']);
@@ -56,6 +58,6 @@ Future<List<int>> readResourceImage(String uri) async {
 
 /// Write an image to staging area.
 Future<void> writeImage(List<int> image, String path) async {
-  final file = await File(path).create(recursive: true);
+  final file = await fs.file(path).create(recursive: true);
   await file.writeAsBytes(image, flush: true);
 }
