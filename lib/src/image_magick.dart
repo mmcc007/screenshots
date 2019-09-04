@@ -75,51 +75,49 @@ class ImageMagick {
       default:
         throw 'unknown command: $command';
     }
-    _cmd('convert', cmdOptions);
+    _imageMagickCmd('convert', cmdOptions);
   }
 
-  /// Checks if brightness of section of image exceeds a threshold
-  bool thresholdExceeded(String imagePath, String crop,
+  /// Checks if brightness of sample of image exceeds a threshold.
+  /// Section is specified by [cropSizeOffset] which is of the form
+  /// cropSizeOffset, eg, '1242x42+0+0'.
+  bool isThresholdExceeded(String imagePath, String cropSizeOffset,
       [double threshold = _kThreshold]) {
     //convert logo.png -crop $crop_size$offset +repage -colorspace gray -format "%[fx:(mean>$threshold)?1:0]" info:
-    final result = _cmd('convert', <String>[
+    final result = cmd(_getPlatformCmd('convert', <String>[
       imagePath,
       '-crop',
-      crop,
+      cropSizeOffset,
       '+repage',
       '-colorspace',
       'gray',
       '-format',
       '""%[fx:(mean>$threshold)?1:0]""',
       'info:'
-    ]).replaceAll('"', '');
+    ])).replaceAll('"', ''); // remove quotes ""0""
     return result == '1';
   }
 
   bool compare(String comparisonImage, String recordedImage) {
-    final diffImage = getDiffName(comparisonImage);
-    try {
-      _cmd('compare', <String>[
-        '-metric',
-        'mae',
-        recordedImage,
-        comparisonImage,
-        diffImage
-      ]);
-    } catch (e) {
-      return false;
+    final diffImage = getDiffImagePath(comparisonImage);
+
+    int returnCode = _imageMagickCmd('compare',
+        <String>['-metric', 'mae', recordedImage, comparisonImage, diffImage]);
+
+    if (returnCode == 0) {
+      // delete no-diff diff image created by image magick
+      fs.file(diffImage).deleteSync();
     }
-    // delete no-diff diff
-    fs.file(diffImage).deleteSync();
-    return true;
+    return returnCode == 0;
   }
 
-  String getDiffName(String comparisonImage) {
-    final diffName = p.dirname(comparisonImage) +
+  /// Append diff suffix [kDiffSuffix] to [imagePath].
+  String getDiffImagePath(String imagePath) {
+    final diffName = p.dirname(imagePath) +
         '/' +
-        p.basenameWithoutExtension(comparisonImage) +
+        p.basenameWithoutExtension(imagePath) +
         kDiffSuffix +
-        p.extension(comparisonImage);
+        p.extension(imagePath);
     return diffName;
   }
 
@@ -132,20 +130,26 @@ class ImageMagick {
         .forEach((diffImage) => fs.file(diffImage.path).deleteSync());
   }
 
-  /// ImageMagick command
-  String _cmd(String imCmd, List imCmdArgs) {
-    // windows uses ImageMagick v7 or later
+  /// Different command for windows (based on recommended installed version!)
+  List<String> _getPlatformCmd(String imCmd, List imCmdArgs) {
+    // windows uses ImageMagick v7 or later which by default does not
+    // have the legacy commands.
     if (platform.isWindows) {
-      return cmd([
+      return [
         ...['magick'],
         ...[imCmd],
         ...imCmdArgs
-      ]);
+      ];
     } else {
-      return cmd([
+      return [
         ...[imCmd],
         ...imCmdArgs
-      ]);
+      ];
     }
+  }
+
+  /// ImageMagick command
+  int _imageMagickCmd(String imCmd, List imCmdArgs) {
+    return runCmd(_getPlatformCmd(imCmd, imCmdArgs));
   }
 }

@@ -1,10 +1,10 @@
 import 'dart:async';
-import 'dart:io';
+//import 'dart:io';
 
 import 'package:intl/intl.dart';
 import 'package:tool_base/tool_base.dart' hide Config;
+import 'package:tool_mobile/tool_mobile.dart';
 
-import 'android/android_sdk.dart';
 import 'archive.dart';
 import 'config.dart';
 import 'context_runner.dart';
@@ -23,21 +23,30 @@ import 'package:path/path.dart' as path;
 /// Run screenshots
 Future<bool> screenshots(
     {String configPath,
-    String mode,
-    String flavor,
+    String configStr,
+    String mode = 'normal',
+    String flavor = kNoFlavor,
     bool verbose = false}) async {
   // run in context
   if (verbose) {
     Logger verboseLogger = VerboseLogger(
         platform.isWindows ? WindowsStdoutLogger() : StdoutLogger());
     return runInContext<bool>(() async {
-      return runScreenshots(configPath: configPath, mode: mode, flavor: flavor);
+      return runScreenshots(
+          configPath: configPath,
+          configStr: configStr,
+          mode: mode,
+          flavor: flavor);
     }, overrides: <Type, Generator>{
       Logger: () => verboseLogger,
     });
   } else {
     return runInContext<bool>(() async {
-      return runScreenshots(configPath: configPath, mode: mode, flavor: flavor);
+      return runScreenshots(
+          configPath: configPath,
+          configStr: configStr,
+          mode: mode,
+          flavor: flavor);
     });
   }
 }
@@ -51,30 +60,24 @@ Future<bool> screenshots(
 /// 3. Process the screenshots including adding a frame if required.
 /// 4. Move processed screenshots to fastlane destination for upload to stores.
 /// 5. If not a real device, stop emulator/simulator.
-Future<bool> runScreenshots(
-    {String configPath = kConfigFileName,
-    String configStr,
-    String mode = 'normal',
-    String flavor = kNoFlavor,
-    DaemonClient client}) async {
+Future<bool> runScreenshots({
+  String configPath = kConfigFileName,
+  String configStr,
+  String mode = 'normal',
+  String flavor = kNoFlavor,
+}) async {
   final runMode = utils.getRunModeEnum(mode);
 
   final screens = Screens();
   await screens.init();
 
-  DaemonClient daemonClient;
+  // start flutter daemon
   Status status;
-  if (client == null) {
-    // start flutter daemon
-    status = logger.startProgress('Starting flutter daemon...',
-        timeout: Duration(milliseconds: 10000));
-    daemonClient = DaemonClient();
-  } else {
-    daemonClient = client;
-  }
-//  daemonClient.verbose = true;
+  status = logger.startProgress('Starting flutter daemon...',
+      timeout: Duration(milliseconds: 10000));
+  //  daemonClient.verbose = true;
   await daemonClient.start;
-  status?.stop();
+  status.stop();
 
   // get all attached devices and running emulators/simulators
   final devices = await daemonClient.devices;
@@ -86,7 +89,9 @@ Future<bool> runScreenshots(
 
   final config = Config(configPath: configPath, configStr: configStr);
   // validate config file
-  await validate(config, screens, devices, emulators);
+  if (!await isValidConfig(config, screens, devices, emulators)) {
+    return false;
+  }
 
   // init
   await fs
@@ -484,7 +489,8 @@ Future<void> setEmulatorLocale(String deviceId, testLocale, deviceName) async {
     //          daemonClient.verbose = false;
     await utils.waitAndroidLocaleChange(deviceId, testLocale);
     // allow additional time before orientation change
-    await Future.delayed(Duration(milliseconds: 5000));
+//    await Future.delayed(Duration(milliseconds: 5000));
+    await Future.delayed(Duration(milliseconds: 1000));
   }
 }
 
@@ -572,30 +578,10 @@ DeviceType getDeviceType(Config config, String deviceName) {
 }
 
 /// Check Image Magick is installed.
-void checkImageMagicInstalled() {
-  runInContext<void>(() async {
-    bool isInstalled = false;
-    if (platform.isWindows) {
-      isInstalled = cmd([
-        'magick',
-      ]).isNotEmpty;
-    } else {
-      isInstalled = cmd([
-        'sh',
-        '-c',
-        'which convert && echo convert || echo not installed'
-      ]).toString().contains('convert');
-    }
-    if (!isInstalled) {
-      stderr.write(
-          '#############################################################\n');
-      stderr.write("# You have to install ImageMagick to use Screenshots\n");
-      stderr.write(
-          "# Install it using 'brew update && brew install imagemagick'\n");
-      stderr.write("# If you don't have homebrew: goto http://brew.sh\n");
-      stderr.write(
-          '#############################################################\n');
-      exit(1);
-    }
+Future<bool> isImageMagicInstalled() async {
+  return await runInContext<bool>(() {
+    final cmd =
+        platform.isWindows ? ['magick', '-version'] : ['convert', '-version'];
+    return runCmd(cmd) == 0;
   });
 }

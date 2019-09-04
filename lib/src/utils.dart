@@ -6,8 +6,9 @@ import 'package:path/path.dart' as p;
 import 'package:process/process.dart';
 import 'package:screenshots/src/daemon_client.dart';
 import 'package:tool_base/tool_base.dart';
+import 'package:tool_mobile/tool_mobile.dart';
 import 'package:yaml/yaml.dart';
-import 'android/android_sdk.dart';
+import 'context_runner.dart';
 import 'globals.dart';
 
 /// Parse a yaml file.
@@ -17,20 +18,6 @@ Map parseYamlFile(String yamlPath) =>
 /// Parse a yaml string.
 Map parseYamlStr(String yamlString) =>
     jsonDecode(jsonEncode(loadYaml(yamlString)));
-
-/// Clear a named directory if it exists.
-/// Create directory if none exists.
-void clearDirectory(String dir) {
-  _deleteDir(dir);
-  fs.directory(dir).createSync(recursive: true);
-}
-
-/// Delete a directory if it exists.
-void _deleteDir(String dir) {
-  if (fs.directory(dir).existsSync()) {
-    fs.directory(dir).deleteSync(recursive: true);
-  }
-}
 
 /// Move files from [srcDir] to [dstDir].
 /// If dstDir does not exist, it is created.
@@ -122,21 +109,21 @@ String getHighestIosVersion(Map iOSVersions) {
 
 /// Create list of avds,
 List<String> getAvdNames() {
-  return cmd(['emulator', '-list-avds']).split('\n');
+  return cmd([getEmulatorPath(androidSdk), '-list-avds']).split('\n');
 }
 
-/// Get the highest available avd version for the android emulator.
-String getHighestAVD(String deviceName) {
-  final emulatorName = deviceName.replaceAll(' ', '_');
-  final avds =
-      getAvdNames().where((name) => name.contains(emulatorName)).toList();
-  // sort list in android API order
-  avds.sort((v1, v2) {
-    return v1.compareTo(v2);
-  });
-
-  return avds.last;
-}
+///// Get the highest available avd version for the android emulator.
+//String getHighestAVD(String deviceName) {
+//  final emulatorName = deviceName.replaceAll(' ', '_');
+//  final avds =
+//      getAvdNames().where((name) => name.contains(emulatorName)).toList();
+//  // sort list in android API order
+//  avds.sort((v1, v2) {
+//    return v1.compareTo(v2);
+//  });
+//
+//  return avds.last;
+//}
 
 /// Adds prefix to all files in a directory
 Future prefixFilesInDir(String dirPath, String prefix) async {
@@ -163,7 +150,7 @@ String getAndroidDeviceLocale(String deviceId) {
 // ro.product.locale is available on first boot but does not update,
 // persist.sys.locale is empty on first boot but updates with locale changes
   String locale = cmd([
-    getAdbPath(),
+    getAdbPath(androidSdk),
     '-s',
     deviceId,
     'shell',
@@ -172,7 +159,7 @@ String getAndroidDeviceLocale(String deviceId) {
   ]).trim();
   if (locale.isEmpty) {
     locale = cmd([
-      getAdbPath(),
+      getAdbPath(androidSdk),
       '-s',
       deviceId,
       'shell',
@@ -197,7 +184,7 @@ String getIosSimulatorLocale(String udId) {
 /// Returns emulator id as [String].
 String getAndroidEmulatorId(String deviceId) {
   // get name of avd of running emulator
-  return cmd([getAdbPath(), '-s', deviceId, 'emu', 'avd', 'name'])
+  return cmd([getAdbPath(androidSdk), '-s', deviceId, 'emu', 'avd', 'name'])
       .split('\r\n')
       .map((line) => line.trim())
       .first;
@@ -206,6 +193,16 @@ String getAndroidEmulatorId(String deviceId) {
 /// Find android device id with matching [emulatorId].
 /// Returns matching android device id as [String].
 String findAndroidDeviceId(String emulatorId) {
+  /// Get the list of running android devices by id.
+  List<String> getAndroidDeviceIds() {
+    return cmd([getAdbPath(androidSdk), 'devices'])
+        .trim()
+        .split('\n')
+        .sublist(1) // remove first line
+        .map((device) => device.split('\t').first)
+        .toList();
+  }
+
   final devicesIds = getAndroidDeviceIds();
   if (devicesIds.isEmpty) return null;
   return devicesIds.firstWhere(
@@ -213,25 +210,15 @@ String findAndroidDeviceId(String emulatorId) {
       orElse: () => null);
 }
 
-/// Get the list of running android devices by id.
-List<String> getAndroidDeviceIds() {
-  return cmd([getAdbPath(), 'devices'])
-      .trim()
-      .split('\n')
-      .sublist(1) // remove first line
-      .map((device) => device.split('\t').first)
-      .toList();
-}
-
-/// Stop an android emulator.
-Future stopAndroidEmulator(String deviceId, String stagingDir) async {
-  cmd([getAdbPath(), '-s', deviceId, 'emu', 'kill']);
-  // wait for emulator to stop
-  await streamCmd([
-    '$stagingDir/resources/script/android-wait-for-emulator-to-stop',
-    deviceId
-  ]);
-}
+///// Stop an android emulator.
+//Future stopAndroidEmulator(String deviceId, String stagingDir) async {
+//  cmd([getAdbPath(), '-s', deviceId, 'emu', 'kill']);
+//  // wait for emulator to stop
+//  await streamCmd([
+//    '$stagingDir/resources/script/android-wait-for-emulator-to-stop',
+//    deviceId
+//  ]);
+//}
 
 /// Wait for android device/emulator locale to change.
 Future<String> waitAndroidLocaleChange(String deviceId, String toLocale) async {
@@ -280,11 +267,12 @@ DaemonDevice getDeviceFromId(List<DaemonDevice> devices, String deviceId) {
 /// Wait for message to appear in sys log and return first matching line
 Future<String> waitSysLogMsg(
     String deviceId, RegExp regExp, String locale) async {
-  cmd([getAdbPath(), '-s', deviceId, 'logcat', '-c']);
-  await Future.delayed(Duration(milliseconds: 1000)); // wait for log to clear
+  cmd([getAdbPath(androidSdk), '-s', deviceId, 'logcat', '-c']);
+//  await Future.delayed(Duration(milliseconds: 1000)); // wait for log to clear
+  await Future.delayed(Duration(milliseconds: 500)); // wait for log to clear
   // -b main ContactsDatabaseHelper:I '*:S'
   final delegate = await runCommand([
-    getAdbPath(),
+    getAdbPath(androidSdk),
     '-s',
     deviceId,
     'logcat',
@@ -345,84 +333,60 @@ String toPlatformPath(String posixPath, {p.Context context}) {
 }
 
 /// Path to the `adb` executable.
-String checkAdbPath() {
-  void printAdbPathError() {
-    print('#############################################################\n');
-    print("# 'adb' must be in the PATH to use Screenshots\n");
-    print("# You can usually add it to the PATH using\n"
-        "# export PATH='\$HOME/Library/Android/sdk/platform-tools:\$PATH'  \n");
-    print('#############################################################\n');
-  }
-
-  String androidHome = getAndroidHome();
-  if (androidHome == null) {
-    return null;
-  }
-  final adbName = platform.isWindows ? 'adb.exe' : 'adb';
-  final String adbPath = p.join(androidHome, 'platform-tools/${adbName}');
-  final absPath = p.absolute(adbPath);
-  if (!fs.file(adbPath).existsSync()) {
-    printAdbPathError();
-  }
-  return absPath;
+Future<bool> isAdbPath() async {
+  return await runInContext<bool>(() async {
+    final adbPath = getAdbPath(androidSdk);
+    return adbPath != null && adbPath.isNotEmpty;
+  });
 }
 
 /// Path to the `emulator` executable.
-String getEmulatorPath() {
-  void printEmulatorPathError() {
-    print('#############################################################\n');
-    print("# 'emulator' must be in the PATH to use Screenshots\n");
-    print("# You can usually add it to the PATH using\n"
-        "# export PATH='\$HOME/Library/Android/sdk/emulator:\$PATH'  \n");
-    print('#############################################################\n');
-  }
-
-  String androidHome = getAndroidHome();
-  if (androidHome == null) {
-    return null;
-  }
-  final emulatorName = platform.isWindows ? 'emulator.exe' : 'emulator';
-  final String emulatorPath = p.join(androidHome, 'emulator/${emulatorName}');
-  final absPath = p.absolute(emulatorPath);
-  if (!fs.file(emulatorPath).existsSync()) {
-    printEmulatorPathError();
-  }
-  return absPath;
+Future<bool> isEmulatorPath() async {
+  return await runInContext<bool>(() async {
+    final emulatorPath = getEmulatorPath(androidSdk);
+    return emulatorPath != null && emulatorPath.isNotEmpty;
+  });
 }
 
-String getAndroidHome() {
-  final String androidHome = platform.environment['ANDROID_HOME'] ??
-      platform.environment['ANDROID_SDK_ROOT'];
-  if (androidHome == null) {
-    print('The ANDROID_SDK_ROOT and ANDROID_HOME environment variables are '
-        'missing. At least one of these variables must point to the Android '
-        'SDK directory.');
-  }
-  return androidHome;
-}
-
+/// Run command and return stdout as string.
 String cmd(List<String> cmd,
     {String workingDirectory = '.', bool silent = true}) {
-  void _traceCommand(List<String> args, {String workingDirectory}) {
-    final String argsText = args.join(' ');
-    if (workingDirectory == null) {
-      printTrace('executing: $argsText');
-    } else {
-      printTrace(
-          'executing: [$workingDirectory${fs.path.separator}] $argsText');
-    }
-  }
-
   final result = processManager.runSync(cmd,
       workingDirectory: workingDirectory, runInShell: true);
-  _traceCommand(cmd, workingDirectory: workingDirectory);
-  if (!silent) stdout.write(result.stdout);
+  traceCommand(cmd, workingDirectory: workingDirectory);
+  if (!silent) printStatus(result.stdout);
   if (result.exitCode != 0) {
-    stderr.write(result.stderr);
+    printError(result.stderr);
     throw 'command failed: exitcode=${result.exitCode}, cmd=\'${cmd.join(" ")}\', workingDir=$workingDirectory';
   }
   // return stdout
   return result.stdout;
+}
+
+/// Trace a command.
+void traceCommand(List<String> args, {String workingDirectory}) {
+  final String argsText = args.join(' ');
+  if (workingDirectory == null) {
+    printTrace('executing: $argsText');
+  } else {
+    printTrace('executing: [$workingDirectory${fs.path.separator}] $argsText');
+  }
+}
+
+/// Run command and return exit code.
+int runCmd(List<String> cmd, {bool verbose = false}) {
+  traceCommand(cmd);
+  final result = processManager.runSync(cmd);
+  if (result.exitCode != 0) {
+    if (verbose) {
+      printError(result.stdout);
+      printError(result.stderr);
+    } else {
+      printTrace(result.stdout);
+      printTrace(result.stderr);
+    }
+  }
+  return result.exitCode;
 }
 
 /// Execute command with arguments [cmd] in a separate process

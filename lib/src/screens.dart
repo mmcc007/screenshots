@@ -44,4 +44,34 @@ class Screens {
     });
     return deviceType;
   }
+
+  /// Test if screen is used for identifying android model type.
+  static bool isAndroidModelTypeScreen(Map screenProps) =>
+      screenProps['size'] == null;
+
+  /// Get supported device names by [os]
+  List<String> getSupportedDeviceNamesByOs(String os) {
+    final deviceNames = <String>[];
+    screens.forEach((osType, osScreens) {
+      if (osType == os) {
+        osScreens.forEach((screenId, screenProps) {
+          // omit devices that have screens that are
+          // only used to identify android model type
+          if (!Screens.isAndroidModelTypeScreen(screenProps)) {
+            for (String device in screenProps['devices']) {
+              deviceNames.add(device);
+            }
+          }
+        });
+      }
+    });
+    // sort iPhone devices first
+    deviceNames.sort((v1, v2) {
+      if ('$v1'.contains('iPhone') && '$v2'.contains('iPad')) return -1;
+      if ('$v1'.contains('iPad') && '$v2'.contains('iPhone')) return 1;
+      return v1.compareTo(v2);
+    });
+
+    return deviceNames;
+  }
 }

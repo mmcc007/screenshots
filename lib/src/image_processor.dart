@@ -37,7 +37,7 @@ class ImageProcessor {
   /// If 'frame' in config file is true, screenshots are placed within image of device.
   ///
   /// After processing, screenshots are handed off for upload via fastlane.
-  Future<void> process(DeviceType deviceType, String deviceName, String locale,
+  Future<bool> process(DeviceType deviceType, String deviceName, String locale,
       RunMode runMode, Archive archive) async {
     final Map screenProps = _screens.getScreen(deviceName);
     if (screenProps == null) {
@@ -52,10 +52,12 @@ class ImageProcessor {
         await resources.unpackImages(screenResources, _config.stagingDir);
 
         // add status and nav bar and frame for each screenshot
-        final screenshots = fs
-            .directory('${_config.stagingDir}/$kTestScreenshotsDir')
-            .listSync();
-        for (final screenshotPath in screenshots) {
+        final screenshotsDir = '${_config.stagingDir}/$kTestScreenshotsDir';
+        final screenshotPaths = fs.directory(screenshotsDir).listSync();
+        if (screenshotPaths.isEmpty) {
+          printStatus('Warning: no screenshots found in $screenshotsDir');
+        }
+        for (final screenshotPath in screenshotPaths) {
           // add status bar for each screenshot
           await overlay(
               _config.stagingDir, screenResources, screenshotPath.path);
@@ -102,6 +104,7 @@ class ImageProcessor {
         throw 'Error: comparison failed.';
       }
     }
+    return true; // for testing
   }
 
   @visibleForTesting
@@ -137,7 +140,7 @@ class ImageProcessor {
         failedCompare[screenshotName] = {
           'recording': recordedImageEntity.path,
           'comparison': screenshot.path,
-          'diff': im.getDiffName(screenshot.path)
+          'diff': im.getDiffImagePath(screenshot.path)
         };
       }
     });
@@ -158,7 +161,7 @@ class ImageProcessor {
     String statusbarPath;
     // select black or white status bar based on brightness of area to be overlaid
     // todo: add black and white status bars
-    if (im.thresholdExceeded(screenshotPath, _kCrop)) {
+    if (im.isThresholdExceeded(screenshotPath, _kCrop)) {
       // use black status bar
       statusbarPath = '$tmpDir/${screenResources['statusbar black']}';
     } else {

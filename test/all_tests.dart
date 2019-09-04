@@ -4,9 +4,8 @@ import 'screenshots_test.dart' as screenshots_test;
 import 'daemon_test.dart' as daemon_test;
 import 'env_test.dart' as env_test;
 import 'frame_test.dart' as frame_test;
-import 'process_images_test.dart' as process_images_test;
+import 'image_processor_test.dart' as image_processor_test;
 import 'screenshots_yaml_test.dart' as screenshots_yaml_test;
-import 'statusbar_color_test.dart' as statusbar_color_test;
 import 'regression/issue_29.dart' as regression_issue_29_test;
 import 'regression/regression_test.dart' as regression_regression_test;
 import 'run_test.dart' as run_test;
@@ -16,12 +15,16 @@ import 'resources_test.dart' as resources_test;
 import 'fastlane_test.dart' as fastlane_test;
 import 'daemon_client_test.dart' as daemon_client_test;
 import 'config_test.dart' as config_test;
-import 'android/android_sdk_test.dart' as android_android_sdk_test;
+import 'screens_test.dart' as screens_test;
+import 'validate_test.dart' as validate_test;
+import 'utils_test.dart' as utils_test;
 
 void main() {
   isCI() ? print('running in CI') : print('not running in CI');
 
-  android_android_sdk_test.main();
+  utils_test.main();
+  validate_test.main();
+  screens_test.main();
   config_test.main();
   daemon_client_test.main();
   src_all_tests.main();
@@ -33,9 +36,8 @@ void main() {
   daemon_test.main();
   env_test.main();
   frame_test.main();
-  process_images_test.main();
+  image_processor_test.main();
   screenshots_yaml_test.main();
-  statusbar_color_test.main();
   regression_issue_29_test.main();
   regression_regression_test.main();
 }

@@ -99,7 +99,7 @@ void main() {
     final origDir = Directory.current;
     Directory.current = 'example';
     expect(
-        await validate(
+        await isValidConfig(
           config,
           screens,
           await daemonClient.devices,

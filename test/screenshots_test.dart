@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:process/process.dart';
 import 'package:screenshots/screenshots.dart';
-import 'package:screenshots/src/android/android_sdk.dart';
 import 'package:screenshots/src/config.dart';
 import 'package:screenshots/src/context_runner.dart';
 import 'package:screenshots/src/daemon_client.dart';
@@ -21,6 +20,7 @@ import 'package:screenshots/src/utils.dart';
 import 'package:screenshots/src/validate.dart' as validate;
 import 'package:test/test.dart';
 import 'package:path/path.dart' as p;
+import 'package:tool_mobile/tool_mobile.dart';
 
 import 'src/common.dart';
 
@@ -554,7 +554,7 @@ void main() {
         });
         behave == 'good'
             ? Null
-            : File(im.getDiffName(comparisonImage)).deleteSync();
+            : File(im.getDiffImagePath(comparisonImage)).deleteSync();
         behave == 'good' ? expect(doCompare, true) : expect(doCompare, false);
       });
     });
@@ -598,7 +598,7 @@ void main() {
     test('cleanup diffs at start of normal run', () {
       final fastlaneDir = 'test/resources/comparison';
       Directory(fastlaneDir).listSync().forEach(
-          (fsEntity) => File(im.getDiffName(fsEntity.path)).createSync());
+          (fsEntity) => File(im.getDiffImagePath(fsEntity.path)).createSync());
       expect(
           Directory(fastlaneDir).listSync().where((fileSysEntity) =>
               p.basename(fileSysEntity.path).contains(ImageMagick.kDiffSuffix)),
@@ -747,8 +747,8 @@ void main() {
       await screens.init();
       final daemonClient = DaemonClient();
       await daemonClient.start;
-      validate.generateConfigGuide(
-          screens, await daemonClient.devices, 'screenshots.yaml');
+      validate.generateConfigGuide(screens, await daemonClient.devices,
+          await daemonClient.emulators, 'screenshots.yaml');
     }, skip: utils.isCI());
 
     test('validate device params', () {
