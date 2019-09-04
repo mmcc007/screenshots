@@ -17,7 +17,6 @@ enum EventType { deviceRemoved }
 
 /// Starts and communicates with flutter daemon.
 class DaemonClient {
-
   Process _process;
   int _messageId = 0;
   bool _connected = false;
