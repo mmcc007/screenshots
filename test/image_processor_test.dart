@@ -95,7 +95,7 @@ main() {
 
       fakeProcessManager.calls = [
         Call(
-            'convert /tmp/screenshots/test/screenshot.png -crop 1000x40+0+0 +repage -colorspace gray -format %[fx:(mean>0.76)?1:0] info:',
+            'convert /tmp/screenshots/test/screenshot.png -crop 1000x40+0+0 +repage -colorspace gray -format "%[fx:(mean>0.76)?1:0]" info:',
             ProcessResult(0, 0, '0', '')),
         Call(
             'convert /tmp/screenshots/test/screenshot.png /tmp/screenshots/resources/android/1440/statusbar.png -gravity north -composite /tmp/screenshots/test/screenshot.png',

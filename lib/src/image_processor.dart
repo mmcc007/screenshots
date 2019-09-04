@@ -161,7 +161,7 @@ class ImageProcessor {
     String statusbarPath;
     // select black or white status bar based on brightness of area to be overlaid
     // todo: add black and white status bars
-    if (im.thresholdExceeded(screenshotPath, _kCrop)) {
+    if (im.isThresholdExceeded(screenshotPath, _kCrop)) {
       // use black status bar
       statusbarPath = '$tmpDir/${screenResources['statusbar black']}';
     } else {

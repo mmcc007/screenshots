@@ -60,11 +60,11 @@ main() {
       final imagePath = toPlatformPath('./test/resources/0.png');
       final cropSizeOffset = '1242x42+0+0';
       bool isThresholdExceeded = await runInContext<bool>(() async {
-        return im.thresholdExceeded(imagePath, cropSizeOffset, 0.5);
+        return im.isThresholdExceeded(imagePath, cropSizeOffset, 0.5);
       });
       expect(isThresholdExceeded, isTrue);
       isThresholdExceeded = await runInContext<bool>(() async {
-        return im.thresholdExceeded(imagePath, cropSizeOffset);
+        return im.isThresholdExceeded(imagePath, cropSizeOffset);
       });
       expect(isThresholdExceeded, isFalse);
     });

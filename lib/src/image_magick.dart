@@ -81,7 +81,7 @@ class ImageMagick {
   /// Checks if brightness of sample of image exceeds a threshold.
   /// Section is specified by [cropSizeOffset] which is of the form
   /// cropSizeOffset, eg, '1242x42+0+0'.
-  bool thresholdExceeded(String imagePath, String cropSizeOffset,
+  bool isThresholdExceeded(String imagePath, String cropSizeOffset,
       [double threshold = _kThreshold]) {
     //convert logo.png -crop $crop_size$offset +repage -colorspace gray -format "%[fx:(mean>$threshold)?1:0]" info:
     final result = cmd(_getPlatformCmd('convert', <String>[
@@ -92,9 +92,9 @@ class ImageMagick {
       '-colorspace',
       'gray',
       '-format',
-      '%[fx:(mean>$threshold)?1:0]',
+      '"%[fx:(mean>$threshold)?1:0]"',
       'info:'
-    ]));
+    ])).replaceAll('"', ''); // remove quotes "0"
     return result == '1';
   }
 
