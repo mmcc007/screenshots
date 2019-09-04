@@ -17,10 +17,12 @@ import 'daemon_client_test.dart' as daemon_client_test;
 import 'config_test.dart' as config_test;
 import 'screens_test.dart' as screens_test;
 import 'validate_test.dart' as validate_test;
+import 'utils_test.dart' as utils_test;
 
 void main() {
   isCI() ? print('running in CI') : print('not running in CI');
 
+  utils_test.main();
   validate_test.main();
   screens_test.main();
   config_test.main();

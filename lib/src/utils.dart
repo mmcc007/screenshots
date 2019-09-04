@@ -8,6 +8,7 @@ import 'package:screenshots/src/daemon_client.dart';
 import 'package:tool_base/tool_base.dart';
 import 'package:tool_mobile/tool_mobile.dart';
 import 'package:yaml/yaml.dart';
+import 'context_runner.dart';
 import 'globals.dart';
 
 /// Parse a yaml file.
@@ -332,60 +333,19 @@ String toPlatformPath(String posixPath, {p.Context context}) {
 }
 
 /// Path to the `adb` executable.
-String checkAdbPath() {
-  void printAdbPathError() {
-    print('#############################################################\n');
-    print("# 'adb' must be in the PATH to use Screenshots\n");
-    print("# You can usually add it to the PATH using\n"
-        "# export PATH='\$HOME/Library/Android/sdk/platform-tools:\$PATH'  \n");
-    print('#############################################################\n');
-  }
-
-  String androidHome = getAndroidHome();
-  if (androidHome == null) {
-    return null;
-  }
-  final adbName = platform.isWindows ? 'adb.exe' : 'adb';
-  final String adbPath = p.join(androidHome, 'platform-tools/${adbName}');
-  final absPath = p.absolute(adbPath);
-  if (!fs.file(adbPath).existsSync()) {
-    printAdbPathError();
-  }
-  return absPath;
+Future<bool> isAdbPath() async {
+  return await runInContext<bool>(() async {
+    final adbPath = getAdbPath(androidSdk);
+    return adbPath != null && adbPath.isNotEmpty;
+  });
 }
 
 /// Path to the `emulator` executable.
-String getEmulatorPath() {
-  void printEmulatorPathError() {
-    print('#############################################################\n');
-    print("# 'emulator' must be in the PATH to use Screenshots\n");
-    print("# You can usually add it to the PATH using\n"
-        "# export PATH='\$HOME/Library/Android/sdk/emulator:\$PATH'  \n");
-    print('#############################################################\n');
-  }
-
-  String androidHome = getAndroidHome();
-  if (androidHome == null) {
-    return null;
-  }
-  final emulatorName = platform.isWindows ? 'emulator.exe' : 'emulator';
-  final String emulatorPath = p.join(androidHome, 'emulator/${emulatorName}');
-  final absPath = p.absolute(emulatorPath);
-  if (!fs.file(emulatorPath).existsSync()) {
-    printEmulatorPathError();
-  }
-  return absPath;
-}
-
-String getAndroidHome() {
-  final String androidHome = platform.environment['ANDROID_HOME'] ??
-      platform.environment['ANDROID_SDK_ROOT'];
-  if (androidHome == null) {
-    print('The ANDROID_SDK_ROOT and ANDROID_HOME environment variables are '
-        'missing. At least one of these variables must point to the Android '
-        'SDK directory.');
-  }
-  return androidHome;
+Future<bool> isEmulatorPath() async {
+  return await runInContext<bool>(() async {
+    final emulatorPath = getEmulatorPath(androidSdk);
+    return emulatorPath != null && emulatorPath.isNotEmpty;
+  });
 }
 
 /// Run command and return stdout as string.

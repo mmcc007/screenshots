@@ -77,8 +77,26 @@ void main(List<String> arguments) async {
   final config = Config(configPath: argResults[configArg]);
   if (config.isRunTypeActive(DeviceType.android)) {
     // check required executables for android
-    checkAdbPath() == null ? exit(1) : Null;
-    getEmulatorPath() == null ? exit(1) : Null;
+    if (!await isAdbPath()) {
+      stderr.writeln(
+          '#############################################################');
+      stderr.writeln("# 'adb' must be in the PATH to use Screenshots");
+      stderr.writeln("# You can usually add it to the PATH using"
+          "# export PATH='\$HOME/Library/Android/sdk/platform-tools:\$PATH'");
+      stderr.writeln(
+          '#############################################################');
+      exit(1);
+    }
+    if (!await isEmulatorPath()) {
+      stderr.writeln(
+          '#############################################################');
+      stderr.writeln("# 'emulator' must be in the PATH to use Screenshots");
+      stderr.writeln("# You can usually add it to the PATH using"
+          "# export PATH='\$HOME/Library/Android/sdk/emulator:\$PATH'");
+      stderr.writeln(
+          '#############################################################');
+      exit(1);
+    }
   }
 
   final success = await screenshots(
