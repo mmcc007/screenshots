@@ -388,21 +388,12 @@ String getAndroidHome() {
   return androidHome;
 }
 
+/// Run command and return stdout as string.
 String cmd(List<String> cmd,
     {String workingDirectory = '.', bool silent = true}) {
-  void _traceCommand(List<String> args, {String workingDirectory}) {
-    final String argsText = args.join(' ');
-    if (workingDirectory == null) {
-      printTrace('executing: $argsText');
-    } else {
-      printTrace(
-          'executing: [$workingDirectory${fs.path.separator}] $argsText');
-    }
-  }
-
   final result = processManager.runSync(cmd,
       workingDirectory: workingDirectory, runInShell: true);
-  _traceCommand(cmd, workingDirectory: workingDirectory);
+  traceCommand(cmd, workingDirectory: workingDirectory);
   if (!silent) stdout.write(result.stdout);
   if (result.exitCode != 0) {
     stderr.write(result.stderr);
@@ -410,6 +401,22 @@ String cmd(List<String> cmd,
   }
   // return stdout
   return result.stdout;
+}
+
+/// Trace a command.
+void traceCommand(List<String> args, {String workingDirectory}) {
+  final String argsText = args.join(' ');
+  if (workingDirectory == null) {
+    printTrace('executing: $argsText');
+  } else {
+    printTrace('executing: [$workingDirectory${fs.path.separator}] $argsText');
+  }
+}
+
+/// Run command and return exit code.
+int runCmd(List<String> cmd) {
+  traceCommand(cmd);
+  return processManager.runSync(cmd).exitCode;
 }
 
 /// Execute command with arguments [cmd] in a separate process

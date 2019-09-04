@@ -554,7 +554,7 @@ void main() {
         });
         behave == 'good'
             ? Null
-            : File(im.getDiffName(comparisonImage)).deleteSync();
+            : File(im.getDiffImagePath(comparisonImage)).deleteSync();
         behave == 'good' ? expect(doCompare, true) : expect(doCompare, false);
       });
     });
@@ -598,7 +598,7 @@ void main() {
     test('cleanup diffs at start of normal run', () {
       final fastlaneDir = 'test/resources/comparison';
       Directory(fastlaneDir).listSync().forEach(
-          (fsEntity) => File(im.getDiffName(fsEntity.path)).createSync());
+          (fsEntity) => File(im.getDiffImagePath(fsEntity.path)).createSync());
       expect(
           Directory(fastlaneDir).listSync().where((fileSysEntity) =>
               p.basename(fileSysEntity.path).contains(ImageMagick.kDiffSuffix)),
