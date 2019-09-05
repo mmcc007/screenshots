@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io' as io show IOSink, ProcessSignal;
-import 'dart:io';
+import 'dart:io' as io show IOSink;
 
 import 'package:mockito/mockito.dart';
 import 'package:process/process.dart';
@@ -34,8 +33,9 @@ class MockAndroidSdk extends Mock implements AndroidSdk {
       _createSdkFile(dir, 'build-tools/19.1.0/aapt$exe');
       _createSdkFile(dir, 'build-tools/22.0.1/aapt$exe');
       _createSdkFile(dir, 'build-tools/23.0.2/aapt$exe');
-      if (withAndroidN)
+      if (withAndroidN) {
         _createSdkFile(dir, 'build-tools/24.0.0-preview/aapt$exe');
+      }
     }
 
     _createSdkFile(dir, 'platforms/android-22/android.jar');

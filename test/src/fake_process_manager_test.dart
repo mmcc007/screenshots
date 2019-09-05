@@ -147,7 +147,7 @@ void main() {
       ];
       processManager.calls = calls;
 
-      final key = calls[1].command;
+//      final key = calls[1].command;
 //      processManager.runSync(key.split(' '));
     });
   });

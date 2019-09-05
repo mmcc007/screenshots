@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:screenshots/src/config.dart';
 import 'package:screenshots/src/daemon_client.dart';
 import 'package:screenshots/src/globals.dart';
-import 'package:screenshots/src/image_processor.dart';
 import 'package:screenshots/src/screens.dart';
 import 'package:screenshots/src/validate.dart';
 import 'package:screenshots/src/utils.dart' as utils;

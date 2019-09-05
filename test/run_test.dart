@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:file/file.dart';
-import 'package:file/memory.dart';
 import 'package:mockito/mockito.dart';
 import 'package:platform/platform.dart';
 import 'package:process/process.dart';
