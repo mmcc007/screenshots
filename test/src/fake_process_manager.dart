@@ -18,9 +18,11 @@ import 'package:test/test.dart';
 ///
 /// Call [verifyCalls] to verify that each desired call occurred.
 class FakeProcessManager extends Mock implements ProcessManager {
-  FakeProcessManager({this.stdinResults}) {
+  FakeProcessManager({this.stdinResults, this.isPeriodic = false}) {
     _setupMock();
   }
+
+  final bool isPeriodic;
 
   /// The callback that will be called each time stdin input is supplied to
   /// a call.
@@ -75,7 +77,8 @@ class FakeProcessManager extends Mock implements ProcessManager {
   }
 
   FakeProcess _popProcess(List<String> command) =>
-      FakeProcess(_popResult(command), stdinResults: stdinResults);
+      FakeProcess(_popResult(command),
+          stdinResults: stdinResults, isPeriodic: isPeriodic);
 
   Future<Process> _nextProcess(Invocation invocation) async {
     invocations.add(invocation);
@@ -133,18 +136,23 @@ class FakeProcessManager extends Mock implements ProcessManager {
 
 /// A fake process that can be used to interact with a process "started" by the FakeProcessManager.
 class FakeProcess extends Mock implements Process {
-  FakeProcess(ProcessResult result, {void stdinResults(String input)})
-      : stdoutStream = Stream<List<int>>.fromIterable(
-            <List<int>>[result.stdout.codeUnits]),
-        stderrStream = Stream<List<int>>.fromIterable(
+  FakeProcess(ProcessResult result,
+      {void stdinResults(String input), bool isPeriodic = false})
+      : stderrStream = Stream<List<int>>.fromIterable(
             <List<int>>[result.stderr.codeUnits]),
         desiredExitCode = result.exitCode,
         stdinSink = IOSink(StringStreamConsumer(stdinResults)) {
+    if (isPeriodic) {
+      stdoutStream = result.stdout;
+    } else {
+      stdoutStream =
+          Stream<List<int>>.fromIterable(<List<int>>[result.stdout.codeUnits]);
+    }
     _setupMock();
   }
 
   final IOSink stdinSink;
-  final Stream<List<int>> stdoutStream;
+  Stream<List<int>> stdoutStream;
   final Stream<List<int>> stderrStream;
   final int desiredExitCode;
 
