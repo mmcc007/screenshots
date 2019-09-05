@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
+//import 'dart:io';
 
 import 'package:meta/meta.dart';
 import 'package:screenshots/src/utils.dart';
@@ -10,23 +10,13 @@ final DaemonClient _kDaemonClient = DaemonClient();
 
 /// Currently active implementation of the daemon client.
 ///
-/// Override this in tests with a fake/mocked daemon flient.
+/// Override this in tests with a fake/mocked daemon client.
 DaemonClient get daemonClient => context.get<DaemonClient>() ?? _kDaemonClient;
 
 enum EventType { deviceRemoved }
 
 /// Starts and communicates with flutter daemon.
 class DaemonClient {
-  static final DaemonClient _daemonClient = DaemonClient._internal();
-
-  factory DaemonClient() {
-    return _daemonClient;
-  }
-
-  DaemonClient._internal();
-
-//  bool verbose = false;
-
   Process _process;
   int _messageId = 0;
   bool _connected = false;
@@ -104,7 +94,9 @@ class DaemonClient {
         <String, dynamic>{'method': 'device.getDevices'});
     return Future.value(devices.map((device) {
       // add model name if real ios device present
-      if (device['platform'] == 'ios' && device['emulator'] == false) {
+      if (platform.isMacOS &&
+          device['platform'] == 'ios' &&
+          device['emulator'] == false) {
         final iosDevice = _iosDevices.firstWhere(
             (iosDevice) => iosDevice['id'] == device['id'],
             orElse: () =>
