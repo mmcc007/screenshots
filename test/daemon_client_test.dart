@@ -224,33 +224,21 @@ main() {
 
   group('marshall', () {
     test('daemon emulators', () {
-      final List emulatorList = jsonDecode(kEmulatorsJson);
-      emulatorList.forEach((emulators) {
-        if (emulators is List) {
-          final flutterEmulators = [];
-          for (var emulator in emulators) {
-            DaemonEmulator flutterEmulator = loadDaemonEmulator(emulator);
-//            print('flutterDevice=$flutterEmulator');
-            flutterEmulators.add(flutterEmulator);
-          }
-          expect(flutterEmulators.length, 7);
-        }
+      final List emulators = jsonDecode(kEmulatorsJson);
+      final daemonEmulators = <DaemonEmulator>[];
+      emulators.forEach((emulator) {
+        daemonEmulators.add(loadDaemonEmulator(emulator));
       });
+      expect(daemonEmulators.length, 7);
     });
 
     test('daemon devices', () {
-      final List devicesList = jsonDecode(kDevicesJson);
-      devicesList.forEach((devices) {
-        if (devices is List) {
-          final flutterDevices = [];
-          for (var device in devices) {
-            DaemonDevice flutterDevice = loadDaemonDevice(device);
-//            print('flutterDevice=$flutterDevice');
-            flutterDevices.add(flutterDevice);
-          }
-          expect(flutterDevices.length, 1);
-        }
+      final List devices = jsonDecode(kDevicesJson);
+      final daemonDevices = [];
+      devices.forEach((device) {
+        daemonDevices.add(loadDaemonDevice(device));
       });
+      expect(daemonDevices.length, 2);
     });
   });
 }
