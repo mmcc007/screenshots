@@ -18,9 +18,8 @@ dependencies:
   process: ^3.0.9
   meta: ^1.1.6
   intl: ^0.15.0
-  tool_mobile:
-    #    path: ../tool_mobile
-    git: https://github.com/mmcc007/tool_mobile.git
+  tool_mobile: ^1.9.5
+
 dev_dependencies:
   test: ^1.5.1+1
   test_api: ^0.2.5
