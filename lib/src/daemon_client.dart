@@ -94,7 +94,9 @@ class DaemonClient {
         <String, dynamic>{'method': 'device.getDevices'});
     return Future.value(devices.map((device) {
       // add model name if real ios device present
-      if (device['platform'] == 'ios' && device['emulator'] == false) {
+      if (platform.isMacOS &&
+          device['platform'] == 'ios' &&
+          device['emulator'] == false) {
         final iosDevice = _iosDevices.firstWhere(
             (iosDevice) => iosDevice['id'] == device['id'],
             orElse: () =>
