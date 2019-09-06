@@ -1,3 +1,6 @@
+## 2.0.2
+- Relaxed intl package versioning #124
+
 ## 2.0.1+1
 - Triggered analysis on pub.dev to fix warning on transient dependency that was resolved.
 
