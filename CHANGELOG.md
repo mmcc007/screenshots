@@ -1,3 +1,7 @@
+## 2.0.2+1
+- Reduced description length to below 180 chars  
+A pub.dev issue
+
 ## 2.0.2
 - Relaxed intl package versioning #124
 
