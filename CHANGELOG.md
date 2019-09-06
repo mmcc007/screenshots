@@ -1,3 +1,7 @@
+## 2.0.1
+- Changed tool_mobile dependency from git to pub package  
+Improves pub dev score
+
 ## 2.0.0
 - Added support for running on linux and windows #97 #96 #106
 - Removed dependency on Yaml objects #98 #100
