@@ -17,7 +17,7 @@ dependencies:
   platform: ^2.2.0
   process: ^3.0.9
   meta: ^1.1.6
-  intl: ^0.15.0
+  intl: ">=0.15.0 <1.0.0"
   tool_mobile: ^1.9.5
 
 dev_dependencies:
