@@ -331,6 +331,13 @@ https://ci.appveyor.com/project/mmcc007/screenshots
 * Running _Screenshots_ in the cloud is  useful for automating the generation of your screenshots in a CI/CD environment.  
 * Running _Screenshots_ on macOS in the cloud can be used to generate your screenshots when developing on Linux and/or Windows (if not using locally attached iOS devices).
 
+# Related projects
+To run integration tests on real devices in cloud:  
+https://github.com/mmcc007/sylph
+
+To automate releases to both stores:  
+https://github.com/mmcc007/fledge
+
 # Issues and Pull Requests
 [Issues](https://github.com/mmcc007/screenshots/issues) and 
 [pull requests](https://github.com/mmcc007/screenshots/pulls) are welcome.
