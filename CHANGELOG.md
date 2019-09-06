@@ -1,3 +1,6 @@
+## 2.0.1+1
+- Triggered analysis on pub.dev to fix warning on transient dependency that was resolved.
+
 ## 2.0.1
 - Changed tool_mobile dependency from git to pub package  
 Improves pub dev score
