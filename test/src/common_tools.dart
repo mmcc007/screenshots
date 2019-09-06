@@ -1,5 +1,6 @@
 import 'package:test/test.dart';
 //import 'package:test_api/test_api.dart' hide TypeMatcher, isInstanceOf;
+// ignore: deprecated_member_use
 import 'package:test_api/test_api.dart' as test_package show TypeMatcher;
 import 'package:tool_base/tool_base.dart';
 //export 'package:test_api/test_api.dart'
