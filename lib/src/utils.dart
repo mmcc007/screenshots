@@ -300,7 +300,8 @@ DaemonEmulator findEmulator(
     List<DaemonEmulator> emulators, String emulatorName) {
   // find highest by avd version number
   emulators.sort(emulatorComparison);
-  return emulators.lastWhere((emulator) => emulator.name == emulatorName,
+  return emulators.lastWhere(
+      (emulator) => emulator.id.contains(emulatorName.replaceAll(' ', '_')),
       orElse: () => null);
 }
 
