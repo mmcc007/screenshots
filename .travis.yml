@@ -24,6 +24,7 @@ jobs:
       dart: stable
 
       install:
+        - pub get # because no pubspec.lock
         - pub run test test/all_tests.dart
         # install image magick (already installed)
         # install coverage tool
