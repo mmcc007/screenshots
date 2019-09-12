@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
+import 'dart:io' as io;
 
 import 'package:meta/meta.dart';
 import 'package:screenshots/src/orientation.dart';
@@ -9,19 +9,43 @@ import 'screens.dart';
 import 'utils.dart' as utils;
 import 'globals.dart';
 
-///
-/// Config info used to process screenshots for android and ios.
-///
+const kEnvConfigPath = 'SCREENSHOTS_YAML';
+
+/// Config info used to manage screenshots for android and ios.
+// Note: should not have context dependencies as is also used in driver.
 class Config {
   Config({this.configPath = kConfigFileName, String configStr}) {
     if (configStr != null) {
+      // used by tests
       _configInfo = utils.parseYamlStr(configStr);
     } else {
-      _configInfo = utils.parseYamlFile(configPath);
+      if (isScreenShotsAvailable) {
+        final envConfigPath = io.Platform.environment[kEnvConfigPath];
+        if (envConfigPath == null) {
+          // used by command line and by driver if using kConfigFileName
+          _configInfo = utils.parseYamlFile(configPath);
+        } else {
+          // used by driver
+          _configInfo = utils.parseYamlFile(envConfigPath);
+        }
+      } else {
+        io.stdout.writeln('Warning: screenshots not available.\n'
+            '\tTo enable set $kEnvConfigPath environment variable\n'
+            '\tor create $kConfigFileName.');
+      }
     }
   }
 
+  /// Checks if screenshots is available.
+  ///
+  /// Created for use in driver.
+  // Note: order of boolean tests is important
+  bool get isScreenShotsAvailable =>
+      io.Platform.environment[kEnvConfigPath] != null ||
+      io.File(configPath).existsSync();
+
   final String configPath;
+
   Map _configInfo;
   Map _screenshotsEnv; // current screenshots env
 
@@ -65,12 +89,17 @@ class Config {
   /// Current screenshots runtime environment
   /// (updated before start of each test)
   Future<Map> get screenshotsEnv async {
-    if (_screenshotsEnv == null) await _retrieveEnv();
-    return _screenshotsEnv;
+    if (isScreenShotsAvailable) {
+      if (_screenshotsEnv == null) await _retrieveEnv();
+      return _screenshotsEnv;
+    } else {
+      io.stdout.writeln('Warning: screenshots runtime environment not set.');
+      return Future.value({});
+    }
   }
 
-  File get _envStore {
-    return File(_configInfo['staging'] + '/' + kEnvFileName);
+  io.File get _envStore {
+    return io.File(_configInfo['staging'] + '/' + kEnvFileName);
   }
 
   /// Records screenshots environment before start of each test

@@ -396,10 +396,11 @@ Future<void> streamCmd(
   List<String> cmd, {
   String workingDirectory = '.',
   ProcessStartMode mode = ProcessStartMode.normal,
+  Map<String, String> environment,
 }) async {
   if (mode == ProcessStartMode.normal) {
     int exitCode = await runCommandAndStreamOutput(cmd,
-        workingDirectory: workingDirectory);
+        workingDirectory: workingDirectory, environment: environment);
     if (exitCode != 0 && mode == ProcessStartMode.normal) {
       throw 'command failed: exitcode=$exitCode, cmd=\'${cmd.join(" ")}\', workingDirectory=$workingDirectory, mode=$mode';
     }

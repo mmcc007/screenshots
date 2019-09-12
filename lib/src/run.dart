@@ -61,7 +61,7 @@ Future<bool> screenshots(
 /// 4. Move processed screenshots to fastlane destination for upload to stores.
 /// 5. If not a real device, stop emulator/simulator.
 Future<bool> runScreenshots({
-  String configPath = kConfigFileName,
+  String configPath,
   String configStr,
   String mode = 'normal',
   String flavor = kNoFlavor,
@@ -244,8 +244,17 @@ Future runTestsOnAll(
       final defaultLocale = 'en_US'; // todo: need actual locale of real device
       printStatus('Warning: the locale of a real device cannot be changed.');
       printStatus('Warning: currently defaulting to locale $defaultLocale.');
-      await runProcessTests(configDeviceName, defaultLocale, deviceType,
-          testPaths, deviceId, imageProcessor, runMode, archive, flavor);
+      await runProcessTests(
+          configDeviceName,
+          defaultLocale,
+          deviceType,
+          testPaths,
+          deviceId,
+          imageProcessor,
+          runMode,
+          archive,
+          flavor,
+          config.configPath);
     } else {
       // device is emulated
 
@@ -342,8 +351,17 @@ Future runTestsOnAll(
             configDevice.orientation);
 
         // run tests and process images
-        await runProcessTests(configDeviceName, locale, deviceType, testPaths,
-            deviceId, imageProcessor, runMode, archive, flavor);
+        await runProcessTests(
+            configDeviceName,
+            locale,
+            deviceType,
+            testPaths,
+            deviceId,
+            imageProcessor,
+            runMode,
+            archive,
+            flavor,
+            config.configPath);
       }
 
       // if an emulator was started, revert locale if necessary and shut it down
@@ -362,16 +380,19 @@ Future runTestsOnAll(
 }
 
 Future runProcessTests(
-    configDeviceName,
-    String locale,
-    DeviceType deviceType,
-    testPaths,
-    String deviceId,
-    ImageProcessor imageProcessor,
-    RunMode runMode,
-    Archive archive,
-    String flavor) async {
+  configDeviceName,
+  String locale,
+  DeviceType deviceType,
+  testPaths,
+  String deviceId,
+  ImageProcessor imageProcessor,
+  RunMode runMode,
+  Archive archive,
+  String flavor,
+  String configPath,
+) async {
   for (final testPath in testPaths) {
+    final environment = {kEnvConfigPath: configPath};
     if (flavor != null && flavor != kNoFlavor) {
       printStatus(
           'Running $testPath on \'$configDeviceName\' in locale $locale with flavor $flavor ...');
@@ -384,12 +405,13 @@ Future runProcessTests(
         testPath,
         '--flavor',
         flavor
-      ]);
+      ], environment: environment);
     } else {
       printStatus(
           'Running $testPath on \'$configDeviceName\' in locale $locale...');
       await streamCmd(
-          ['flutter', '-d', deviceId, 'drive']..addAll(testPath.split(" ")));
+          ['flutter', '-d', deviceId, 'drive']..addAll(testPath.split(" ")),
+          environment: environment);
     }
     // process screenshots
     await imageProcessor.process(
