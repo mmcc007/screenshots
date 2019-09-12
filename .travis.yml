@@ -20,25 +20,14 @@ jobs:
         - Unit tests
         - OS=linux
       os: linux
-#      language: dart
-#      dart: stable
-
-      # install flutter on linux
-      before_install: &install_flutter_linux
-        - sudo apt-get install -y --no-install-recommends lib32stdc++6 libstdc++6 > /dev/null
-        # install pre-compiled flutter
-        - wget --quiet --output-document=flutter.tar.xz https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/${OS}/flutter_${OS}_v${FLUTTER_VERSION}.tar.xz && tar xf flutter.tar.xz > /dev/null && rm flutter.tar.xz
-        - export PATH="$PATH":"$HOME/.pub-cache/bin"
-        - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
+      language: dart
+      dart: stable
 
       install:
-        - flutter doctor -v
-
+        - pub run test test/all_tests.dart
         # install image magick (already installed)
         # install coverage tool
         - pub global activate coverage
-        # install most current (released or unreleased) Screenshots
-        - pub global activate --source path .
 
       script:
         - script/code_coverage.sh
@@ -183,7 +172,12 @@ jobs:
 
         # Install image magick (already installed)
 
-      install: *install_flutter_linux
+      install:
+        - sudo apt-get install -y --no-install-recommends lib32stdc++6 libstdc++6 > /dev/null
+        # install pre-compiled flutter
+        - wget --quiet --output-document=flutter.tar.xz https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/${OS}/flutter_${OS}_v${FLUTTER_VERSION}.tar.xz && tar xf flutter.tar.xz > /dev/null && rm flutter.tar.xz
+        - export PATH="$PATH":"$HOME/.pub-cache/bin"
+        - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
 
       before_script:
         - flutter doctor -v
