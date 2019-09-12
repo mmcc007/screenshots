@@ -2,7 +2,6 @@ import 'package:screenshots/src/utils.dart';
 
 import 'screenshots_test.dart' as screenshots_test;
 import 'daemon_test.dart' as daemon_test;
-import 'env_test.dart' as env_test;
 import 'frame_test.dart' as frame_test;
 import 'image_processor_test.dart' as image_processor_test;
 import 'screenshots_yaml_test.dart' as screenshots_yaml_test;
@@ -35,7 +34,6 @@ void main() {
 
   screenshots_test.main();
   daemon_test.main();
-  env_test.main();
   frame_test.main();
   screenshots_yaml_test.main();
 
