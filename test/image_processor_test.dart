@@ -29,7 +29,7 @@ main() {
 
     for (final String deviceName in devices.keys) {
       final screenshotName = devices[deviceName];
-      print('deviceName=$deviceName, screenshotName=$screenshotName');
+//      print('deviceName=$deviceName, screenshotName=$screenshotName');
       Map screen = screens.getScreen(deviceName);
 
       final Map screenResources = screen['resources'];
@@ -122,7 +122,7 @@ main() {
       fakeProcessManager.verifyCalls();
     }, overrides: <Type, Generator>{
       ProcessManager: () => fakeProcessManager,
-      Logger: () => VerboseLogger(StdoutLogger()),
+//      Logger: () => VerboseLogger(StdoutLogger()),
       FileSystem: () => memFs
     });
   });

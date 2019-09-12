@@ -124,7 +124,7 @@ main() {
         ProcessManager: () => fakeProcessManager,
         Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
           ..environment = {'CI': 'false'},
-        Logger: () => VerboseLogger(StdoutLogger()),
+//        Logger: () => VerboseLogger(StdoutLogger()),
       });
 
       testUsingContext(
@@ -173,7 +173,7 @@ main() {
         ProcessManager: () => fakeProcessManager,
         Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
           ..environment = {'CI': 'false'},
-        Logger: () => VerboseLogger(StdoutLogger()),
+//        Logger: () => VerboseLogger(StdoutLogger()),
       });
     });
 
@@ -228,7 +228,7 @@ main() {
         ProcessManager: () => fakeProcessManager,
         Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
           ..environment = {'CI': 'false'},
-        Logger: () => VerboseLogger(StdoutLogger()),
+//        Logger: () => VerboseLogger(StdoutLogger()),
       });
 
       testUsingContext(
@@ -423,7 +423,7 @@ main() {
             'HOME': LocalPlatform().environment['HOME']
           }
           ..operatingSystem = 'macos',
-        Logger: () => VerboseLogger(StdoutLogger()),
+//        Logger: () => VerboseLogger(StdoutLogger()),
       });
     });
   });

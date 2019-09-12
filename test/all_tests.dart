@@ -22,22 +22,24 @@ import 'utils_test.dart' as utils_test;
 void main() {
   isCI() ? print('running in CI') : print('not running in CI');
 
-  utils_test.main();
-  validate_test.main();
-  screens_test.main();
   config_test.main();
   daemon_client_test.main();
-  src_all_tests.main();
-  run_test.main();
-  image_magick_test.main();
-  resources_test.main();
   fastlane_test.main();
+  image_magick_test.main();
+  image_processor_test.main();
+  resources_test.main();
+  run_test.main();
+  screens_test.main();
+  utils_test.main();
+  validate_test.main();
+
   screenshots_test.main();
   daemon_test.main();
   env_test.main();
   frame_test.main();
-  image_processor_test.main();
   screenshots_yaml_test.main();
+
+  src_all_tests.main();
   regression_issue_29_test.main();
   regression_regression_test.main();
 }
