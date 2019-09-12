@@ -1,9 +1,13 @@
+import 'dart:io' as io;
+
 import 'package:screenshots/screenshots.dart';
 import 'package:screenshots/src/config.dart';
 import 'package:screenshots/src/orientation.dart';
 import 'package:screenshots/src/screens.dart';
 import 'package:screenshots/src/utils.dart';
 import 'package:test/test.dart';
+
+import 'src/common.dart';
 
 main() {
   group('config', () {
@@ -132,7 +136,12 @@ main() {
     });
 
     test('store and retrieve environment', () async {
-      final Config config = Config(configPath: 'test/screenshots_test.yaml');
+      final tmpDir = '/tmp/screenshots_test_env';
+      clearDirectory(tmpDir);
+      String configStr = '''
+        staging: $tmpDir
+      ''';
+      final config = Config(configStr: configStr);
       final screens = await Screens();
       await screens.init();
       final orientation = 'Portrait';
@@ -154,8 +163,14 @@ main() {
           getEnumFromString(Orientation.values, orientation));
 
       // called by test
-      final Config testConfig =
-          Config(configPath: 'test/screenshots_test.yaml');
+      // simulate no screenshots available
+      Config testConfig = Config(configStr: configStr);
+      expect(await testConfig.screenshotsEnv, {});
+
+      // simulate screenshots available
+      final configPath = '$tmpDir/screenshots.yaml';
+      await io.File(configPath).writeAsString(configStr);
+      testConfig = Config(configPath: configPath);
       expect(await testConfig.screenshotsEnv, env);
     });
   });
