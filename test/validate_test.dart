@@ -81,7 +81,7 @@ main() {
       expect(isValid, isTrue);
     }, skip: false, overrides: <Type, Generator>{
       ProcessManager: () => fakeProcessManager,
-      Logger: () => VerboseLogger(StdoutLogger()),
+//      Logger: () => VerboseLogger(StdoutLogger()),
       Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
         ..operatingSystem = 'macos',
     });
@@ -126,7 +126,7 @@ main() {
       expect(isValid, isFalse);
     }, skip: false, overrides: <Type, Generator>{
       ProcessManager: () => fakeProcessManager,
-      Logger: () => StdoutLogger()
+//      Logger: () => StdoutLogger()
     });
 
     testUsingContext('show guide', () async {
@@ -177,7 +177,7 @@ main() {
               screens, allDevices, allEmulators, 'myScreenshots.yaml'),
           returnsNormally);
     }, skip: false, overrides: <Type, Generator>{
-      Logger: () => VerboseLogger(StdoutLogger())
+//      Logger: () => VerboseLogger(StdoutLogger())
     });
   });
 }

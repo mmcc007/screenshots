@@ -18,9 +18,9 @@ void main(List<String> arguments) async {
   final ArgParser argParser = ArgParser(allowTrailingOptions: false)
     ..addOption(configArg,
         abbr: 'c',
-        defaultsTo: 'screenshots.yaml',
+        defaultsTo: kConfigFileName,
         help: 'Path to config file.',
-        valueHelp: 'screenshots.yaml')
+        valueHelp: kConfigFileName)
     ..addOption(modeArg,
         abbr: 'm',
         defaultsTo: 'normal',
