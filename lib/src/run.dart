@@ -459,18 +459,14 @@ DaemonDevice findRunningDevice(
         return device.iosModel.contains(deviceName);
       }
     } else {
-      // platform is android
-      // check if ephemeral is present
-      // note: sometimes a running emulator has device['emulator'] of false
-      //       so using ephemeral for now (may not work for real devices)
-      final isEphemeral = device.ephemeral == null ? false : device.ephemeral;
-      if (isEphemeral || device.emulator) {
-        // running android emulator ??
-        return _findDeviceNameOfRunningEmulator(emulators, device.id) ==
-            deviceName;
+      final emulatorName =
+          _findDeviceNameOfRunningEmulator(emulators, device.id);
+      if (emulatorName == null) {
+        // real device
+        return device.name.contains(deviceName);
       } else {
-        // real android device
-        return device.name == deviceName;
+        // running android emulator
+        return emulatorName.contains(deviceName);
       }
     }
   }, orElse: () => null);
