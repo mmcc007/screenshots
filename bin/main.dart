@@ -74,6 +74,19 @@ void main(List<String> arguments) async {
     _handleError(argParser, "File not found: ${argResults[configArg]}");
   }
 
+  // Check flutter command is found
+  // https://github.com/mmcc007/screenshots/issues/135
+  if (getExecutablePath('flutter', '.') == null) {
+    stderr.writeln(
+        '#############################################################');
+    stderr.writeln("# 'flutter' must be in the PATH to use Screenshots");
+    stderr.writeln("# You can usually add it to the PATH using"
+        "# export PATH='\$HOME/Library/flutter/bin:\$PATH'");
+    stderr.writeln(
+        '#############################################################');
+    exit(1);
+  }
+
   final config = Config(configPath: argResults[configArg]);
   if (config.isRunTypeActive(DeviceType.android)) {
     // check required executables for android
