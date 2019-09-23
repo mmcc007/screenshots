@@ -4,9 +4,9 @@ coverage:
     project:
       default:
         # basic
-        target: 0%
-        threshold: 0%
-        base: 0%
+        target: auto
+        threshold: null
+        base: auto
         # advanced
         branches: null
         if_no_uploads: error
