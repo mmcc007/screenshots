@@ -196,8 +196,7 @@ Future runTestsOnAll(
   for (final configDeviceName in configDeviceNames) {
     // look for matching device first.
     // Note: flutter daemon handles devices and running emulators/simulators as devices.
-    final device =
-        findRunningDevice(runningDevices, emulators, configDeviceName);
+    final device = findRunningDevice(runningDevices, configDeviceName);
 
     String deviceId;
     DaemonEmulator emulator;
@@ -447,30 +446,26 @@ Future<String> _startEmulator(
 
 /// Find a real device or running emulator/simulator for [deviceName].
 /// Note: flutter daemon handles devices and running emulators/simulators as devices.
-DaemonDevice findRunningDevice(
-    List<DaemonDevice> devices, List emulators, String deviceName) {
-  final device = devices.firstWhere((device) {
-    if (device.platform == 'ios') {
-      if (device.emulator) {
-        // running ios simulator
-        return device.name == deviceName;
+DaemonDevice findRunningDevice(List<DaemonDevice> devices, String deviceName) {
+  return devices.firstWhere((device) {
+    if (device.emulator) {
+      if (device.platformType == 'android') {
+        // running emulator
+        return device.emulatorId.replaceAll('_', ' ').contains(deviceName);
       } else {
-        // real ios device
-        return device.iosModel.contains(deviceName);
+        // running simulator
+        return device.name.contains(deviceName);
       }
     } else {
-      final emulatorName =
-          _findDeviceNameOfRunningEmulator(emulators, device.id);
-      if (emulatorName == null) {
-        // real device
-        return device.name.contains(deviceName);
+      if (device.platformType == 'ios') {
+        // real ios device
+        return device.iosModel.contains(deviceName);
       } else {
-        // running android emulator
-        return emulatorName.contains(deviceName);
+        // real android device
+        return device.name.contains(deviceName);
       }
     }
   }, orElse: () => null);
-  return device;
 }
 
 /// Set the simulator locale.
@@ -579,15 +574,6 @@ Future _startAndroidEmulatorOnCI(String emulatorId, String stagingDir) async {
   ], mode: ProcessStartMode.detached);
   // wait for emulator to start
   await streamCmd(['$stagingDir/resources/script/android-wait-for-emulator']);
-}
-
-/// Find the device name of a running emulator.
-String _findDeviceNameOfRunningEmulator(
-    List<DaemonEmulator> emulators, String deviceId) {
-  final emulatorId = utils.getAndroidEmulatorId(deviceId);
-  final emulator = emulators.firstWhere((emulator) => emulator.id == emulatorId,
-      orElse: () => null);
-  return emulator == null ? null : emulator.name;
 }
 
 /// Get device type from config info
