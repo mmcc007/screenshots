@@ -17,10 +17,12 @@ import 'config_test.dart' as config_test;
 import 'screens_test.dart' as screens_test;
 import 'validate_test.dart' as validate_test;
 import 'utils_test.dart' as utils_test;
+import 'base/all_tests.dart' as base_all_tests;
 
 void main() {
   isCI() ? print('running in CI') : print('not running in CI');
 
+  base_all_tests.main();
   config_test.main();
   daemon_client_test.main();
   fastlane_test.main();
