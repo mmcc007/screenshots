@@ -72,6 +72,7 @@ class DaemonClient {
     await _sendCommand(command);
 
     // wait for expected device-added-emulator event
+    // Note: future does not complete if emulator already running
     final results = await Future.wait(
         <Future>[_waitForResponse.future, _waitForEvent.future]);
     // process the response
@@ -260,8 +261,12 @@ abstract class BaseDevice {
 
 /// Describe an emulator.
 class DaemonEmulator extends BaseDevice {
-  DaemonEmulator(String id, String name, String category, String platformType)
-      : super(id, name, category, platformType);
+  DaemonEmulator(
+    String id,
+    String name,
+    String category,
+    String platformType,
+  ) : super(id, name, category, platformType);
 }
 
 /// Describe a device.
@@ -269,27 +274,38 @@ class DaemonDevice extends BaseDevice {
   final String platform;
   final bool emulator;
   final bool ephemeral;
+  final String emulatorId;
   final String iosModel; //  iOS model
-  DaemonDevice(String id, String name, String category, String platformType,
-      this.platform, this.emulator, this.ephemeral,
-      {this.iosModel})
-      : super(id, name, category, platformType);
+  DaemonDevice(
+    String id,
+    String name,
+    String category,
+    String platformType,
+    this.platform,
+    this.emulator,
+    this.ephemeral,
+    this.emulatorId, {
+    this.iosModel,
+  }) : super(id, name, category, platformType);
 
   @override
   String toString() {
     return super.toString() +
-        ' platform: $platform, emulator: $emulator, ephemeral: $ephemeral, iosModel: $iosModel';
+        ' platform: $platform, emulator: $emulator, ephemeral: $ephemeral, emulatorId: $emulatorId, iosModel: $iosModel';
   }
 }
 
 DaemonEmulator loadDaemonEmulator(emulator) {
-  final flutterEmulator = DaemonEmulator(emulator['id'], emulator['name'],
-      emulator['category'], emulator['platformType']);
-  return flutterEmulator;
+  return DaemonEmulator(
+    emulator['id'],
+    emulator['name'],
+    emulator['category'],
+    emulator['platformType'],
+  );
 }
 
 DaemonDevice loadDaemonDevice(device) {
-  final flutterDevice = DaemonDevice(
+  return DaemonDevice(
       device['id'],
       device['name'],
       device['category'],
@@ -297,6 +313,6 @@ DaemonDevice loadDaemonDevice(device) {
       device['platform'],
       device['emulator'],
       device['ephemeral'],
+      device['emulatorId'],
       iosModel: device['model']);
-  return flutterDevice;
 }
