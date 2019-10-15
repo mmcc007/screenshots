@@ -7,10 +7,14 @@ import 'globals.dart';
 /// Called by integration test to capture images.
 Future screenshot(final driver, Config config, String name,
     {Duration timeout = const Duration(seconds: 30),
-    bool silent = false}) async {
+    bool silent = false,
+    bool waitUntilNoTransientCallbacks = true}) async {
   if (config.isScreenShotsAvailable) {
     // todo: auto-naming scheme
-    await driver.waitUntilNoTransientCallbacks(timeout: timeout);
+    if (waitUntilNoTransientCallbacks) {
+      await driver.waitUntilNoTransientCallbacks(timeout: timeout);
+    }
+
     final pixels = await driver.screenshot();
     final testDir = '${config.stagingDir}/$kTestScreenshotsDir';
     final file =
