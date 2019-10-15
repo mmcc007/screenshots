@@ -69,8 +69,8 @@ main() {
       expect(config.archiveDir, expectedArchive);
       expect(config.getDevice(expectedAndroidName), expectedAndroidDevice);
       expect(config.getDevice(expectedAndroidName), isNot(expectedIosDevice));
-      expect(
-          config.deviceNames, equals([expectedAndroidName, expectedIosName]));
+      expect(config.deviceNames..sort(),
+          equals([expectedAndroidName, expectedIosName]..sort()));
     });
 
     test('active run type', () {
