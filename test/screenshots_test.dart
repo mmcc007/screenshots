@@ -889,31 +889,10 @@ void main() {
           loadDaemonDevice(androidDevice),
           loadDaemonDevice(iosDevice)
         ];
-        final installedEmulators = [
-          {
-            'id': 'Nexus_6P_API_28',
-            'name': 'Nexus 6P',
-            'category': 'mobile',
-            'platformType': 'android'
-          },
-          {
-            'id': 'Nexus_6P_API_30',
-            'name': 'Nexus 6P',
-            'category': 'mobile',
-            'platformType': 'android'
-          },
-          {
-            'id': 'apple_ios_simulator',
-            'name': 'iOS Simulator',
-            'category': 'mobile',
-            'platformType': 'ios'
-          }
-        ];
-        DaemonDevice deviceInfo = run.findRunningDevice(
-            runningDevices, installedEmulators, androidDeviceName);
+        DaemonDevice deviceInfo =
+            run.findRunningDevice(runningDevices, androidDeviceName);
         expect(deviceInfo, androidDevice);
-        deviceInfo = run.findRunningDevice(
-            runningDevices, installedEmulators, iosDeviceName);
+        deviceInfo = run.findRunningDevice(runningDevices, iosDeviceName);
         expect(deviceInfo, iosDevice);
       }, skip: utils.isCI());
     });
