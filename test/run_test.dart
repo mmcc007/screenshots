@@ -103,6 +103,8 @@ main() {
         // fake process responses
         final List<Call> calls = [
           ...unpackScriptsCalls,
+          Call('$adbPath -s emulator-5554 emu avd name',
+              ProcessResult(0, 0, 'Nexus_6P_API_28', '')),
           Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
               ProcessResult(0, 0, 'en-US', '')),
           Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
@@ -147,6 +149,8 @@ main() {
         // fake process responses
         final List<Call> calls = [
           ...unpackScriptsCalls,
+          Call('$adbPath -s emulator-5554 emu avd name',
+              ProcessResult(0, 0, 'Nexus_6P_API_28', '')),
           Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
               ProcessResult(0, 0, 'en-US', '')),
           Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',

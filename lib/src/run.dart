@@ -157,8 +157,8 @@ void printScreenshotDirs(Config config, String dirPrefix) {
 /// provided [capture_screen.screenshot()].
 Future runTestsOnAll(
     DaemonClient daemonClient,
-    List runningDevices,
-    List emulators,
+    List<DaemonDevice> runningDevices,
+    List<DaemonEmulator> emulators,
     Config config,
     Screens screens,
     RunMode runMode,
@@ -196,7 +196,8 @@ Future runTestsOnAll(
   for (final configDeviceName in configDeviceNames) {
     // look for matching device first.
     // Note: flutter daemon handles devices and running emulators/simulators as devices.
-    final device = findRunningDevice(runningDevices, configDeviceName);
+    final device =
+        findRunningDevice(runningDevices, emulators, configDeviceName);
 
     String deviceId;
     DaemonEmulator emulator;
@@ -446,8 +447,26 @@ Future<String> _startEmulator(
 
 /// Find a real device or running emulator/simulator for [deviceName].
 /// Note: flutter daemon handles devices and running emulators/simulators as devices.
-DaemonDevice findRunningDevice(List<DaemonDevice> devices, String deviceName) {
+DaemonDevice findRunningDevice(List<DaemonDevice> devices,
+    List<DaemonEmulator> emulators, String deviceName) {
   return devices.firstWhere((device) {
+    // hack for CI testing of old arm emulator
+    if (device.id.startsWith('emulator')) {
+      /// Find the device name of a running emulator.
+      String findDeviceNameOfRunningEmulator(
+          List<DaemonEmulator> emulators, String deviceId) {
+        final emulatorId = utils.getAndroidEmulatorId(deviceId);
+        final emulator = emulators.firstWhere(
+            (emulator) => emulator.id == emulatorId,
+            orElse: () => null);
+        return emulator == null ? null : emulator.name;
+      }
+
+      final emulatorName =
+          findDeviceNameOfRunningEmulator(emulators, device.id);
+      return emulatorName.contains(deviceName);
+    }
+
     if (device.emulator) {
       if (device.platformType == 'android') {
         // running emulator
