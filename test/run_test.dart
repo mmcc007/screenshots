@@ -76,7 +76,8 @@ main() {
         'emulator': true,
         'category': 'mobile',
         'platformType': 'android',
-        'ephemeral': true
+        'ephemeral': true,
+        'emulatorId': 'Nexus_6P_API_28',
       });
 
       setUp(() {
