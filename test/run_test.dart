@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:file/file.dart';
 import 'package:mockito/mockito.dart';
@@ -16,7 +17,6 @@ import 'src/mocks.dart';
 
 main() {
   final stagingDir = '/tmp/screenshots';
-//  MemoryFileSystem fs;
   Directory sdkDir;
 
   FakeProcessManager fakeProcessManager;
@@ -48,16 +48,10 @@ main() {
   });
 
   setUp(() async {
-//    fs = MemoryFileSystem();
     fakeProcessManager = FakeProcessManager(stdinResults: _captureStdin);
     mockDaemonClient = MockDaemonClient();
     when(mockDaemonClient.emulators)
         .thenAnswer((_) => Future.value([daemonEmulator]));
-
-    // create screenshot dir
-//    fs
-//        .directory('$stagingDir/$kTestScreenshotsDir')
-//        .createSync(recursive: true);
   });
 
   tearDown(() {
@@ -103,8 +97,8 @@ main() {
         // fake process responses
         final List<Call> calls = [
           ...unpackScriptsCalls,
-          Call('$adbPath -s emulator-5554 emu avd name',
-              ProcessResult(0, 0, 'Nexus_6P_API_28', '')),
+//          Call('$adbPath -s emulator-5554 emu avd name',
+//              ProcessResult(0, 0, 'Nexus_6P_API_28', '')),
           Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
               ProcessResult(0, 0, 'en-US', '')),
           Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
@@ -149,8 +143,8 @@ main() {
         // fake process responses
         final List<Call> calls = [
           ...unpackScriptsCalls,
-          Call('$adbPath -s emulator-5554 emu avd name',
-              ProcessResult(0, 0, 'Nexus_6P_API_28', '')),
+//          Call('$adbPath -s emulator-5554 emu avd name',
+//              ProcessResult(0, 0, 'Nexus_6P_API_28', '')),
           Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
               ProcessResult(0, 0, 'en-US', '')),
           Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
@@ -216,7 +210,7 @@ main() {
         when(mockDaemonClient.waitForEvent(EventType.deviceRemoved))
             .thenAnswer((_) => Future.value({'id': 'emulator-5554'}));
 
-        final result = await screenshots(configStr: configStr, verbose: true);
+        final result = await screenshots(configStr: configStr, isVerbose: true);
         expect(result, isTrue);
         fakeProcessManager.verifyCalls();
         verify(mockDaemonClient.devices).called(1);
@@ -430,7 +424,7 @@ main() {
     });
   });
 
-  group('image magick', () {
+  group('main image magick', () {
     testUsingContext('is installed on macOS/linux', () async {
       fakeProcessManager.calls = [Call('convert -version', null)];
       final isInstalled = await isImageMagicInstalled();
@@ -464,6 +458,97 @@ main() {
       ProcessManager: () => fakeProcessManager,
       Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
         ..operatingSystem = 'windows',
+    });
+  });
+
+  group('run utils', () {
+    testUsingContext('change android locale', () {
+      String adbPath = initAdbPath();
+      final deviceId = 'deviceId';
+      final deviceLocale = 'deviceLocale';
+      final testLocale = 'testLocale';
+
+      fakeProcessManager.calls = [
+        Call(
+            '$adbPath -s $deviceId root',
+            ProcessResult(
+                0, 0, 'adbd cannot run as root in production builds\n', '')),
+        Call(
+            '$adbPath -s $deviceId shell setprop persist.sys.locale $testLocale ; setprop ctl.restart zygote',
+            null),
+      ];
+      changeAndroidLocale(deviceId, deviceLocale, testLocale);
+      fakeProcessManager.verifyCalls();
+    }, skip: false, overrides: <Type, Generator>{
+      ProcessManager: () => fakeProcessManager,
+//      Logger: () => VerboseLogger(StdoutLogger()),
+    });
+
+    testUsingContext('start emulator on CI', () async {
+      final emulatorId = 'emulatorId';
+      final emulatorAvdName = 'emulatorAvdName';
+      final stagingDir = 'stagingDir';
+      String adbPath = initAdbPath();
+
+      fakeProcessManager.calls = [
+        Call('$stagingDir/resources/script/android-wait-for-emulator', null),
+        Call(
+            '$adbPath devices',
+            ProcessResult(
+                0, 0, 'List of devices attached\n$emulatorId	device\n', '')),
+        Call('$adbPath -s $emulatorId emu avd name',
+            ProcessResult(0, 0, '$emulatorAvdName', '')),
+      ];
+      await startEmulator(null, emulatorId, stagingDir);
+      fakeProcessManager.verifyCalls();
+    }, skip: false, overrides: <Type, Generator>{
+      ProcessManager: () => fakeProcessManager,
+      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
+        ..environment = {
+          'CI': 'true',
+          'ANDROID_HOME': 'android_home',
+        },
+//      Logger: () => VerboseLogger(StdoutLogger()),
+    });
+
+    testUsingContext('find running device on CI', () async {
+      final emulatorId = 'emulator-5554';
+      final emulatorAvdName = 'Nexus_6P_API_28';
+      final deviceName = 'Nexus 6P';
+      String adbPath = initAdbPath();
+
+      fakeProcessManager.calls = [
+        Call('$adbPath -s $emulatorId emu avd name',
+            ProcessResult(0, 0, '$emulatorAvdName', '')),
+      ];
+
+      final device = loadDaemonDevice({
+        'id': '$emulatorId',
+        'name': 'sdk phone armv7',
+        'platform': 'android-x86',
+        'emulator': true,
+        'category': 'mobile',
+        'platformType': 'android',
+        'ephemeral': true
+      });
+
+      final emulator = loadDaemonEmulator({
+        'id': '$emulatorAvdName',
+        'name': '$deviceName',
+        'category': 'mobile',
+        'platformType': 'android'
+      });
+      final deviceFound = findRunningDevice([device], [emulator], deviceName);
+      expect(deviceFound, equals(device));
+      fakeProcessManager.verifyCalls();
+    }, skip: false, overrides: <Type, Generator>{
+      ProcessManager: () => fakeProcessManager,
+      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
+        ..environment = {
+          'CI': 'true',
+          'ANDROID_HOME': 'android_home',
+        },
+//      Logger: () => VerboseLogger(StdoutLogger()),
     });
   });
 }
