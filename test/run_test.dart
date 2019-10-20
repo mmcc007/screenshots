@@ -407,7 +407,8 @@ main() {
         when(mockDaemonClient.waitForEvent(EventType.deviceRemoved))
             .thenAnswer((_) => Future.value({'id': 'emulator-5554'}));
 
-        final result = await runScreenshots(configStr: configStr);
+        final screenshots = Screenshots(configStr: configStr);
+        final result = await screenshots.run();
         expect(result, isTrue);
         fakeProcessManager.verifyCalls();
         verify(mockDaemonClient.devices).called(7);

@@ -6,7 +6,7 @@ import 'package:screenshots/src/daemon_client.dart';
 import 'package:screenshots/src/fastlane.dart' as fastlane;
 import 'package:screenshots/src/globals.dart';
 import 'package:screenshots/src/resources.dart' as resources;
-import 'package:screenshots/src/run.dart' as run;
+import 'package:screenshots/src/run.dart';
 import 'package:screenshots/src/screens.dart';
 import 'package:screenshots/src/config.dart';
 import 'package:screenshots/src/utils.dart' as utils;
@@ -108,7 +108,7 @@ main() {
       await daemonClient.start;
       final deviceId = await daemonClient.launchEmulator(emulatorId);
       expect(deviceId, expected);
-      await run.shutdownAndroidEmulator(daemonClient, deviceId);
+      await shutdownAndroidEmulator(daemonClient, deviceId);
     }, skip: utils.isCI());
 
     test('parse ios-deploy response', () {
@@ -166,7 +166,7 @@ main() {
       expect(utils.findAndroidDeviceId(id), deviceId);
 
       // shutdown
-      await run.shutdownAndroidEmulator(daemonClient, deviceId);
+      await shutdownAndroidEmulator(daemonClient, deviceId);
     }, skip: utils.isCI());
 
     test('join devices', () {
@@ -201,8 +201,13 @@ main() {
       final origDir = Directory.current;
       Directory.current = 'example';
 
-      await run.runTestsOnAll(daemonClient, devices, emulators, config, screens,
-          RunMode.normal, null, kNoFlavor);
+      final screenshots = Screenshots(flavor: kNoFlavor);
+      screenshots.devices = devices;
+      screenshots.emulators = emulators;
+      screenshots.config = config;
+      screenshots.screens = screens;
+      screenshots.runMode = RunMode.normal;
+      await screenshots.runTestsOnAll();
       // allow other tests to continue
       Directory.current = origDir;
     }, timeout: Timeout(Duration(minutes: 4)), skip: utils.isCI());
