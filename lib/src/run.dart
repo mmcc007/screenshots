@@ -440,7 +440,8 @@ DaemonDevice findRunningDevice(List<DaemonDevice> devices,
     List<DaemonEmulator> emulators, String deviceName) {
   return devices.firstWhere((device) {
     // hack for CI testing of old arm emulator
-    if (utils.isCI() && device.name.contains('armv7')) {
+//    if (utils.isCI() && device.platform == 'android-arm') {
+      if (device.platform == 'android-arm') {
       /// Find the device name of a running emulator.
       String findDeviceNameOfRunningEmulator(
           List<DaemonEmulator> emulators, String deviceId) {

@@ -319,7 +319,7 @@ Future<bool> isRecorded(String recordDir) async =>
 
 /// Test for CI environment.
 bool isCI() {
-  return platform.environment['CI'] == 'true';
+  return platform.environment['CI'].toLowerCase() == 'true';
 }
 
 /// Convert a posix path to platform path (windows/posix).

@@ -525,7 +525,7 @@ main() {
       final device = loadDaemonDevice({
         'id': '$emulatorId',
         'name': 'sdk phone armv7',
-        'platform': 'android-x86',
+        'platform': 'android-arm',
         'emulator': true,
         'category': 'mobile',
         'platformType': 'android',
@@ -534,7 +534,7 @@ main() {
 
       final emulator = loadDaemonEmulator({
         'id': '$emulatorAvdName',
-        'name': '$deviceName',
+        'name': '${emulatorAvdName.replaceAll('_', ' ')}',
         'category': 'mobile',
         'platformType': 'android'
       });
