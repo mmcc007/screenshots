@@ -211,13 +211,13 @@ Individual devices can be configured in `screenshots.yaml` by specifying per dev
 
 | Parameter | Values | Required | Description |
 | --- | --- | --- | --- |
-|frame|true/false|optional|Controls whether screenshots generated on the device should be placed in a frame. Overrides the global frame setting (see example `screenshots.yaml` above).
-|orientation|Portrait \| LandscapeRight \| PortraitUpsideDown \| LandscapeLeft|optional|Controls orientation of device during test. Currently disables framing resulting in a raw screenshot. Ignored for real devices.
-
+|frame|true/false|optional|Controls whether screenshots generated on the device should be placed in a frame. Overrides the global frame setting (see example `screenshots.yaml` above).|
+|orientation|Portrait \| LandscapeRight \| PortraitUpsideDown \| LandscapeLeft|optional|Controls orientation of device during test. Disables framing resulting in a raw screenshot. Ignored for real devices.|
+|build|true(default)/false|optional|Builds and installs app. When set to false, can be used for pre-installed apps that need to be configured before running tests.|
 
 _frame_ parameter notes:
 - images generated for devices where framing is disabled may not be suitable for upload.
-- set this to true for devices unknown to _screenshots_.
+- set to true for devices unknown to _screenshots_.
 
 _orientation_ parameter notes:
 - orientation on iOS simulators is implemented using an AppleScript script which requires granting permission on first use.

@@ -376,28 +376,24 @@ class Screenshots {
     DeviceType deviceType,
     String deviceId,
   ) async {
+    final command = ['flutter', '-d', deviceId, 'drive'];
     for (final testPath in config.tests) {
-      final environment = {kEnvConfigPath: configPath};
-      if (flavor != null && flavor != kNoFlavor) {
-        printStatus(
-            'Running $testPath on \'$configDeviceName\' in locale $locale with flavor $flavor ...');
-        await utils.streamCmd([
-          'flutter',
-          '-d',
-          deviceId,
-          'drive',
-          '-t',
-          testPath,
-          '--flavor',
-          flavor
-        ], environment: environment);
-      } else {
-        printStatus(
-            'Running $testPath on \'$configDeviceName\' in locale $locale...');
-        await utils.streamCmd(
-            ['flutter', '-d', deviceId, 'drive']..addAll(testPath.split(" ")),
-            environment: environment);
+      bool isBuild() => config.getDevice(configDeviceName).isBuild;
+      if (!isBuild()) {
+        command.add('--no-build');
       }
+      bool isFlavor() => flavor != null && flavor != kNoFlavor;
+      if (isFlavor()) {
+        command.addAll(['--flavor', flavor]);
+      }
+      command.addAll(testPath.split(" ")); // add test path or custom command
+      printStatus(
+          'Running $testPath on \'$configDeviceName\' in locale $locale${isFlavor() ? ' with flavor $flavor' : ''}...');
+      if (!isBuild() && isFlavor()) {
+        printStatus(
+            'Warning: flavor parameter \'$flavor\' is ignored because no build is set for this device');
+      }
+      await utils.streamCmd(command, environment: {kEnvConfigPath: configPath});
       // process screenshots
       final imageProcessor = ImageProcessor(screens, config);
       await imageProcessor.process(
