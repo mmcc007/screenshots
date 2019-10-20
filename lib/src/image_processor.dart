@@ -40,6 +40,8 @@ class ImageProcessor {
   Future<bool> process(DeviceType deviceType, String deviceName, String locale,
       RunMode runMode, Archive archive) async {
     final Map screenProps = _screens.getScreen(deviceName);
+    final screenshotsDir = '${_config.stagingDir}/$kTestScreenshotsDir';
+    final screenshotPaths = fs.directory(screenshotsDir).listSync();
     if (screenProps == null) {
       printStatus('Warning: \'$deviceName\' images will not be processed');
     } else {
@@ -52,8 +54,6 @@ class ImageProcessor {
         await resources.unpackImages(screenResources, _config.stagingDir);
 
         // add status and nav bar and frame for each screenshot
-        final screenshotsDir = '${_config.stagingDir}/$kTestScreenshotsDir';
-        final screenshotPaths = fs.directory(screenshotsDir).listSync();
         if (screenshotPaths.isEmpty) {
           printStatus('Warning: no screenshots found in $screenshotsDir');
         }
@@ -77,31 +77,32 @@ class ImageProcessor {
     }
 
     // move to final destination for upload to stores via fastlane
-    final srcDir = '${_config.stagingDir}/$kTestScreenshotsDir';
-    final androidModelType = fastlane.getAndroidModelType(screenProps);
-    String dstDir = fastlane.getDirPath(deviceType, locale, androidModelType);
-    runMode == RunMode.recording
-        ? dstDir = '${_config.recordingDir}/$dstDir'
-        : null;
-    runMode == RunMode.archive
-        ? dstDir = archive.dstDir(deviceType, locale)
-        : null;
-    // prefix screenshots with name of device before moving
-    // (useful for uploading to apple via fastlane)
-    await utils.prefixFilesInDir(srcDir, '$deviceName-');
+    if (screenshotPaths.isNotEmpty) {
+      final androidModelType = fastlane.getAndroidModelType(screenProps);
+      String dstDir = fastlane.getDirPath(deviceType, locale, androidModelType);
+      runMode == RunMode.recording
+          ? dstDir = '${_config.recordingDir}/$dstDir'
+          : null;
+      runMode == RunMode.archive
+          ? dstDir = archive.dstDir(deviceType, locale)
+          : null;
+      // prefix screenshots with name of device before moving
+      // (useful for uploading to apple via fastlane)
+      await utils.prefixFilesInDir(screenshotsDir, '$deviceName-');
 
-    printStatus('Moving screenshots to $dstDir');
-    utils.moveFiles(srcDir, dstDir);
+      printStatus('Moving screenshots to $dstDir');
+      utils.moveFiles(screenshotsDir, dstDir);
 
-    if (runMode == RunMode.comparison) {
-      final recordingDir = '${_config.recordingDir}/$dstDir';
-      printStatus(
-          'Running comparison with recorded screenshots in $recordingDir ...');
-      final failedCompare =
-          await compareImages(deviceName, recordingDir, dstDir);
-      if (failedCompare.isNotEmpty) {
-        showFailedCompare(failedCompare);
-        throw 'Error: comparison failed.';
+      if (runMode == RunMode.comparison) {
+        final recordingDir = '${_config.recordingDir}/$dstDir';
+        printStatus(
+            'Running comparison with recorded screenshots in $recordingDir ...');
+        final failedCompare =
+            await compareImages(deviceName, recordingDir, dstDir);
+        if (failedCompare.isNotEmpty) {
+          showFailedCompare(failedCompare);
+          throw 'Error: comparison failed.';
+        }
       }
     }
     return true; // for testing
