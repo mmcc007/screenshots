@@ -4,7 +4,7 @@ import 'package:args/args.dart';
 import 'package:screenshots/screenshots.dart';
 
 const usage =
-    'usage: screenshots [-h] [-c <config file>] [-m <normal|recording|comparison|archive>] [-f <flavor>] [-v]';
+    'usage: screenshots [-h] [-c <config file>] [-m <normal|recording|comparison|archive>] [-f <flavor>] [--no-build] [-v]';
 const sampleUsage = 'sample usage: screenshots';
 
 void main(List<String> arguments) async {
@@ -13,6 +13,7 @@ void main(List<String> arguments) async {
   final configArg = 'config';
   final modeArg = 'mode';
   final flavorArg = 'flavor';
+  final buildArg = 'build';
   final helpArg = 'help';
   final verboseArg = 'verbose';
   final ArgParser argParser = ArgParser(allowTrailingOptions: false)
@@ -30,6 +31,11 @@ void main(List<String> arguments) async {
         valueHelp: 'normal|recording|comparison|archive')
     ..addOption(flavorArg,
         abbr: 'f', help: 'Flavor name.', valueHelp: 'flavor name')
+    ..addFlag(
+      buildArg,
+      help:
+          'Build and install app for all devices.\nOverrides settings in screenshots.yaml (if any).\n(defaults to on)',
+    )
     ..addFlag(verboseArg,
         abbr: 'v',
         help: 'Noisy logging, including all shell commands executed.',
@@ -116,7 +122,8 @@ void main(List<String> arguments) async {
     configPath: argResults[configArg],
     mode: argResults[modeArg],
     flavor: argResults[flavorArg],
-    verbose: argResults.wasParsed(verboseArg) ? true : false,
+    isBuild: argResults.wasParsed(buildArg) ? argResults[buildArg] : null,
+    isVerbose: argResults.wasParsed(verboseArg) ? true : false,
   );
   exit(success ? 0 : 1);
 }

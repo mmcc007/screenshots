@@ -25,15 +25,17 @@ Future<bool> screenshots(
     String configStr,
     String mode = 'normal',
     String flavor = kNoFlavor,
-    bool verbose = false}) async {
+    bool isBuild,
+    bool isVerbose = false}) async {
   final screenshots = Screenshots(
     configPath: configPath,
     configStr: configStr,
     mode: mode,
     flavor: flavor,
+    isBuild: isBuild,
   );
   // run in context
-  if (verbose) {
+  if (isVerbose) {
     Logger verboseLogger = VerboseLogger(
         platform.isWindows ? WindowsStdoutLogger() : StdoutLogger());
     return runInContext<bool>(() async {
@@ -54,12 +56,14 @@ class Screenshots {
     this.configStr,
     this.mode = 'normal',
     this.flavor = kNoFlavor,
+    this.isBuild,
   });
 
   final String configPath;
   final String configStr;
   final String mode;
   final String flavor;
+  final bool isBuild; // defaults to null
 
   RunMode runMode;
   Screens screens;
@@ -208,8 +212,8 @@ class Screenshots {
         emulator = utils.findEmulator(emulators, configDeviceName);
         if (emulator != null) {
           printStatus('Starting $configDeviceName...');
-          deviceId = await _startEmulator(
-              daemonClient, emulator.id, config.stagingDir);
+          deviceId =
+              await startEmulator(daemonClient, emulator.id, config.stagingDir);
         } else {
           // if no matching android emulator, look for matching ios simulator
           // and start it
@@ -378,8 +382,10 @@ class Screenshots {
   ) async {
     final command = ['flutter', '-d', deviceId, 'drive'];
     for (final testPath in config.tests) {
-      bool isBuild() => config.getDevice(configDeviceName).isBuild;
-      if (!isBuild()) {
+      bool _isBuild() => isBuild != null
+          ? isBuild
+          : config.getDevice(configDeviceName).isBuild;
+      if (!_isBuild()) {
         command.add('--no-build');
       }
       bool isFlavor() => flavor != null && flavor != kNoFlavor;
@@ -389,7 +395,7 @@ class Screenshots {
       command.addAll(testPath.split(" ")); // add test path or custom command
       printStatus(
           'Running $testPath on \'$configDeviceName\' in locale $locale${isFlavor() ? ' with flavor $flavor' : ''}...');
-      if (!isBuild() && isFlavor()) {
+      if (!_isBuild() && isFlavor()) {
         printStatus(
             'Warning: flavor parameter \'$flavor\' is ignored because no build is set for this device');
       }
@@ -416,7 +422,7 @@ Future<void> startSimulator(DaemonClient daemonClient, String deviceId) async {
 }
 
 /// Start android emulator and return device id.
-Future<String> _startEmulator(
+Future<String> startEmulator(
     DaemonClient daemonClient, String emulatorId, stagingDir) async {
   if (utils.isCI()) {
     // testing on CI/CD requires starting emulator in a specific way
@@ -434,7 +440,7 @@ DaemonDevice findRunningDevice(List<DaemonDevice> devices,
     List<DaemonEmulator> emulators, String deviceName) {
   return devices.firstWhere((device) {
     // hack for CI testing of old arm emulator
-    if (device.id.startsWith('emulator')) {
+    if (utils.isCI() && device.name.contains('armv7')) {
       /// Find the device name of a running emulator.
       String findDeviceNameOfRunningEmulator(
           List<DaemonEmulator> emulators, String deviceId) {
@@ -514,11 +520,11 @@ void changeAndroidLocale(
     String deviceId, String deviceLocale, String testLocale) {
   if (utils.cmd([getAdbPath(androidSdk), '-s', deviceId, 'root']) ==
       'adbd cannot run as root in production builds\n') {
-    stdout.write(
+    printError(
         'Warning: locale will not be changed. Running in locale \'$deviceLocale\'.\n');
-    stdout.write(
+    printError(
         'To change locale you must use a non-production emulator (one that does not depend on Play Store). See:\n');
-    stdout.write(
+    printError(
         '    https://stackoverflow.com/questions/43923996/adb-root-is-not-working-on-emulator/45668555#45668555 for details.\n');
   }
   // adb shell "setprop persist.sys.locale fr_CA; setprop ctl.restart zygote"
