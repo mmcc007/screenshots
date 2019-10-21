@@ -394,7 +394,7 @@ class Screenshots {
       }
       command.addAll(testPath.split(" ")); // add test path or custom command
       printStatus(
-          'Running $testPath on \'$configDeviceName\' in locale $locale${isFlavor() ? ' with flavor $flavor' : ''}...');
+          'Running $testPath on \'$configDeviceName\' in locale $locale${isFlavor() ? ' with flavor $flavor' : ''}${!_isBuild() ? ' with no build' : ''}...');
       if (!_isBuild() && isFlavor()) {
         printStatus(
             'Warning: flavor parameter \'$flavor\' is ignored because no build is set for this device');
@@ -441,7 +441,7 @@ DaemonDevice findRunningDevice(List<DaemonDevice> devices,
   return devices.firstWhere((device) {
     // hack for CI testing of old arm emulator
 //    if (utils.isCI() && device.platform == 'android-arm') {
-      if (device.platform == 'android-arm') {
+    if (device.platform == 'android-arm') {
       /// Find the device name of a running emulator.
       String findDeviceNameOfRunningEmulator(
           List<DaemonEmulator> emulators, String deviceId) {
