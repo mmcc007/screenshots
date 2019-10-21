@@ -120,7 +120,7 @@ screenshots -c <path to config file>
 ````
 Other options:
 ```
-usage: screenshots [-h] [-c <config file>] [-m <normal|recording|comparison|archive>] [-f <flavor>] [--no-build] [-v]
+usage: screenshots [-h] [-c <config file>] [-m <normal|recording|comparison|archive>] [-f <flavor>] [-b <true|false>] [-v]
 
 sample usage: screenshots
 
@@ -133,9 +133,9 @@ sample usage: screenshots
                                                     [normal (default), recording, comparison, archive]
 
 -f, --flavor=<flavor name>                          Flavor name.
-    --[no-]build                                    Build and install app for all devices.
-                                                    Overrides settings in screenshots.yaml (if any).
-                                                    (defaults to on)
+-b, --build=<true|false>                            Force build and install of app for all devices.
+                                                    Override settings in screenshots.yaml (if any).
+                                                    [true, false]
 
 -v, --verbose                                       Noisy logging, including all shell commands executed.
 -h, --help                                          Display this help information.
