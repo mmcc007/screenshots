@@ -1,3 +1,10 @@
+## 2.1.0
+- Added support for non-default config file in test #128
+- Added check for flutter path at startup #136
+- Added option to by-pass waitUntilNoTransientCallbacks when taking screenshot #138 #139
+- Fixed bug with finding real android devices #141
+- Added support for skipping builds #142
+
 ## 2.0.2+1
 - Reduced description length to below 180 chars  
 A pub.dev issue
