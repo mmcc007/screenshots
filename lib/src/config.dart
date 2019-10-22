@@ -150,6 +150,7 @@ class Config {
                       Orientation.values, deviceProps['orientation'],
                       allowNull: true),
           deviceProps == null ? null : deviceProps['orientation'],
+          deviceProps == null ? true : deviceProps['build'] ?? true,
         ));
       });
     });
@@ -165,12 +166,19 @@ class ConfigDevice {
   final bool isFramed;
   final Orientation orientation;
   final String orientationStr; // for validation
+  final bool isBuild;
 
-  ConfigDevice(this.name, this.deviceType, this.isFramed, this.orientation,
-      this.orientationStr)
-      : assert(name != null),
+  ConfigDevice(
+    this.name,
+    this.deviceType,
+    this.isFramed,
+    this.orientation,
+    this.orientationStr,
+    this.isBuild,
+  )   : assert(name != null),
         assert(deviceType != null),
-        assert(isFramed != null);
+        assert(isFramed != null),
+        assert(isBuild != null);
 
   @override
   bool operator ==(other) {
@@ -178,10 +186,11 @@ class ConfigDevice {
         other.name == name &&
         other.isFramed == isFramed &&
         other.orientation == orientation &&
-        other.deviceType == deviceType;
+        other.deviceType == deviceType &&
+        other.isBuild == isBuild;
   }
 
   @override
   String toString() =>
-      'name: $name, deviceType: ${utils.getStringFromEnum(deviceType)}, isFramed: $isFramed, orientation: ${utils.getStringFromEnum(orientation)}';
+      'name: $name, deviceType: ${utils.getStringFromEnum(deviceType)}, isFramed: $isFramed, orientation: ${utils.getStringFromEnum(orientation)}, isBuild: $isBuild';
 }

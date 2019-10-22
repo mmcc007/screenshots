@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:process/process.dart';
-import 'package:screenshots/screenshots.dart';
 import 'package:screenshots/src/config.dart';
 import 'package:screenshots/src/context_runner.dart';
 import 'package:screenshots/src/daemon_client.dart';
@@ -12,6 +11,7 @@ import 'package:screenshots/src/image_magick.dart';
 import 'package:screenshots/src/image_processor.dart';
 import 'package:screenshots/src/orientation.dart' as orient;
 import 'package:screenshots/src/orientation.dart';
+import 'package:screenshots/src/run.dart';
 import 'package:screenshots/src/screens.dart';
 import 'package:screenshots/src/resources.dart' as resources;
 import 'package:screenshots/src/run.dart' as run;
@@ -841,7 +841,8 @@ void main() {
         // for this test change directory
         final origDir = Directory.current;
         Directory.current = 'example';
-        expect(await run.runScreenshots(configStr: configIosOnly), isTrue);
+        final screenshots = Screenshots(configStr: configIosOnly);
+        expect(await screenshots.run(), isTrue);
         // allow other tests to continue
         Directory.current = origDir;
       }, timeout: Timeout(Duration(minutes: 4)), skip: utils.isCI());
