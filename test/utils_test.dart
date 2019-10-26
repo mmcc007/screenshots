@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:mockito/mockito.dart';
 import 'package:screenshots/screenshots.dart';
 import 'package:screenshots/src/daemon_client.dart';
@@ -39,6 +37,12 @@ main() {
         expect(emulatorPathFound, isTrue);
       }, overrides: <Type, Generator>{
         AndroidSdk: () => fakeAndroidSdk,
+      });
+
+      testUsingContext('with null CI env', () {
+        expect(isCI(), isFalse);
+      }, overrides: <Type, Generator>{
+        Platform: () => FakePlatform(environment: {}),
       });
     });
 
