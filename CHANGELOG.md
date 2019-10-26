@@ -1,3 +1,6 @@
+## 2.1.0+1
+- Fixed test of CI env var when no CI env var defined #146
+
 ## 2.1.0
 - Added support for non-default config file in test #128
 - Added check for flutter path at startup #136
