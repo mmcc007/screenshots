@@ -83,8 +83,11 @@ class Config {
   bool isFrameRequired(String deviceName) {
     final device = devices.firstWhere((device) => device.name == deviceName,
         orElse: () => throw 'Error: device \'$deviceName\' not found');
-    // orientation over-rides frame
-    return device.orientation != null ? false : device.isFramed;
+    // orientation over-rides frame if not in Portait (default)
+    return device.orientation != null &&
+            device.orientation != Orientation.Portrait
+        ? false
+        : device.isFramed;
   }
 
   /// Current screenshots runtime environment
