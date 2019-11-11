@@ -7,6 +7,7 @@ import 'package:platform/platform.dart';
 import 'package:process/process.dart';
 import 'package:screenshots/src/daemon_client.dart';
 import 'package:screenshots/src/run.dart';
+import 'package:screenshots/src/screens.dart';
 import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart';
 
@@ -549,6 +550,42 @@ main() {
           'ANDROID_HOME': 'android_home',
         },
 //      Logger: () => VerboseLogger(StdoutLogger()),
+    });
+
+    testUsingContext('multiple tests', () async {
+      final deviceName = 'device name';
+      final deviceId='deviceId';
+      final test1='test_driver/main.dart';
+      final test2='test_driver/main2.dart';
+      final configStr = '''
+        tests:
+          - $test1
+          - $test2
+        staging: /tmp/screenshots
+        locales:
+          - en-US
+        devices:
+          ios:
+            $deviceName:
+        frame: false
+      ''';
+      final screenshots = Screenshots(configStr: configStr);
+      screenshots.screens = Screens();
+      await screenshots.screens.init();
+      fakeProcessManager.calls = [
+        Call('flutter -d $deviceId drive $test1', null),
+        Call('flutter -d $deviceId drive $test2', null),
+      ];
+      final result = await screenshots.runProcessTests(
+        deviceName,
+        'locale',
+        getDeviceType(screenshots.config, deviceName),
+        deviceId,
+      );
+      expect(result, isNull);
+      fakeProcessManager.verifyCalls();
+    }, skip: false, overrides: <Type, Generator>{
+      ProcessManager: () => fakeProcessManager,
     });
   });
 }
