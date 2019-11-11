@@ -380,8 +380,9 @@ class Screenshots {
     DeviceType deviceType,
     String deviceId,
   ) async {
-    final command = ['flutter', '-d', deviceId, 'drive'];
+    
     for (final testPath in config.tests) {
+      final command = ['flutter', '-d', deviceId, 'drive'];
       bool _isBuild() => isBuild != null
           ? isBuild
           : config.getDevice(configDeviceName).isBuild;
