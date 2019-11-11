@@ -57,7 +57,9 @@ class Screenshots {
     this.mode = 'normal',
     this.flavor = kNoFlavor,
     this.isBuild,
-  });
+  }) {
+    config = Config(configPath: configPath, configStr: configStr);
+  }
 
   final String configPath;
   final String configStr;
@@ -103,7 +105,6 @@ class Screenshots {
     emulators = await daemonClient.emulators;
     emulators.sort(utils.emulatorComparison);
 
-    config = Config(configPath: configPath, configStr: configStr);
     // validate config file
     if (!await validate.isValidConfig(config, screens, devices, emulators)) {
       return false;
@@ -380,8 +381,8 @@ class Screenshots {
     DeviceType deviceType,
     String deviceId,
   ) async {
-    final command = ['flutter', '-d', deviceId, 'drive'];
     for (final testPath in config.tests) {
+      final command = ['flutter', '-d', deviceId, 'drive'];
       bool _isBuild() => isBuild != null
           ? isBuild
           : config.getDevice(configDeviceName).isBuild;
