@@ -5,6 +5,7 @@ task:
   simulators_script: xcrun simctl list devices --json
   doctor_script: flutter doctor -v
   activate_script: pub global activate --source path .
+  imagemagick_script: brew install imagemagick
   test_script:
     - export PATH="$HOME/.pub-cache/bin:$PATH" # needed to find screenshots
     - cd example
