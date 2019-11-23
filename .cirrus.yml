@@ -1,0 +1,10 @@
+osx_instance:
+  image: mojave-xcode-11.2.1-flutter
+
+task:
+  simulators_script: xcrun simctl list devices --json
+  doctor_script: flutter doctor -v
+  activate_script: pub global activate --source path .
+  test_script:
+    - cd example
+    - screenshots -c screenshots_ios.yaml -v
