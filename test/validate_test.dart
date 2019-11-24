@@ -100,7 +100,7 @@ main() {
                       {
                         "state" : "Shutdown",
                         "isAvailable" : true,
-                        "name" : "iPhone 11 Pro Max",
+                        "name" : "iPhone X",
                         "udid" : "FAD89341-9B18-4A40-92F5-0440F1B19731"
                       },
                       {
@@ -126,7 +126,7 @@ main() {
               Nexus 6P:
                 orientation: LandscapeRight
             ios:
-              iPhone 11 Pro Max:
+              iPhone X:
                 orientation: LandscapeRight
           frame: true
       ''';
@@ -142,7 +142,7 @@ main() {
       final allEmulators = <DaemonEmulator>[loadDaemonEmulator(emulator)];
       final allDevices = <DaemonDevice>[];
 
-      fakeProcessManager.calls = [callListIosDevices, callListIosDevices];
+      fakeProcessManager.calls = [callListIosDevices];
 
       final isValid =
       await isValidConfig(config, screens, allDevices, allEmulators);
@@ -150,7 +150,7 @@ main() {
       fakeProcessManager.verifyCalls();
     }, skip: false, overrides: <Type, Generator>{
       ProcessManager: () => fakeProcessManager,
-      Logger: () => VerboseLogger(StdoutLogger()),
+//      Logger: () => VerboseLogger(StdoutLogger()),
       Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
         ..operatingSystem = 'macos',
     });
