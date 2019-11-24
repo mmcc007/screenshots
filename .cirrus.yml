@@ -1,6 +1,6 @@
 osx_instance:
-#  image: mojave-xcode-11.2.1-flutter
-  image: mojave-xcode-10.1-flutter
+  image: mojave-xcode-11.2.1-flutter
+#  image: mojave-xcode-10.1-flutter
 
 unit_task:
   pub_script:
