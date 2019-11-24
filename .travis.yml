@@ -3,7 +3,8 @@ language: generic
 env:
   global:
     - FLUTTER_CHANNEL=stable
-    - FLUTTER_VERSION=1.7.8+hotfix.4-${FLUTTER_CHANNEL}
+    - FLUTTER_VERSION=1.9.1+hotfix.6-${FLUTTER_CHANNEL}
+#    - DART_VERSION=2.5.0 # for unit tests
 
 matrix:
   fast_finish: true
@@ -24,6 +25,15 @@ jobs:
       dart: stable
 
       install:
+#        - dart --version
+#        - curl --connect-timeout 15 --retry 5 https://storage.googleapis.com/dart-archive/channels/stable/release/$DART_VERSION/sdk/dartsdk-linux-x64-release.zip > ${TRAVIS_HOME}/dartsdk.zip
+#        - unzip ${TRAVIS_HOME}/dartsdk.zip -d ${TRAVIS_HOME} > /dev/null
+#        - rm ${TRAVIS_HOME}/dartsdk.zip
+#        - export DART_SDK="${TRAVIS_HOME}/dart-sdk"
+#        - export PATH="$DART_SDK/bin:$PATH"
+#        - export PATH="${TRAVIS_HOME}/.pub-cache/bin:$PATH"
+        - pub --version
+        - dart --version
         - pub get # because no pubspec.lock
         - pub run test test/all_tests.dart
         # install image magick (already installed)
@@ -45,7 +55,8 @@ jobs:
       # the following osx_image fixes the JDK module problem, has iPhone XS Max
       # but doesn't have iPad Pro (12.9-inch) (3rd generation). So for now we exclude the
       # iPad Pro (12.9-inch) (3rd generation) in screenshots.yaml
-      osx_image: xcode10 # macOS 10.13, JDK 10.0.2+13
+#      osx_image: xcode10 # macOS 10.13, JDK 10.0.2+13
+      osx_image: xcode11.2 # macOS 10.14, JDK 13.0.1
 
       # run on master or PRs
       if: branch = master
@@ -91,6 +102,7 @@ jobs:
         - pub global activate --source path .
 
       script:
+        - xcrun simctl list devices --json
         - cd example; screenshots -c screenshots_ios.yaml -v
 
       before_deploy:

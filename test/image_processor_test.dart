@@ -1,3 +1,4 @@
+import 'package:fake_process_manager/fake_process_manager.dart';
 import 'package:file/memory.dart';
 import 'package:process/process.dart';
 import 'package:screenshots/src/config.dart';
@@ -9,7 +10,6 @@ import 'package:screenshots/src/screens.dart';
 import 'package:screenshots/src/utils.dart';
 import 'package:test/test.dart';
 import 'src/context.dart';
-import 'src/fake_process_manager.dart';
 import 'package:tool_base/tool_base.dart' hide Config;
 import 'dart:io' as io;
 

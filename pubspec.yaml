@@ -19,6 +19,8 @@ dependencies:
   meta: ^1.1.6
   intl: ">=0.15.0 <1.0.0"
   tool_mobile: ^1.9.5
+#  tool_mobile:
+#    path: ../tool_mobile
 
 dev_dependencies:
   test: ^1.5.1+1
@@ -26,6 +28,8 @@ dev_dependencies:
   mockito: ^4.1.0
   pedantic: ^1.8.0+1
   quiver: '>=2.0.0 <3.0.0'
-
+  fake_process_manager:
+        git: https://github.com/mmcc007/fake_process_manager.git
+#    path: ../fake_process_manager
 executables:
   screenshots: main

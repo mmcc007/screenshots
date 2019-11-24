@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math';
 
+import 'package:fake_process_manager/fake_process_manager.dart';
 import 'package:file/file.dart';
 import 'package:mockito/mockito.dart';
 import 'package:platform/platform.dart';
@@ -13,7 +14,6 @@ import 'package:tool_base/tool_base.dart';
 
 import 'src/common_tools.dart';
 import 'src/context.dart';
-import 'src/fake_process_manager.dart';
 import 'src/mocks.dart';
 
 main() {
@@ -427,7 +427,7 @@ main() {
 
   group('main image magick', () {
     testUsingContext('is installed on macOS/linux', () async {
-      fakeProcessManager.calls = [Call('convert -version', null)];
+      fakeProcessManager.calls = [Call('convert -version', ProcessResult(0, 0, '', ''))];
       final isInstalled = await isImageMagicInstalled();
       expect(isInstalled, isTrue);
       fakeProcessManager.verifyCalls();
@@ -438,7 +438,7 @@ main() {
     });
 
     testUsingContext('is installed on windows', () async {
-      fakeProcessManager.calls = [Call('magick -version', null)];
+      fakeProcessManager.calls = [Call('magick -version', ProcessResult(0, 0, '', ''))];
       final isInstalled = await isImageMagicInstalled();
       expect(isInstalled, isTrue);
       fakeProcessManager.verifyCalls();
@@ -450,7 +450,7 @@ main() {
 
     testUsingContext('is not installed on windows', () async {
       fakeProcessManager.calls = [
-        Call('magick -version', ProcessResult(0, 1, '', ''))
+        Call('magick -version', null, sideEffects: ()=> throw 'exception')
       ];
       final isInstalled = await isImageMagicInstalled();
       expect(isInstalled, isFalse);

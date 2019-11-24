@@ -128,6 +128,9 @@ class MockOperatingSystemUtils implements OperatingSystemUtils {
 
   @override
   Future<int> findFreePort({bool ipv6 = false}) async => 12345;
+
+  @override
+  void chmod(FileSystemEntity entity, String mode) {}
 }
 
 class LocalFileSystemBlockingSetCurrentDirectory extends LocalFileSystem {
