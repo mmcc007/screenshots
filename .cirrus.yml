@@ -1,7 +1,15 @@
 osx_instance:
   image: mojave-xcode-11.2.1-flutter
 
-task:
+unit_task:
+  pub_script:
+    - pub --version
+    - dart --version
+    - pub get # because no pubspec.lock
+  test_script:
+    - pub run test test/all_tests.dart
+
+integration_task:
   simulators_script: xcrun simctl list devices --json
   doctor_script: flutter doctor -v
   activate_script: pub global activate --source path .
