@@ -2,6 +2,7 @@ import 'package:process/process.dart';
 import 'package:screenshots/src/config.dart';
 import 'package:screenshots/src/daemon_client.dart';
 import 'package:screenshots/src/screens.dart';
+import 'package:screenshots/src/utils.dart';
 import 'package:screenshots/src/validate.dart';
 import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart' hide Config;
@@ -45,7 +46,7 @@ main() {
       fakeProcessManager = FakeProcessManager();
     });
 
-    testUsingContext('pass', () async {
+    testUsingContext('pass with \'availability\'', () async {
       final configStr = '''
           tests:
             - example/test_driver/main.dart
@@ -84,6 +85,112 @@ main() {
 //      Logger: () => VerboseLogger(StdoutLogger()),
       Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
         ..operatingSystem = 'macos',
+    });
+
+    testUsingContext('pass with \'isAvailable\'', () async {
+      final callListIosDevices = Call(
+          'xcrun simctl list devices --json',
+          ProcessResult(
+              0,
+              0,
+              '''
+                {
+                  "devices" : {
+                    "com.apple.CoreSimulator.SimRuntime.iOS-13-2" : [
+                      {
+                        "state" : "Shutdown",
+                        "isAvailable" : true,
+                        "name" : "iPhone 11 Pro Max",
+                        "udid" : "FAD89341-9B18-4A40-92F5-0440F1B19731"
+                      },
+                      {
+                        "state" : "Shutdown",
+                        "isAvailable" : true,
+                        "name" : "iPad Pro (12.9-inch) (3rd generation)",
+                        "udid" : "A225B800-9979-48C4-BF28-922984806788"
+                      }
+                    ]
+                  }
+                }
+                ''',
+              ''));
+      final configStr = '''
+          tests:
+            - example/test_driver/main.dart
+          staging: /tmp/screenshots
+          locales:
+            - en-US
+            - fr-CA
+          devices:
+            android:
+              Nexus 6P:
+                orientation: LandscapeRight
+            ios:
+              iPhone 11 Pro Max:
+                orientation: LandscapeRight
+          frame: true
+      ''';
+      final config = Config(configStr: configStr);
+      final screens = Screens();
+      await screens.init();
+      final emulator = {
+        "id": "Nexus_6P_API_28",
+        "name": "Nexus 6P",
+        "category": "mobile",
+        "platformType": "android"
+      };
+      final allEmulators = <DaemonEmulator>[loadDaemonEmulator(emulator)];
+      final allDevices = <DaemonDevice>[];
+
+      fakeProcessManager.calls = [callListIosDevices, callListIosDevices];
+
+      final isValid =
+      await isValidConfig(config, screens, allDevices, allEmulators);
+      expect(isValid, isTrue);
+      fakeProcessManager.verifyCalls();
+    }, skip: false, overrides: <Type, Generator>{
+      ProcessManager: () => fakeProcessManager,
+      Logger: () => VerboseLogger(StdoutLogger()),
+      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
+        ..operatingSystem = 'macos',
+    });
+
+    testUsingContext('getIosSimulators', () async {
+      final callListIosDevices = Call(
+          'xcrun simctl list devices --json',
+          ProcessResult(
+              0,
+              0,
+              '''
+                {
+                  "devices" : {
+                    "com.apple.CoreSimulator.SimRuntime.iOS-13-2" : [
+                      {
+                        "state" : "Shutdown",
+                        "isAvailable" : true,
+                        "name" : "iPhone 11 Pro Max",
+                        "udid" : "FAD89341-9B18-4A40-92F5-0440F1B19731"
+                      },
+                      {
+                        "state" : "Shutdown",
+                        "isAvailable" : true,
+                        "name" : "iPad Pro (12.9-inch) (3rd generation)",
+                        "udid" : "A225B800-9979-48C4-BF28-922984806788"
+                      }
+                    ]
+                  }
+                }
+                ''',
+              ''));
+
+      fakeProcessManager.calls = [callListIosDevices];
+
+      final Map simulators = getIosSimulators();
+      final isSimulatorFound= isSimulatorInstalled(simulators, 'iPhone 11 Pro Max');
+      expect(isSimulatorFound, isTrue);
+    }, skip: false, overrides: <Type, Generator>{
+      ProcessManager: () => fakeProcessManager,
+//      Logger: () => VerboseLogger(StdoutLogger()),
     });
 
     testUsingContext('fail', () async {
