@@ -24,6 +24,8 @@ jobs:
       dart: stable
 
       install:
+        - pub --version
+        - dart --version
         - pub get # because no pubspec.lock
         - pub run test test/all_tests.dart
         # install image magick (already installed)
@@ -49,7 +51,7 @@ jobs:
       osx_image: xcode11.2 # macOS 10.14, JDK 13.0.1
 
       # run on master or PRs
-#      if: branch = master
+      if: branch = master
 
       before_install:
         # Install flutter on macOS
@@ -92,6 +94,7 @@ jobs:
         - pub global activate --source path .
 
       script:
+        - xcrun simctl list devices --json
         - cd example; screenshots -c screenshots_ios.yaml -v
 
       before_deploy:
