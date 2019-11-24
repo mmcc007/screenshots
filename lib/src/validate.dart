@@ -1,3 +1,4 @@
+import 'package:meta/meta.dart';
 import 'package:screenshots/src/daemon_client.dart';
 import 'package:tool_base/tool_base.dart' hide Config;
 
@@ -42,6 +43,8 @@ Future<bool> isValidConfig(
           !isEmulatorInstalled(allEmulators, configDevice.name)) {
         printError('No device attached or emulator installed for '
             'device \'${configDevice.name}\' in $configPath.');
+        printError('  Either remove the device from $configPath or '
+            'attach/install the matching device/emulator');
         isValid = false;
         showGuide = true;
       }
@@ -64,9 +67,11 @@ Future<bool> isValidConfig(
 
         // check device attached or simulator installed
         if (!isDeviceAttached(utils.getDevice(iosDevices, configDevice.name)) &&
-            !_isSimulatorInstalled(simulators, configDevice.name)) {
+            !isSimulatorInstalled(simulators, configDevice.name)) {
           printError('No device attached or simulator installed for '
               'device \'${configDevice.name}\' in $configPath.');
+          printError('  Either remove the device from $configPath or '
+              'attach/install the matching device/simulator');
           showGuide = true;
           isValid = false;
         }
@@ -165,7 +170,8 @@ bool isEmulatorInstalled(List<DaemonEmulator> emulators, String deviceName) {
 }
 
 /// Checks if a simulator is installed, matching the device named in config file.
-bool _isSimulatorInstalled(Map simulators, String deviceName) {
+@visibleForTesting
+bool isSimulatorInstalled(Map simulators, String deviceName) {
   // check simulator installed
   bool isSimulatorInstalled = false;
   simulators.forEach((simulatorName, iOSVersions) {
