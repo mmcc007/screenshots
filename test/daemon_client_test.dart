@@ -1,6 +1,7 @@
 import 'dart:convert';
 //import 'dart:io';
 
+import 'package:fake_process_manager/fake_process_manager.dart';
 import 'package:mockito/mockito.dart';
 import 'package:platform/platform.dart';
 import 'package:process/process.dart';
@@ -9,7 +10,6 @@ import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart';
 
 import 'src/context.dart';
-import 'src/fake_process_manager.dart';
 
 main() {
   const kEmulatorsJson =

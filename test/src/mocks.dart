@@ -240,8 +240,8 @@ class MockStdio extends Stdio {
   final MemoryIOSink _stderr = MemoryIOSink();
   final StreamController<List<int>> _stdin = StreamController<List<int>>();
 
-  @override
-  IOSink get stdout => _stdout;
+//  @override
+//  IOSink get stdout => _stdout;
 
   @override
   IOSink get stderr => _stderr;

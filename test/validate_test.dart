@@ -1,3 +1,4 @@
+import 'package:fake_process_manager/fake_process_manager.dart';
 import 'package:process/process.dart';
 import 'package:screenshots/src/config.dart';
 import 'package:screenshots/src/daemon_client.dart';
@@ -7,7 +8,6 @@ import 'package:screenshots/src/validate.dart';
 import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart' hide Config;
 import 'src/context.dart';
-import 'src/fake_process_manager.dart';
 
 main() {
   group('validate', () {
