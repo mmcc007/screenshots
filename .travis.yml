@@ -62,7 +62,6 @@ jobs:
 #      if: branch = master
 
       before_install:
-        - find / -name .GlobalPreferences.plist
         - xcrun simctl list devices --json
         - xcrun simctl list devicetypes
         - xcrun simctl list runtimes

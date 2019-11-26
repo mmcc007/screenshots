@@ -22,7 +22,6 @@ integration_task:
     - xcrun simctl list runtimes
   simulators_json_script:
     - xcrun simctl list devices --json
-  find_script: find / -name .GlobalPreferences.plist
   doctor_script: flutter doctor -v
   activate_script: pub global activate --source path .
   imagemagick_script: brew install imagemagick
