@@ -3,13 +3,13 @@ unit_task:
     image: cirrusci/flutter:latest
   pub_cache:
     folder: ~/.pub-cache
+  imagemagic_script:
+    - sudo apt-get update -y
+    - sudo apt-get install -y imagemagick
   pub_get_script:
     - pub --version
     - dart --version
     - pub get # because no pubspec.lock
-  imagemagic_script:
-    - sudo apt-get update -y
-    - sudo apt-get install imagemagick
   test_script:
     - pub run test test/all_tests.dart
 
@@ -22,6 +22,7 @@ integration_task:
     - xcrun simctl list runtimes
   simulators_json_script:
     - xcrun simctl list devices --json
+  find_script: find / -name .GlobalPreferences.plist
   doctor_script: flutter doctor -v
   activate_script: pub global activate --source path .
   imagemagick_script: brew install imagemagick
