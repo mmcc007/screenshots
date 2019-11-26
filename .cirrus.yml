@@ -8,7 +8,7 @@ unit_task:
     - dart --version
     - pub get # because no pubspec.lock
   imagemagic_script:
-    - sudo apt-get update
+    - sudo apt-get update -y
     - sudo apt-get install imagemagick
   test_script:
     - pub run test test/all_tests.dart
