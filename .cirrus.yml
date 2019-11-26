@@ -1,8 +1,9 @@
-osx_instance:
-  image: mojave-xcode-11.2.1-flutter
-#  image: mojave-xcode-10.1-flutter
 
 unit_task:
+  container:
+    image: cirrusci/flutter:latest
+  pub_cache:
+    folder: ~/.pub-cache
   pub_script:
     - pub --version
     - dart --version
@@ -11,6 +12,9 @@ unit_task:
     - pub run test test/all_tests.dart
 
 integration_task:
+  osx_instance:
+    image: mojave-xcode-11.2.1-flutter
+    #  image: mojave-xcode-10.1-flutter
   simulators_script: xcrun simctl list devices --json
   doctor_script: flutter doctor -v
   activate_script: pub global activate --source path .
