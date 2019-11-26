@@ -58,8 +58,8 @@ jobs:
 #      osx_image: xcode10 # macOS 10.13, JDK 10.0.2+13
       osx_image: xcode11.2 # macOS 10.14, JDK 13.0.1
 
-      # run on master or PRs
-      if: branch = master
+      # run on master or PRs (ignore pushes)
+#      if: branch = master
 
       before_install:
         # Install flutter on macOS
@@ -127,8 +127,8 @@ jobs:
       dist: trusty # defaults to java 1.8
       os: linux
 
-      # run on master or PRs
-      if: branch = master
+      # run on master or PRs (ignore pushes)
+#      if: branch = master
 
       before_install:
 
