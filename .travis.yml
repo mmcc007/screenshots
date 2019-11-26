@@ -62,13 +62,24 @@ jobs:
 #      if: branch = master
 
       before_install:
+        - xcrun simctl list devices --json
+        - xcrun simctl list devicetypes
+        - xcrun simctl list runtimes
+        # create simulator
+        #- udid=$(xcrun simctl create "iPhone X" com.apple.CoreSimulator.SimDeviceType.iPhone-X com.apple.CoreSimulator.SimRuntime.iOS-13-2)
+        # start/stop iPhone 8 Plus simulator
+        - xcrun simctl boot 6A5047EC-7F22-46AB-919D-73F8516DCE1A
+        - xcrun simctl shutdown 6A5047EC-7F22-46AB-919D-73F8516DCE1A
+        # start/stop iPad Pro (12.9-inch) (3rd generation) simulator
+        - xcrun simctl boot 0118FBB3-9F05-4A8C-9D75-478AE5F7753C
+        - xcrun simctl shutdown 0118FBB3-9F05-4A8C-9D75-478AE5F7753C
+
         # Install flutter on macOS
         - wget --quiet --output-document=flutter.zip https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/${OS}/flutter_${OS}_v${FLUTTER_VERSION}.zip && unzip -qq flutter.zip > /dev/null && rm flutter.zip
         - export PATH="$PATH":"$HOME/.pub-cache/bin"
         - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
 
       install:
-        #      - xcrun simctl list devices
         # create repository for artifacts
         - mkdir $HOME/screenshots
         # setup osx environment for flutter and simulators
@@ -102,7 +113,6 @@ jobs:
         - pub global activate --source path .
 
       script:
-        - xcrun simctl list devices --json
         - cd example; screenshots -c screenshots_ios.yaml -v
 
       before_deploy:
