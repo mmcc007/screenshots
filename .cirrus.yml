@@ -1,10 +1,9 @@
-
 unit_task:
   container:
     image: cirrusci/flutter:latest
   pub_cache:
     folder: ~/.pub-cache
-  pub_script:
+  pub_get_script:
     - pub --version
     - dart --version
     - pub get # because no pubspec.lock
