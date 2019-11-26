@@ -358,7 +358,8 @@ String cmd(List<String> cmd,
   if (!silent) printStatus(result.stdout);
   if (result.exitCode != 0) {
     printError(result.stderr);
-    throw 'command failed: stderr: ${result.stderr}, stdout: ${result.stdout}, exitcode=${result.exitCode}, cmd=\'${cmd.join(" ")}\', workingDir=$workingDirectory';
+    printError(result.stdout);
+    throw 'command failed: exitcode=${result.exitCode}, cmd=\'${cmd.join(" ")}\', workingDir=$workingDirectory';
   }
   // return stdout
   return result.stdout;
