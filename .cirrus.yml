@@ -1,6 +1,6 @@
 unit_task:
   container:
-    image: cirrusci/flutter:latest
+    image: cirrusci/flutter:stable
   pub_cache:
     folder: ~/.pub-cache
   imagemagic_script:
@@ -13,10 +13,12 @@ unit_task:
   test_script:
     - pub run test test/all_tests.dart
 
-integration_task:
+ios_integration_task:
   osx_instance:
     image: mojave-xcode-11.2.1-flutter
     #  image: mojave-xcode-10.1-flutter
+  pub_cache:
+    folder: ~/.pub-cache
   simulators_script:
     - xcrun simctl list devicetypes
     - xcrun simctl list runtimes
@@ -29,7 +31,32 @@ integration_task:
     - export PATH="$HOME/.pub-cache/bin:$PATH" # needed to find screenshots
     - cd example
     - screenshots -c screenshots_ios.yaml -v
-  find_artifacts:
-    - find ios/fastlane/screenshots
   screenshot_artifacts:
-    path: ios/fastlane/screenshots/**/*
+    path: example/ios/fastlane/screenshots/*
+
+android_integration_task:
+  container:
+    dockerfile: .ci/Dockerfile.x86
+#    cpu: 4
+#    memory: 10G
+    kvm: true
+  pub_cache:
+    folder: ~/.pub-cache
+  start_emulator_background_script:
+    - sudo chown cirrus:cirrus /dev/kvm
+    - $ANDROID_HOME/emulator/emulator-headless -version
+    - $ANDROID_HOME/emulator/emulator-headless -avd test -no-audio -no-window
+#  wait_for_emulator_script:
+#    - ./script/android-wait-for-emulator.sh
+  doctor_script: flutter doctor -v
+  activate_script: pub global activate --source path .
+  test_script:
+    - export PATH="$HOME/.pub-cache/bin:$PATH" # needed to find screenshots
+    - cd example
+    - screenshots -c screenshots_android.yaml -v
+  find_script:
+    - pwd
+    - find example/ios/fastlane/screenshots || echo -n
+    - find ios/fastlane/screenshots || echo -n
+  screenshot_artifacts:
+    path: example/ios/fastlane/screenshots/*
