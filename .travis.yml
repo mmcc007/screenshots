@@ -11,6 +11,7 @@ matrix:
 
 jobs:
   allow_failures:
+    # don't wait for android to finish
     - env:
         - Run screenshots on Android
         - OS=linux
@@ -58,7 +59,7 @@ jobs:
 #      osx_image: xcode10 # macOS 10.13, JDK 10.0.2+13
       osx_image: xcode11.2 # macOS 10.14, JDK 13.0.1
 
-      # run on master or PRs (ignore pushes)
+      # run on master or PRs (ignore other branches)
       # if: branch = master
 
       before_install:
@@ -107,8 +108,13 @@ jobs:
         - cd example; screenshots -c screenshots_ios.yaml -v
 
       before_deploy:
-        # copy artifacts to cache for later deploy
+        # bundle artifacts for later deploy
         - zip -r $HOME/screenshots/screenshots.zip ios/fastlane/screenshots android/fastlane/metadata/android/*/images
+        # Set up git user name and tag this commit
+        - git config --local user.name "$GIT_USER_NAME"
+        - git config --local user.email "$GIT_USER_EMAIL"
+        - export TRAVIS_TAG=${TRAVIS_TAG:-$(date +'%Y%m%d%H%M%S')-$(git log --format=%h -1)}
+        - git tag $TRAVIS_TAG
 
       # deploy artifacts if tagged commit
       deploy:
@@ -128,7 +134,7 @@ jobs:
       dist: trusty # defaults to java 1.8
       os: linux
 
-      # run on master or PRs (ignore pushes)
+      # run on master or PRs (ignore other branches)
       # if: branch = master
 
       before_install:

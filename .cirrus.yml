@@ -29,6 +29,7 @@ integration_task:
     - export PATH="$HOME/.pub-cache/bin:$PATH" # needed to find screenshots
     - cd example
     - screenshots -c screenshots_ios.yaml -v
-  find_artifacts: find ios/fastlane/screenshots
+  find_artifacts:
+    - find ios/fastlane/screenshots
   screenshot_artifacts:
-    path: ios/fastlane/screenshots
+    path: ios/fastlane/screenshots/**/*
