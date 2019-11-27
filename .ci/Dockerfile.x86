@@ -1,6 +1,6 @@
 FROM cirrusci/flutter:stable
 
-ENV EMULATOR_API_LEVEL=28 ABI="default;x86" EMULATOR_NAME='Nexus 6P'
+ENV EMULATOR_API_LEVEL=28 ABI="default;x86" EMULATOR_NAME='Nexus_6P_API_28'
 
 RUN sudo apt-get update && \
     sudo apt-get install -y imagemagick && \

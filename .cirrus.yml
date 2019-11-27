@@ -42,6 +42,7 @@ android_integration_task:
     kvm: true
   pub_cache:
     folder: ~/.pub-cache
+  emulator_config_script: cat $HOME/.android/avd/Nexus_6P_API_28.avd/config.ini
   start_emulator_background_script:
     - sudo chown cirrus:cirrus /dev/kvm
     - $ANDROID_HOME/emulator/emulator-headless -version
