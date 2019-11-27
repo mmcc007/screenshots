@@ -14,6 +14,7 @@ const kEnvConfigPath = 'SCREENSHOTS_YAML';
 
 /// Config info used to manage screenshots for android and ios.
 // Note: should not have context dependencies as is also used in driver.
+// todo: yaml validation
 class Config {
   Config({this.configPath = kConfigFileName, String configStr}) {
     if (configStr != null) {
@@ -162,7 +163,7 @@ class Config {
         for (final _orientation in Orientation.values) {
           print('  ${utils.getStringFromEnum(_orientation)}');
         }
-        io.exit(1);
+        io.exit(1); // todo: add tool exception and throw
       }
       return utils.getEnumFromString(Orientation.values, orientation);
     }
@@ -206,8 +207,6 @@ class ConfigDevice {
   final DeviceType deviceType;
   final bool isFramed;
   final List<Orientation> orientations;
-
-//  final List<String> orientationStrs; // for validation
   final bool isBuild;
 
   ConfigDevice(
