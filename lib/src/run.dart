@@ -357,6 +357,14 @@ class Screenshots {
                 deviceId,
               );
             }
+          } else {
+            await runProcessTests(
+              configDeviceName,
+              locale,
+              null,
+              deviceType,
+              deviceId,
+            );
           }
         }
         // if an emulator was started, revert locale if necessary and shut it down
