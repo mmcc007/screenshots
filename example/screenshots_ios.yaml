@@ -17,8 +17,9 @@ devices:
 #    iPhone XS Max:
 #    iPhone 8 Plus:
     iPad Pro (12.9-inch) (3rd generation):
-      - orientation: Portrait
-      - orientation: LandscapeRight
+      orientation:
+        - Portrait
+        - LandscapeRight
 
 # Frame screenshots
 frame: true
