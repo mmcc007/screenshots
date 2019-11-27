@@ -237,15 +237,16 @@ main() {
       expect(logger.errorText, contains('File \'example/test_driver/main.dartx\' not found.'));
       expect(logger.errorText, contains('Invalid config: \'example/test_driver/main.dartx\' in screenshots.yaml'));
       expect(logger.errorText, contains('Screen not available for device \'Bad android phone\' in screenshots.yaml.'));
-//      expect(logger.errorText, contains('Screen not available for device \'Bad ios phone\' in screenshots.yaml.'));
+      expect(logger.errorText, contains('Screen not available for device \'Bad ios phone\' in screenshots.yaml.'));
       expect(logger.errorText, contains('No device attached or emulator installed for device \'Bad android phone\' in screenshots.yaml.'));
       expect(logger.errorText, contains('No device attached or emulator installed for device \'Unknown android phone\' in screenshots.yaml.'));
-//      expect(logger.errorText, contains('No device attached or simulator installed for device \'Bad ios phone\' in screenshots.yaml.'));
+      expect(logger.errorText, contains('No device attached or simulator installed for device \'Bad ios phone\' in screenshots.yaml.'));
     }, skip: false, overrides: <Type, Generator>{
       ProcessManager: () => fakeProcessManager,
       Logger: () => BufferLogger(),
-      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
-        ..operatingSystem = 'linux',
+//      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
+//        ..operatingSystem = 'linux',
+      OutputPreferences: () => OutputPreferences(wrapText: false),
     });
 
     testUsingContext('show guide', () async {
