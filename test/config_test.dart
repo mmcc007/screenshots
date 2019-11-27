@@ -24,8 +24,7 @@ main() {
         expectedIosName,
         DeviceType.ios,
         expectedIosFrame,
-        orientation,
-        null,
+        [orientation],
         true,
       );
       final expectedAndroidName = 'Nexus 6P';
@@ -34,8 +33,7 @@ main() {
         expectedAndroidName,
         DeviceType.android,
         expectedGlobalFrame,
-        orientation,
-        null,
+        [orientation],
         true,
       );
       final expectedRecording = '/tmp/screenshots_record';
@@ -50,7 +48,8 @@ main() {
         ios:
           $expectedIosName:
             frame: $expectedIosFrame
-            orientation: $expectedOrientation
+            orientation: 
+              - $expectedOrientation
         android:
           $expectedAndroidName:
             orientation: $expectedOrientation
@@ -73,6 +72,28 @@ main() {
       expect(config.getDevice(expectedAndroidName), isNot(expectedIosDevice));
       expect(config.deviceNames..sort(),
           equals([expectedAndroidName, expectedIosName]..sort()));
+    });
+
+    test('backward compatible orientation', () {
+      String configStr = '''
+        devices:
+          android:
+            device name:
+              orientation: 
+                - Portrait
+        frame: true
+        ''';
+      Config config = Config(configStr: configStr);
+      expect(config.devices[0].orientations[0], Orientation.Portrait);
+      configStr = '''
+        devices:
+          android:
+            device name:
+              orientation: Portrait
+        frame: true
+        ''';
+      config = Config(configStr: configStr);
+      expect(config.devices[0].orientations[0], Orientation.Portrait);
     });
 
     test('active run type', () {
@@ -118,32 +139,39 @@ main() {
     });
 
     test('isFrameRequired', () {
+      final deviceName = 'Nexus 6P';
       String configStr = '''
         devices:
           android:
-            Nexus 6P:
+            $deviceName:
         frame: true
         ''';
       Config config = Config(configStr: configStr);
-      expect(config.isFrameRequired('Nexus 6P'), isTrue);
+      expect(config.isFrameRequired(deviceName, null), isTrue);
       configStr = '''
         devices:
           android:
-            Nexus 6P:
+            $deviceName:
               frame: false
         frame: true
         ''';
       config = Config(configStr: configStr);
-      expect(config.isFrameRequired('Nexus 6P'), isFalse);
+      expect(config.isFrameRequired(deviceName, null), isFalse);
       configStr = '''
         devices:
           android:
-            Nexus 6P:
-              orientation: LandscapeRight
+            $deviceName:
+              orientation: 
+                - Portrait
+                - LandscapeRight
         frame: true
         ''';
       config = Config(configStr: configStr);
-      expect(config.isFrameRequired('Nexus 6P'), isFalse);
+      final device = config.getDevice(deviceName);
+      expect(
+          config.isFrameRequired(deviceName, device.orientations[0]), isTrue);
+      expect(
+          config.isFrameRequired(deviceName, device.orientations[1]), isFalse);
     });
 
     test('store and retrieve environment', () async {

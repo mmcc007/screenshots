@@ -12,6 +12,13 @@ import 'src/context.dart';
 main() {
   group('validate', () {
     FakeProcessManager fakeProcessManager;
+    FakePlatform fakePlatform;
+
+    setUp(() {
+      fakeProcessManager = FakeProcessManager();
+      fakePlatform = FakePlatform.fromPlatform(const LocalPlatform())
+        ..operatingSystem = 'linux';
+    });
 
     final callListIosDevices = Call(
         'xcrun simctl list devices --json',
@@ -41,10 +48,6 @@ main() {
                 }
                 ''',
             ''));
-
-    setUp(() {
-      fakeProcessManager = FakeProcessManager();
-    });
 
     testUsingContext('pass with \'availability\'', () async {
       final configStr = '''
@@ -194,6 +197,7 @@ main() {
     });
 
     testUsingContext('fail', () async {
+      final BufferLogger logger = context.get<Logger>();
       final configStr = '''
           tests:
             - example/test_driver/main.dartx
@@ -207,7 +211,7 @@ main() {
               Unknown android phone:
                 frame: false
               Nexus 6P:
-                orientation: LandscapeRightx
+                orientation: LandscapeRight
             ios:
               Bad ios phone:
               iPhone X:
@@ -218,7 +222,7 @@ main() {
       final screens = Screens();
       await screens.init();
       final emulator = {
-        "id": "Nexus_6P_API_28",
+        "id": "ANY_EMULATOR_ID",
         "name": "Nexus 6P",
         "category": "mobile",
         "platformType": "android"
@@ -228,25 +232,52 @@ main() {
 
       fakeProcessManager.calls = [callListIosDevices, callListIosDevices];
 
-      final isValid =
+      bool isValid =
           await isValidConfig(config, screens, allDevices, allEmulators);
       expect(isValid, isFalse);
+      expect(logger.statusText, contains('Guide'));
+      expect(logger.statusText, contains('Use a device with a supported screen'));
+      expect(logger.errorText, contains('File \'example/test_driver/main.dartx\' not found.'));
+      expect(logger.errorText, contains('Invalid config: \'example/test_driver/main.dartx\' in screenshots.yaml'));
+      expect(logger.errorText, contains('Screen not available for device \'Bad android phone\' in screenshots.yaml.'));
+      expect(logger.errorText, isNot(contains('Screen not available for device \'Bad ios phone\' in screenshots.yaml.')));
+      expect(logger.errorText, contains('No device attached or emulator installed for device \'Bad android phone\' in screenshots.yaml.'));
+      expect(logger.errorText, contains('No device attached or emulator installed for device \'Unknown android phone\' in screenshots.yaml.'));
+      expect(logger.errorText, isNot(contains('No device attached or simulator installed for device \'Bad ios phone\' in screenshots.yaml.')));
+
+//       fakePlatform.operatingSystem = 'linux';
+//       isValid =
+//      await isValidConfig(config, screens, allDevices, allEmulators);
+//      expect(isValid, isFalse);
+//      expect(logger.statusText, contains('Guide'));
+//      expect(logger.statusText, contains('Use a device with a supported screen'));
+//      expect(logger.errorText, contains('File \'example/test_driver/main.dartx\' not found.'));
+//      expect(logger.errorText, contains('Invalid config: \'example/test_driver/main.dartx\' in screenshots.yaml'));
+//      expect(logger.errorText, contains('Screen not available for device \'Bad android phone\' in screenshots.yaml.'));
+//      expect(logger.errorText, isNot(contains('Screen not available for device \'Bad ios phone\' in screenshots.yaml.')));
+//      expect(logger.errorText, contains('No device attached or emulator installed for device \'Bad android phone\' in screenshots.yaml.'));
+//      expect(logger.errorText, contains('No device attached or emulator installed for device \'Unknown android phone\' in screenshots.yaml.'));
+//      expect(logger.errorText, isNot(contains('No device attached or simulator installed for device \'Bad ios phone\' in screenshots.yaml.')));
+
     }, skip: false, overrides: <Type, Generator>{
       ProcessManager: () => fakeProcessManager,
-//      Logger: () => StdoutLogger()
+      Logger: () => BufferLogger(),
+      Platform: () => fakePlatform,
+      OutputPreferences: () => OutputPreferences(wrapText: false, showColor: false),
     });
 
     testUsingContext('show guide', () async {
+      final BufferLogger logger = context.get<Logger>();
       final screens = Screens();
       await screens.init();
-      final emulator = {
+      final installedEmulator = loadDaemonEmulator({
         "id": "Nexus_6P_API_28",
         "name": "Nexus 6P",
         "category": "mobile",
         "platformType": "android"
-      };
-      final allEmulators = <DaemonEmulator>[loadDaemonEmulator(emulator)];
-      final startedEmulator = {
+      });
+      final allEmulators = <DaemonEmulator>[installedEmulator];
+      final startedEmulator = loadDaemonDevice({
         "id": "emulator-5554",
         "name": "Android SDK built for x86",
         "platform": "android-x86",
@@ -254,8 +285,8 @@ main() {
         "category": "mobile",
         "platformType": "android",
         "ephemeral": true
-      };
-      final realIosDevice = {
+      });
+      final realIosDevice = loadDaemonDevice({
         "id": "3b3455019e329e007e67239d9b897148244b5053",
         "name": "My iPhone",
         "platform": "ios",
@@ -264,8 +295,8 @@ main() {
         "platformType": "ios",
         "ephemeral": true,
         'model': 'iPhone model'
-      };
-      final realAndroidDevice = {
+      });
+      final realAndroidDevice = loadDaemonDevice({
         "id": "device id",
         "name": "Adroid Phone Name",
         "platform": "android",
@@ -273,18 +304,25 @@ main() {
         "category": "mobile",
         "platformType": "android",
         "ephemeral": true
-      };
+      });
       final allDevices = <DaemonDevice>[
-        loadDaemonDevice(startedEmulator),
-        loadDaemonDevice(realIosDevice),
-        loadDaemonDevice(realAndroidDevice),
+        startedEmulator,
+        realIosDevice,
+        realAndroidDevice,
       ];
       expect(
           () async => await generateConfigGuide(
               screens, allDevices, allEmulators, 'myScreenshots.yaml'),
           returnsNormally);
+      expect(logger.statusText, contains('Guide'));
+      expect(logger.statusText, contains(realIosDevice.iosModel));
+      expect(logger.statusText, contains(realAndroidDevice.name));
+      expect(logger.statusText, isNot(contains(startedEmulator.id)));
+      expect(logger.statusText, contains(installedEmulator.name));
+      expect(logger.errorText, '');
+
     }, skip: false, overrides: <Type, Generator>{
-//      Logger: () => VerboseLogger(StdoutLogger())
+      Logger: () => BufferLogger(),
     });
   });
 }

@@ -590,6 +590,7 @@ main() {
       final result = await screenshots.runProcessTests(
         deviceName,
         'locale',
+        null,
         getDeviceType(screenshots.config, deviceName),
         deviceId,
       );

@@ -295,7 +295,7 @@ class DaemonDevice extends BaseDevice {
   }
 }
 
-DaemonEmulator loadDaemonEmulator(emulator) {
+DaemonEmulator loadDaemonEmulator(Map<String, dynamic> emulator) {
   return DaemonEmulator(
     emulator['id'],
     emulator['name'],
@@ -304,7 +304,7 @@ DaemonEmulator loadDaemonEmulator(emulator) {
   );
 }
 
-DaemonDevice loadDaemonDevice(device) {
+DaemonDevice loadDaemonDevice(Map<String, dynamic> device) {
   return DaemonDevice(
       device['id'],
       device['name'],

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:path/path.dart' as p;
 import 'package:process/process.dart';
 import 'package:screenshots/src/config.dart';
 import 'package:screenshots/src/context_runner.dart';
@@ -11,16 +12,14 @@ import 'package:screenshots/src/image_magick.dart';
 import 'package:screenshots/src/image_processor.dart';
 import 'package:screenshots/src/orientation.dart' as orient;
 import 'package:screenshots/src/orientation.dart';
-import 'package:screenshots/src/run.dart';
-import 'package:screenshots/src/screens.dart';
 import 'package:screenshots/src/resources.dart' as resources;
+import 'package:screenshots/src/run.dart';
 import 'package:screenshots/src/run.dart' as run;
+import 'package:screenshots/src/screens.dart';
 import 'package:screenshots/src/utils.dart' as utils;
 import 'package:screenshots/src/utils.dart';
 import 'package:screenshots/src/validate.dart' as validate;
 import 'package:test/test.dart';
-import 'package:path/path.dart' as p;
-import 'package:tool_mobile/tool_mobile.dart';
 
 import 'src/common.dart';
 
@@ -689,12 +688,12 @@ void main() {
       }, skip: utils.isCI());
     });
 
-    group('adb path', () {
-      test('find adb path', () async {
-        final _adbPath = getAdbPath(androidSdk);
-//      print('adbPath=$_adbPath');
-      }, skip: utils.isCI());
-    });
+//    group('adb path', () {
+//      test('find adb path', () async {
+//        final _adbPath = getAdbPath(androidSdk);
+////      print('adbPath=$_adbPath');
+//      }, skip: utils.isCI());
+//    });
 
     group('manage device orientation', () {
       test('find ios simulator orientation', () async {
@@ -791,10 +790,10 @@ void main() {
 //        print('deviceInfo=$deviceInfo');
           if (deviceInfo != null) {
             if (deviceInfo.name == deviceName) {
-              expect(deviceInfo.orientation,
-                  utils.getEnumFromString(Orientation.values, orientation));
-              expect(validate.isValidOrientation(orientation), isTrue);
-              expect(validate.isValidOrientation('bad orientation'), isFalse);
+              expect(utils.getEnumFromString(Orientation.values, orientation),
+                  deviceInfo.orientations[0]);
+//              expect(validate.isValidOrientation(orientation), isTrue);
+//              expect(validate.isValidOrientation('bad orientation'), isFalse);
             }
             expect(deviceInfo.isFramed, frame);
             expect(validate.isValidFrame(frame), isTrue);
@@ -803,12 +802,12 @@ void main() {
         }
       });
 
-      test('valid values for params', () {
-//      print(Orientation.values);
-        for (final orientation in Orientation.values) {
-//        print('${utils.getStringFromEnum(orientation)}');
-        }
-      });
+//      test('valid values for params', () {
+////      print(Orientation.values);
+//        for (final orientation in Orientation.values) {
+////        print('${utils.getStringFromEnum(orientation)}');
+//        }
+//      });
     });
 
     group('flavors', () {

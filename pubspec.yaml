@@ -34,5 +34,7 @@ dev_dependencies:
   tool_base_test:
     git: https://github.com/mmcc007/tool_base_test.git
 #    path: ../tool_base_test
+  collection: any
+
 executables:
   screenshots: main

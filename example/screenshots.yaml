@@ -20,7 +20,9 @@ devices:
       orientation: LandscapeRight
   android:
     Nexus 6P:
-      orientation: LandscapeRight
+      orientation:
+        - LandscapeRight
+        - Portrait
 
 # Frame screenshots
 frame: true

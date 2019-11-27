@@ -4,7 +4,6 @@ import 'package:tool_base/tool_base.dart' hide Config;
 
 import 'config.dart';
 import 'globals.dart';
-import 'orientation.dart';
 import 'screens.dart';
 import 'utils.dart' as utils;
 
@@ -30,7 +29,7 @@ Future<bool> isValidConfig(
   if (config.isRunTypeActive(DeviceType.android)) {
     final androidDevices = utils.getAndroidDevices(allDevices);
     for (ConfigDevice configDevice in config.androidDevices) {
-      if (config.isFrameRequired(configDevice.name)) {
+      if (config.isFrameRequired(configDevice.name, null)) {
         // check screen available for this device
         if (!_isScreenAvailable(screens, configDevice.name, configPath)) {
           isValid = false;
@@ -58,7 +57,7 @@ Future<bool> isValidConfig(
       final iosDevices = utils.getIosDaemonDevices(allDevices);
       final Map simulators = utils.getIosSimulators();
       for (ConfigDevice configDevice in config.iosDevices) {
-        if (config.isFrameRequired(configDevice.name)) {
+        if (config.isFrameRequired(configDevice.name, null)) {
           // check screen available for this device
           if (!_isScreenAvailable(screens, configDevice.name, configPath)) {
             isValid = false;
@@ -91,16 +90,6 @@ Future<bool> isValidConfig(
   for (final devName in deviceNames) {
     final configDevice = config.getDevice(devName);
     if (configDevice != null) {
-      if (configDevice.orientationStr != null &&
-          !isValidOrientation(configDevice.orientationStr)) {
-        printError(
-            'Invalid value for \'orientation\' for device \'$devName\': ${configDevice.orientationStr}');
-        printStatus('Valid values:');
-        for (final orientation in Orientation.values) {
-          printStatus('  ${utils.getStringFromEnum(orientation)}');
-        }
-        isValid = false;
-      }
       final frame = configDevice.isFramed;
       if (frame != null && !isValidFrame(frame)) {
         printError(
@@ -265,13 +254,6 @@ void _printSimulators() {
           ? -1
           : thisSim.compareTo(otherSim));
   simulatorNames.forEach((simulatorName) => printStatus('    $simulatorName'));
-}
-
-bool isValidOrientation(String orientation) {
-  return Orientation.values.firstWhere(
-          (o) => utils.getStringFromEnum(o) == orientation,
-          orElse: () => null) !=
-      null;
 }
 
 bool isValidFrame(dynamic frame) {
