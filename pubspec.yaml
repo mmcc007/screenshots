@@ -29,7 +29,10 @@ dev_dependencies:
   pedantic: ^1.8.0+1
   quiver: '>=2.0.0 <3.0.0'
   fake_process_manager:
-        git: https://github.com/mmcc007/fake_process_manager.git
+    git: https://github.com/mmcc007/fake_process_manager.git
 #    path: ../fake_process_manager
+  tool_base_test:
+    git: https://github.com/mmcc007/tool_base_test.git
+#    path: ../tool_base_test
 executables:
   screenshots: main
