@@ -99,7 +99,7 @@ jobs:
         - flutter doctor -v
 
         # install ImageMagick
-        - brew install imagemagick
+        - brew install imagemagick &
 
         # install most current (released or unreleased) Screenshots
         - pub global activate --source path .
