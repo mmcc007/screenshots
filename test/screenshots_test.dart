@@ -20,7 +20,6 @@ import 'package:screenshots/src/utils.dart';
 import 'package:screenshots/src/validate.dart' as validate;
 import 'package:test/test.dart';
 import 'package:path/path.dart' as p;
-import 'package:tool_mobile/tool_mobile.dart';
 
 import 'src/common.dart';
 
@@ -689,12 +688,12 @@ void main() {
       }, skip: utils.isCI());
     });
 
-    group('adb path', () {
-      test('find adb path', () async {
-        final _adbPath = getAdbPath(androidSdk);
-//      print('adbPath=$_adbPath');
-      }, skip: utils.isCI());
-    });
+//    group('adb path', () {
+//      test('find adb path', () async {
+//        final _adbPath = getAdbPath(androidSdk);
+////      print('adbPath=$_adbPath');
+//      }, skip: utils.isCI());
+//    });
 
     group('manage device orientation', () {
       test('find ios simulator orientation', () async {
@@ -803,12 +802,12 @@ void main() {
         }
       });
 
-      test('valid values for params', () {
-//      print(Orientation.values);
-        for (final orientation in Orientation.values) {
-//        print('${utils.getStringFromEnum(orientation)}');
-        }
-      });
+//      test('valid values for params', () {
+////      print(Orientation.values);
+//        for (final orientation in Orientation.values) {
+////        print('${utils.getStringFromEnum(orientation)}');
+//        }
+//      });
     });
 
     group('flavors', () {

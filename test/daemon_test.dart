@@ -126,17 +126,17 @@ main() {
       expect(model, expectedModel);
     });
 
-    test('get ios model from device id', () {
-      final deviceId = '3b3455019e329e007e67239d9b897148244b5053';
-      final devices = getIosDevices();
+//    test('get ios model from device id', () {
+//      final deviceId = '3b3455019e329e007e67239d9b897148244b5053';
+//      final devices = getIosDevices();
 //      print('devices=$devices');
-
-      final device = devices.firstWhere((device) => device['id'] == deviceId,
-          orElse: () => null);
+//
+//      final device = devices.firstWhere((device) => device['id'] == deviceId,
+//          orElse: () => null);
 //      device == null
 //          ? print('device not attached')
 //          : print('model=${device['model']}');
-    }, skip: utils.isCI());
+//    }, skip: utils.isCI());
 
     test('run test on real device', () async {
       final deviceName = 'iPhone 5c';
@@ -169,14 +169,14 @@ main() {
       await shutdownAndroidEmulator(daemonClient, deviceId);
     }, skip: utils.isCI());
 
-    test('join devices', () {
-      final configPath = 'test/screenshots_test.yaml';
-      final config = Config(configPath: configPath);
-      final androidInfo = config.androidDevices;
+//    test('join devices', () {
+//      final configPath = 'test/screenshots_test.yaml';
+//      final config = Config(configPath: configPath);
+//      final androidInfo = config.androidDevices;
 //      print('androidInfo=$androidInfo');
-      List deviceNames = config.deviceNames;
+//      List deviceNames = config.deviceNames;
 //      print('deviceNames=$deviceNames');
-    });
+//    });
 
     test('run test on matching devices or emulators', () async {
       final configPath = 'test/screenshots_test.yaml';
