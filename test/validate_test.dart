@@ -12,6 +12,13 @@ import 'src/context.dart';
 main() {
   group('validate', () {
     FakeProcessManager fakeProcessManager;
+    FakePlatform fakePlatform;
+
+    setUp(() {
+      fakeProcessManager = FakeProcessManager();
+      fakePlatform = FakePlatform.fromPlatform(const LocalPlatform())
+        ..operatingSystem = 'linux';
+    });
 
     final callListIosDevices = Call(
         'xcrun simctl list devices --json',
@@ -41,10 +48,6 @@ main() {
                 }
                 ''',
             ''));
-
-    setUp(() {
-      fakeProcessManager = FakeProcessManager();
-    });
 
     testUsingContext('pass with \'availability\'', () async {
       final configStr = '''
@@ -229,7 +232,7 @@ main() {
 
       fakeProcessManager.calls = [callListIosDevices, callListIosDevices];
 
-      final isValid =
+      bool isValid =
           await isValidConfig(config, screens, allDevices, allEmulators);
       expect(isValid, isFalse);
       expect(logger.statusText, contains('Guide'));
@@ -237,16 +240,30 @@ main() {
       expect(logger.errorText, contains('File \'example/test_driver/main.dartx\' not found.'));
       expect(logger.errorText, contains('Invalid config: \'example/test_driver/main.dartx\' in screenshots.yaml'));
       expect(logger.errorText, contains('Screen not available for device \'Bad android phone\' in screenshots.yaml.'));
-      expect(logger.errorText, contains('Screen not available for device \'Bad ios phone\' in screenshots.yaml.'));
+      expect(logger.errorText, isNot(contains('Screen not available for device \'Bad ios phone\' in screenshots.yaml.')));
       expect(logger.errorText, contains('No device attached or emulator installed for device \'Bad android phone\' in screenshots.yaml.'));
       expect(logger.errorText, contains('No device attached or emulator installed for device \'Unknown android phone\' in screenshots.yaml.'));
-      expect(logger.errorText, contains('No device attached or simulator installed for device \'Bad ios phone\' in screenshots.yaml.'));
+      expect(logger.errorText, isNot(contains('No device attached or simulator installed for device \'Bad ios phone\' in screenshots.yaml.')));
+
+//       fakePlatform.operatingSystem = 'linux';
+//       isValid =
+//      await isValidConfig(config, screens, allDevices, allEmulators);
+//      expect(isValid, isFalse);
+//      expect(logger.statusText, contains('Guide'));
+//      expect(logger.statusText, contains('Use a device with a supported screen'));
+//      expect(logger.errorText, contains('File \'example/test_driver/main.dartx\' not found.'));
+//      expect(logger.errorText, contains('Invalid config: \'example/test_driver/main.dartx\' in screenshots.yaml'));
+//      expect(logger.errorText, contains('Screen not available for device \'Bad android phone\' in screenshots.yaml.'));
+//      expect(logger.errorText, isNot(contains('Screen not available for device \'Bad ios phone\' in screenshots.yaml.')));
+//      expect(logger.errorText, contains('No device attached or emulator installed for device \'Bad android phone\' in screenshots.yaml.'));
+//      expect(logger.errorText, contains('No device attached or emulator installed for device \'Unknown android phone\' in screenshots.yaml.'));
+//      expect(logger.errorText, isNot(contains('No device attached or simulator installed for device \'Bad ios phone\' in screenshots.yaml.')));
+
     }, skip: false, overrides: <Type, Generator>{
       ProcessManager: () => fakeProcessManager,
       Logger: () => BufferLogger(),
-//      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
-//        ..operatingSystem = 'linux',
-      OutputPreferences: () => OutputPreferences(wrapText: false),
+      Platform: () => fakePlatform,
+      OutputPreferences: () => OutputPreferences(wrapText: false, showColor: false),
     });
 
     testUsingContext('show guide', () async {
