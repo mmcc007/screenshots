@@ -1,18 +1,18 @@
 import 'dart:async';
 
 import 'package:meta/meta.dart';
+import 'package:path/path.dart' as p;
 import 'package:screenshots/src/config.dart';
 import 'package:screenshots/src/image_magick.dart';
+import 'package:screenshots/src/orientation.dart';
 import 'package:tool_base/tool_base.dart' hide Config;
 
 import 'archive.dart';
-import 'screens.dart';
 import 'fastlane.dart' as fastlane;
-import 'resources.dart' as resources;
-import 'utils.dart' as utils;
-import 'package:path/path.dart' as p;
-
 import 'globals.dart';
+import 'resources.dart' as resources;
+import 'screens.dart';
+import 'utils.dart' as utils;
 
 class ImageProcessor {
   static const _kDefaultIosBackground = 'xc:white';
@@ -23,6 +23,7 @@ class ImageProcessor {
 
   final Screens _screens;
   final Config _config;
+
   ImageProcessor(Screens screens, Config config)
       : _screens = screens,
         _config = config;
@@ -37,8 +38,14 @@ class ImageProcessor {
   /// If 'frame' in config file is true, screenshots are placed within image of device.
   ///
   /// After processing, screenshots are handed off for upload via fastlane.
-  Future<bool> process(DeviceType deviceType, String deviceName, String locale,
-      RunMode runMode, Archive archive) async {
+  Future<bool> process(
+    DeviceType deviceType,
+    String deviceName,
+    String locale,
+    Orientation orientation,
+    RunMode runMode,
+    Archive archive,
+  ) async {
     final Map screenProps = _screens.getScreen(deviceName);
     final screenshotsDir = '${_config.stagingDir}/$kTestScreenshotsDir';
     final screenshotPaths = fs.directory(screenshotsDir).listSync();
@@ -46,7 +53,7 @@ class ImageProcessor {
       printStatus('Warning: \'$deviceName\' images will not be processed');
     } else {
       // add frame if required
-      if (_config.isFrameRequired(deviceName)) {
+      if (_config.isFrameRequired(deviceName, orientation)) {
         final Map screenResources = screenProps['resources'];
         printStatus('Processing screenshots from test...');
 

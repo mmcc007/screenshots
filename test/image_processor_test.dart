@@ -117,7 +117,7 @@ main() {
 
       final imageProcessor = ImageProcessor(screens, config);
       final result = await imageProcessor.process(
-          DeviceType.android, deviceName, locale, RunMode.normal, null);
+          DeviceType.android, deviceName, locale, null, RunMode.normal, null);
       expect(result, isTrue);
       fakeProcessManager.verifyCalls();
     }, overrides: <Type, Generator>{

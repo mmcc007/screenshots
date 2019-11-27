@@ -119,12 +119,12 @@ void main() {
   test('check if frame is needed', () {
     final config = Config(configStr: screenshotsYaml);
 
-    expect(config.isFrameRequired('iPhone X'), true);
-    expect(config.isFrameRequired('iPhone 7 Plus'), false);
-    expect(config.isFrameRequired('Nexus 5X'), true);
-    expect(config.isFrameRequired('iPhone 5c'), false);
+    expect(config.isFrameRequired('iPhone X', null), true);
+    expect(config.isFrameRequired('iPhone 7 Plus', null), false);
+    expect(config.isFrameRequired('Nexus 5X', null), true);
+    expect(config.isFrameRequired('iPhone 5c', null), false);
     final unknownDevice = 'unknown';
-    expect(() => config.isFrameRequired('unknown'),
+    expect(() => config.isFrameRequired('unknown', null),
         throwsA('Error: device \'$unknownDevice\' not found'));
   });
 }

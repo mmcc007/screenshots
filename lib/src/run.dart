@@ -1,7 +1,7 @@
 import 'dart:async';
-//import 'dart:io';
 
 import 'package:intl/intl.dart';
+import 'package:path/path.dart' as path;
 import 'package:tool_base/tool_base.dart' hide Config;
 import 'package:tool_mobile/tool_mobile.dart';
 
@@ -17,7 +17,6 @@ import 'resources.dart' as resources;
 import 'screens.dart';
 import 'utils.dart' as utils;
 import 'validate.dart' as validate;
-import 'package:path/path.dart' as path;
 
 /// Run screenshots
 Future<bool> screenshots(
@@ -252,6 +251,7 @@ class Screenshots {
         await runProcessTests(
           configDeviceName,
           defaultLocale,
+          null,
           deviceType,
           deviceId,
         );
@@ -315,50 +315,50 @@ class Screenshots {
 
           // Change orientation if required
           final configDevice = config.getDevice(configDeviceName);
-          if (configDevice.orientation != null) {
-            final currentDevice =
-                utils.getDeviceFromId(await daemonClient.devices, deviceId);
-            currentDevice == null
-                ? throw 'Error: device \'$configDeviceName\' not found in flutter daemon.'
-                : null;
-            switch (deviceType) {
-              case DeviceType.android:
-                if (currentDevice.emulator) {
-                  orient.changeDeviceOrientation(
-                      deviceType, configDevice.orientation,
-                      deviceId: deviceId);
-                } else {
-                  printStatus(
-                      'Warning: cannot change orientation of a real android device.');
-                }
-                break;
-              case DeviceType.ios:
-                if (currentDevice.emulator) {
-                  orient.changeDeviceOrientation(
-                      deviceType, configDevice.orientation,
-                      scriptDir: '${config.stagingDir}/resources/script');
-                } else {
-                  printStatus(
-                      'Warning: cannot change orientation of a real iOS device.');
-                }
-                break;
+          if (configDevice.orientations != null) {
+            for (orient.Orientation orientation in configDevice.orientations) {
+              final currentDevice =
+                  utils.getDeviceFromId(await daemonClient.devices, deviceId);
+              currentDevice == null
+                  ? throw 'Error: device \'$configDeviceName\' not found in flutter daemon.'
+                  : null;
+              switch (deviceType) {
+                case DeviceType.android:
+                  if (currentDevice.emulator) {
+                    orient.changeDeviceOrientation(deviceType, orientation,
+                        deviceId: deviceId);
+                  } else {
+                    printStatus(
+                        'Warning: cannot change orientation of a real android device.');
+                  }
+                  break;
+                case DeviceType.ios:
+                  if (currentDevice.emulator) {
+                    orient.changeDeviceOrientation(deviceType, orientation,
+                        scriptDir: '${config.stagingDir}/resources/script');
+                  } else {
+                    printStatus(
+                        'Warning: cannot change orientation of a real iOS device.');
+                  }
+                  break;
+              }
+
+              // store env for later use by tests
+              // ignore: invalid_use_of_visible_for_testing_member
+              await config.storeEnv(
+                  screens, configDeviceName, locale, deviceType, orientation);
+
+              // run tests and process images
+              await runProcessTests(
+                configDeviceName,
+                locale,
+                orientation,
+                deviceType,
+                deviceId,
+              );
             }
           }
-
-          // store env for later use by tests
-          // ignore: invalid_use_of_visible_for_testing_member
-          await config.storeEnv(screens, configDeviceName, locale, deviceType,
-              configDevice.orientation);
-
-          // run tests and process images
-          await runProcessTests(
-            configDeviceName,
-            locale,
-            deviceType,
-            deviceId,
-          );
         }
-
         // if an emulator was started, revert locale if necessary and shut it down
         if (emulator != null) {
           await setEmulatorLocale(
@@ -380,6 +380,7 @@ class Screenshots {
   Future runProcessTests(
     configDeviceName,
     String locale,
+    orient.Orientation orientation,
     DeviceType deviceType,
     String deviceId,
   ) async {
@@ -406,7 +407,7 @@ class Screenshots {
       // process screenshots
       final imageProcessor = ImageProcessor(screens, config);
       await imageProcessor.process(
-          deviceType, configDeviceName, locale, runMode, archive);
+          deviceType, configDeviceName, locale, orientation, runMode, archive);
     }
   }
 }
@@ -599,10 +600,10 @@ Future<bool> isImageMagicInstalled() async {
   try {
     return await runInContext<bool>(() {
       final cmd =
-      platform.isWindows ? ['magick', '-version'] : ['convert', '-version'];
+          platform.isWindows ? ['magick', '-version'] : ['convert', '-version'];
       return utils.runCmd(cmd) == 0;
     });
-  }catch (e) {
+  } catch (e) {
     return false;
   }
 }
