@@ -58,27 +58,29 @@ jobs:
 #      osx_image: xcode10 # macOS 10.13, JDK 10.0.2+13
       osx_image: xcode11.2 # macOS 10.14, JDK 13.0.1
 
-      # run on master or PRs
+      # run on master or PRs (ignore pushes)
       if: branch = master
 
       before_install:
+        - xcrun simctl list devices --json
+        - xcrun simctl list devicetypes
+        - xcrun simctl list runtimes
+
         # Install flutter on macOS
         - wget --quiet --output-document=flutter.zip https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/${OS}/flutter_${OS}_v${FLUTTER_VERSION}.zip && unzip -qq flutter.zip > /dev/null && rm flutter.zip
         - export PATH="$PATH":"$HOME/.pub-cache/bin"
         - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
 
       install:
-        #      - xcrun simctl list devices
         # create repository for artifacts
         - mkdir $HOME/screenshots
         # setup osx environment for flutter and simulators
         - export HOMEBREW_NO_AUTO_UPDATE=1
-        - brew install libimobiledevice
-        - brew install ideviceinstaller
-        - brew install ios-deploy
-        - brew install cocoapods || echo 'ignore exit(1)'
-        - brew link --overwrite cocoapods
-
+#        - brew install libimobiledevice
+#        - brew install ideviceinstaller
+#        - brew install ios-deploy
+#        - brew install cocoapods || echo 'ignore exit(1)'
+#        - brew link --overwrite cocoapods
 
 #
 #      # fix timezone warning on osx
@@ -102,7 +104,6 @@ jobs:
         - pub global activate --source path .
 
       script:
-        - xcrun simctl list devices --json
         - cd example; screenshots -c screenshots_ios.yaml -v
 
       before_deploy:
@@ -127,7 +128,7 @@ jobs:
       dist: trusty # defaults to java 1.8
       os: linux
 
-      # run on master or PRs
+      # run on master or PRs (ignore pushes)
       if: branch = master
 
       before_install:

@@ -1,8 +1,7 @@
-import 'dart:io';
-import 'dart:math';
+//import 'dart:io';
 
 import 'package:fake_process_manager/fake_process_manager.dart';
-import 'package:file/file.dart';
+import 'package:file/memory.dart';
 import 'package:mockito/mockito.dart';
 import 'package:platform/platform.dart';
 import 'package:process/process.dart';
@@ -11,17 +10,14 @@ import 'package:screenshots/src/run.dart';
 import 'package:screenshots/src/screens.dart';
 import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart';
+import 'package:tool_base_test/tool_base_test.dart';
 
-import 'src/common_tools.dart';
-import 'src/context.dart';
 import 'src/mocks.dart';
 
 main() {
   final stagingDir = '/tmp/screenshots';
   Directory sdkDir;
 
-  FakeProcessManager fakeProcessManager;
-  MockDaemonClient mockDaemonClient;
   final List<String> stdinCaptured = <String>[];
 
   void _captureStdin(String item) {
@@ -47,6 +43,9 @@ main() {
     'category': 'mobile',
     'platformType': 'android'
   });
+
+  FakeProcessManager fakeProcessManager;
+  MockDaemonClient mockDaemonClient;
 
   setUp(() async {
     fakeProcessManager = FakeProcessManager(stdinResults: _captureStdin);
@@ -174,6 +173,12 @@ main() {
     });
 
     group('with no devices, emulators or simulators', () {
+      MemoryFileSystem memoryFileSystem;
+
+      setUp(() async {
+        memoryFileSystem = MemoryFileSystem();
+      });
+
       testUsingContext(', android only run, no frames, no locales', () async {
         final emulatorName = 'Nexus 6P';
         // screenshots config
@@ -211,7 +216,7 @@ main() {
         when(mockDaemonClient.waitForEvent(EventType.deviceRemoved))
             .thenAnswer((_) => Future.value({'id': 'emulator-5554'}));
 
-        final result = await screenshots(configStr: configStr, isVerbose: true);
+        final result = await screenshots(configStr: configStr);
         expect(result, isTrue);
         fakeProcessManager.verifyCalls();
         verify(mockDaemonClient.devices).called(1);
@@ -280,10 +285,10 @@ main() {
                 ''',
                 ''));
         final callPlutilEnUS = Call(
-            'plutil -convert json -o - ${LocalPlatform().environment['HOME']}/Library/Developer/CoreSimulator/Devices/$simulatorID/data/Library/Preferences/.GlobalPreferences.plist',
+            'plutil -convert json -o - //Library/Developer/CoreSimulator/Devices/$simulatorID/data/Library/Preferences/.GlobalPreferences.plist',
             ProcessResult(0, 0, '{"AppleLocale":"en_US"}', ''));
         final callPlutilFrCA = Call(
-            'plutil -convert json -o - ${LocalPlatform().environment['HOME']}/Library/Developer/CoreSimulator/Devices/$simulatorID/data/Library/Preferences/.GlobalPreferences.plist',
+            'plutil -convert json -o - //Library/Developer/CoreSimulator/Devices/$simulatorID/data/Library/Preferences/.GlobalPreferences.plist',
             ProcessResult(0, 0, '{"AppleLocale":"fr_CA"}', ''));
         String adbPath = initAdbPath();
         final List<Call> calls = [
@@ -333,6 +338,7 @@ main() {
                   '')),
           Call('$adbPath -s emulator-5554 emu kill', null),
           callListIosDevices,
+          Call('plutil -convert binary1 //Library/Developer/CoreSimulator/Devices/$simulatorID/data/Library/Preferences/.GlobalPreferences.plist', null),
           callPlutilEnUS,
           Call('xcrun simctl boot $simulatorID', null),
           callPlutilEnUS,
@@ -402,6 +408,9 @@ main() {
         when(mockDaemonClient.waitForEvent(EventType.deviceRemoved))
             .thenAnswer((_) => Future.value({'id': 'emulator-5554'}));
 
+            memoryFileSystem.file('example/test_driver/main.dart').createSync(recursive: true);
+            memoryFileSystem.directory('/Library/Developer/CoreSimulator/Devices/$simulatorID/data/Library/Preferences').createSync(recursive: true);
+
         final screenshots = Screenshots(configStr: configStr);
         final result = await screenshots.run();
         expect(result, isTrue);
@@ -417,10 +426,12 @@ main() {
         Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
           ..environment = {
             'CI': 'false',
-            'HOME': LocalPlatform().environment['HOME']
+//            'HOME': LocalPlatform().environment['HOME']
+            'HOME': memoryFileSystem.currentDirectory.path
           }
           ..operatingSystem = 'macos',
 //        Logger: () => VerboseLogger(StdoutLogger()),
+        FileSystem: () => memoryFileSystem,
       });
     });
   });

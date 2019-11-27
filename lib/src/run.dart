@@ -240,6 +240,7 @@ class Screenshots {
           ? throw 'Error: device \'$configDeviceName\' not found'
           : Null;
 
+      // todo: make a backup of GlobalPreferences.plist if changing iOS locale
       // set locale and run tests
       final deviceType = getDeviceType(config, configDeviceName);
       if (device != null && !device.emulator) {
@@ -366,6 +367,7 @@ class Screenshots {
         }
         // if a simulator was started, revert locale if necessary and shut it down
         if (simulator != null) {
+          // todo restore backup of GlobalPreferences.plist
           await setSimulatorLocale(deviceId, configDeviceName, origIosLocale,
               config.stagingDir, daemonClient);
           await shutdownSimulator(deviceId);

@@ -14,8 +14,9 @@ locales:
 # A list of devices to run tests on
 devices:
   ios:
-    iPhone XS Max:
-    iPad Pro (12.9-inch) (2nd generation):
+#    iPhone XS Max:
+    iPhone 8 Plus:
+    iPad Pro (12.9-inch) (3rd generation):
       frame: false
 
 # Frame screenshots
