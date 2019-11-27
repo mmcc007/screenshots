@@ -59,7 +59,7 @@ jobs:
       osx_image: xcode11.2 # macOS 10.14, JDK 13.0.1
 
       # run on master or PRs (ignore pushes)
-#      if: branch = master
+      if: branch = master
 
       before_install:
         - xcrun simctl list devices --json
@@ -75,7 +75,7 @@ jobs:
         # create repository for artifacts
         - mkdir $HOME/screenshots
         # setup osx environment for flutter and simulators
-#        - export HOMEBREW_NO_AUTO_UPDATE=1
+        - export HOMEBREW_NO_AUTO_UPDATE=1
 #        - brew install libimobiledevice
 #        - brew install ideviceinstaller
 #        - brew install ios-deploy
@@ -129,7 +129,7 @@ jobs:
       os: linux
 
       # run on master or PRs (ignore pushes)
-#      if: branch = master
+      if: branch = master
 
       before_install:
 
