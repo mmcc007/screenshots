@@ -9,18 +9,18 @@ staging: /tmp/screenshots
 # A list of locales supported in app
 locales:
   - en-US
-  - fr-CA
+#  - fr-CA
 
 # A list of devices to run tests on
 devices:
   ios:
-    iPhone XS Max:
-      frame: false
+#    iPhone XS Max:
+#      frame: false
     iPad Pro (12.9-inch) (2nd generation):
       orientation: LandscapeRight
-  android:
-    Nexus 6P:
-      orientation: LandscapeRight
+#  android:
+#    Nexus 6P:
+#      orientation: LandscapeRight
 
 # Frame screenshots
 frame: true

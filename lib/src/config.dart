@@ -104,6 +104,7 @@ class Config {
       if (_screenshotsEnv == null) await _retrieveEnv();
       return _screenshotsEnv;
     } else {
+      // output in test (hence no printStatus)
       io.stdout.writeln('Warning: screenshots runtime environment not set.');
       return Future.value({});
     }
