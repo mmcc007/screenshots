@@ -21,8 +21,8 @@ main() {
   group('utils', () {
     group('in context', () {
       FakeAndroidSDK fakeAndroidSdk;
-      MockFileSystem mockFileSystem;
-      MockFile mockFile;
+      FileSystem mockFileSystem;
+      File mockFile;
       FakeProcessManager fakeProcessManager;
 
       setUp(() {
