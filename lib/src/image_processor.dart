@@ -95,7 +95,8 @@ class ImageProcessor {
           : null;
       // prefix screenshots with name of device before moving
       // (useful for uploading to apple via fastlane)
-      await utils.prefixFilesInDir(screenshotsDir, '$deviceName-');
+      await utils.prefixFilesInDir(screenshotsDir,
+          '$deviceName-${utils.getStringFromEnum(orientation)}-');
 
       printStatus('Moving screenshots to $dstDir');
       utils.moveFiles(screenshotsDir, dstDir);
