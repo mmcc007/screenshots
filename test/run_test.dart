@@ -496,32 +496,32 @@ main() {
 //      Logger: () => VerboseLogger(StdoutLogger()),
     });
 
-    testUsingContext('start emulator on CI', () async {
-      final emulatorId = 'emulatorId';
-      final emulatorAvdName = 'emulatorAvdName';
-      final stagingDir = 'stagingDir';
-      String adbPath = initAdbPath();
-
-      fakeProcessManager.calls = [
-        Call('$stagingDir/resources/script/android-wait-for-emulator', null),
-        Call(
-            '$adbPath devices',
-            ProcessResult(
-                0, 0, 'List of devices attached\n$emulatorId	device\n', '')),
-        Call('$adbPath -s $emulatorId emu avd name',
-            ProcessResult(0, 0, '$emulatorAvdName', '')),
-      ];
-      await startEmulator(null, emulatorId, stagingDir);
-      fakeProcessManager.verifyCalls();
-    }, skip: false, overrides: <Type, Generator>{
-      ProcessManager: () => fakeProcessManager,
-      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
-        ..environment = {
-          'CI': 'true',
-          'ANDROID_HOME': 'android_home',
-        },
-//      Logger: () => VerboseLogger(StdoutLogger()),
-    });
+//    testUsingContext('start emulator on CI', () async {
+//      final emulatorId = 'emulatorId';
+//      final emulatorAvdName = 'emulatorAvdName';
+//      final stagingDir = 'stagingDir';
+//      String adbPath = initAdbPath();
+//
+//      fakeProcessManager.calls = [
+//        Call('$stagingDir/resources/script/android-wait-for-emulator', null),
+//        Call(
+//            '$adbPath devices',
+//            ProcessResult(
+//                0, 0, 'List of devices attached\n$emulatorId	device\n', '')),
+//        Call('$adbPath -s $emulatorId emu avd name',
+//            ProcessResult(0, 0, '$emulatorAvdName', '')),
+//      ];
+//      await startEmulator(null, emulatorId, stagingDir);
+//      fakeProcessManager.verifyCalls();
+//    }, skip: false, overrides: <Type, Generator>{
+//      ProcessManager: () => fakeProcessManager,
+//      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
+//        ..environment = {
+//          'CI': 'true',
+//          'ANDROID_HOME': 'android_home',
+//        },
+////      Logger: () => VerboseLogger(StdoutLogger()),
+//    });
 
     testUsingContext('find running device on CI', () async {
       final emulatorId = 'emulator-5554';
