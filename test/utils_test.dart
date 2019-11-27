@@ -59,7 +59,7 @@ main() {
         fakeProcessManager.calls = [
           Call('plutil -convert binary1 null', null),
           Call(
-              'plutil -convert json -o - /Users/jenkins/Library/Developer/CoreSimulator/Devices/udid/data/Library/Preferences/.GlobalPreferences.plist',
+              'plutil -convert json -o - /Library/Developer/CoreSimulator/Devices/udid/data/Library/Preferences/.GlobalPreferences.plist',
               ProcessResult(0, 0, '{"AppleLocale":"en_US"}', '')),
         ];
         final result = getIosSimulatorLocale('udid');
@@ -67,7 +67,10 @@ main() {
       }, overrides: <Type, Generator>{
         FileSystem: () => mockFileSystem,
         ProcessManager: () => fakeProcessManager,
-      });
+        Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
+          ..environment = {
+            'HOME': ''
+          },    });
     });
 
     group('not in context', () {
