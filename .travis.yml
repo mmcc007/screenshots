@@ -59,7 +59,7 @@ jobs:
       osx_image: xcode11.2 # macOS 10.14, JDK 13.0.1
 
       # run on master or PRs (ignore pushes)
-      if: branch = master
+      # if: branch = master
 
       before_install:
         - xcrun simctl list devices --json
@@ -129,7 +129,7 @@ jobs:
       os: linux
 
       # run on master or PRs (ignore pushes)
-      if: branch = master
+      # if: branch = master
 
       before_install:
 
