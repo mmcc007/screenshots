@@ -11,13 +11,14 @@ locales:
   - en-US
   - fr-CA
 
-# A list of devices to run tests on
+# A map of devices to run tests on
 devices:
   ios:
 #    iPhone XS Max:
-    iPhone 8 Plus:
+#    iPhone 8 Plus:
     iPad Pro (12.9-inch) (3rd generation):
-      frame: false
+      - orientation: Portrait
+      - orientation: LandscapeRight
 
 # Frame screenshots
 frame: true
