@@ -135,6 +135,15 @@ main() {
         ''';
       config = Config(configStr: configStr);
       expect(config.isFrameRequired('Nexus 6P'), isFalse);
+      configStr = '''
+        devices:
+          android:
+            Nexus 6P:
+              orientation: LandscapeRight
+        frame: true
+        ''';
+      config = Config(configStr: configStr);
+      expect(config.isFrameRequired('Nexus 6P'), isFalse);
     });
 
     test('store and retrieve environment', () async {

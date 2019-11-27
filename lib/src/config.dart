@@ -5,9 +5,9 @@ import 'dart:io' as io;
 import 'package:meta/meta.dart';
 import 'package:screenshots/src/orientation.dart';
 
+import 'globals.dart';
 import 'screens.dart';
 import 'utils.dart' as utils;
-import 'globals.dart';
 
 const kEnvConfigPath = 'SCREENSHOTS_YAML';
 
@@ -51,17 +51,25 @@ class Config {
 
   // Getters
   List<String> get tests => _processList(_configInfo['tests']);
+
   String get stagingDir => _configInfo['staging'];
+
   List<String> get locales => _processList(_configInfo['locales']);
+
   List<ConfigDevice> get devices =>
       _processDevices(_configInfo['devices'], isFrameEnabled);
+
   List<ConfigDevice> get iosDevices =>
       devices.where((device) => device.deviceType == DeviceType.ios).toList();
+
   List<ConfigDevice> get androidDevices => devices
       .where((device) => device.deviceType == DeviceType.android)
       .toList();
+
   bool get isFrameEnabled => _configInfo['frame'];
+
   String get recordingDir => _configInfo['recording'];
+
   String get archiveDir => _configInfo['archive'];
 
   /// Get all android and ios device names.
@@ -83,7 +91,10 @@ class Config {
   bool isFrameRequired(String deviceName) {
     final device = devices.firstWhere((device) => device.name == deviceName,
         orElse: () => throw 'Error: device \'$deviceName\' not found');
-    return device.isFramed;
+    return (device.orientation == Orientation.LandscapeLeft ||
+            device.orientation == Orientation.LandscapeRight)
+        ? false
+        : device.isFramed;
   }
 
   /// Current screenshots runtime environment
@@ -93,6 +104,7 @@ class Config {
       if (_screenshotsEnv == null) await _retrieveEnv();
       return _screenshotsEnv;
     } else {
+      // output in test (hence no printStatus)
       io.stdout.writeln('Warning: screenshots runtime environment not set.');
       return Future.value({});
     }
