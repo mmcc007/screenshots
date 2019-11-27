@@ -244,6 +244,8 @@ main() {
     }, skip: false, overrides: <Type, Generator>{
       ProcessManager: () => fakeProcessManager,
       Logger: () => BufferLogger(),
+      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
+        ..operatingSystem = 'macos',
     });
 
     testUsingContext('show guide', () async {
