@@ -101,6 +101,8 @@ android_integration_task:
 #      vm.heapSize=384
 #      EOF
 #    - cat $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
+  android_licenses_script:
+    - yes | sdkmanager --licenses >/dev/null
   start_emulator_background_script:
     - sudo chown cirrus:cirrus /dev/kvm
     - $ANDROID_HOME/emulator/emulator-headless -version
@@ -111,7 +113,6 @@ android_integration_task:
     - ./script/android-wait-for-emulator.sh
     - adb shell getprop ro.product.cpu.abi
   doctor_script:
-    - flutter doctor --android-licenses
     - flutter doctor -v
   test_script:
     - export PATH="$HOME/.pub-cache/bin:$PATH" # needed to find screenshots
