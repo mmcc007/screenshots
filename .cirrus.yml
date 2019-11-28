@@ -42,6 +42,14 @@ android_integration_task:
     kvm: true
   pub_cache:
     folder: ~/.pub-cache
+  gradle_cache:
+    folder: ~/.gradle/caches
+  check_script: gradle check
+  cleanup_before_cache_script:
+    - rm -rf ~/.gradle/caches/$GRADLE_VERSION/
+    - rm -rf ~/.gradle/caches/transforms-1
+    - rm -rf ~/.gradle/caches/journal-1
+    - find ~/.gradle/caches/ -name "*.lock" -type f -delete
   emulator_config_script:
     - EMULATOR_NAME=Nexus_6P_API_28
     - cat $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
