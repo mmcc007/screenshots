@@ -284,7 +284,8 @@ main() {
         "emulator": true,
         "category": "mobile",
         "platformType": "android",
-        "ephemeral": true
+        "ephemeral": true,
+        "emulatorId": "emulator_id",
       });
       final realIosDevice = loadDaemonDevice({
         "id": "3b3455019e329e007e67239d9b897148244b5053",
@@ -298,7 +299,7 @@ main() {
       });
       final realAndroidDevice = loadDaemonDevice({
         "id": "device id",
-        "name": "Adroid Phone Name",
+        "name": "Android Phone Name",
         "platform": "android",
         "emulator": false,
         "category": "mobile",
