@@ -101,19 +101,20 @@ android_integration_task:
     - sudo chown cirrus:cirrus /dev/kvm
     - $ANDROID_HOME/emulator/emulator-headless -version
     - $ANDROID_HOME/emulator/emulator-headless -avd Nexus_6P_API_28 -no-audio -no-window -verbose
+  activate_script:
+    - pub global activate --source path .
   wait_for_emulator_script:
     - ./script/android-wait-for-emulator.sh
   doctor_script:
     - flutter doctor -v
-  activate_script:
-    - pub global activate --source path .
   test_script:
     - export PATH="$HOME/.pub-cache/bin:$PATH" # needed to find screenshots
-    - cd example
-    - screenshots -c screenshots_android.yaml -v
+    - (cd example; screenshots -c screenshots_android.yaml -v)
   find_script:
     - pwd
+    - ls -la
     - find example/ios/fastlane/screenshots || echo -n
     - find ios/fastlane/screenshots || echo -n
+    - find .
   screenshot_artifacts:
     path: example/ios/fastlane/screenshots/*
