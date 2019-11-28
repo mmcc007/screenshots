@@ -109,6 +109,7 @@ android_integration_task:
     - pub global activate --source path .
   wait_for_emulator_script:
     - ./script/android-wait-for-emulator.sh
+    - adb shell getprop ro.product.cpu.abi
   doctor_script:
     - flutter doctor -v
   test_script:
