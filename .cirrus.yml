@@ -43,7 +43,7 @@ android_integration_task:
   pub_cache:
     folder: ~/.pub-cache
   emulator_config_script:
-    - EMULATOR_NAME
+    - EMULATOR_NAME=Nexus_6P_API_28
     - cat $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
 #    - rm $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
 #    - |
@@ -100,7 +100,7 @@ android_integration_task:
   start_emulator_background_script:
     - sudo chown cirrus:cirrus /dev/kvm
     - $ANDROID_HOME/emulator/emulator-headless -version
-    - $ANDROID_HOME/emulator/emulator-headless -avd Nexus_6_API_28 -no-audio -no-window -verbose
+    - $ANDROID_HOME/emulator/emulator-headless -avd Nexus_6P_API_28 -no-audio -no-window -verbose
   wait_for_emulator_script:
     - ./script/android-wait-for-emulator.sh
   doctor_script:
