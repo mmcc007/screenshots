@@ -3,6 +3,7 @@ import 'package:file/memory.dart';
 import 'package:process/process.dart';
 import 'package:screenshots/src/config.dart';
 import 'package:screenshots/src/context_runner.dart';
+import 'package:screenshots/src/fastlane.dart';
 import 'package:screenshots/src/globals.dart';
 import 'package:screenshots/src/image_processor.dart';
 import 'package:screenshots/src/resources.dart' as resources;
@@ -71,10 +72,10 @@ main() {
 
   group('image processor', () {
     FakeProcessManager fakeProcessManager;
-    MemoryFileSystem memFs;
+    MemoryFileSystem memoryFileSystem;
 
     setUp(() async {
-      memFs = MemoryFileSystem();
+      memoryFileSystem = MemoryFileSystem();
       fakeProcessManager = FakeProcessManager();
     });
 
@@ -119,11 +120,14 @@ main() {
       final result = await imageProcessor.process(
           DeviceType.android, deviceName, locale, null, RunMode.normal, null);
       expect(result, isTrue);
+      expect(fs.directory(stagingDir).existsSync(), isTrue);
+      final dstDir = getDirPath(DeviceType.android, locale, getAndroidModelType(screens.getScreen(deviceName)));
+      expect(fs.directory(dstDir).listSync().length, 1);
       fakeProcessManager.verifyCalls();
     }, overrides: <Type, Generator>{
       ProcessManager: () => fakeProcessManager,
-//      Logger: () => VerboseLogger(StdoutLogger()),
-      FileSystem: () => memFs
+      Logger: () => VerboseLogger(StdoutLogger()),
+      FileSystem: () => memoryFileSystem
     });
   });
 }
