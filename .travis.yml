@@ -198,16 +198,6 @@ jobs:
         # Create an Android emulator
         #  - echo no | avdmanager --verbose create avd --force -n test -k "system-images;android-$API;$GOO;$ABI" -c 10M
         - echo no | avdmanager --verbose create avd --force -n $EMULATOR_NAME -k "system-images;android-$API;$GOO;$ABI"
-        #  - EMU_PARAMS="
-        #      -verbose
-        #      -no-snapshot
-        #      -no-window
-        #      -no-audio
-        #      -no-boot-anim
-        #      -camera-back none
-        #      -camera-front none
-        #      -selinux permissive
-        #      -qemu -m 2048"
 
         # config emulator
         - cat $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
@@ -261,15 +251,25 @@ jobs:
           tag.display=Default
           tag.id=default
           vm.heapSize=384
-          EOF
         - cat $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
 
         # start emulator
         - ${ANDROID_HOME}/emulator/emulator -version
+        #  - EMU_PARAMS="
+        #      -verbose
+        #      -no-snapshot
+        #      -no-window
+        #      -no-audio
+        #      -no-boot-anim
+        #      -camera-back none
+        #      -camera-front none
+        #      -selinux permissive
+        #      -qemu -m 2048"
         - EMU_PARAMS="
           -avd $EMULATOR_NAME
           -no-window
           -no-audio
+          -verbose
           "
         - EMU_COMMAND="emulator-headless"
         # This double "sudo" monstrosity is used to have Travis execute the
