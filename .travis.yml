@@ -192,21 +192,6 @@ jobs:
         - sdkmanager "platforms;android-28" >/dev/null # We need the API of the current compileSdkVersion from gradle.properties  -
 
         - sdkmanager "emulator" >/dev/null
-        - |
-          if [[ $ABI =~ "arm" ]]; then
-            # Download a pinned version of the emulator since default version can cause issues
-            ${ANDROID_HOME}/emulator/emulator -version
-            emulator_version=5264690 # 29.2.1.0 (build_id 5889189) ==> 28.0.23.0 (build_id 5264690)
-            # sudo apt-get install -y libunwind8 libc++1
-            curl -fo emulator.zip "https://dl.google.com/android/repository/emulator-linux-$emulator_version.zip"
-            rm -rf "${ANDROID_HOME}/emulator"
-            unzip -q emulator.zip -d "${ANDROID_HOME}"
-            rm -f emulator.zip
-            # install build tools and platforms for arm (to allow emulator to run)
-            sdkmanager "build-tools;25.0.2" "platforms;android-25" > /dev/null
-          fi
-        - ${ANDROID_HOME}/emulator/emulator -version
-
         - sdkmanager "extras;android;m2repository" >/dev/null
         - sdkmanager "system-images;android-$API;$GOO;$ABI" >/dev/null # install system images for emulator
 
@@ -280,19 +265,13 @@ jobs:
         - cat $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
 
         # start emulator
+        - ${ANDROID_HOME}/emulator/emulator -version
         - EMU_PARAMS="
           -avd $EMULATOR_NAME
           -no-window
           -no-audio
           "
-        - EMU_COMMAND="emulator"
-        - |
-          if [[ $ABI =~ "x86" ]]; then
-            EMU_COMMAND="emulator-headless"
-          else
-            # emulate graphics if running on ARM
-            EMU_PARAMS="${EMU_PARAMS} -gpu swiftshader"
-          fi
+        - EMU_COMMAND="emulator-headless"
         # This double "sudo" monstrosity is used to have Travis execute the
         # emulator with its new group permissions and help preserve the rule
         # of least privilege.
@@ -322,3 +301,18 @@ jobs:
 
       script:
         - cd example; screenshots -c screenshots_android.yaml -v
+
+      before_deploy:
+        # bundle artifacts for later deploy
+        - zip -r $HOME/screenshots/screenshots.zip android/fastlane/metadata/android/*/images
+
+      # deploy artifacts if tagged commit
+      deploy:
+        provider: releases
+        skip_cleanup: true
+        api_key:
+          secure: wyPNNbjTFChWOGc/JiTpGhN490dRzz/qhU2T3CddZALjy4VN3LywennK3xnTOAq+FEYE9H/quP/SxkUX154al/lxeL6QuN5D0Ev2bL3lS9jyaoe0NOKx5GnNTzfv84taZPi768UF4rgYqzzdF8WJTCe0dlvDH7qKgH+dHIZGoB1dM/hhWMEXUv0uAZuFDkepxWHOLHsIABunkz428MEsSRCTdEWOsgdFiEl+DOC5ErmorgHazUWPpSwenz13kCLhU+wT2Fsek5tGBO6GT1Mvw8qrht3LUZBaBQJfx4yhdXQKtq0Dr+gI9a3sbF/3TKV0nRvDVA+KGmMLHT+fkRrz1xkGvrLnCDfkylDZlmn/IoQUkv4JwI+lJIXfUp40pMmSlFH1WKToWSjMsPSxv02fVYzxNZoxlno+qyKk4lfdROOSSYS5LjmMd+Lrvhmx7vNMCHl57fdXdKwgyJllxT/khMZTJv5IPQih1yi3m/hDw0s59IHYd22QHFoodcdAPy2xxeVh8VhzhucpesWAvoFZfgdTmPZXAzpMR4kEaeBb5f3Z/Eg3AypDPXg67kXwFqTRL+ZqDzOFynZYJML8RbsZd/nqU5TYc0Ocmh0YMA3v0Z43wuZMshXOXujl8z3zmnwzV/QmFP0U/phOGa9SmvKtRyGQoTGtIXoPWdXrRpgm3F4=
+        file:
+          - $HOME/screenshots/screenshots.zip
+        on:
+          tags: true
