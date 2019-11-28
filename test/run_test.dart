@@ -375,7 +375,8 @@ main() {
             'emulator': true,
             'category': 'mobile',
             'platformType': 'android',
-            'ephemeral': true
+            'ephemeral': true,
+            "emulatorId": "emulator_id",
           },
           {
             'id': '$simulatorID',
@@ -385,7 +386,8 @@ main() {
             'category': 'mobile',
             'platformType': 'ios',
             'ephemeral': true,
-            'model': 'iPhone 5c (GSM)'
+            'model': 'iPhone 5c (GSM)',
+          "emulatorId": 'emulatorId',
           }
         ];
         final daemonDevices =
