@@ -311,7 +311,9 @@ DaemonDevice loadDaemonDevice(Map<String, dynamic> device) {
       device['category'],
       device['platformType'],
       device['platform'],
-      device['emulator'],
+//      device['emulator'],
+      // flutter daemon is not identifying running emulators correctly
+      device['name'].contains('Android SDK')?true:false,
       device['ephemeral'],
       device['emulatorId'],
       iosModel: device['model']);
