@@ -295,12 +295,12 @@ jobs:
         # Install image magick (already installed)
 
       before_script:
+        # install most current (released or unreleased) Screenshots
+        - pub global activate --source path .
         # wait for emulator to finish startup
         - ./script/android-wait-for-emulator.sh
         # unlock screen
         - adb shell input keyevent 82 &
-        # install most current (released or unreleased) Screenshots
-        - pub global activate --source path .
 
       script:
         - cd example; screenshots -c screenshots_android.yaml -v
