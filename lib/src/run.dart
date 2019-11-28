@@ -12,7 +12,7 @@ import 'daemon_client.dart';
 import 'fastlane.dart' as fastlane;
 import 'globals.dart';
 import 'image_processor.dart';
-import 'orientation.dart' as orient;
+import 'orientation.dart';
 import 'resources.dart' as resources;
 import 'screens.dart';
 import 'utils.dart' as utils;
@@ -89,10 +89,8 @@ class Screenshots {
     await screens.init();
 
     // start flutter daemon
-    Status status;
-    status = logger.startProgress('Starting flutter daemon...',
+    final status = logger.startProgress('Starting flutter daemon...',
         timeout: Duration(milliseconds: 10000));
-    //  daemonClient.verbose = true;
     await daemonClient.start;
     status.stop();
 
@@ -316,7 +314,7 @@ class Screenshots {
           // Change orientation if required
           final configDevice = config.getDevice(configDeviceName);
           if (configDevice.orientations != null) {
-            for (orient.Orientation orientation in configDevice.orientations) {
+            for (final orientation in configDevice.orientations) {
               final currentDevice =
                   utils.getDeviceFromId(await daemonClient.devices, deviceId);
               currentDevice == null
@@ -325,7 +323,7 @@ class Screenshots {
               switch (deviceType) {
                 case DeviceType.android:
                   if (currentDevice.emulator) {
-                    orient.changeDeviceOrientation(deviceType, orientation,
+                    changeDeviceOrientation(deviceType, orientation,
                         deviceId: deviceId);
                   } else {
                     printStatus(
@@ -334,7 +332,7 @@ class Screenshots {
                   break;
                 case DeviceType.ios:
                   if (currentDevice.emulator) {
-                    orient.changeDeviceOrientation(deviceType, orientation,
+                    changeDeviceOrientation(deviceType, orientation,
                         scriptDir: '${config.stagingDir}/resources/script');
                   } else {
                     printStatus(
@@ -388,7 +386,7 @@ class Screenshots {
   Future runProcessTests(
     configDeviceName,
     String locale,
-    orient.Orientation orientation,
+    Orientation orientation,
     DeviceType deviceType,
     String deviceId,
   ) async {
@@ -579,24 +577,24 @@ Future<String> shutdownAndroidEmulator(
   return device['id'];
 }
 
-/// Start android emulator in a CI environment.
-Future _startAndroidEmulatorOnCI(String emulatorId, String stagingDir) async {
-  // testing on CI/CD requires starting emulator in a specific way
-  final androidHome = platform.environment['ANDROID_HOME'];
-  await utils.streamCmd([
-    '$androidHome/emulator/emulator',
-    '-avd',
-    emulatorId,
-    '-no-audio',
-    '-no-window',
-    '-no-snapshot',
-    '-gpu',
-    'swiftshader',
-  ], mode: ProcessStartMode.detached);
-  // wait for emulator to start
-  await utils
-      .streamCmd(['$stagingDir/resources/script/android-wait-for-emulator']);
-}
+///// Start android emulator in a CI environment.
+//Future _startAndroidEmulatorOnCI(String emulatorId, String stagingDir) async {
+//  // testing on CI/CD requires starting emulator in a specific way
+//  final androidHome = platform.environment['ANDROID_HOME'];
+//  await utils.streamCmd([
+//    '$androidHome/emulator/emulator',
+//    '-avd',
+//    emulatorId,
+//    '-no-audio',
+//    '-no-window',
+//    '-no-snapshot',
+//    '-gpu',
+//    'swiftshader',
+//  ], mode: ProcessStartMode.detached);
+//  // wait for emulator to start
+//  await utils
+//      .streamCmd(['$stagingDir/resources/script/android-wait-for-emulator']);
+//}
 
 /// Get device type from config info
 DeviceType getDeviceType(Config config, String deviceName) {
