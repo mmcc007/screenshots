@@ -40,6 +40,12 @@ android_integration_task:
 #    cpu: 4
 #    memory: 10G
     kvm: true
+  pub_cache:
+    folder: ~/.pub-cache
+  gradle_cache:
+    folder: ~/.gradle/caches
+  gradle_wrapper_cache:
+    folder: ~/.gradle/wrapper
   emulator_config_script:
     - EMULATOR_NAME=Nexus_6P_API_28
     - cat $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
@@ -124,9 +130,3 @@ android_integration_task:
     - rm -rf ~/.gradle/caches/transforms-1
     - rm -rf ~/.gradle/caches/journal-1
     - find ~/.gradle/caches/ -name "*.lock" -type f -delete
-  pub_cache:
-    folder: ~/.pub-cache
-  gradle_cache:
-    folder: ~/.gradle/caches
-  gradle_wrapper_cache:
-    folder: ~/.gradle/wrapper
