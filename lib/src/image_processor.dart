@@ -55,7 +55,8 @@ class ImageProcessor {
       // add frame if required
       if (_config.isFrameRequired(deviceName, orientation)) {
         final Map screenResources = screenProps['resources'];
-        printStatus('Processing screenshots from test...');
+        final status = logger.startProgress('Processing screenshots from test...',
+            timeout: Duration(minutes: 4));
 
         // unpack images for screen from package to local tmpDir area
         await resources.unpackImages(screenResources, _config.stagingDir);
@@ -78,6 +79,7 @@ class ImageProcessor {
           await frame(_config.stagingDir, screenProps, screenshotPath.path,
               deviceType, runMode);
         }
+        status.stop();
       } else {
         printStatus('Warning: framing is not enabled');
       }
