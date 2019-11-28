@@ -303,7 +303,24 @@ jobs:
         - adb shell input keyevent 82 &
 
       script:
-        - cd example; screenshots -c screenshots_android.yaml -v
+        - (cd example; screenshots -c screenshots_android.yaml -v)
+
+      before_cache:
+#        - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
+#        - curl "${GRAVIS}.clean_gradle_cache.sh" --output ~/.clean_gradle_cache.sh
+#        - bash ~/.clean_gradle_cache.sh
+        - GRADLE_VERSION=$(./android/gradlew -version | grep Gradle | awk '{print $2}')
+        - rm -rf ~/.gradle/caches/$GRADLE_VERSION/
+        - rm -rf ~/.gradle/caches/transforms-1
+        - rm -rf ~/.gradle/caches/journal-1
+        - find ~/.gradle/caches/ -name "*.lock" -type f -delete
+
+      cache:
+        directories:
+          - $HOME/.pub-cache
+          - $HOME/.gradle/caches/
+          - $HOME/.gradle/wrapper/
+
 
       before_deploy:
         # bundle artifacts for later deploy
