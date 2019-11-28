@@ -15,6 +15,7 @@ locales:
 devices:
   android:
     Nexus 6P:
+      orientation: LandscapeRight
 
 # Frame screenshots
 frame: true
