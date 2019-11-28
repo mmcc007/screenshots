@@ -47,7 +47,7 @@ android_integration_task:
   start_emulator_background_script:
     - sudo chown cirrus:cirrus /dev/kvm
     - $ANDROID_HOME/emulator/emulator-headless -version
-    - $ANDROID_HOME/emulator/emulator-headless -avd test -no-audio -no-window -no-skin
+    - $ANDROID_HOME/emulator/emulator-headless -avd Nexus_6_API_28 -no-audio -no-window -no-skin
   wait_for_emulator_script:
     - ./script/android-wait-for-emulator.sh
   doctor_script:
