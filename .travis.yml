@@ -17,115 +17,115 @@ jobs:
         - OS=linux
   include:
 
-    - stage: Testing
-      env:
-        - Unit tests
-        - OS=linux
-      os: linux
-      language: dart
-      dart: stable
-
-      install:
+#    - stage: Testing
+#      env:
+#        - Unit tests
+#        - OS=linux
+#      os: linux
+#      language: dart
+#      dart: stable
+#
+#      install:
+##        - dart --version
+##        - curl --connect-timeout 15 --retry 5 https://storage.googleapis.com/dart-archive/channels/stable/release/$DART_VERSION/sdk/dartsdk-linux-x64-release.zip > ${TRAVIS_HOME}/dartsdk.zip
+##        - unzip ${TRAVIS_HOME}/dartsdk.zip -d ${TRAVIS_HOME} > /dev/null
+##        - rm ${TRAVIS_HOME}/dartsdk.zip
+##        - export DART_SDK="${TRAVIS_HOME}/dart-sdk"
+##        - export PATH="$DART_SDK/bin:$PATH"
+##        - export PATH="${TRAVIS_HOME}/.pub-cache/bin:$PATH"
+#        - pub --version
 #        - dart --version
-#        - curl --connect-timeout 15 --retry 5 https://storage.googleapis.com/dart-archive/channels/stable/release/$DART_VERSION/sdk/dartsdk-linux-x64-release.zip > ${TRAVIS_HOME}/dartsdk.zip
-#        - unzip ${TRAVIS_HOME}/dartsdk.zip -d ${TRAVIS_HOME} > /dev/null
-#        - rm ${TRAVIS_HOME}/dartsdk.zip
-#        - export DART_SDK="${TRAVIS_HOME}/dart-sdk"
-#        - export PATH="$DART_SDK/bin:$PATH"
-#        - export PATH="${TRAVIS_HOME}/.pub-cache/bin:$PATH"
-        - pub --version
-        - dart --version
-        - pub get # because no pubspec.lock
-        - pub run test test/all_tests.dart
-        # install image magick (already installed)
-        # install coverage tool
-        - pub global activate coverage
-
-      script:
-        - script/code_coverage.sh
-
-      after_success: bash <(curl -s https://codecov.io/bash) -f coverage/lcov.info
-
-    - stage: Testing
-      env:
-        - Run screenshots on iOS
-        - OS=macos
-      os: osx
-      #osx_image: xcode10.2 # macOS 10.14, JDK 12+33
-      #osx_image: xcode10.1 # macOS 10.13, JDK 11.0.1+13
-      # the following osx_image fixes the JDK module problem, has iPhone XS Max
-      # but doesn't have iPad Pro (12.9-inch) (3rd generation). So for now we exclude the
-      # iPad Pro (12.9-inch) (3rd generation) in screenshots.yaml
-#      osx_image: xcode10 # macOS 10.13, JDK 10.0.2+13
-      osx_image: xcode11.2 # macOS 10.14, JDK 13.0.1
-
-      # run on master or PRs (ignore other branches)
-      # if: branch = master
-
-      before_install:
-        - xcrun simctl list devices --json
-        - xcrun simctl list devicetypes
-        - xcrun simctl list runtimes
-
-        # Install flutter on macOS
-        - wget --quiet --output-document=flutter.zip https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/${OS}/flutter_${OS}_v${FLUTTER_VERSION}.zip && unzip -qq flutter.zip > /dev/null && rm flutter.zip
-        - export PATH="$PATH":"$HOME/.pub-cache/bin"
-        - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
-
-      install:
-        # create repository for artifacts
-        - mkdir $HOME/screenshots
-        # setup osx environment for flutter and simulators
-        - export HOMEBREW_NO_AUTO_UPDATE=1
-#        - brew install libimobiledevice
-#        - brew install ideviceinstaller
-#        - brew install ios-deploy
-#        - brew install cocoapods || echo 'ignore exit(1)'
-#        - brew link --overwrite cocoapods
-
+#        - pub get # because no pubspec.lock
+#        - pub run test test/all_tests.dart
+#        # install image magick (already installed)
+#        # install coverage tool
+#        - pub global activate coverage
 #
-#      # fix timezone warning on osx
-#      - sudo ln -sf /usr/share/zoneinfo/US/Pacific /etc/localtime
+#      script:
+#        - script/code_coverage.sh
 #
-
-
-#      # install pre-compiled flutter
-##      - sdkmanager "platforms;android-28" "build-tools;28.0.3" > /dev/null # required by flutter
-##      - FLUTTER_CHANNEL=stable
-##      - FLUTTER_VERSION=1.7.8+hotfix.4-${FLUTTER_CHANNEL}
-##      - wget --quiet --output-document=flutter.zip https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/macos/flutter_macos_v${FLUTTER_VERSION}.zip && unzip -qq flutter.zip > /dev/null && rm flutter.zip
-##      - export PATH="$PATH":"$HOME/.pub-cache/bin"
-##      - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
-        - flutter doctor -v
-
-        # install ImageMagick
-        - brew install imagemagick &
-
-        # install most current (released or unreleased) Screenshots
-        - pub global activate --source path .
-
-      script:
-        - cd example; screenshots -c screenshots_ios.yaml -v
-
-      before_deploy:
-        # bundle artifacts for later deploy
-        - zip -r $HOME/screenshots/screenshots.zip ios/fastlane/screenshots android/fastlane/metadata/android/*/images
-        # Set up git user name and tag this commit
-#        - git config --local user.name "$GIT_USER_NAME"
-#        - git config --local user.email "$GIT_USER_EMAIL"
-#        - export TRAVIS_TAG=${TRAVIS_TAG:-$(date +'%Y%m%d%H%M%S')-$(git log --format=%h -1)}
-#        - git tag $TRAVIS_TAG
-
-      # deploy artifacts if tagged commit
-      deploy:
-        provider: releases
-        skip_cleanup: true
-        api_key:
-          secure: wyPNNbjTFChWOGc/JiTpGhN490dRzz/qhU2T3CddZALjy4VN3LywennK3xnTOAq+FEYE9H/quP/SxkUX154al/lxeL6QuN5D0Ev2bL3lS9jyaoe0NOKx5GnNTzfv84taZPi768UF4rgYqzzdF8WJTCe0dlvDH7qKgH+dHIZGoB1dM/hhWMEXUv0uAZuFDkepxWHOLHsIABunkz428MEsSRCTdEWOsgdFiEl+DOC5ErmorgHazUWPpSwenz13kCLhU+wT2Fsek5tGBO6GT1Mvw8qrht3LUZBaBQJfx4yhdXQKtq0Dr+gI9a3sbF/3TKV0nRvDVA+KGmMLHT+fkRrz1xkGvrLnCDfkylDZlmn/IoQUkv4JwI+lJIXfUp40pMmSlFH1WKToWSjMsPSxv02fVYzxNZoxlno+qyKk4lfdROOSSYS5LjmMd+Lrvhmx7vNMCHl57fdXdKwgyJllxT/khMZTJv5IPQih1yi3m/hDw0s59IHYd22QHFoodcdAPy2xxeVh8VhzhucpesWAvoFZfgdTmPZXAzpMR4kEaeBb5f3Z/Eg3AypDPXg67kXwFqTRL+ZqDzOFynZYJML8RbsZd/nqU5TYc0Ocmh0YMA3v0Z43wuZMshXOXujl8z3zmnwzV/QmFP0U/phOGa9SmvKtRyGQoTGtIXoPWdXrRpgm3F4=
-        file:
-          - $HOME/screenshots/screenshots.zip
-        on:
-          tags: true
+#      after_success: bash <(curl -s https://codecov.io/bash) -f coverage/lcov.info
+#
+#    - stage: Testing
+#      env:
+#        - Run screenshots on iOS
+#        - OS=macos
+#      os: osx
+#      #osx_image: xcode10.2 # macOS 10.14, JDK 12+33
+#      #osx_image: xcode10.1 # macOS 10.13, JDK 11.0.1+13
+#      # the following osx_image fixes the JDK module problem, has iPhone XS Max
+#      # but doesn't have iPad Pro (12.9-inch) (3rd generation). So for now we exclude the
+#      # iPad Pro (12.9-inch) (3rd generation) in screenshots.yaml
+##      osx_image: xcode10 # macOS 10.13, JDK 10.0.2+13
+#      osx_image: xcode11.2 # macOS 10.14, JDK 13.0.1
+#
+#      # run on master or PRs (ignore other branches)
+#      # if: branch = master
+#
+#      before_install:
+#        - xcrun simctl list devices --json
+#        - xcrun simctl list devicetypes
+#        - xcrun simctl list runtimes
+#
+#        # Install flutter on macOS
+#        - wget --quiet --output-document=flutter.zip https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/${OS}/flutter_${OS}_v${FLUTTER_VERSION}.zip && unzip -qq flutter.zip > /dev/null && rm flutter.zip
+#        - export PATH="$PATH":"$HOME/.pub-cache/bin"
+#        - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
+#
+#      install:
+#        # create repository for artifacts
+#        - mkdir $HOME/screenshots
+#        # setup osx environment for flutter and simulators
+#        - export HOMEBREW_NO_AUTO_UPDATE=1
+##        - brew install libimobiledevice
+##        - brew install ideviceinstaller
+##        - brew install ios-deploy
+##        - brew install cocoapods || echo 'ignore exit(1)'
+##        - brew link --overwrite cocoapods
+#
+##
+##      # fix timezone warning on osx
+##      - sudo ln -sf /usr/share/zoneinfo/US/Pacific /etc/localtime
+##
+#
+#
+##      # install pre-compiled flutter
+###      - sdkmanager "platforms;android-28" "build-tools;28.0.3" > /dev/null # required by flutter
+###      - FLUTTER_CHANNEL=stable
+###      - FLUTTER_VERSION=1.7.8+hotfix.4-${FLUTTER_CHANNEL}
+###      - wget --quiet --output-document=flutter.zip https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/macos/flutter_macos_v${FLUTTER_VERSION}.zip && unzip -qq flutter.zip > /dev/null && rm flutter.zip
+###      - export PATH="$PATH":"$HOME/.pub-cache/bin"
+###      - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
+#        - flutter doctor -v
+#
+#        # install ImageMagick
+#        - brew install imagemagick &
+#
+#        # install most current (released or unreleased) Screenshots
+#        - pub global activate --source path .
+#
+#      script:
+#        - cd example; screenshots -c screenshots_ios.yaml -v
+#
+#      before_deploy:
+#        # bundle artifacts for later deploy
+#        - zip -r $HOME/screenshots/screenshots.zip ios/fastlane/screenshots android/fastlane/metadata/android/*/images
+#        # Set up git user name and tag this commit
+##        - git config --local user.name "$GIT_USER_NAME"
+##        - git config --local user.email "$GIT_USER_EMAIL"
+##        - export TRAVIS_TAG=${TRAVIS_TAG:-$(date +'%Y%m%d%H%M%S')-$(git log --format=%h -1)}
+##        - git tag $TRAVIS_TAG
+#
+#      # deploy artifacts if tagged commit
+#      deploy:
+#        provider: releases
+#        skip_cleanup: true
+#        api_key:
+#          secure: wyPNNbjTFChWOGc/JiTpGhN490dRzz/qhU2T3CddZALjy4VN3LywennK3xnTOAq+FEYE9H/quP/SxkUX154al/lxeL6QuN5D0Ev2bL3lS9jyaoe0NOKx5GnNTzfv84taZPi768UF4rgYqzzdF8WJTCe0dlvDH7qKgH+dHIZGoB1dM/hhWMEXUv0uAZuFDkepxWHOLHsIABunkz428MEsSRCTdEWOsgdFiEl+DOC5ErmorgHazUWPpSwenz13kCLhU+wT2Fsek5tGBO6GT1Mvw8qrht3LUZBaBQJfx4yhdXQKtq0Dr+gI9a3sbF/3TKV0nRvDVA+KGmMLHT+fkRrz1xkGvrLnCDfkylDZlmn/IoQUkv4JwI+lJIXfUp40pMmSlFH1WKToWSjMsPSxv02fVYzxNZoxlno+qyKk4lfdROOSSYS5LjmMd+Lrvhmx7vNMCHl57fdXdKwgyJllxT/khMZTJv5IPQih1yi3m/hDw0s59IHYd22QHFoodcdAPy2xxeVh8VhzhucpesWAvoFZfgdTmPZXAzpMR4kEaeBb5f3Z/Eg3AypDPXg67kXwFqTRL+ZqDzOFynZYJML8RbsZd/nqU5TYc0Ocmh0YMA3v0Z43wuZMshXOXujl8z3zmnwzV/QmFP0U/phOGa9SmvKtRyGQoTGtIXoPWdXrRpgm3F4=
+#        file:
+#          - $HOME/screenshots/screenshots.zip
+#        on:
+#          tags: true
 
     - stage: Testing
       env:

@@ -1,38 +1,38 @@
-unit_task:
-  container:
-    image: cirrusci/flutter:stable
-  pub_cache:
-    folder: ~/.pub-cache
-  imagemagic_script:
-    - sudo apt-get update -y
-    - sudo apt-get install -y imagemagick
-  pub_get_script:
-    - pub --version
-    - dart --version
-    - pub get # because no pubspec.lock
-  test_script:
-    - pub run test test/all_tests.dart
-
-ios_integration_task:
-  osx_instance:
-    image: mojave-xcode-11.2.1-flutter
-    #  image: mojave-xcode-10.1-flutter
-  pub_cache:
-    folder: ~/.pub-cache
-  simulators_script:
-    - xcrun simctl list devicetypes
-    - xcrun simctl list runtimes
-  simulators_json_script:
-    - xcrun simctl list devices --json
-  doctor_script: flutter doctor -v
-  activate_script: pub global activate --source path .
-  imagemagick_backgroundscript: brew install imagemagick
-  test_script:
-    - export PATH="$HOME/.pub-cache/bin:$PATH" # needed to find screenshots
-    - cd example
-    - screenshots -c screenshots_ios.yaml -v
-  screenshot_artifacts:
-    path: example/ios/fastlane/screenshots/*
+#unit_task:
+#  container:
+#    image: cirrusci/flutter:stable
+#  pub_cache:
+#    folder: ~/.pub-cache
+#  imagemagic_script:
+#    - sudo apt-get update -y
+#    - sudo apt-get install -y imagemagick
+#  pub_get_script:
+#    - pub --version
+#    - dart --version
+#    - pub get # because no pubspec.lock
+#  test_script:
+#    - pub run test test/all_tests.dart
+#
+#ios_integration_task:
+#  osx_instance:
+#    image: mojave-xcode-11.2.1-flutter
+#    #  image: mojave-xcode-10.1-flutter
+#  pub_cache:
+#    folder: ~/.pub-cache
+#  simulators_script:
+#    - xcrun simctl list devicetypes
+#    - xcrun simctl list runtimes
+#  simulators_json_script:
+#    - xcrun simctl list devices --json
+#  doctor_script: flutter doctor -v
+#  activate_script: pub global activate --source path .
+#  imagemagick_backgroundscript: brew install imagemagick
+#  test_script:
+#    - export PATH="$HOME/.pub-cache/bin:$PATH" # needed to find screenshots
+#    - cd example
+#    - screenshots -c screenshots_ios.yaml -v
+#  screenshot_artifacts:
+#    path: example/ios/fastlane/screenshots/*
 
 android_integration_task:
   container:
@@ -43,60 +43,60 @@ android_integration_task:
   pub_cache:
     folder: ~/.pub-cache
   emulator_config_script:
-    - cat $HOME/.android/avd/Nexus_6_API_28.avd/config.ini
-    - rm $HOME/.android/avd/Nexus_6_API_28.avd/config.ini
-    - |
-      cat << EOF >> $HOME/.android/avd/Nexus_6_API_28.avd/config.ini
-      AvdId=Nexus_6_API_28
-      PlayStore.enabled=false
-      abi.type=x86_64
-      avd.ini.displayname=Nexus 6 API 28
-      avd.ini.encoding=UTF-8
-      disk.dataPartition.size=800M
-      fastboot.chosenSnapshotFile=
-      fastboot.forceChosenSnapshotBoot=no
-      fastboot.forceColdBoot=no
-      fastboot.forceFastBoot=yes
-      hw.accelerometer=yes
-      hw.arc=false
-      hw.audioInput=yes
-      hw.battery=yes
-      hw.camera.back=none
-      hw.camera.front=none
-      hw.cpu.arch=x86_64
-      hw.cpu.ncore=1
-      hw.dPad=no
-      hw.device.hash2=MD5:869d76256fcdae165862720ddb8343f9
-      hw.device.manufacturer=Google
-      hw.device.name=Nexus 6
-      hw.gps=yes
-      hw.gpu.enabled=yes
-      hw.gpu.mode=auto
-      hw.initialOrientation=Portrait
-      hw.keyboard=yes
-      hw.lcd.density=560
-      hw.lcd.height=2560
-      hw.lcd.width=1440
-      hw.mainKeys=no
-      hw.ramSize=1536
-      hw.sdCard=yes
-      hw.sensors.orientation=yes
-      hw.sensors.proximity=yes
-      hw.trackBall=no
-      image.sysdir.1=system-images/android-28/default/x86_64/
-      runtime.network.latency=none
-      runtime.network.speed=full
-      sdcard.size=100M
-      showDeviceFrame=no
-      skin.dynamic=yes
-      skin.name=1440x2560
-      skin.path=_no_skin
-      skin.path.backup=_no_skin
-      tag.display=Default
-      tag.id=default
-      vm.heapSize=384
-      EOF
-    - cat $HOME/.android/avd/Nexus_6_API_28.avd/config.ini
+    - EMULATOR_NAME
+    - cat $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
+#    - rm $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
+#    - |
+#      cat << EOF >> $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
+#      AvdId=$EMULATOR_NAME
+#      PlayStore.enabled=false
+#      abi.type=x86_64
+#      avd.ini.displayname=Nexus 6P API 28
+#      avd.ini.encoding=UTF-8
+#      disk.dataPartition.size=800M
+#      fastboot.chosenSnapshotFile=
+#      fastboot.forceChosenSnapshotBoot=no
+#      fastboot.forceColdBoot=no
+#      fastboot.forceFastBoot=yes
+#      hw.accelerometer=yes
+#      hw.arc=false
+#      hw.audioInput=yes
+#      hw.battery=yes
+#      hw.camera.back=none
+#      hw.camera.front=none
+#      hw.cpu.arch=x86_64
+#      hw.dPad=no
+#      hw.device.hash2=MD5:869d76256fcdae165862720ddb8343f9
+#      hw.device.manufacturer=Google
+#      hw.device.name=Nexus 6P
+#      hw.gps=yes
+#      hw.gpu.enabled=yes
+#      hw.gpu.mode=auto
+#      hw.initialOrientation=Portrait
+#      hw.keyboard=no
+#      hw.lcd.density=560
+#      hw.lcd.height=2560
+#      hw.lcd.width=1440
+#      hw.mainKeys=no
+#      hw.ramSize=1536
+#      hw.sdCard=yes
+#      hw.sensors.orientation=yes
+#      hw.sensors.proximity=yes
+#      hw.trackBall=no
+#      image.sysdir.1=system-images/android-28/default/x86_64/
+#      runtime.network.latency=none
+#      runtime.network.speed=full
+#      sdcard.size=100M
+#      showDeviceFrame=no
+#      skin.dynamic=yes
+#      skin.name=1440x2560
+#      skin.path=_no_skin
+#      skin.path.backup=_no_skin
+#      tag.display=Default
+#      tag.id=default
+#      vm.heapSize=384
+#      EOF
+#    - cat $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
   start_emulator_background_script:
     - sudo chown cirrus:cirrus /dev/kvm
     - $ANDROID_HOME/emulator/emulator-headless -version
