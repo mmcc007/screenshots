@@ -116,5 +116,6 @@ android_integration_task:
     - find example/android/fastlane/screenshots || echo -n
     - find android/fastlane/screenshots || echo -n
     - find .
-  screenshot_artifacts:
-    path: example/android/fastlane/screenshots/*
+  screenshots_artifacts:
+#    path: example/android/fastlane/screenshots/*
+    path: "example/android/fastlane/screenshots/*"
