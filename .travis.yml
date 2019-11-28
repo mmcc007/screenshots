@@ -131,76 +131,192 @@ jobs:
       env:
         - Run screenshots on Android
         - OS=linux
-      dist: trusty # defaults to java 1.8
-      os: linux
-
+#      dist: trusty # defaults to java 1.8
+#      os: linux
+      language: generic
+      dist: bionic
       # run on master or PRs (ignore other branches)
       # if: branch = master
 
       before_install:
-
-        # Install android tools
+        # envs
+        - API=28
+        - ABI=x86_64
+        - GOO=default
         - ANDROID_TOOLS=4333796 # android-28
-        - export ANDROID_HOME=~/android-sdk
-        - wget -q "https://dl.google.com/android/repository/sdk-tools-$OS-$ANDROID_TOOLS.zip" -O android-sdk-tools.zip
+        - ANDROID_HOME=${HOME}/android-sdk
+        - GRAVIS="https://raw.githubusercontent.com/DanySK/Gravis-CI/master/"
+        - JDK="1.8" # the JDK used for running tests
+        - TOOLS=${ANDROID_HOME}/tools
+        # PATH order is incredibly important. e.g. the 'emulator' script exists in more than one place!
+        - PATH=${ANDROID_HOME}:${ANDROID_HOME}/emulator:${TOOLS}:${TOOLS}/bin:${ANDROID_HOME}/platform-tools:${PATH}
+        - FLUTTER_CHANNEL=stable
+        - FLUTTER_VERSION=1.9.1+hotfix.6-${FLUTTER_CHANNEL}
+        - FLUTTER_HOME=${HOME}/flutter
+        - PATH=${HOME}/.pub-cache/bin:${PATH}
+        - PATH=${FLUTTER_HOME}/bin:${FLUTTER_HOME}/bin/cache/dart-sdk/bin:${PATH}
+        - EMULATOR_NAME=NEXUS_6P_API_28
+
+        - java -version
+
+        # Set up KVM
+        - sudo apt-get -y --no-install-recommends install bridge-utils libpulse0 libvirt-bin qemu-kvm virtinst ubuntu-vm-builder > /dev/null
+        # add travis user to groups
+        - sudo adduser $USER libvirt
+        - sudo adduser $USER kvm
+
+        # Set up JDK 8 for Android SDK
+        - curl "${GRAVIS}.install-jdk-travis.sh" --output ~/.install-jdk-travis.sh
+        - export TARGET_JDK="${JDK}"
+        - JDK="1.8" # used when running sdkmanager
+        - source ~/.install-jdk-travis.sh
+
+        - wget -q "https://dl.google.com/android/repository/sdk-tools-linux-$ANDROID_TOOLS.zip" -O android-sdk-tools.zip
         - unzip -q android-sdk-tools.zip -d ${ANDROID_HOME}
         - rm android-sdk-tools.zip
-        #      - PATH=${PATH}:${ANDROID_HOME}/tools:${ANDROID_HOME}/tools/bin:${ANDROID_HOME}/platform-tools
-        - PATH=${PATH}:${ANDROID_HOME}/emulator:${ANDROID_HOME}/tools/bin:${ANDROID_HOME}/platform-tools
-        # Silence warning.
-        - mkdir -p ~/.android
-        - touch ~/.android/repositories.cfg
 
-        # Add missing java module used by sdkmanager, etc...
-        #      - export SDKMANAGER_OPTS="--add-modules java.se.ee"
-        # - export JAVA_OPTS='-XX:+IgnoreUnrecognizedVMOptions --add-modules java.se.ee'
+        # Avoid harmless sdkmanager warning
+        - mkdir ~/.android
+        - echo 'count=0' > ~/.android/repositories.cfg
+
         # Accept licenses before installing components, no need to echo y for each component
-        - yes | sdkmanager --licenses > /dev/null
-        # Platform tools
-        - sdkmanager "emulator" "tools" "platform-tools" > /dev/null
-        - sdkmanager --list | head -15
-        # install older build tools (for emulator)
-        - sdkmanager "build-tools;25.0.2" "platforms;android-25" > /dev/null
+        - yes | sdkmanager --licenses >/dev/null
 
-        # Download a pinned version of the emulator since upgrades can cause issues
+
+      install:
+        # Download SDK tools
+        - sdkmanager "platform-tools" >/dev/null
+        - sdkmanager "tools" >/dev/null # A second time per Travis docs, gets latest versions
+        - sdkmanager "build-tools;28.0.3" >/dev/null # Implicit gradle dependency - gradle drives changes
+        - sdkmanager "platforms;android-$API" >/dev/null # We need the API of the emulator we will run
+        - sdkmanager "platforms;android-28" >/dev/null # We need the API of the current compileSdkVersion from gradle.properties  -
+
+        - sdkmanager "emulator" >/dev/null
+        - |
+          if [[ $ABI =~ "arm" ]]; then
+            # Download a pinned version of the emulator since default version can cause issues
+            ${ANDROID_HOME}/emulator/emulator -version
+            emulator_version=5264690 # 29.2.1.0 (build_id 5889189) ==> 28.0.23.0 (build_id 5264690)
+            # sudo apt-get install -y libunwind8 libc++1
+            curl -fo emulator.zip "https://dl.google.com/android/repository/emulator-linux-$emulator_version.zip"
+            rm -rf "${ANDROID_HOME}/emulator"
+            unzip -q emulator.zip -d "${ANDROID_HOME}"
+            rm -f emulator.zip
+            # install build tools and platforms for arm (to allow emulator to run)
+            sdkmanager "build-tools;25.0.2" "platforms;android-25" > /dev/null
+          fi
         - ${ANDROID_HOME}/emulator/emulator -version
-        - emulator_version=5264690 # 29.0.9.0 (build_id 5537588) ==> 28.0.23.0 (build_id 5264690)
-        - curl -fo emulator.zip "https://dl.google.com/android/repository/emulator-$OS-$emulator_version.zip"
-        - rm -rf "${ANDROID_HOME}/emulator"
-        - unzip -q emulator.zip -d "${ANDROID_HOME}"
-        - rm -f emulator.zip
-        - ${ANDROID_HOME}/emulator/emulator -version
 
-        # Create emulator
-        - EMULATOR_API_LEVEL=22
-        - ABI="default;armeabi-v7a"
-        - EMULATOR_NAME='Nexus_6P_API_28'
-        - sdkmanager "system-images;android-$EMULATOR_API_LEVEL;$ABI" > /dev/null
-        - sdkmanager --list | head -15
-        - echo no | avdmanager create avd -n $EMULATOR_NAME -k "system-images;android-$EMULATOR_API_LEVEL;$ABI"
-        #      - cat ~/.android/avd/$EMULATOR_NAME.ini
-        #      - cat ~/.android/avd/$EMULATOR_NAME.avd/config.ini
-        - echo "hw.lcd.width=1440" >> ~/.android/avd/$EMULATOR_NAME.avd/config.ini
-        - echo "hw.lcd.height=2560" >> ~/.android/avd/$EMULATOR_NAME.avd/config.ini
-        - echo "hw.device.name=Nexus 6P" >> ~/.android/avd/$EMULATOR_NAME.avd/config.ini
-        - echo "hw.device.manufacturer=Google" >> ~/.android/avd/$EMULATOR_NAME.avd/config.ini
-        - echo "avd.ini.displayname=Nexus 6P API 28" >> ~/.android/avd/$EMULATOR_NAME.avd/config.ini
+        - sdkmanager "extras;android;m2repository" >/dev/null
+        - sdkmanager "system-images;android-$API;$GOO;$ABI" >/dev/null # install system images for emulator
 
-        # Install android sdk dependencies required by flutter
-        # (not used but installing anyway)
-        - sdkmanager "platforms;android-28" "build-tools;28.0.3" > /dev/null
+        # Create an Android emulator
+        #  - echo no | avdmanager --verbose create avd --force -n test -k "system-images;android-$API;$GOO;$ABI" -c 10M
+        - echo no | avdmanager --verbose create avd --force -n $EMULATOR_NAME -k "system-images;android-$API;$GOO;$ABI"
+        #  - EMU_PARAMS="
+        #      -verbose
+        #      -no-snapshot
+        #      -no-window
+        #      -no-audio
+        #      -no-boot-anim
+        #      -camera-back none
+        #      -camera-front none
+        #      -selinux permissive
+        #      -qemu -m 2048"
+
+        # config emulator
+        - cat $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
+        - rm $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
+        - |
+          cat << EOF >> $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
+          AvdId=$EMULATOR_NAME
+          PlayStore.enabled=false
+          abi.type=x86_64
+          avd.ini.displayname=Nexus 6P API 28
+          avd.ini.encoding=UTF-8
+          disk.dataPartition.size=800M
+          fastboot.chosenSnapshotFile=
+          fastboot.forceChosenSnapshotBoot=no
+          fastboot.forceColdBoot=no
+          fastboot.forceFastBoot=yes
+          hw.accelerometer=yes
+          hw.arc=false
+          hw.audioInput=yes
+          hw.battery=yes
+          hw.camera.back=none
+          hw.camera.front=none
+          hw.cpu.arch=x86_64
+          hw.dPad=no
+          hw.device.hash2=MD5:869d76256fcdae165862720ddb8343f9
+          hw.device.manufacturer=Google
+          hw.device.name=Nexus 6P
+          hw.gps=yes
+          hw.gpu.enabled=yes
+          hw.gpu.mode=auto
+          hw.initialOrientation=Portrait
+          hw.keyboard=no
+          hw.lcd.density=560
+          hw.lcd.height=2560
+          hw.lcd.width=1440
+          hw.mainKeys=no
+          hw.ramSize=1536
+          hw.sdCard=yes
+          hw.sensors.orientation=yes
+          hw.sensors.proximity=yes
+          hw.trackBall=no
+          image.sysdir.1=system-images/android-28/default/x86_64/
+          runtime.network.latency=none
+          runtime.network.speed=full
+          sdcard.size=100M
+          showDeviceFrame=no
+          skin.dynamic=yes
+          skin.name=1440x2560
+          skin.path=_no_skin
+          skin.path.backup=_no_skin
+          tag.display=Default
+          tag.id=default
+          vm.heapSize=384
+          EOF
+        - cat $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
+
+        # start emulator
+        - EMU_PARAMS="
+          -avd $EMULATOR_NAME
+          -no-window
+          -no-audio
+          "
+        - EMU_COMMAND="emulator"
+        - |
+          if [[ $ABI =~ "x86" ]]; then
+            EMU_COMMAND="emulator-headless"
+          else
+            # emulate graphics if running on ARM
+            EMU_PARAMS="${EMU_PARAMS} -gpu swiftshader"
+          fi
+        # This double "sudo" monstrosity is used to have Travis execute the
+        # emulator with its new group permissions and help preserve the rule
+        # of least privilege.
+        - sudo -E sudo -u $USER -E bash -c "${ANDROID_HOME}/emulator/${EMU_COMMAND} ${EMU_PARAMS} &"
+
+        # install flutter (while emulator is starting)
+        #  - sudo apt-get install -y --no-install-recommends lib32stdc++6 libstdc++6 > /dev/null
+        - wget --quiet --output-document=flutter.tar.xz https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/linux/flutter_linux_v${FLUTTER_VERSION}.tar.xz
+        - tar xf flutter.tar.xz -C $(dirname ${FLUTTER_HOME})
+        - rm flutter.tar.xz
+
+        # Switch back to our target JDK version to build and run tests
+        - JDK="${TARGET_JDK}"
+        - source ~/.install-jdk-travis.sh
+
+        - flutter doctor -v
 
         # Install image magick (already installed)
 
-      install:
-        - sudo apt-get install -y --no-install-recommends lib32stdc++6 libstdc++6 > /dev/null
-        # install pre-compiled flutter
-        - wget --quiet --output-document=flutter.tar.xz https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/${OS}/flutter_${OS}_v${FLUTTER_VERSION}.tar.xz && tar xf flutter.tar.xz > /dev/null && rm flutter.tar.xz
-        - export PATH="$PATH":"$HOME/.pub-cache/bin"
-        - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
-
       before_script:
-        - flutter doctor -v
+        # wait for emulator to finish startup
+        - ./script/android-wait-for-emulator.sh
+        # unlock screen
+        - adb shell input keyevent 82 &
         # install most current (released or unreleased) Screenshots
         - pub global activate --source path .
 
