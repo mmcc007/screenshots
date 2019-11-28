@@ -5,10 +5,11 @@ import 'package:screenshots/src/daemon_client.dart';
 import 'package:screenshots/src/globals.dart';
 import 'package:screenshots/src/screens.dart';
 import 'package:screenshots/src/validate.dart';
-import 'package:screenshots/src/utils.dart' as utils;
 import 'package:test/test.dart';
 import 'package:screenshots/src/fastlane.dart' as fastlane;
 import 'package:yaml/yaml.dart';
+
+import 'src/common.dart';
 
 final screenshotsYaml = '''
 # Screen capture tests
@@ -78,7 +79,7 @@ void main() {
     expect(isValidTestPaths('--driver=$testPath --target=$mainPath '), isTrue);
     expect(isValidTestPaths('--driver $testPath --target $mainPath '), isTrue);
 
-    if (!utils.isCI()) {
+    if (!isCI()) {
       expect(isValidTestPaths(bogusPath), isFalse);
       expect(isValidTestPaths('--target=$bogusPath'), isFalse);
       expect(
@@ -107,14 +108,14 @@ void main() {
         true);
     // allow other tests to continue
     Directory.current = origDir;
-  }, skip: utils.isCI());
+  }, skip: isCI());
 
   test('clear all destination directories on init', () async {
     final Screens screens = Screens();
     await screens.init();
     final config = Config(configStr: screenshotsYaml);
     await fastlane.clearFastlaneDirs(config, screens, RunMode.normal);
-  }, skip: utils.isCI());
+  }, skip: isCI());
 
   test('check if frame is needed', () {
     final config = Config(configStr: screenshotsYaml);

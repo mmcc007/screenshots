@@ -523,16 +523,16 @@ main() {
 ////      Logger: () => VerboseLogger(StdoutLogger()),
 //    });
 
-    testUsingContext('find running device on CI', () async {
+    test('find running device', () async {
       final emulatorId = 'emulator-5554';
       final emulatorAvdName = 'Nexus_6P_API_28';
       final deviceName = 'Nexus 6P';
-      String adbPath = initAdbPath();
-
-      fakeProcessManager.calls = [
-        Call('$adbPath -s $emulatorId emu avd name',
-            ProcessResult(0, 0, '$emulatorAvdName', '')),
-      ];
+//      String adbPath = initAdbPath();
+//
+//      fakeProcessManager.calls = [
+//        Call('$adbPath -s $emulatorId emu avd name',
+//            ProcessResult(0, 0, '$emulatorAvdName', '')),
+//      ];
 
       final device = loadDaemonDevice({
         'id': '$emulatorId',
@@ -541,7 +541,8 @@ main() {
         'emulator': true,
         'category': 'mobile',
         'platformType': 'android',
-        'ephemeral': true
+        'ephemeral': true,
+        'emulatorId':emulatorAvdName,
       });
 
       final emulator = loadDaemonEmulator({
@@ -552,14 +553,14 @@ main() {
       });
       final deviceFound = findRunningDevice([device], [emulator], deviceName);
       expect(deviceFound, equals(device));
-      fakeProcessManager.verifyCalls();
-    }, skip: false, overrides: <Type, Generator>{
-      ProcessManager: () => fakeProcessManager,
-      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
-        ..environment = {
-          'CI': 'true',
-          'ANDROID_HOME': 'android_home',
-        },
+//      fakeProcessManager.verifyCalls();
+//    }, skip: false, overrides: <Type, Generator>{
+//      ProcessManager: () => fakeProcessManager,
+//      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
+//        ..environment = {
+//          'CI': 'true',
+//          'ANDROID_HOME': 'android_home',
+//        },
 //      Logger: () => VerboseLogger(StdoutLogger()),
     });
 

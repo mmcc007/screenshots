@@ -1,5 +1,3 @@
-import 'package:screenshots/src/utils.dart';
-
 import 'screenshots_test.dart' as screenshots_test;
 import 'daemon_test.dart' as daemon_test;
 import 'frame_test.dart' as frame_test;
@@ -15,6 +13,7 @@ import 'fastlane_test.dart' as fastlane_test;
 import 'daemon_client_test.dart' as daemon_client_test;
 import 'config_test.dart' as config_test;
 import 'screens_test.dart' as screens_test;
+import 'src/common.dart';
 import 'validate_test.dart' as validate_test;
 import 'utils_test.dart' as utils_test;
 import 'base/all_tests.dart' as base_all_tests;

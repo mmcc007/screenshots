@@ -383,11 +383,6 @@ RunMode getRunModeEnum(String runMode) {
 Future<bool> isRecorded(String recordDir) async =>
     !(await fs.directory(recordDir).list().isEmpty);
 
-/// Test for CI environment.
-bool isCI() {
-  return platform.environment['CI']?.toLowerCase() == 'true';
-}
-
 /// Convert a posix path to platform path (windows/posix).
 String toPlatformPath(String posixPath, {p.Context context}) {
   const posixPathSeparator = '/';

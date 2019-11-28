@@ -9,6 +9,8 @@ import 'package:tool_base/tool_base.dart';
 import 'package:tool_base_test/tool_base_test.dart';
 import 'package:tool_mobile/tool_mobile.dart';
 
+import 'src/common.dart';
+
 class FakeAndroidSDK extends Fake implements AndroidSdk {
   @override
   String get adbPath => 'path to adb';

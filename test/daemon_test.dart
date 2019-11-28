@@ -12,6 +12,8 @@ import 'package:screenshots/src/config.dart';
 import 'package:screenshots/src/utils.dart' as utils;
 import 'package:test/test.dart';
 
+import 'src/common.dart';
+
 main() {
   group('daemon test', () {
     test('start shipped daemon client', () async {
@@ -56,7 +58,7 @@ main() {
 
       // wait for exit code
 //      print('exit code:${await daemonClient.exitCode}');
-    }, skip: utils.isCI());
+    }, skip: isCI());
 
     test('parse daemon result response', () {
       final expected =
@@ -99,7 +101,7 @@ main() {
       final exitCode = await daemonClient.stop;
 //      print('exit code: $exitCode');
       expect(exitCode, 0);
-    }, skip: utils.isCI());
+    }, skip: isCI());
 
     test('launch android emulator via daemon and shutdown', () async {
       final expected = 'emulator-5554';
@@ -109,7 +111,7 @@ main() {
       final deviceId = await daemonClient.launchEmulator(emulatorId);
       expect(deviceId, expected);
       await shutdownAndroidEmulator(daemonClient, deviceId);
-    }, skip: utils.isCI());
+    }, skip: isCI());
 
     test('parse ios-deploy response', () {
       final expectedDeviceId = '3b3455019e329e007e67239d9b897148244b5053';
@@ -153,7 +155,7 @@ main() {
       // run the test
       await utils.streamCmd(['flutter', '-d', device.id, 'drive', testPath],
           workingDirectory: 'example');
-    }, timeout: Timeout(Duration(minutes: 2)), skip: utils.isCI());
+    }, timeout: Timeout(Duration(minutes: 2)), skip: isCI());
 
     test('wait for start of android emulator', () async {
       final id = 'Nexus_6P_API_28';
@@ -167,7 +169,7 @@ main() {
 
       // shutdown
       await shutdownAndroidEmulator(daemonClient, deviceId);
-    }, skip: utils.isCI());
+    }, skip: isCI());
 
 //    test('join devices', () {
 //      final configPath = 'test/screenshots_test.yaml';
@@ -210,6 +212,6 @@ main() {
       await screenshots.runTestsOnAll();
       // allow other tests to continue
       Directory.current = origDir;
-    }, timeout: Timeout(Duration(minutes: 4)), skip: utils.isCI());
+    }, timeout: Timeout(Duration(minutes: 4)), skip: isCI());
   });
 }
