@@ -125,7 +125,8 @@ android_integration_task:
     - rm -rf ~/.gradle/caches/journal-1
     - find ~/.gradle/caches/ -name "*.lock" -type f -delete
   pub_cache:
-    folder:
-      - ~/.pub-cache
-      - ~/.gradle/caches
-      - ~/.gradle/wrapper
+    folder: ~/.pub-cache
+  gradle_cache:
+    folder: ~/.gradle/caches
+  gradle_wrapper_cache:
+    folder: ~/.gradle/wrapper
