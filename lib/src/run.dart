@@ -449,23 +449,22 @@ Future<String> startEmulator(
 DaemonDevice findRunningDevice(List<DaemonDevice> devices,
     List<DaemonEmulator> emulators, String deviceName) {
   return devices.firstWhere((device) {
-//    // hack for CI testing of old arm emulator
-////    if (utils.isCI() && device.platform == 'android-arm') {
-//    if (device.platform == 'android-arm') {
-//      /// Find the device name of a running emulator.
-//      String findDeviceNameOfRunningEmulator(
-//          List<DaemonEmulator> emulators, String deviceId) {
-//        final emulatorId = utils.getAndroidEmulatorId(deviceId);
-//        final emulator = emulators.firstWhere(
-//            (emulator) => emulator.id == emulatorId,
-//            orElse: () => null);
-//        return emulator == null ? null : emulator.name;
-//      }
-//
-//      final emulatorName =
-//          findDeviceNameOfRunningEmulator(emulators, device.id);
-//      return emulatorName.contains(deviceName);
-//    }
+    // hack for CI testing. Platform is reporting as 'android-arm' instead of 'android-x86'
+    if (device.platform == 'android-arm') {
+      /// Find the device name of a running emulator.
+      String findDeviceNameOfRunningEmulator(
+          List<DaemonEmulator> emulators, String deviceId) {
+        final emulatorId = utils.getAndroidEmulatorId(deviceId);
+        final emulator = emulators.firstWhere(
+            (emulator) => emulator.id == emulatorId,
+            orElse: () => null);
+        return emulator == null ? null : emulator.name;
+      }
+
+      final emulatorName =
+          findDeviceNameOfRunningEmulator(emulators, device.id);
+      return emulatorName.contains(deviceName);
+    }
 
     if (device.emulator) {
       if (device.platformType == 'android') {
