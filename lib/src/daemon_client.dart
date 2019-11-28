@@ -286,7 +286,10 @@ class DaemonDevice extends BaseDevice {
     this.ephemeral,
     this.emulatorId, {
     this.iosModel,
-  }) : super(id, name, category, platformType);
+  }) : super(id, name, category, platformType){
+    // debug check in CI
+    if (emulator && emulatorId==null) throw 'Emulator id is null';
+  }
 
   @override
   String toString() {
