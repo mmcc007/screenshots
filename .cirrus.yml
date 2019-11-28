@@ -42,15 +42,18 @@ android_integration_task:
     kvm: true
   pub_cache:
     folder: ~/.pub-cache
-  emulator_config_script: cat $HOME/.android/avd/Nexus_6P_API_28.avd/config.ini
+  emulator_config_script:
+    - cat $HOME/.android/avd/Nexus_6_API_28.avd/config.ini
   start_emulator_background_script:
     - sudo chown cirrus:cirrus /dev/kvm
     - $ANDROID_HOME/emulator/emulator-headless -version
-    - $ANDROID_HOME/emulator/emulator-headless -avd test -no-audio -no-window
-#  wait_for_emulator_script:
-#    - ./script/android-wait-for-emulator.sh
-  doctor_script: flutter doctor -v
-  activate_script: pub global activate --source path .
+    - $ANDROID_HOME/emulator/emulator-headless -avd test -no-audio -no-window -no-skin
+  wait_for_emulator_script:
+    - ./script/android-wait-for-emulator.sh
+  doctor_script:
+    - flutter doctor -v
+  activate_script:
+    - pub global activate --source path .
   test_script:
     - export PATH="$HOME/.pub-cache/bin:$PATH" # needed to find screenshots
     - cd example

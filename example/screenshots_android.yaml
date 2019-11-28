@@ -9,12 +9,12 @@ staging: /tmp/screenshots
 # A list of locales supported in app
 locales:
   - en-US
-  - fr-CA
+#  - fr-CA
 
 # A list of devices to run tests on
 devices:
   android:
-    Nexus 6P:
+    Nexus 6:
 
 # Frame screenshots
 frame: true
