@@ -113,8 +113,8 @@ android_integration_task:
   find_script:
     - pwd
     - ls -la
-    - find example/ios/fastlane/screenshots || echo -n
-    - find ios/fastlane/screenshots || echo -n
+    - find example/android/fastlane/screenshots || echo -n
+    - find android/fastlane/screenshots || echo -n
     - find .
   screenshot_artifacts:
-    path: example/ios/fastlane/screenshots/*
+    path: example/android/fastlane/screenshots/*
