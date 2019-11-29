@@ -108,7 +108,7 @@ android_integration_task:
   start_emulator_background_script:
     - sudo chown cirrus:cirrus /dev/kvm
     - $ANDROID_HOME/emulator/emulator-headless -version
-    - $ANDROID_HOME/emulator/emulator-headless -avd Nexus_6P_API_28 -no-audio -no-window -verbose
+    - $ANDROID_HOME/emulator/emulator-headless -avd $EMULATOR_NAME -no-audio -no-window -verbose
   activate_script:
     - pub global activate --source path .
   wait_for_emulator_script:

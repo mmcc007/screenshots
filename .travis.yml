@@ -253,7 +253,7 @@ jobs:
           tag.display=Default Android System Image
           tag.id=default
           vm.heapSize=256
-#        - cat $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
+        - cat $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
 
         # start emulator
         - ${ANDROID_HOME}/emulator/emulator -version
