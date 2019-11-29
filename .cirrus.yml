@@ -117,17 +117,19 @@ android_integration_task:
   test_script:
     - export PATH="$HOME/.pub-cache/bin:$PATH" # needed to find screenshots
     - (cd example; screenshots -c screenshots_android.yaml -v)
-  find_script:
-    - pwd
-    - ls -la
-    - find example/android/fastlane/screenshots || echo -n
-    - find android/fastlane/screenshots || echo -n
-    - find .
   screenshots_artifacts:
     #    path: example/android/fastlane/screenshots/*
-    path: "example/android/fastlane/screenshots/*"
+    path: "example/android/fastlane/metadata/android/*"
   cleanup_before_cache_script:
-    - rm -rf ~/.gradle/caches/$GRADLE_VERSION/
-    - rm -rf ~/.gradle/caches/transforms-1
-    - rm -rf ~/.gradle/caches/journal-1
-    - find ~/.gradle/caches/ -name "*.lock" -type f -delete
+    - env
+    - pwd
+    - echo GRADLE_VERSION = $GRADLE_VERSION
+    - GRADLE_VERSION=$(./example/android/gradlew -version | grep Gradle | awk '{print $2}')
+    - echo GRADLE_VERSION = $GRADLE_VERSION
+    - echo $HOME
+    - echo ~
+    - find ${HOME}/.gradle/caches || echo -n
+    - rm -rfv ${HOME}/.gradle/caches/$GRADLE_VERSION/
+    - rm -rfv ${HOME}/.gradle/caches/transforms-1
+    - rm -rfv ${HOME}/.gradle/caches/journal-1
+    - find ${HOME}/.gradle/caches/ -name "*.lock" -type f -delete || echo -n

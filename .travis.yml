@@ -309,18 +309,23 @@ jobs:
 #        - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
 #        - curl "${GRAVIS}.clean_gradle_cache.sh" --output ~/.clean_gradle_cache.sh
 #        - bash ~/.clean_gradle_cache.sh
+        - env
         - pwd
+        - echo GRADLE_VERSION = $GRADLE_VERSION
         - GRADLE_VERSION=$(./example/android/gradlew -version | grep Gradle | awk '{print $2}')
-        - rm -rf ~/.gradle/caches/$GRADLE_VERSION/
-        - rm -rf ~/.gradle/caches/transforms-1
-        - rm -rf ~/.gradle/caches/journal-1
-        - find ~/.gradle/caches/ -name "*.lock" -type f -delete
-
+        - echo GRADLE_VERSION = $GRADLE_VERSION
+        - echo $HOME
+        - echo ~
+        - find ${HOME}/.gradle/caches || echo -n
+        - rm -rfv ${HOME}/.gradle/caches/$GRADLE_VERSION/
+        - rm -rfv ${HOME}/.gradle/caches/transforms-1
+        - rm -rfv ${HOME}/.gradle/caches/journal-1
+        - find ${HOME}/.gradle/caches/ -name "*.lock" -type f -delete || echo -n
       cache:
         directories:
-          - $HOME/.pub-cache
-          - $HOME/.gradle/caches/
-          - $HOME/.gradle/wrapper/
+          - ${HOME}/.pub-cache
+          - ${HOME}/.gradle/caches/
+          - ${HOME}/.gradle/wrapper/
 
       before_deploy:
         # bundle artifacts for later deploy
