@@ -200,6 +200,7 @@ jobs:
         - echo no | avdmanager --verbose create avd --force -n $EMULATOR_NAME -k "system-images;android-$API;$GOO;$ABI"
 
         # config emulator
+        - cat ~/.android/avd/$EMULATOR_NAME.ini
         - cat $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
         - rm $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
         - |
@@ -224,7 +225,7 @@ jobs:
           hw.cpu.ncore=2
           hw.dPad=no
           hw.device.hash2=MD5:210d8492b0d8f56499facd30fdda7669
-          hw.device.manufacturer=User
+          hw.device.manufacturer=Google
           hw.device.name=Nexus 6P
           hw.gps=no
           hw.gpu.enabled=yes
@@ -301,10 +302,13 @@ jobs:
         - ./script/android-wait-for-emulator.sh
         # unlock screen
 #        - adb shell input keyevent 82 &
-        # checks made by daemon to decide if emulator or real device
+        # checks made by daemon to decide if running device is emulator or real
         - adb shell getprop ro.product.cpu.abi # 'x86_64' (device)
         - adb shell getprop ro.hardware # 'ranchu' (emulator)
         - adb shell getprop ro.build.characteristics # 'emulator' (emulator)
+        - adb shell getprop ro.build.version.release # '9' (emulator)
+        - adb shell getprop ro.build.version.sdk # '28' (emulator))
+        - adb shell getprop
 
       script:
         - (cd example; screenshots -c screenshots_android.yaml -v) # ignore cd

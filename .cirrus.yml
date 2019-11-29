@@ -48,6 +48,7 @@ android_integration_task:
     folder: ~/.gradle/wrapper
   emulator_config_script:
 #    - EMULATOR_NAME=Nexus_6P_API_28
+    - cat $HOME/.android/avd/$EMULATOR_NAME.ini
     - cat $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
 #    - rm $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
 #    - |
@@ -113,10 +114,13 @@ android_integration_task:
     - pub global activate --source path .
   wait_for_emulator_script:
     - ./script/android-wait-for-emulator.sh
-      # checks made by daemon to decide if emulator or real device
+    # checks made by daemon to decide if running device is emulator or real
     - adb shell getprop ro.product.cpu.abi # 'x86_64' (device)
     - adb shell getprop ro.hardware # 'ranchu' (emulator)
     - adb shell getprop ro.build.characteristics # 'emulator' (emulator)
+    - adb shell getprop ro.build.version.release # '9' (emulator)
+    - adb shell getprop ro.build.version.sdk # '28' (emulator))
+    - adb shell getprop
   doctor_script:
     - flutter doctor -v
   test_script:
