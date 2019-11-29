@@ -303,29 +303,29 @@ jobs:
 #        - adb shell input keyevent 82 &
         - adb shell getprop ro.product.cpu.abi
       script:
-        - cd example; screenshots -c screenshots_android.yaml -v
+        - (cd example; screenshots -c screenshots_android.yaml -v) # ignore cd
 
       before_cache:
 #        - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
 #        - curl "${GRAVIS}.clean_gradle_cache.sh" --output ~/.clean_gradle_cache.sh
 #        - bash ~/.clean_gradle_cache.sh
-        - env
+#        - env
         - pwd
         - echo GRADLE_VERSION = $GRADLE_VERSION
         - ls -la
-        - find .
+#        - find .
         - GRADLE_VERSION=$(./example/android/gradlew -version | grep Gradle | awk '{print $2}')
         - echo GRADLE_VERSION = $GRADLE_VERSION
         - echo $HOME
         - echo ~
-        - find ${HOME}/.gradle/caches || echo -n
+#        - find ${HOME}/.gradle/caches || echo -n
         - |
           if [[ ! -z "$GRADLE_VERSION" ]];
           then
-            rm -rfv ${HOME}/.gradle/caches/$GRADLE_VERSION/
+            rm -rf ${HOME}/.gradle/caches/$GRADLE_VERSION/
           fi
-        - rm -rfv ${HOME}/.gradle/caches/transforms-1
-        - rm -rfv ${HOME}/.gradle/caches/journal-1
+        - rm -rf ${HOME}/.gradle/caches/transforms-1
+        - rm -rf ${HOME}/.gradle/caches/journal-1
         - find ${HOME}/.gradle/caches/ -name "*.lock" -type f -delete || echo -n
       cache:
         directories:
@@ -335,7 +335,7 @@ jobs:
 
       before_deploy:
         # bundle artifacts for later deploy
-        - zip -r $HOME/screenshots/screenshots.zip android/fastlane/metadata/android/*/images
+        - zip -r $HOME/screenshots/screenshots.zip example/android/fastlane/metadata/android/*/images
 
       # deploy artifacts if tagged commit
       deploy:

@@ -47,7 +47,7 @@ android_integration_task:
   gradle_wrapper_cache:
     folder: ~/.gradle/wrapper
   emulator_config_script:
-    - EMULATOR_NAME=Nexus_6P_API_28
+#    - EMULATOR_NAME=Nexus_6P_API_28
     - cat $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
 #    - rm $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
 #    - |
