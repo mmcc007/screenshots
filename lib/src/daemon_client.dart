@@ -286,9 +286,9 @@ class DaemonDevice extends BaseDevice {
     this.ephemeral,
     this.emulatorId, {
     this.iosModel,
-  }) : super(id, name, category, platformType){
+  }) : super(id, name, category, platformType) {
     // debug check in CI
-    if (emulator && emulatorId==null) throw 'Emulator id is null';
+    if (emulator && emulatorId == null) throw 'Emulator id is null';
   }
 
   @override
@@ -308,14 +308,31 @@ DaemonEmulator loadDaemonEmulator(Map<String, dynamic> emulator) {
 }
 
 DaemonDevice loadDaemonDevice(Map<String, dynamic> device) {
-  return DaemonDevice(
+  // hack for CI testing.
+  // Emulator is reporting as real device.
+  // Platform is reporting as 'android-arm' instead of 'android-x86', etc...
+  if (platform.environment['CI'] == 'true') {
+    return DaemonDevice(
       device['id'],
       device['name'],
       device['category'],
       device['platformType'],
       device['platform'],
-      device['emulator'],
+      true,
       device['ephemeral'],
-      device['emulatorId'],
-      iosModel: device['model']);
+      'NEXUS_6P_API_28',
+      iosModel: device['model'],
+    );
+  }
+  return DaemonDevice(
+    device['id'],
+    device['name'],
+    device['category'],
+    device['platformType'],
+    device['platform'],
+    device['emulator'],
+    device['ephemeral'],
+    device['emulatorId'],
+    iosModel: device['model'],
+  );
 }

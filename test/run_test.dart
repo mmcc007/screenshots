@@ -438,6 +438,87 @@ main() {
     });
   });
 
+  group('hack in CI', (){
+    final daemonDevice = loadDaemonDevice({
+      'id': 'emulator-5554',
+      'name': 'Android SDK built for x86',
+      'platform': 'android-x86',
+//      'platform': 'android-arm', // expect android-x86
+      'emulator': true,
+//      'emulator': false, // expect true
+      'category': 'mobile',
+      'platformType': 'android',
+      'ephemeral': true,
+      'emulatorId': 'Nexus_6P_API_28',
+//      'emulatorId': null, // expect Nexus_6P_API_28 (or running avd)
+    });
+
+    setUp(() {
+      when(mockDaemonClient.devices)
+          .thenAnswer((_) => Future.value([daemonDevice]));
+    });
+
+    testUsingContext('on android', () async {
+      final emulatorName = 'Nexus 6P';
+      // screenshots config
+      final configStr = '''
+          tests:
+            - example/test_driver/main.dart
+          staging: $stagingDir
+          locales:
+            - en-US
+          devices:
+            android:
+              $emulatorName:
+                orientation: 
+                 - Portrait
+                 - LandscapeRight
+          frame: false
+      ''';
+      String adbPath = initAdbPath();
+      // fake process responses
+      final List<Call> calls = [
+        ...unpackScriptsCalls,
+        Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
+            ProcessResult(0, 0, 'en-US', '')),
+        Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
+            ProcessResult(0, 0, 'en-US', '')),
+//        Call('$adbPath -s emulator-5554 emu avd name',
+//            ProcessResult(0, 0, 'Nexus_6P_API_28', '')),
+        Call(
+            '$adbPath -s emulator-5554 shell settings put system user_rotation 0',
+            null),
+        Call('flutter -d emulator-5554 drive example/test_driver/main.dart',
+            ProcessResult(0, 0, 'drive output', '')),
+        Call(
+            '$adbPath -s emulator-5554 shell settings put system user_rotation 1',
+            null),
+        Call('flutter -d emulator-5554 drive example/test_driver/main.dart',
+            ProcessResult(0, 0, 'drive output', '')),
+      ];
+      fakeProcessManager.calls = calls;
+
+      final result = await screenshots(configStr: configStr);
+      final BufferLogger logger = context.get<Logger>();
+
+      expect(result, isTrue);
+      fakeProcessManager.verifyCalls();
+      verify(mockDaemonClient.devices).called(3);
+      verify(mockDaemonClient.emulators).called(1);
+      expect(logger.errorText, '');
+      expect(logger.statusText, '');
+      expect(logger.statusText, isNot(contains('Warning: the locale of a real device cannot be changed.')));
+    }, skip: false, overrides: <Type, Generator>{
+      DaemonClient: () => mockDaemonClient,
+//      FileSystem: () => fs,
+      ProcessManager: () => fakeProcessManager,
+      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
+        ..environment = {'CI': 'true'},
+//        Logger: () => VerboseLogger(StdoutLogger()),
+      Logger: () => BufferLogger(),
+    });
+  });
+
   group('main image magick', () {
     testUsingContext('is installed on macOS/linux', () async {
       fakeProcessManager.calls = [Call('convert -version', ProcessResult(0, 0, '', ''))];
