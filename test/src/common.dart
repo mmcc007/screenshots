@@ -6,10 +6,10 @@ import 'package:path/path.dart' as p;
 import 'package:platform/platform.dart';
 import 'package:screenshots/src/utils.dart';
 
-/// Test for CI environment.
-bool isCI() {
-  return LocalPlatform().environment['CI']?.toLowerCase() == 'true';
-}
+///// Test for CI environment.
+//bool     true   {
+//  return LocalPlatform().environment['CI']?.toLowerCase() == 'true';
+//}
 
 /// Copy files from [srcDir] to [dstDir].
 /// If dstDir does not exist, it is created.

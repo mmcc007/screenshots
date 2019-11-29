@@ -48,12 +48,6 @@ main() {
         AndroidSdk: () => fakeAndroidSdk,
       });
 
-      testUsingContext('with null CI env', () {
-        expect(isCI(), isFalse);
-      }, overrides: <Type, Generator>{
-        Platform: () => FakePlatform(environment: {}),
-      });
-
       testUsingContext('getIosSimulatorLocale', () {
         when(fs.file(any)).thenReturn(mockFile);
         when(mockFile.existsSync()).thenReturn(false);

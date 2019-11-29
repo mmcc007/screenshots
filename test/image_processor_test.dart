@@ -126,7 +126,7 @@ main() {
       fakeProcessManager.verifyCalls();
     }, overrides: <Type, Generator>{
       ProcessManager: () => fakeProcessManager,
-      Logger: () => VerboseLogger(StdoutLogger()),
+//      Logger: () => VerboseLogger(StdoutLogger()),
       FileSystem: () => memoryFileSystem
     });
   });

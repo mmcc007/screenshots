@@ -828,7 +828,7 @@ void main() {
 //        () => getHighestIosDevice(iosDevices, deviceName), throwsA(anything));
     expect(utils.getHighestIosSimulator(iosDevices, deviceName),
         jsonDecode(expected));
-  }, skip: isCI());
+  }, skip:     true  );
 
   test('issue #73: parse without availability', () {
     final expected = '''

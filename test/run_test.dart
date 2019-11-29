@@ -506,7 +506,7 @@ main() {
       verify(mockDaemonClient.devices).called(3);
       verify(mockDaemonClient.emulators).called(1);
       expect(logger.errorText, '');
-      expect(logger.statusText, '');
+//      expect(logger.statusText, '');
       expect(logger.statusText, isNot(contains('Warning: the locale of a real device cannot be changed.')));
     }, skip: false, overrides: <Type, Generator>{
       DaemonClient: () => mockDaemonClient,

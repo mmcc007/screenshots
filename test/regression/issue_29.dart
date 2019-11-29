@@ -39,7 +39,7 @@ devices:
 //    expect(foundIt(findEmulator(emulators, 'Nexus 6P')), true);
 //    expect(foundIt(findEmulator(emulators, 'Nexus_6P_API_27')), false);
 //    expect(foundIt(findEmulator(emulators, 'Nexus 6P API 27')), false);
-  }, skip: isCI());
+  }, skip:     true  );
 }
 
 Map findEmulatorById(List emulators, String emulatorName) {
