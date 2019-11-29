@@ -301,7 +301,11 @@ jobs:
         - ./script/android-wait-for-emulator.sh
         # unlock screen
 #        - adb shell input keyevent 82 &
-        - adb shell getprop ro.product.cpu.abi
+        # checks made by daemon to decide if emulator or real device
+        - adb shell getprop ro.product.cpu.abi # 'x86_64' (device)
+        - adb shell getprop ro.hardware # 'ranchu' (emulator)
+        - adb shell getprop ro.build.characteristics # 'emulator' (emulator)
+
       script:
         - (cd example; screenshots -c screenshots_android.yaml -v) # ignore cd
 

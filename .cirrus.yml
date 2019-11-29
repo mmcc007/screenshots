@@ -113,7 +113,10 @@ android_integration_task:
     - pub global activate --source path .
   wait_for_emulator_script:
     - ./script/android-wait-for-emulator.sh
-    - adb shell getprop ro.product.cpu.abi
+      # checks made by daemon to decide if emulator or real device
+    - adb shell getprop ro.product.cpu.abi # 'x86_64' (device)
+    - adb shell getprop ro.hardware # 'ranchu' (emulator)
+    - adb shell getprop ro.build.characteristics # 'emulator' (emulator)
   doctor_script:
     - flutter doctor -v
   test_script:
