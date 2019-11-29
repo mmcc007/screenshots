@@ -124,12 +124,18 @@ android_integration_task:
     - env
     - pwd
     - echo GRADLE_VERSION = $GRADLE_VERSION
+    - ls -la
+    - find .
     - GRADLE_VERSION=$(./example/android/gradlew -version | grep Gradle | awk '{print $2}')
     - echo GRADLE_VERSION = $GRADLE_VERSION
     - echo $HOME
     - echo ~
     - find ${HOME}/.gradle/caches || echo -n
-    - rm -rfv ${HOME}/.gradle/caches/$GRADLE_VERSION/
+    - |
+      if [[ ! -z "$GRADLE_VERSION" ]];
+      then
+        rm -rfv ${HOME}/.gradle/caches/$GRADLE_VERSION/
+      fi
     - rm -rfv ${HOME}/.gradle/caches/transforms-1
     - rm -rfv ${HOME}/.gradle/caches/journal-1
     - find ${HOME}/.gradle/caches/ -name "*.lock" -type f -delete || echo -n
