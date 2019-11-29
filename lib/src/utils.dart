@@ -8,6 +8,7 @@ import 'package:screenshots/src/daemon_client.dart';
 import 'package:tool_base/tool_base.dart';
 import 'package:tool_mobile/tool_mobile.dart';
 import 'package:yaml/yaml.dart';
+
 import 'context_runner.dart';
 import 'globals.dart';
 
@@ -240,8 +241,8 @@ String getIosSimulatorLocale(String udId) {
     globalPreferences.writeAsStringSync(contents);
     cmd(['plutil', '-convert', 'binary1', globalPreferences.path]);
   }
-  final localeInfo = cnv
-      .jsonDecode(cmd(['plutil', '-convert', 'json', '-o', '-', globalPreferencesPath]));
+  final localeInfo = cnv.jsonDecode(
+      cmd(['plutil', '-convert', 'json', '-o', '-', globalPreferencesPath]));
   final locale = localeInfo['AppleLocale'];
   return locale;
 }
@@ -366,8 +367,11 @@ DaemonEmulator findEmulator(
     List<DaemonEmulator> emulators, String emulatorName) {
   // find highest by avd version number
   emulators.sort(emulatorComparison);
+  // todo: fix find for example 'Nexus_6_API_28' and Nexus_6P_API_28'
   return emulators.lastWhere(
-      (emulator) => emulator.id.contains(emulatorName.replaceAll(' ', '_')),
+      (emulator) => emulator.id
+          .toLowerCase()
+          .contains(emulatorName.toLowerCase().replaceAll(' ', '_')),
       orElse: () => null);
 }
 

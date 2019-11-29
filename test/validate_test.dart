@@ -12,11 +12,11 @@ import 'src/context.dart';
 main() {
   group('validate', () {
     FakeProcessManager fakeProcessManager;
-    FakePlatform fakePlatform;
+    FakePlatform fakeLinuxPlatform;
 
     setUp(() {
       fakeProcessManager = FakeProcessManager();
-      fakePlatform = FakePlatform.fromPlatform(const LocalPlatform())
+      fakeLinuxPlatform = FakePlatform.fromPlatform(const LocalPlatform())
         ..operatingSystem = 'linux';
     });
 
@@ -49,7 +49,7 @@ main() {
                 ''',
             ''));
 
-    testUsingContext('pass with \'availability\'', () async {
+    testUsingContext('pass on iOS with \'availability\'', () async {
       final configStr = '''
           tests:
             - example/test_driver/main.dart
@@ -58,24 +58,14 @@ main() {
             - en-US
             - fr-CA
           devices:
-            android:
-              Nexus 6P:
-                orientation: LandscapeRight
             ios:
               iPhone X:
-                orientation: LandscapeRight
           frame: true
       ''';
       final config = Config(configStr: configStr);
       final screens = Screens();
       await screens.init();
-      final emulator = {
-        "id": "Nexus_6P_API_28",
-        "name": "Nexus 6P",
-        "category": "mobile",
-        "platformType": "android"
-      };
-      final allEmulators = <DaemonEmulator>[loadDaemonEmulator(emulator)];
+      final allEmulators = <DaemonEmulator>[];
       final allDevices = <DaemonDevice>[];
 
       fakeProcessManager.calls = [callListIosDevices];
@@ -90,7 +80,7 @@ main() {
         ..operatingSystem = 'macos',
     });
 
-    testUsingContext('pass with \'isAvailable\'', () async {
+    testUsingContext('pass on iOS with \'isAvailable\'', () async {
       final callListIosDevices = Call(
           'xcrun simctl list devices --json',
           ProcessResult(
@@ -125,24 +115,14 @@ main() {
             - en-US
             - fr-CA
           devices:
-            android:
-              Nexus 6P:
-                orientation: LandscapeRight
             ios:
               iPhone X:
-                orientation: LandscapeRight
           frame: true
       ''';
       final config = Config(configStr: configStr);
       final screens = Screens();
       await screens.init();
-      final emulator = {
-        "id": "Nexus_6P_API_28",
-        "name": "Nexus 6P",
-        "category": "mobile",
-        "platformType": "android"
-      };
-      final allEmulators = <DaemonEmulator>[loadDaemonEmulator(emulator)];
+      final allEmulators = <DaemonEmulator>[];
       final allDevices = <DaemonDevice>[];
 
       fakeProcessManager.calls = [callListIosDevices];
@@ -159,39 +139,12 @@ main() {
     });
 
     testUsingContext('getIosSimulators', () async {
-      final callListIosDevices = Call(
-          'xcrun simctl list devices --json',
-          ProcessResult(
-              0,
-              0,
-              '''
-                {
-                  "devices" : {
-                    "com.apple.CoreSimulator.SimRuntime.iOS-13-2" : [
-                      {
-                        "state" : "Shutdown",
-                        "isAvailable" : true,
-                        "name" : "iPhone 11 Pro Max",
-                        "udid" : "FAD89341-9B18-4A40-92F5-0440F1B19731"
-                      },
-                      {
-                        "state" : "Shutdown",
-                        "isAvailable" : true,
-                        "name" : "iPad Pro (12.9-inch) (3rd generation)",
-                        "udid" : "A225B800-9979-48C4-BF28-922984806788"
-                      }
-                    ]
-                  }
-                }
-                ''',
-              ''));
-
       fakeProcessManager.calls = [callListIosDevices];
-
       final Map simulators = getIosSimulators();
-      final isSimulatorFound= isSimulatorInstalled(simulators, 'iPhone 11 Pro Max');
+      final isSimulatorFound= isSimulatorInstalled(simulators, 'iPhone X');
       expect(isSimulatorFound, isTrue);
-    }, skip: false, overrides: <Type, Generator>{
+      fakeProcessManager.verifyCalls();
+   }, skip: false, overrides: <Type, Generator>{
       ProcessManager: () => fakeProcessManager,
 //      Logger: () => VerboseLogger(StdoutLogger()),
     });
@@ -258,12 +211,59 @@ main() {
 //      expect(logger.errorText, contains('No device attached or emulator installed for device \'Bad android phone\' in screenshots.yaml.'));
 //      expect(logger.errorText, contains('No device attached or emulator installed for device \'Unknown android phone\' in screenshots.yaml.'));
 //      expect(logger.errorText, isNot(contains('No device attached or simulator installed for device \'Bad ios phone\' in screenshots.yaml.')));
-
     }, skip: false, overrides: <Type, Generator>{
-      ProcessManager: () => fakeProcessManager,
       Logger: () => BufferLogger(),
-      Platform: () => fakePlatform,
-      OutputPreferences: () => OutputPreferences(wrapText: false, showColor: false),
+      Platform: () => fakeLinuxPlatform,
+    });
+
+    testUsingContext('pass on android in CI', () async {
+      final configStr = '''
+          tests:
+            - example/test_driver/main.dart
+          staging: /tmp/screenshots
+          locales:
+            - en-US
+            - fr-CA
+          devices:
+            android:
+              Nexus 6P:
+                orientation: LandscapeRight
+          frame: true
+      ''';
+      final config = Config(configStr: configStr);
+      final screens = Screens();
+      await screens.init();
+      final emulator = loadDaemonEmulator({
+        "id": "NEXUS_6P_API_28",
+        "name": "NEXUS 6P API 28",
+        "category": "mobile",
+        "platformType": "android"
+      });
+      final device = loadDaemonDevice({
+        "id": "emulator-5554",
+        "name": "Android SDK built for x86 64",
+        "platform": "android-arm",
+        "emulator": false,
+        "category": "mobile",
+        "platformType": "android",
+        "ephemeral": true,
+        "emulatorId": null
+      });
+      final allEmulators = <DaemonEmulator>[emulator];
+      final allDevices = <DaemonDevice>[device];
+
+//      fakeProcessManager.calls = [callListIosDevices, callListIosDevices];
+
+      final BufferLogger logger = context.get<Logger>();
+      bool isValid =
+      await isValidConfig(config, screens, allDevices, allEmulators);
+      expect(logger.errorText, '');
+      expect(isValid, isTrue);
+//      fakeProcessManager.verifyCalls();
+    }, skip: false, overrides: <Type, Generator>{
+//      ProcessManager: () => fakeProcessManager,
+      Platform: () => fakeLinuxPlatform,
+      Logger: () => BufferLogger(),
     });
 
     testUsingContext('show guide', () async {
