@@ -372,6 +372,24 @@ main() {
       expect(daemonDevices[0].id, devices[0]['id']);
     });
   });
+
+  group('devices', (){
+    test('equality', (){
+      DaemonEmulator emulator1 = loadDaemonEmulator(jsonDecode(kEmulatorsJson)[0]);
+      DaemonEmulator emulator2 = loadDaemonEmulator(jsonDecode(kEmulatorsJson)[0]);
+      expect(emulator1, equals(emulator2));
+      emulator2 = loadDaemonEmulator(jsonDecode(kEmulatorsJson)[1]);
+      expect(emulator1, isNot(equals(emulator2)));
+
+      DaemonDevice device1 = loadDaemonDevice(jsonDecode(kRealDevicesJson)[0]);
+      DaemonDevice device2 = loadDaemonDevice(jsonDecode(kRealDevicesJson)[0]);
+      expect(device1, equals(device2));
+      device2 = loadDaemonDevice(jsonDecode(kRealDevicesJson)[1]);
+      expect(device1, isNot(equals(device2)));
+
+      expect(emulator1, isNot(equals(device1)));
+    });
+  });
 }
 
 class MockProcess extends Mock implements Process {}

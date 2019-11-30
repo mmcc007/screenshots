@@ -254,6 +254,15 @@ abstract class BaseDevice {
   BaseDevice(this.id, this.name, this.category, this.platformType);
 
   @override
+  bool operator ==(other) {
+    return other is BaseDevice &&
+        other.name == name &&
+        other.id == id &&
+        other.category == category &&
+        other.platformType == platformType;
+  }
+
+  @override
   String toString() {
     return 'id: $id, name: $name, category: $category, platformType: $platformType';
   }
@@ -289,6 +298,17 @@ class DaemonDevice extends BaseDevice {
   }) : super(id, name, category, platformType) {
     // debug check in CI
     if (emulator && emulatorId == null) throw 'Emulator id is null';
+  }
+
+  @override
+  bool operator ==(other) {
+    return super == other &&
+        other is DaemonDevice &&
+        other.platform == platform &&
+        other.emulator == emulator &&
+        other.ephemeral == ephemeral &&
+        other.emulatorId == emulatorId &&
+        other.iosModel == iosModel;
   }
 
   @override
