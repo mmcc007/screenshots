@@ -36,6 +36,8 @@ main() {
     Call('chmod u+x /tmp/screenshots/resources/script/sim_orientation.scpt',
         null),
   ];
+  final runAndroidTestCall = Call('flutter -d emulator-5554 drive example/test_driver/main.dart',
+      ProcessResult(0, 0, 'drive output', ''));
 
   final daemonEmulator = loadDaemonEmulator({
     'id': 'Nexus_6P_API_28',
@@ -94,17 +96,16 @@ main() {
           frame: false
       ''';
         String adbPath = initAdbPath();
+        final androidUSLocaleCall = Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
+            ProcessResult(0, 0, 'en-US', ''));
         // fake process responses
         final List<Call> calls = [
           ...unpackScriptsCalls,
 //          Call('$adbPath -s emulator-5554 emu avd name',
 //              ProcessResult(0, 0, 'Nexus_6P_API_28', '')),
-          Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
-              ProcessResult(0, 0, 'en-US', '')),
-          Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
-              ProcessResult(0, 0, 'en-US', '')),
-          Call('flutter -d emulator-5554 drive example/test_driver/main.dart',
-              ProcessResult(0, 0, 'drive output', '')),
+          androidUSLocaleCall,
+          androidUSLocaleCall,
+          runAndroidTestCall,
         ];
         fakeProcessManager.calls = calls;
 
@@ -140,20 +141,19 @@ main() {
           frame: false
       ''';
         String adbPath = initAdbPath();
+        final androidUSLocaleCall = Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
+            ProcessResult(0, 0, 'en-US', ''));
         // fake process responses
         final List<Call> calls = [
           ...unpackScriptsCalls,
 //          Call('$adbPath -s emulator-5554 emu avd name',
 //              ProcessResult(0, 0, 'Nexus_6P_API_28', '')),
-          Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
-              ProcessResult(0, 0, 'en-US', '')),
-          Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
-              ProcessResult(0, 0, 'en-US', '')),
+          androidUSLocaleCall,
+          androidUSLocaleCall,
           Call(
               '$adbPath -s emulator-5554 shell settings put system user_rotation 1',
               null),
-          Call('flutter -d emulator-5554 drive example/test_driver/main.dart',
-              ProcessResult(0, 0, 'drive output', '')),
+          runAndroidTestCall,
         ];
         fakeProcessManager.calls = calls;
 
@@ -194,18 +194,15 @@ main() {
       frame: false
       ''';
         String adbPath = initAdbPath();
-
+        final androidUSLocaleCall = Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
+            ProcessResult(0, 0, 'en-US', ''));
         // fake process responses
         final List<Call> calls = [
           ...unpackScriptsCalls,
-          Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
-              ProcessResult(0, 0, 'en-US', '')),
-          Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
-              ProcessResult(0, 0, 'en-US', '')),
-          Call('flutter -d emulator-5554 drive example/test_driver/main.dart',
-              ProcessResult(0, 0, 'drive output', '')),
-          Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
-              ProcessResult(0, 0, 'en-US', '')),
+          androidUSLocaleCall,
+          androidUSLocaleCall,
+          runAndroidTestCall,
+          androidUSLocaleCall,
           Call('$adbPath -s emulator-5554 emu kill', null),
         ];
         fakeProcessManager.calls = calls;
@@ -291,20 +288,20 @@ main() {
             'plutil -convert json -o - //Library/Developer/CoreSimulator/Devices/$simulatorID/data/Library/Preferences/.GlobalPreferences.plist',
             ProcessResult(0, 0, '{"AppleLocale":"fr_CA"}', ''));
         String adbPath = initAdbPath();
+        final androidUSLocaleCall = Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
+            ProcessResult(0, 0, 'en-US', ''));
+        final androidCALocaleCall = Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
+            ProcessResult(0, 0, 'fr-CA', ''));
         final List<Call> calls = [
           callListIosDevices,
           ...unpackScriptsCalls,
-          Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
-              ProcessResult(0, 0, 'en-US', '')),
-          Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
-              ProcessResult(0, 0, 'en-US', '')),
+          androidUSLocaleCall,
+          androidUSLocaleCall,
           Call(
               '$adbPath -s emulator-5554 shell settings put system user_rotation 1',
               null),
-          Call('flutter -d emulator-5554 drive example/test_driver/main.dart',
-              ProcessResult(0, 0, 'drive output', '')),
-          Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
-              ProcessResult(0, 0, 'en-US', '')),
+          runAndroidTestCall,
+          androidUSLocaleCall,
           Call('$adbPath -s emulator-5554 root', null),
           Call(
               '$adbPath -s emulator-5554 shell setprop persist.sys.locale fr-CA ; setprop ctl.restart zygote',
@@ -320,10 +317,8 @@ main() {
           Call(
               '$adbPath -s emulator-5554 shell settings put system user_rotation 1',
               null),
-          Call('flutter -d emulator-5554 drive example/test_driver/main.dart',
-              null),
-          Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
-              ProcessResult(0, 0, 'fr-CA', '')),
+          runAndroidTestCall,
+          androidCALocaleCall,
           Call('$adbPath -s emulator-5554 root', null),
           Call(
               '$adbPath -s emulator-5554 shell setprop persist.sys.locale en-US ; setprop ctl.restart zygote',
@@ -476,25 +471,22 @@ main() {
           frame: false
       ''';
       String adbPath = initAdbPath();
-      // fake process responses
+      final androidUSLocaleCall = Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
+          ProcessResult(0, 0, 'en-US', ''));
       final List<Call> calls = [
         ...unpackScriptsCalls,
-        Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
-            ProcessResult(0, 0, 'en-US', '')),
-        Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
-            ProcessResult(0, 0, 'en-US', '')),
+        androidUSLocaleCall,
+        androidUSLocaleCall,
 //        Call('$adbPath -s emulator-5554 emu avd name',
 //            ProcessResult(0, 0, 'Nexus_6P_API_28', '')),
         Call(
             '$adbPath -s emulator-5554 shell settings put system user_rotation 0',
             null),
-        Call('flutter -d emulator-5554 drive example/test_driver/main.dart',
-            ProcessResult(0, 0, 'drive output', '')),
+        runAndroidTestCall,
         Call(
             '$adbPath -s emulator-5554 shell settings put system user_rotation 1',
             null),
-        Call('flutter -d emulator-5554 drive example/test_driver/main.dart',
-            ProcessResult(0, 0, 'drive output', '')),
+        runAndroidTestCall,
       ];
       fakeProcessManager.calls = calls;
 
@@ -508,6 +500,9 @@ main() {
       expect(logger.errorText, '');
 //      expect(logger.statusText, '');
       expect(logger.statusText, isNot(contains('Warning: the locale of a real device cannot be changed.')));
+      expect(logger.statusText, isNot(contains('Starting $emulatorName...')));
+      expect(logger.statusText, contains('Setting orientation to Portrait'));
+      expect(logger.statusText, contains('Setting orientation to LandscapeRight'));
     }, skip: false, overrides: <Type, Generator>{
       DaemonClient: () => mockDaemonClient,
 //      FileSystem: () => fs,
