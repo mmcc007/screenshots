@@ -24,9 +24,9 @@ ios_integration_task:
     - xcrun simctl list runtimes
   simulators_json_script:
     - xcrun simctl list devices --json
+  imagemagick_background_script: brew install imagemagick
   doctor_script: flutter doctor -v
   activate_script: pub global activate --source path .
-  imagemagick_background_script: brew install imagemagick
   test_script:
     - export PATH="$HOME/.pub-cache/bin:$PATH" # needed to find screenshots
     - cd example
