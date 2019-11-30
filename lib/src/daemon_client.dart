@@ -329,9 +329,9 @@ DaemonEmulator loadDaemonEmulator(Map<String, dynamic> emulator) {
 
 DaemonDevice loadDaemonDevice(Map<String, dynamic> device) {
   // hack for CI testing.
-  // Emulator is reporting as real device.
-  // Platform is reporting as 'android-arm' instead of 'android-x86', etc...
-  if (platform.environment['CI'] == 'true') {
+  // x64 emulator is reporting as real device.
+  // Platform is reporting as 'android-arm' instead of 'android-x64', etc...
+  if (platform.environment['CI'] == 'true' && device['platform'] == 'android-arm') {
     return DaemonDevice(
       device['id'],
       device['name'],
