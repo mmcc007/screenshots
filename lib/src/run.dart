@@ -57,7 +57,7 @@ class Screenshots {
     this.mode = 'normal',
     this.flavor = kNoFlavor,
     this.isBuild,
-    this.verbose,
+    this.verbose = false,
   }) {
     config = Config(configPath: configPath, configStr: configStr);
   }
