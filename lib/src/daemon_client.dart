@@ -329,7 +329,8 @@ DaemonEmulator loadDaemonEmulator(Map<String, dynamic> emulator) {
 
 DaemonDevice loadDaemonDevice(Map<String, dynamic> device) {
   // hack for CI testing.
-  // x64 emulator is reporting as real device.
+  // flutter daemon is reporting x64 emulator as real device while
+  // flutter doctor is reporting correctly.
   // Platform is reporting as 'android-arm' instead of 'android-x64', etc...
   if (platform.environment['CI'] == 'true' && device['platform'] == 'android-arm') {
     return DaemonDevice(
