@@ -12,11 +12,11 @@ import 'src/context.dart';
 main() {
   group('validate', () {
     FakeProcessManager fakeProcessManager;
-    FakePlatform fakeLinuxPlatform;
+    FakePlatform fakePlatform;
 
     setUp(() {
       fakeProcessManager = FakeProcessManager();
-      fakeLinuxPlatform = FakePlatform.fromPlatform(const LocalPlatform())
+      fakePlatform = FakePlatform.fromPlatform(const LocalPlatform())
         ..operatingSystem = 'linux';
     });
 
@@ -50,6 +50,7 @@ main() {
             ''));
 
     testUsingContext('pass on iOS with \'availability\'', () async {
+      fakePlatform.operatingSystem = 'macos';
       final configStr = '''
           tests:
             - example/test_driver/main.dart
@@ -76,8 +77,7 @@ main() {
     }, skip: false, overrides: <Type, Generator>{
       ProcessManager: () => fakeProcessManager,
 //      Logger: () => VerboseLogger(StdoutLogger()),
-      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
-        ..operatingSystem = 'macos',
+      Platform: () => fakePlatform
     });
 
     testUsingContext('pass on iOS with \'isAvailable\'', () async {
@@ -213,7 +213,7 @@ main() {
 //      expect(logger.errorText, isNot(contains('No device attached or simulator installed for device \'Bad ios phone\' in screenshots.yaml.')));
     }, skip: false, overrides: <Type, Generator>{
       Logger: () => BufferLogger(),
-      Platform: () => fakeLinuxPlatform,
+      Platform: () => fakePlatform,
     });
 
     testUsingContext('pass on android in CI', () async {
@@ -262,11 +262,12 @@ main() {
 //      fakeProcessManager.verifyCalls();
     }, skip: false, overrides: <Type, Generator>{
 //      ProcessManager: () => fakeProcessManager,
-      Platform: () => fakeLinuxPlatform,
+      Platform: () => fakePlatform,
       Logger: () => BufferLogger(),
     });
 
     testUsingContext('show guide', () async {
+      fakePlatform.operatingSystem = 'macos';
       final BufferLogger logger = context.get<Logger>();
       final screens = Screens();
       await screens.init();
@@ -324,6 +325,7 @@ main() {
 
     }, skip: false, overrides: <Type, Generator>{
       Logger: () => BufferLogger(),
+      Platform: () => fakePlatform,
     });
   });
 }
