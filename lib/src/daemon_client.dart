@@ -189,7 +189,7 @@ class DaemonClient {
 
   Future<List> _sendCommandWaitResponse(Map<String, dynamic> command) async {
     _sendCommand(command);
-    printTrace('waiting for response: $command');
+//    printTrace('waiting for response: $command');
     final String response = await _waitForResponse.future;
 //    printTrace('response: $response');
     return _processResponse(response, command);
