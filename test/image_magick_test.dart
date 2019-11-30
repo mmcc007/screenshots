@@ -1,7 +1,9 @@
+import 'package:fake_process_manager/fake_process_manager.dart';
 import 'package:mockito/mockito.dart';
 import 'package:process/process.dart';
 import 'package:screenshots/src/context_runner.dart';
 import 'package:screenshots/src/globals.dart';
+import 'package:screenshots/src/image_magick.dart';
 import 'package:screenshots/src/image_processor.dart';
 import 'package:screenshots/src/utils.dart';
 import 'package:test/test.dart';
@@ -69,4 +71,48 @@ main() {
       expect(isThresholdExceeded, isFalse);
     });
   });
+
+  group('main image magick', () {
+    FakeProcessManager fakeProcessManager;
+
+    setUp(() async {
+      fakeProcessManager = FakeProcessManager();
+    });
+
+    testUsingContext('is installed on macOS/linux', () async {
+      fakeProcessManager.calls = [Call('convert -version', ProcessResult(0, 0, '', ''))];
+      final isInstalled = await isImageMagicInstalled();
+      expect(isInstalled, isTrue);
+      fakeProcessManager.verifyCalls();
+    }, overrides: <Type, Generator>{
+      ProcessManager: () => fakeProcessManager,
+      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
+        ..operatingSystem = 'macos',
+    });
+
+    testUsingContext('is installed on windows', () async {
+      fakeProcessManager.calls = [Call('magick -version', ProcessResult(0, 0, '', ''))];
+      final isInstalled = await isImageMagicInstalled();
+      expect(isInstalled, isTrue);
+      fakeProcessManager.verifyCalls();
+    }, overrides: <Type, Generator>{
+      ProcessManager: () => fakeProcessManager,
+      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
+        ..operatingSystem = 'windows',
+    });
+
+    testUsingContext('is not installed on windows', () async {
+      fakeProcessManager.calls = [
+        Call('magick -version', null, sideEffects: ()=> throw 'exception')
+      ];
+      final isInstalled = await isImageMagicInstalled();
+      expect(isInstalled, isFalse);
+      fakeProcessManager.verifyCalls();
+    }, overrides: <Type, Generator>{
+      ProcessManager: () => fakeProcessManager,
+      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
+        ..operatingSystem = 'windows',
+    });
+  });
+
 }
