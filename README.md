@@ -194,11 +194,15 @@ locales:
 devices:
   ios:
     iPhone XS Max:
-      frame: false
+    iPhone 11 Pro:
+      frame: false # no screen avail so frame must be false
     iPad Pro (12.9-inch) (3rd generation):
-      orientation: LandscapeRight
+      orientation:
+        - Portrait # default 
+        - LandscapeRight
   android:
     Nexus 6P:
+    SM G965F: # a real attached device (frame and orientation disabled)
 
 # Frame screenshots
 frame: true
