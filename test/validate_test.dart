@@ -330,6 +330,7 @@ main() {
         realIosDevice,
         realAndroidDevice,
       ];
+      fakeProcessManager.calls = [callListIosDevices];
       expect(
           () async => await deviceGuide(
               screens, allDevices, allEmulators, 'myScreenshots.yaml'),
@@ -342,12 +343,13 @@ main() {
       expect(logger.errorText, '');
 //      print(logger.statusText);
 //      print(logger.errorText);
-
+      fakeProcessManager.verifyCalls();
     }, skip: false, overrides: <Type, Generator>{
       Logger: () => BufferLogger(),
 //            Logger: () => VerboseLogger(StdoutLogger()),
       Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
     ..operatingSystem = 'macos',
+      ProcessManager: () => fakeProcessManager,
     });
   });
 }
