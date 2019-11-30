@@ -101,7 +101,7 @@ install:
   - emulator -version
 
   # create and start emulator in background
-  - SET EMULATOR_NAME=Nexus_6P_API_28
+  - SET EMULATOR_NAME=NEXUS_6P_API_28
   - SET AVD_CONFIG=%USERPROFILE%\.android\avd\%EMULATOR_NAME%.avd\config.ini
   - echo Create and start emulator in background
   - emulator -accel-check & exit 0
