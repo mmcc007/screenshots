@@ -4,7 +4,7 @@ env:
   global:
     - FLUTTER_CHANNEL=stable
     - FLUTTER_VERSION=1.9.1+hotfix.6-${FLUTTER_CHANNEL}
-#    - DART_VERSION=2.5.0 # for unit tests
+    - DART_VERSION=2.5.0 # for unit tests
 
 matrix:
   fast_finish: true
@@ -26,17 +26,17 @@ jobs:
         - Unit tests
         - OS=linux
       os: linux
-      language: dart
-      dart: stable
+#      language: dart
+#      dart: stable
 
       install:
 #        - dart --version
-#        - curl --connect-timeout 15 --retry 5 https://storage.googleapis.com/dart-archive/channels/stable/release/$DART_VERSION/sdk/dartsdk-linux-x64-release.zip > ${TRAVIS_HOME}/dartsdk.zip
-#        - unzip ${TRAVIS_HOME}/dartsdk.zip -d ${TRAVIS_HOME} > /dev/null
-#        - rm ${TRAVIS_HOME}/dartsdk.zip
-#        - export DART_SDK="${TRAVIS_HOME}/dart-sdk"
-#        - export PATH="$DART_SDK/bin:$PATH"
-#        - export PATH="${TRAVIS_HOME}/.pub-cache/bin:$PATH"
+        - curl --connect-timeout 15 --retry 5 https://storage.googleapis.com/dart-archive/channels/stable/release/$DART_VERSION/sdk/dartsdk-linux-x64-release.zip > ${TRAVIS_HOME}/dartsdk.zip
+        - unzip ${TRAVIS_HOME}/dartsdk.zip -d ${TRAVIS_HOME} > /dev/null
+        - rm ${TRAVIS_HOME}/dartsdk.zip
+        - export DART_SDK="${TRAVIS_HOME}/dart-sdk"
+        - export PATH="$DART_SDK/bin:$PATH"
+        - export PATH="${TRAVIS_HOME}/.pub-cache/bin:$PATH"
         - pub --version
         - dart --version
         - pub get # because no pubspec.lock
