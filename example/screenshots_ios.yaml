@@ -9,9 +9,9 @@ staging: /tmp/screenshots
 # A list of locales supported in app
 locales:
   - en-US
-  - fr-CA
+#  - fr-CA
 
-# A list of devices to run tests on
+# A map of devices to run tests on
 devices:
   ios:
 #    iPhone XS Max:

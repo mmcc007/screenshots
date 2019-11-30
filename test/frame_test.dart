@@ -1,6 +1,6 @@
 import 'package:screenshots/src/config.dart';
 import 'package:screenshots/src/context_runner.dart';
-import 'package:screenshots/src/globals.dart';
+import 'package:screenshots/src/image_magick.dart';
 import 'package:screenshots/src/image_processor.dart';
 import 'package:screenshots/src/resources.dart' as resources;
 import 'package:screenshots/src/screens.dart';

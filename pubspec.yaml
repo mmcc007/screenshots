@@ -28,8 +28,7 @@ dev_dependencies:
   mockito: ^4.1.0
   pedantic: ^1.8.0+1
   quiver: '>=2.0.0 <3.0.0'
-  fake_process_manager:
-    git: https://github.com/mmcc007/fake_process_manager.git
+  fake_process_manager: ^0.1.0
 #    path: ../fake_process_manager
   tool_base_test:
     git: https://github.com/mmcc007/tool_base_test.git

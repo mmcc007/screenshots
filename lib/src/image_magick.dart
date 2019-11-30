@@ -4,6 +4,15 @@ import 'package:path/path.dart' as p;
 import 'package:screenshots/src/utils.dart';
 import 'package:tool_base/tool_base.dart';
 
+import 'context_runner.dart';
+
+final ImageMagick _kImageMagick = ImageMagick();
+
+/// Currently active implementation of ImageMagick.
+///
+/// Override this in tests with a fake/mocked daemon client.
+ImageMagick get im => context.get<ImageMagick>() ?? _kImageMagick;
+
 class ImageMagick {
   static const _kThreshold = 0.76;
   static const kDiffSuffix = '-diff';
@@ -151,5 +160,17 @@ class ImageMagick {
   /// ImageMagick command
   int _imageMagickCmd(String imCmd, List imCmdArgs) {
     return runCmd(_getPlatformCmd(imCmd, imCmdArgs));
+  }
+}
+
+
+/// Check Image Magick is installed.
+Future<bool> isImageMagicInstalled() async {
+  try {
+    return await runInContext<bool>(() {
+      return runCmd(platform.isWindows ? ['magick', '-version'] : ['convert', '-version']) == 0;
+    });
+  } catch (e) {
+    return false;
   }
 }

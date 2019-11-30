@@ -12,7 +12,7 @@ import 'daemon_client.dart';
 import 'fastlane.dart' as fastlane;
 import 'globals.dart';
 import 'image_processor.dart';
-import 'orientation.dart' as orient;
+import 'orientation.dart';
 import 'resources.dart' as resources;
 import 'screens.dart';
 import 'utils.dart' as utils;
@@ -32,6 +32,7 @@ Future<bool> screenshots(
     mode: mode,
     flavor: flavor,
     isBuild: isBuild,
+    verbose: isVerbose
   );
   // run in context
   if (isVerbose) {
@@ -56,6 +57,7 @@ class Screenshots {
     this.mode = 'normal',
     this.flavor = kNoFlavor,
     this.isBuild,
+    this.verbose = false,
   }) {
     config = Config(configPath: configPath, configStr: configStr);
   }
@@ -65,6 +67,7 @@ class Screenshots {
   final String mode;
   final String flavor;
   final bool isBuild; // defaults to null
+  final bool verbose;
 
   RunMode runMode;
   Screens screens;
@@ -89,10 +92,8 @@ class Screenshots {
     await screens.init();
 
     // start flutter daemon
-    Status status;
-    status = logger.startProgress('Starting flutter daemon...',
+    final status = logger.startProgress('Starting flutter daemon...',
         timeout: Duration(milliseconds: 10000));
-    //  daemonClient.verbose = true;
     await daemonClient.start;
     status.stop();
 
@@ -316,7 +317,7 @@ class Screenshots {
           // Change orientation if required
           final configDevice = config.getDevice(configDeviceName);
           if (configDevice.orientations != null) {
-            for (orient.Orientation orientation in configDevice.orientations) {
+            for (final orientation in configDevice.orientations) {
               final currentDevice =
                   utils.getDeviceFromId(await daemonClient.devices, deviceId);
               currentDevice == null
@@ -325,7 +326,7 @@ class Screenshots {
               switch (deviceType) {
                 case DeviceType.android:
                   if (currentDevice.emulator) {
-                    orient.changeDeviceOrientation(deviceType, orientation,
+                    changeDeviceOrientation(deviceType, orientation,
                         deviceId: deviceId);
                   } else {
                     printStatus(
@@ -334,7 +335,7 @@ class Screenshots {
                   break;
                 case DeviceType.ios:
                   if (currentDevice.emulator) {
-                    orient.changeDeviceOrientation(deviceType, orientation,
+                    changeDeviceOrientation(deviceType, orientation,
                         scriptDir: '${config.stagingDir}/resources/script');
                   } else {
                     printStatus(
@@ -388,12 +389,16 @@ class Screenshots {
   Future runProcessTests(
     configDeviceName,
     String locale,
-    orient.Orientation orientation,
+    Orientation orientation,
     DeviceType deviceType,
     String deviceId,
   ) async {
     for (final testPath in config.tests) {
       final command = ['flutter', '-d', deviceId, 'drive'];
+      // if verbose on CI
+      if (verbose && platform.environment['CI'] == 'true') {
+        command.add('-v');
+      }
       bool _isBuild() => isBuild != null
           ? isBuild
           : config.getDevice(configDeviceName).isBuild;
@@ -436,14 +441,14 @@ Future<void> startSimulator(DaemonClient daemonClient, String deviceId) async {
 /// Start android emulator and return device id.
 Future<String> startEmulator(
     DaemonClient daemonClient, String emulatorId, stagingDir) async {
-  if (utils.isCI()) {
-    // testing on CI/CD requires starting emulator in a specific way
-    await _startAndroidEmulatorOnCI(emulatorId, stagingDir);
-    return utils.findAndroidDeviceId(emulatorId);
-  } else {
+//  if (utils.isCI()) {
+//    // testing on CI/CD requires starting emulator in a specific way
+//    await _startAndroidEmulatorOnCI(emulatorId, stagingDir);
+//    return utils.findAndroidDeviceId(emulatorId);
+//  } else {
     // testing locally, so start emulator in normal way
     return await daemonClient.launchEmulator(emulatorId);
-  }
+//  }
 }
 
 /// Find a real device or running emulator/simulator for [deviceName].
@@ -451,28 +456,27 @@ Future<String> startEmulator(
 DaemonDevice findRunningDevice(List<DaemonDevice> devices,
     List<DaemonEmulator> emulators, String deviceName) {
   return devices.firstWhere((device) {
-    // hack for CI testing of old arm emulator
-//    if (utils.isCI() && device.platform == 'android-arm') {
-    if (device.platform == 'android-arm') {
-      /// Find the device name of a running emulator.
-      String findDeviceNameOfRunningEmulator(
-          List<DaemonEmulator> emulators, String deviceId) {
-        final emulatorId = utils.getAndroidEmulatorId(deviceId);
-        final emulator = emulators.firstWhere(
-            (emulator) => emulator.id == emulatorId,
-            orElse: () => null);
-        return emulator == null ? null : emulator.name;
-      }
-
-      final emulatorName =
-          findDeviceNameOfRunningEmulator(emulators, device.id);
-      return emulatorName.contains(deviceName);
-    }
+//    // hack for CI testing. Platform is reporting as 'android-arm' instead of 'android-x86'
+//    if (device.platform == 'android-arm') {
+//      /// Find the device name of a running emulator.
+//      String findDeviceNameOfRunningEmulator(
+//          List<DaemonEmulator> emulators, String deviceId) {
+//        final emulatorId = utils.getAndroidEmulatorId(deviceId);
+//        final emulator = emulators.firstWhere(
+//            (emulator) => emulator.id == emulatorId,
+//            orElse: () => null);
+//        return emulator == null ? null : emulator.name;
+//      }
+//
+//      final emulatorName =
+//          findDeviceNameOfRunningEmulator(emulators, device.id);
+//      return emulatorName.contains(deviceName);
+//    }
 
     if (device.emulator) {
       if (device.platformType == 'android') {
         // running emulator
-        return device.emulatorId.replaceAll('_', ' ').contains(deviceName);
+        return device.emulatorId.replaceAll('_', ' ').toUpperCase().contains(deviceName.toUpperCase());
       } else {
         // running simulator
         return device.name.contains(deviceName);
@@ -579,39 +583,27 @@ Future<String> shutdownAndroidEmulator(
   return device['id'];
 }
 
-/// Start android emulator in a CI environment.
-Future _startAndroidEmulatorOnCI(String emulatorId, String stagingDir) async {
-  // testing on CI/CD requires starting emulator in a specific way
-  final androidHome = platform.environment['ANDROID_HOME'];
-  await utils.streamCmd([
-    '$androidHome/emulator/emulator',
-    '-avd',
-    emulatorId,
-    '-no-audio',
-    '-no-window',
-    '-no-snapshot',
-    '-gpu',
-    'swiftshader',
-  ], mode: ProcessStartMode.detached);
-  // wait for emulator to start
-  await utils
-      .streamCmd(['$stagingDir/resources/script/android-wait-for-emulator']);
-}
+///// Start android emulator in a CI environment.
+//Future _startAndroidEmulatorOnCI(String emulatorId, String stagingDir) async {
+//  // testing on CI/CD requires starting emulator in a specific way
+//  final androidHome = platform.environment['ANDROID_HOME'];
+//  await utils.streamCmd([
+//    '$androidHome/emulator/emulator',
+//    '-avd',
+//    emulatorId,
+//    '-no-audio',
+//    '-no-window',
+//    '-no-snapshot',
+//    '-gpu',
+//    'swiftshader',
+//  ], mode: ProcessStartMode.detached);
+//  // wait for emulator to start
+//  await utils
+//      .streamCmd(['$stagingDir/resources/script/android-wait-for-emulator']);
+//}
 
 /// Get device type from config info
 DeviceType getDeviceType(Config config, String deviceName) {
   return config.getDevice(deviceName).deviceType;
 }
 
-/// Check Image Magick is installed.
-Future<bool> isImageMagicInstalled() async {
-  try {
-    return await runInContext<bool>(() {
-      final cmd =
-          platform.isWindows ? ['magick', '-version'] : ['convert', '-version'];
-      return utils.runCmd(cmd) == 0;
-    });
-  } catch (e) {
-    return false;
-  }
-}

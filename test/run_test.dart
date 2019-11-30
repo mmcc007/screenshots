@@ -16,9 +16,12 @@ import 'src/mocks.dart';
 
 main() {
   final stagingDir = '/tmp/screenshots';
-  Directory sdkDir;
-
+  final configAndroidDeviceName = 'Nexus 6P';
+  final configIosDeviceName = 'iPhone X';
+  final emulatorId = 'NEXUS_6P_API_28';
   final List<String> stdinCaptured = <String>[];
+
+  Directory sdkDir;
 
   void _captureStdin(String item) {
     stdinCaptured.add(item);
@@ -36,10 +39,12 @@ main() {
     Call('chmod u+x /tmp/screenshots/resources/script/sim_orientation.scpt',
         null),
   ];
+  final runAndroidTestCall = Call('flutter -d emulator-5554 drive example/test_driver/main.dart',
+      ProcessResult(0, 0, 'drive output', ''));
 
-  final daemonEmulator = loadDaemonEmulator({
-    'id': 'Nexus_6P_API_28',
-    'name': 'Nexus 6P',
+  final installedDaemonEmulator = loadDaemonEmulator({
+    'id': emulatorId,
+    'name': 'emulator description',
     'category': 'mobile',
     'platformType': 'android'
   });
@@ -51,7 +56,7 @@ main() {
     fakeProcessManager = FakeProcessManager(stdinResults: _captureStdin);
     mockDaemonClient = MockDaemonClient();
     when(mockDaemonClient.emulators)
-        .thenAnswer((_) => Future.value([daemonEmulator]));
+        .thenAnswer((_) => Future.value([installedDaemonEmulator]));
   });
 
   tearDown(() {
@@ -62,25 +67,26 @@ main() {
   });
 
   group('run', () {
-    group('with one running android emulator only', () {
-      final daemonDevice = loadDaemonDevice({
-        'id': 'emulator-5554',
+    group('with running android emulator', () {
+      final deviceId = 'emulator-5554';
+      final runningDaemonDevice = loadDaemonDevice({
+        'id': deviceId,
         'name': 'Android SDK built for x86',
         'platform': 'android-x86',
         'emulator': true,
         'category': 'mobile',
         'platformType': 'android',
         'ephemeral': true,
-        'emulatorId': 'Nexus_6P_API_28',
+        'emulatorId': configAndroidDeviceName,
       });
 
       setUp(() {
+        // running emulator
         when(mockDaemonClient.devices)
-            .thenAnswer((_) => Future.value([daemonDevice]));
+            .thenAnswer((_) => Future.value([runningDaemonDevice]));
       });
 
-      testUsingContext(', android only run, no frames, no locales', () async {
-        final emulatorName = 'Nexus 6P';
+      testUsingContext('no frames, no locales', () async {
         // screenshots config
         final configStr = '''
           tests:
@@ -90,41 +96,40 @@ main() {
             - en-US
           devices:
             android:
-              $emulatorName:
+              $configAndroidDeviceName:
           frame: false
       ''';
         String adbPath = initAdbPath();
+        final androidUSLocaleCall = Call('$adbPath -s $deviceId shell getprop persist.sys.locale',
+            ProcessResult(0, 0, 'en-US', ''));
         // fake process responses
         final List<Call> calls = [
           ...unpackScriptsCalls,
 //          Call('$adbPath -s emulator-5554 emu avd name',
 //              ProcessResult(0, 0, 'Nexus_6P_API_28', '')),
-          Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
-              ProcessResult(0, 0, 'en-US', '')),
-          Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
-              ProcessResult(0, 0, 'en-US', '')),
-          Call('flutter -d emulator-5554 drive example/test_driver/main.dart',
-              ProcessResult(0, 0, 'drive output', '')),
+          androidUSLocaleCall,
+          androidUSLocaleCall,
+          runAndroidTestCall,
         ];
         fakeProcessManager.calls = calls;
-
         final result = await screenshots(configStr: configStr);
         expect(result, isTrue);
+        final BufferLogger logger = context.get<Logger>();
+        expect(logger.statusText, isNot(contains('Starting $configAndroidDeviceName...')));
+        expect(logger.statusText, isNot(contains('Changing locale')));
+        expect(logger.statusText, contains('Warning: framing is not enabled'));
         fakeProcessManager.verifyCalls();
         verify(mockDaemonClient.devices).called(1);
         verify(mockDaemonClient.emulators).called(1);
       }, skip: false, overrides: <Type, Generator>{
         DaemonClient: () => mockDaemonClient,
-//      FileSystem: () => fs,
         ProcessManager: () => fakeProcessManager,
-        Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
-          ..environment = {'CI': 'false'},
-//        Logger: () => VerboseLogger(StdoutLogger()),
+//        Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
+//          ..environment = {'CI': 'false'},
+        Logger: () => BufferLogger(),
       });
 
-      testUsingContext(
-          ', android only run, no frames, no locales, change orientation',
-          () async {
+      testUsingContext('change orientation', () async {
         final emulatorName = 'Nexus 6P';
         // screenshots config
         final configStr = '''
@@ -137,50 +142,49 @@ main() {
             android:
               $emulatorName:
                 orientation: LandscapeRight
-          frame: false
+          frame: true
       ''';
         String adbPath = initAdbPath();
+        final androidUSLocaleCall = Call('$adbPath -s $deviceId shell getprop persist.sys.locale',
+            ProcessResult(0, 0, 'en-US', ''));
         // fake process responses
         final List<Call> calls = [
           ...unpackScriptsCalls,
 //          Call('$adbPath -s emulator-5554 emu avd name',
 //              ProcessResult(0, 0, 'Nexus_6P_API_28', '')),
-          Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
-              ProcessResult(0, 0, 'en-US', '')),
-          Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
-              ProcessResult(0, 0, 'en-US', '')),
+          androidUSLocaleCall,
+          androidUSLocaleCall,
           Call(
               '$adbPath -s emulator-5554 shell settings put system user_rotation 1',
               null),
-          Call('flutter -d emulator-5554 drive example/test_driver/main.dart',
-              ProcessResult(0, 0, 'drive output', '')),
+          runAndroidTestCall,
         ];
         fakeProcessManager.calls = calls;
-
         final result = await screenshots(configStr: configStr);
         expect(result, isTrue);
+        final BufferLogger logger = context.get<Logger>();
+        expect(logger.statusText, contains('Setting orientation to LandscapeRight'));
+        expect(logger.statusText, contains('Warning: framing is not enabled'));
         fakeProcessManager.verifyCalls();
         verify(mockDaemonClient.devices).called(2);
         verify(mockDaemonClient.emulators).called(1);
       }, skip: false, overrides: <Type, Generator>{
         DaemonClient: () => mockDaemonClient,
-//      FileSystem: () => fs,
         ProcessManager: () => fakeProcessManager,
-        Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
-          ..environment = {'CI': 'false'},
-//        Logger: () => VerboseLogger(StdoutLogger()),
+//        Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
+//          ..environment = {'CI': 'false'},
+        Logger: () => BufferLogger(),
       });
     });
 
-    group('with no devices, emulators or simulators', () {
+    group('with no attached devices, no running emulators', () {
       MemoryFileSystem memoryFileSystem;
 
       setUp(() async {
         memoryFileSystem = MemoryFileSystem();
       });
 
-      testUsingContext(', android only run, no frames, no locales', () async {
-        final emulatorName = 'Nexus 6P';
+      testUsingContext(', android run, no frames, no locales', () async {
         // screenshots config
         final configStr = '''
       tests:
@@ -190,67 +194,73 @@ main() {
         - en-US
       devices:
         android:
-          $emulatorName:
+          $configAndroidDeviceName:
       frame: false
       ''';
         String adbPath = initAdbPath();
-
+        final deviceId = 'emulator-5554';
+        final androidUSLocaleCall = Call('$adbPath -s $deviceId shell getprop persist.sys.locale',
+            ProcessResult(0, 0, 'en-US', ''));
         // fake process responses
         final List<Call> calls = [
           ...unpackScriptsCalls,
-          Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
-              ProcessResult(0, 0, 'en-US', '')),
-          Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
-              ProcessResult(0, 0, 'en-US', '')),
-          Call('flutter -d emulator-5554 drive example/test_driver/main.dart',
-              ProcessResult(0, 0, 'drive output', '')),
-          Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
-              ProcessResult(0, 0, 'en-US', '')),
-          Call('$adbPath -s emulator-5554 emu kill', null),
+          androidUSLocaleCall,
+          androidUSLocaleCall,
+          runAndroidTestCall,
+          androidUSLocaleCall,
+          Call('$adbPath -s $deviceId emu kill', null),
         ];
         fakeProcessManager.calls = calls;
 
         when(mockDaemonClient.devices).thenAnswer((_) => Future.value([]));
-        when(mockDaemonClient.launchEmulator('Nexus_6P_API_28'))
-            .thenAnswer((_) => Future.value('emulator-5554'));
+        when(mockDaemonClient.launchEmulator(emulatorId))
+            .thenAnswer((_) => Future.value(deviceId));
         when(mockDaemonClient.waitForEvent(EventType.deviceRemoved))
-            .thenAnswer((_) => Future.value({'id': 'emulator-5554'}));
+            .thenAnswer((_) => Future.value({'id': deviceId}));
 
         final result = await screenshots(configStr: configStr);
         expect(result, isTrue);
+        final BufferLogger logger = context.get<Logger>();
+        expect(logger.statusText, contains('Starting $configAndroidDeviceName...'));
+        expect(logger.statusText, contains('Warning: framing is not enabled'));
         fakeProcessManager.verifyCalls();
         verify(mockDaemonClient.devices).called(1);
         verify(mockDaemonClient.emulators).called(1);
-        verify(mockDaemonClient.launchEmulator('Nexus_6P_API_28')).called(1);
+        verify(mockDaemonClient.launchEmulator(emulatorId)).called(1);
         verify(mockDaemonClient.waitForEvent(EventType.deviceRemoved))
             .called(1);
       }, skip: false, overrides: <Type, Generator>{
         DaemonClient: () => mockDaemonClient,
         ProcessManager: () => fakeProcessManager,
-        Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
-          ..environment = {'CI': 'false'},
-//        Logger: () => VerboseLogger(StdoutLogger()),
+//        Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
+//          ..environment = {'CI': 'false'},
+        Logger: () => BufferLogger(),
       });
 
       testUsingContext(
           ', android and ios run, no frames, multiple locales, orientation',
           () async {
-        final emulatorName = 'Nexus 6P';
-        // screenshots config
+        final locale1 = 'en-US';
+        final locale1Lower = 'en_US';
+        final locale2 = 'fr-CA';
+        final locale2Lower = 'fr_CA';
+        final orientation1 = 'LandscapeRight';
+        final orientation2 = 'LandscapeLeft';
+        final deviceId = 'emulator-5554';
         final configStr = '''
           tests:
             - example/test_driver/main.dart
           staging: $stagingDir
           locales:
-            - en-US
-            - fr-CA
+            - $locale1
+            - $locale2
           devices:
             android:
-              $emulatorName:
-                orientation: LandscapeRight
+              $configAndroidDeviceName:
+                orientation: $orientation1
             ios:
-              iPhone X:
-                orientation: LandscapeRight
+              $configIosDeviceName:
+                orientation: $orientation2
           frame: false
       ''';
         final simulatorID = '6B3B1AD9-EFD3-49AB-9CE9-D43CE1A47446';
@@ -286,106 +296,109 @@ main() {
                 ''));
         final callPlutilEnUS = Call(
             'plutil -convert json -o - //Library/Developer/CoreSimulator/Devices/$simulatorID/data/Library/Preferences/.GlobalPreferences.plist',
-            ProcessResult(0, 0, '{"AppleLocale":"en_US"}', ''));
+            ProcessResult(0, 0, '{"AppleLocale":"$locale1"}', ''));
         final callPlutilFrCA = Call(
             'plutil -convert json -o - //Library/Developer/CoreSimulator/Devices/$simulatorID/data/Library/Preferences/.GlobalPreferences.plist',
-            ProcessResult(0, 0, '{"AppleLocale":"fr_CA"}', ''));
+            ProcessResult(0, 0, '{"AppleLocale":"$locale2"}', ''));
         String adbPath = initAdbPath();
+        final androidEnUSLocaleCall = Call('$adbPath -s $deviceId shell getprop persist.sys.locale',
+            ProcessResult(0, 0, '$locale1', ''));
+        final androidFrCALocaleCall = Call('$adbPath -s $deviceId shell getprop persist.sys.locale',
+            ProcessResult(0, 0, '$locale2', ''));
         final List<Call> calls = [
           callListIosDevices,
           ...unpackScriptsCalls,
-          Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
-              ProcessResult(0, 0, 'en-US', '')),
-          Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
-              ProcessResult(0, 0, 'en-US', '')),
+          androidEnUSLocaleCall,
+          androidEnUSLocaleCall,
           Call(
-              '$adbPath -s emulator-5554 shell settings put system user_rotation 1',
+              '$adbPath -s $deviceId shell settings put system user_rotation 1',
               null),
-          Call('flutter -d emulator-5554 drive example/test_driver/main.dart',
-              ProcessResult(0, 0, 'drive output', '')),
-          Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
-              ProcessResult(0, 0, 'en-US', '')),
-          Call('$adbPath -s emulator-5554 root', null),
+          runAndroidTestCall,
+          androidEnUSLocaleCall,
+          Call('$adbPath -s $deviceId root', null),
           Call(
-              '$adbPath -s emulator-5554 shell setprop persist.sys.locale fr-CA ; setprop ctl.restart zygote',
+              '$adbPath -s $deviceId shell setprop persist.sys.locale $locale2 ; setprop ctl.restart zygote',
               null),
-          Call('$adbPath -s emulator-5554 logcat -c', null),
+          Call('$adbPath -s $deviceId logcat -c', null),
           Call(
-              '$adbPath -s emulator-5554 logcat -b main *:S ContactsDatabaseHelper:I ContactsProvider:I -e fr_CA',
+              '$adbPath -s $deviceId logcat -b main *:S ContactsDatabaseHelper:I ContactsProvider:I -e $locale2Lower',
               ProcessResult(
                   0,
                   0,
-                  '08-28 14:25:11.994  5294  5417 I ContactsProvider: Locale has changed from [en_US] to [fr_CA]',
+                  '08-28 14:25:11.994  5294  5417 I ContactsProvider: Locale has changed from [$locale1] to [$locale2]',
                   '')),
           Call(
-              '$adbPath -s emulator-5554 shell settings put system user_rotation 1',
+              '$adbPath -s $deviceId shell settings put system user_rotation 1',
               null),
-          Call('flutter -d emulator-5554 drive example/test_driver/main.dart',
-              null),
-          Call('$adbPath -s emulator-5554 shell getprop persist.sys.locale',
-              ProcessResult(0, 0, 'fr-CA', '')),
-          Call('$adbPath -s emulator-5554 root', null),
+          runAndroidTestCall,
+          androidFrCALocaleCall,
+          Call('$adbPath -s $deviceId root', null),
           Call(
-              '$adbPath -s emulator-5554 shell setprop persist.sys.locale en-US ; setprop ctl.restart zygote',
+              '$adbPath -s $deviceId shell setprop persist.sys.locale $locale1 ; setprop ctl.restart zygote',
               null),
-          Call('$adbPath -s emulator-5554 logcat -c', null),
+          Call('$adbPath -s $deviceId logcat -c', null),
           Call(
-              '$adbPath -s emulator-5554 logcat -b main *:S ContactsDatabaseHelper:I ContactsProvider:I -e en_US',
+              '$adbPath -s $deviceId logcat -b main *:S ContactsDatabaseHelper:I ContactsProvider:I -e $locale1Lower',
               ProcessResult(
                   0,
                   0,
-                  '08-28 14:25:11.994  5294  5417 I ContactsProvider: Locale has changed from [fr_CA] to [en_US]',
+                  '08-28 14:25:11.994  5294  5417 I ContactsProvider: Locale has changed from [$locale2] to [$locale1]',
                   '')),
-          Call('$adbPath -s emulator-5554 emu kill', null),
+          Call('$adbPath -s $deviceId emu kill', null),
           callListIosDevices,
           Call('plutil -convert binary1 //Library/Developer/CoreSimulator/Devices/$simulatorID/data/Library/Preferences/.GlobalPreferences.plist', null),
           callPlutilEnUS,
           Call('xcrun simctl boot $simulatorID', null),
           callPlutilEnUS,
           callPlutilEnUS,
+          // 29
           Call(
-              'osascript /tmp/screenshots/resources/script/sim_orientation.scpt Landscape Right',
+              'osascript /tmp/screenshots/resources/script/sim_orientation.scpt Landscape Left',
               null),
           Call('flutter -d $simulatorID drive example/test_driver/main.dart',
               null),
           callPlutilEnUS,
           Call(
-              '/tmp/screenshots/resources/script/simulator-controller $simulatorID locale fr-CA',
+              '/tmp/screenshots/resources/script/simulator-controller $simulatorID locale $locale2',
               null),
           Call('xcrun simctl shutdown $simulatorID', null),
           Call('xcrun simctl boot $simulatorID', null),
+          // 35
           Call(
-              'osascript /tmp/screenshots/resources/script/sim_orientation.scpt Landscape Right',
+              'osascript /tmp/screenshots/resources/script/sim_orientation.scpt Landscape Left',
               null),
           Call('flutter -d $simulatorID drive example/test_driver/main.dart',
               null),
           callPlutilFrCA,
           Call(
-              '/tmp/screenshots/resources/script/simulator-controller $simulatorID locale en_US',
+              '/tmp/screenshots/resources/script/simulator-controller $simulatorID locale $locale1',
               null),
           Call('xcrun simctl shutdown $simulatorID', null),
         ];
         fakeProcessManager.calls = calls;
 
+        final runningEmulatorDeviceId = 'emulator-5554';
         final devices = [
           {
-            'id': 'emulator-5554',
+            'id': runningEmulatorDeviceId,
             'name': 'Android SDK built for x86',
             'platform': 'android-x86',
             'emulator': true,
             'category': 'mobile',
             'platformType': 'android',
-            'ephemeral': true
+            'ephemeral': true,
+            "emulatorId": emulatorId,
           },
           {
-            'id': '$simulatorID',
+            'id': simulatorID,
             'name': 'User’s iPhone X',
             'platform': 'ios',
             'emulator': true,
             'category': 'mobile',
             'platformType': 'ios',
             'ephemeral': true,
-            'model': 'iPhone 5c (GSM)'
+            'model': 'iPhone 5c (GSM)',
+            "emulatorId": simulatorID,
           }
         ];
         final daemonDevices =
@@ -403,21 +416,34 @@ main() {
 
         when(mockDaemonClient.devices)
             .thenAnswer((_) => Future.value(devicesResponses.removeAt(0)));
-        when(mockDaemonClient.launchEmulator('Nexus_6P_API_28'))
-            .thenAnswer((_) => Future.value('emulator-5554'));
+        when(mockDaemonClient.launchEmulator(emulatorId))
+            .thenAnswer((_) => Future.value(runningEmulatorDeviceId));
         when(mockDaemonClient.waitForEvent(EventType.deviceRemoved))
-            .thenAnswer((_) => Future.value({'id': 'emulator-5554'}));
+            .thenAnswer((_) => Future.value({'id': runningEmulatorDeviceId}));
 
-            memoryFileSystem.file('example/test_driver/main.dart').createSync(recursive: true);
-            memoryFileSystem.directory('/Library/Developer/CoreSimulator/Devices/$simulatorID/data/Library/Preferences').createSync(recursive: true);
+        memoryFileSystem.file('example/test_driver/main.dart').createSync(recursive: true);
+        memoryFileSystem.directory('/Library/Developer/CoreSimulator/Devices/$simulatorID/data/Library/Preferences').createSync(recursive: true);
 
         final screenshots = Screenshots(configStr: configStr);
         final result = await screenshots.run();
         expect(result, isTrue);
+        final BufferLogger logger = context.get<Logger>();
+        expect(logger.errorText, '');
+//        print(logger.statusText);
+        expect(logger.statusText, contains('Starting $configAndroidDeviceName...'));
+        expect(logger.statusText, contains('Starting $configIosDeviceName...'));
+        expect(logger.statusText, contains('Setting orientation to $orientation1'));
+        expect(logger.statusText, contains('Setting orientation to $orientation2'));
+        expect(logger.statusText, contains('Warning: framing is not enabled'));
+        expect(logger.statusText, contains('Changing locale from $locale1 to $locale2 on \'$configAndroidDeviceName\'...'));
+        expect(logger.statusText, contains('Changing locale from $locale2 to $locale1 on \'$configAndroidDeviceName\'...'));
+        expect(logger.statusText, contains('Changing locale from $locale1 to $locale2 on \'$configIosDeviceName\'...'));
+        expect(logger.statusText, contains('Changing locale from $locale2 to $locale1 on \'$configIosDeviceName\'...'));
+        expect(logger.statusText, contains('Restarting \'$configIosDeviceName\' due to locale change...'));
         fakeProcessManager.verifyCalls();
         verify(mockDaemonClient.devices).called(7);
         verify(mockDaemonClient.emulators).called(1);
-        verify(mockDaemonClient.launchEmulator('Nexus_6P_API_28')).called(1);
+        verify(mockDaemonClient.launchEmulator(emulatorId)).called(1);
         verify(mockDaemonClient.waitForEvent(EventType.deviceRemoved))
             .called(1);
       }, skip: false, overrides: <Type, Generator>{
@@ -425,60 +451,101 @@ main() {
         ProcessManager: () => fakeProcessManager,
         Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
           ..environment = {
-            'CI': 'false',
+//            'CI': 'false',
 //            'HOME': LocalPlatform().environment['HOME']
             'HOME': memoryFileSystem.currentDirectory.path
           }
           ..operatingSystem = 'macos',
-//        Logger: () => VerboseLogger(StdoutLogger()),
+        Logger: () => BufferLogger(),
         FileSystem: () => memoryFileSystem,
       });
     });
   });
 
-  group('main image magick', () {
-    testUsingContext('is installed on macOS/linux', () async {
-      fakeProcessManager.calls = [Call('convert -version', ProcessResult(0, 0, '', ''))];
-      final isInstalled = await isImageMagicInstalled();
-      expect(isInstalled, isTrue);
-      fakeProcessManager.verifyCalls();
-    }, overrides: <Type, Generator>{
-      ProcessManager: () => fakeProcessManager,
-      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
-        ..operatingSystem = 'macos',
+  group('hack in CI', (){
+    final deviceId = 'emulator-5554';
+    final runningEmulatorDaemonDevice = loadDaemonDevice({
+      'id': deviceId,
+      'name': 'Android SDK built for x86',
+      'platform': 'android-x86',
+//      'platform': 'android-arm', // expect android-x86
+      'emulator': true,
+//      'emulator': false, // expect true
+      'category': 'mobile',
+      'platformType': 'android',
+      'ephemeral': true,
+      'emulatorId': emulatorId,
+//      'emulatorId': null, // expect Nexus_6P_API_28 (or running avd)
     });
 
-    testUsingContext('is installed on windows', () async {
-      fakeProcessManager.calls = [Call('magick -version', ProcessResult(0, 0, '', ''))];
-      final isInstalled = await isImageMagicInstalled();
-      expect(isInstalled, isTrue);
-      fakeProcessManager.verifyCalls();
-    }, overrides: <Type, Generator>{
-      ProcessManager: () => fakeProcessManager,
-      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
-        ..operatingSystem = 'windows',
+    setUp(() {
+      when(mockDaemonClient.devices)
+          .thenAnswer((_) => Future.value([runningEmulatorDaemonDevice]));
     });
 
-    testUsingContext('is not installed on windows', () async {
-      fakeProcessManager.calls = [
-        Call('magick -version', null, sideEffects: ()=> throw 'exception')
+    testUsingContext('on android', () async {
+      // screenshots config
+      final configStr = '''
+          tests:
+            - example/test_driver/main.dart
+          staging: $stagingDir
+          locales:
+            - en-US
+          devices:
+            android:
+              $configAndroidDeviceName:
+                orientation: 
+                 - Portrait
+                 - LandscapeRight
+          frame: false
+      ''';
+      String adbPath = initAdbPath();
+      final androidUSLocaleCall = Call('$adbPath -s $deviceId shell getprop persist.sys.locale',
+          ProcessResult(0, 0, 'en-US', ''));
+      final List<Call> calls = [
+        ...unpackScriptsCalls,
+        androidUSLocaleCall,
+        androidUSLocaleCall,
+//        Call('$adbPath -s emulator-5554 emu avd name',
+//            ProcessResult(0, 0, 'Nexus_6P_API_28', '')),
+        Call(
+            '$adbPath -s $deviceId shell settings put system user_rotation 0',
+            null),
+        runAndroidTestCall,
+        Call(
+            '$adbPath -s $deviceId shell settings put system user_rotation 1',
+            null),
+        runAndroidTestCall,
       ];
-      final isInstalled = await isImageMagicInstalled();
-      expect(isInstalled, isFalse);
+      fakeProcessManager.calls = calls;
+
+      final result = await screenshots(configStr: configStr);
+
+      expect(result, isTrue);
       fakeProcessManager.verifyCalls();
-    }, overrides: <Type, Generator>{
+      verify(mockDaemonClient.devices).called(3);
+      verify(mockDaemonClient.emulators).called(1);
+      final BufferLogger logger = context.get<Logger>();
+      expect(logger.errorText, '');
+      expect(logger.statusText, isNot(contains('Warning: the locale of a real device cannot be changed.')));
+      expect(logger.statusText, isNot(contains('Starting $configAndroidDeviceName...')));
+      expect(logger.statusText, contains('Setting orientation to Portrait'));
+      expect(logger.statusText, contains('Setting orientation to LandscapeRight'));
+    }, skip: false, overrides: <Type, Generator>{
+      DaemonClient: () => mockDaemonClient,
       ProcessManager: () => fakeProcessManager,
       Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
-        ..operatingSystem = 'windows',
+        ..environment = {'CI': 'true'},
+      Logger: () => BufferLogger(),
     });
   });
 
-  group('run utils', () {
-    testUsingContext('change android locale', () {
+  group('utils', () {
+    testUsingContext('change android locale of real device', () {
       String adbPath = initAdbPath();
       final deviceId = 'deviceId';
-      final deviceLocale = 'deviceLocale';
-      final testLocale = 'testLocale';
+      final deviceLocale = 'en-US';
+      final testLocale = 'fr-CA';
 
       fakeProcessManager.calls = [
         Call(
@@ -490,82 +557,39 @@ main() {
             null),
       ];
       changeAndroidLocale(deviceId, deviceLocale, testLocale);
+      final BufferLogger logger = context.get<Logger>();
+      expect(logger.errorText, contains('Warning: locale will not be changed. Running in locale \'$deviceLocale\''));
       fakeProcessManager.verifyCalls();
     }, skip: false, overrides: <Type, Generator>{
       ProcessManager: () => fakeProcessManager,
-//      Logger: () => VerboseLogger(StdoutLogger()),
+      Logger: () => BufferLogger(),
     });
 
-    testUsingContext('start emulator on CI', () async {
-      final emulatorId = 'emulatorId';
-      final emulatorAvdName = 'emulatorAvdName';
-      final stagingDir = 'stagingDir';
-      String adbPath = initAdbPath();
-
-      fakeProcessManager.calls = [
-        Call('$stagingDir/resources/script/android-wait-for-emulator', null),
-        Call(
-            '$adbPath devices',
-            ProcessResult(
-                0, 0, 'List of devices attached\n$emulatorId	device\n', '')),
-        Call('$adbPath -s $emulatorId emu avd name',
-            ProcessResult(0, 0, '$emulatorAvdName', '')),
-      ];
-      await startEmulator(null, emulatorId, stagingDir);
-      fakeProcessManager.verifyCalls();
-    }, skip: false, overrides: <Type, Generator>{
-      ProcessManager: () => fakeProcessManager,
-      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
-        ..environment = {
-          'CI': 'true',
-          'ANDROID_HOME': 'android_home',
-        },
-//      Logger: () => VerboseLogger(StdoutLogger()),
-    });
-
-    testUsingContext('find running device on CI', () async {
-      final emulatorId = 'emulator-5554';
-      final emulatorAvdName = 'Nexus_6P_API_28';
-      final deviceName = 'Nexus 6P';
-      String adbPath = initAdbPath();
-
-      fakeProcessManager.calls = [
-        Call('$adbPath -s $emulatorId emu avd name',
-            ProcessResult(0, 0, '$emulatorAvdName', '')),
-      ];
-
-      final device = loadDaemonDevice({
+    test('find running emulator', () async {
+      final runningEmulator = loadDaemonDevice({
         'id': '$emulatorId',
         'name': 'sdk phone armv7',
         'platform': 'android-arm',
         'emulator': true,
         'category': 'mobile',
         'platformType': 'android',
-        'ephemeral': true
+        'ephemeral': true,
+        'emulatorId':emulatorId,
       });
-
       final emulator = loadDaemonEmulator({
-        'id': '$emulatorAvdName',
-        'name': '${emulatorAvdName.replaceAll('_', ' ')}',
+        'id': emulatorId,
+        'name': 'emulator description',
         'category': 'mobile',
         'platformType': 'android'
       });
-      final deviceFound = findRunningDevice([device], [emulator], deviceName);
-      expect(deviceFound, equals(device));
-      fakeProcessManager.verifyCalls();
-    }, skip: false, overrides: <Type, Generator>{
-      ProcessManager: () => fakeProcessManager,
-      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
-        ..environment = {
-          'CI': 'true',
-          'ANDROID_HOME': 'android_home',
-        },
-//      Logger: () => VerboseLogger(StdoutLogger()),
+      final deviceFound = findRunningDevice([runningEmulator], [emulator], configAndroidDeviceName);
+      expect(deviceFound, equals(runningEmulator));
     });
 
-    testUsingContext('multiple tests', () async {
+    testUsingContext('multiple tests (on iOS)', () async {
       final deviceName = 'device name';
       final deviceId='deviceId';
+      final locale ='locale';
       final test1='test_driver/main.dart';
       final test2='test_driver/main2.dart';
       final configStr = '''
@@ -589,15 +613,21 @@ main() {
       ];
       final result = await screenshots.runProcessTests(
         deviceName,
-        'locale',
+        locale,
         null,
         getDeviceType(screenshots.config, deviceName),
         deviceId,
       );
       expect(result, isNull);
+      final BufferLogger logger = context.get<Logger>();
+      expect(logger.errorText, '');
+      expect(logger.statusText, contains('Running $test1 on \'$deviceName\' in locale $locale...'));
+      expect(logger.statusText, contains('Running $test2 on \'$deviceName\' in locale $locale...'));
+      expect(logger.statusText, contains('Warning: \'$deviceName\' images will not be processed'));
       fakeProcessManager.verifyCalls();
     }, skip: false, overrides: <Type, Generator>{
       ProcessManager: () => fakeProcessManager,
+      Logger: () => BufferLogger(),
     });
   });
 }

@@ -1,5 +1,3 @@
-import 'image_magick.dart';
-
 /// default config file name
 const String kConfigFileName = 'screenshots.yaml';
 
@@ -17,9 +15,6 @@ enum DeviceType { android, ios }
 
 /// Run mode
 enum RunMode { normal, recording, comparison, archive }
-
-/// singleton
-ImageMagick get im => ImageMagick();
 
 /// No flavor
 const String kNoFlavor = 'no flavor';

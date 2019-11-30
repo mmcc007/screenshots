@@ -172,13 +172,6 @@ Note: to turn off the debug banner, in the integration test's main(), call:
   WidgetsApp.debugAllowBannerOverride = false; // remove debug banner for screenshots
 ````
 
-## Modifying tests based on screenshots environment
-In some cases it is useful to know what device, device type, screen size, screen orientation and locale the test is currently running with. To obtain this information use:
-```
-final screenshotsEnv = config.screenshotsEnv;
-```
-See https://github.com/flutter/flutter/issues/31609 for related `flutter driver` issue.
-
 # Configuration
 _Screenshots_ uses a configuration file to configure a run.  
  The default config filename is `screenshots.yaml`:
@@ -201,11 +194,15 @@ locales:
 devices:
   ios:
     iPhone XS Max:
-      frame: false
+    iPhone 11 Pro:
+      frame: false # no screen avail so frame must be false
     iPad Pro (12.9-inch) (3rd generation):
-      orientation: LandscapeRight
+      orientation:
+        - Portrait # default 
+        - LandscapeRight
   android:
     Nexus 6P:
+    SM G965F: # a real attached device (frame and orientation disabled)
 
 # Frame screenshots
 frame: true
@@ -222,7 +219,7 @@ Individual devices can be configured in `screenshots.yaml` by specifying per dev
 
 _frame_ parameter notes:
 - images generated for devices where framing is disabled may not be suitable for upload.
-- set to true for devices unknown to _screenshots_.
+- set to false for devices unknown to _screenshots_.
 
 _orientation_ parameter notes:
 - multiple orientations can be specified. For example:
@@ -307,6 +304,13 @@ _Screenshots_ will check configuration before running for errors and provide a g
 If device does not have a screen in screens.yaml please create an issue to request a new screen.
 
 To submit a new screen please see related [README](https://github.com/mmcc007/screenshots/blob/master/test/resources/README.md).
+
+## Modifying tests based on screenshots environment
+In some cases it is useful to know what device, device type, screen size, screen orientation and locale the test is currently running with. To obtain this information use:
+```
+final screenshotsEnv = config.screenshotsEnv;
+```
+See https://github.com/flutter/flutter/issues/31609 for related `flutter driver` issue.
 
 # Upgrading
 To upgrade, simply re-issue the install command

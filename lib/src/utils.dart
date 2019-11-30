@@ -8,6 +8,7 @@ import 'package:screenshots/src/daemon_client.dart';
 import 'package:tool_base/tool_base.dart';
 import 'package:tool_mobile/tool_mobile.dart';
 import 'package:yaml/yaml.dart';
+
 import 'context_runner.dart';
 import 'globals.dart';
 
@@ -107,10 +108,10 @@ String getHighestIosVersion(Map iOSVersions) {
   return iOSVersionName;
 }
 
-/// Create list of avds,
-List<String> getAvdNames() {
-  return cmd([getEmulatorPath(androidSdk), '-list-avds']).split('\n');
-}
+///// Create list of avds,
+//List<String> getAvdNames() {
+//  return cmd([getEmulatorPath(androidSdk), '-list-avds']).split('\n');
+//}
 
 ///// Get the highest available avd version for the android emulator.
 //String getHighestAVD(String deviceName) {
@@ -240,41 +241,41 @@ String getIosSimulatorLocale(String udId) {
     globalPreferences.writeAsStringSync(contents);
     cmd(['plutil', '-convert', 'binary1', globalPreferences.path]);
   }
-  final localeInfo = cnv
-      .jsonDecode(cmd(['plutil', '-convert', 'json', '-o', '-', globalPreferencesPath]));
+  final localeInfo = cnv.jsonDecode(
+      cmd(['plutil', '-convert', 'json', '-o', '-', globalPreferencesPath]));
   final locale = localeInfo['AppleLocale'];
   return locale;
 }
 
-/// Get android emulator id from a running emulator with id [deviceId].
-/// Returns emulator id as [String].
-String getAndroidEmulatorId(String deviceId) {
-  // get name of avd of running emulator
-  return cmd([getAdbPath(androidSdk), '-s', deviceId, 'emu', 'avd', 'name'])
-      .split('\r\n')
-      .map((line) => line.trim())
-      .first;
-}
-
-/// Find android device id with matching [emulatorId].
-/// Returns matching android device id as [String].
-String findAndroidDeviceId(String emulatorId) {
-  /// Get the list of running android devices by id.
-  List<String> getAndroidDeviceIds() {
-    return cmd([getAdbPath(androidSdk), 'devices'])
-        .trim()
-        .split('\n')
-        .sublist(1) // remove first line
-        .map((device) => device.split('\t').first)
-        .toList();
-  }
-
-  final devicesIds = getAndroidDeviceIds();
-  if (devicesIds.isEmpty) return null;
-  return devicesIds.firstWhere(
-      (deviceId) => emulatorId == getAndroidEmulatorId(deviceId),
-      orElse: () => null);
-}
+///// Get android emulator id from a running emulator with id [deviceId].
+///// Returns emulator id as [String].
+//String getAndroidEmulatorId(String deviceId) {
+//  // get name of avd of running emulator
+//  return cmd([getAdbPath(androidSdk), '-s', deviceId, 'emu', 'avd', 'name'])
+//      .split('\r\n')
+//      .map((line) => line.trim())
+//      .first;
+//}
+//
+///// Find android device id with matching [emulatorId].
+///// Returns matching android device id as [String].
+//String findAndroidDeviceId(String emulatorId) {
+//  /// Get the list of running android devices by id.
+//  List<String> getAndroidDeviceIds() {
+//    return cmd([getAdbPath(androidSdk), 'devices'])
+//        .trim()
+//        .split('\n')
+//        .sublist(1) // remove first line
+//        .map((device) => device.split('\t').first)
+//        .toList();
+//  }
+//
+//  final devicesIds = getAndroidDeviceIds();
+//  if (devicesIds.isEmpty) return null;
+//  return devicesIds.firstWhere(
+//      (deviceId) => emulatorId == getAndroidEmulatorId(deviceId),
+//      orElse: () => null);
+//}
 
 ///// Stop an android emulator.
 //Future stopAndroidEmulator(String deviceId, String stagingDir) async {
@@ -366,8 +367,11 @@ DaemonEmulator findEmulator(
     List<DaemonEmulator> emulators, String emulatorName) {
   // find highest by avd version number
   emulators.sort(emulatorComparison);
+  // todo: fix find for example 'Nexus_6_API_28' and Nexus_6P_API_28'
   return emulators.lastWhere(
-      (emulator) => emulator.id.contains(emulatorName.replaceAll(' ', '_')),
+      (emulator) => emulator.id
+          .toUpperCase()
+          .contains(emulatorName.toUpperCase().replaceAll(' ', '_')),
       orElse: () => null);
 }
 
@@ -382,11 +386,6 @@ RunMode getRunModeEnum(String runMode) {
 /// Test for recordings in [recordDir].
 Future<bool> isRecorded(String recordDir) async =>
     !(await fs.directory(recordDir).list().isEmpty);
-
-/// Test for CI environment.
-bool isCI() {
-  return platform.environment['CI']?.toLowerCase() == 'true';
-}
 
 /// Convert a posix path to platform path (windows/posix).
 String toPlatformPath(String posixPath, {p.Context context}) {

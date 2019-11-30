@@ -1,5 +1,4 @@
 import 'dart:convert';
-//import 'dart:io';
 
 import 'package:fake_process_manager/fake_process_manager.dart';
 import 'package:mockito/mockito.dart';
@@ -12,17 +11,52 @@ import 'package:tool_base/tool_base.dart';
 import 'src/context.dart';
 
 main() {
-  const kEmulatorsJson =
-      '[{"id":"Nexus_5X_API_27","name":"Nexus 5X","category":"mobile","platformType":"android"},{"id":"Nexus_6P_API_28","name":"Nexus 6P","category":"mobile","platformType":"android"},{"id":"Nexus_6_API_28","name":"Nexus 6","category":"mobile","platformType":"android"},{"id":"Nexus_9_API_28","name":"Nexus 9","category":"mobile","platformType":"android"},{"id":"Nexus_test_6P_API_30","name":"Nexus test 6P","category":"mobile","platformType":"android"},{"id":"test","name":null,"category":"mobile","platformType":"android"},{"id":"apple_ios_simulator","name":"iOS Simulator","category":"mobile","platformType":"ios"}]';
-  const kRunningAndroidDeviceJson =
-      '{"id":"emulator-5554","name":"Android SDK built for x86","platform":"android-x86","emulator":true,"category":"mobile","platformType":"android","ephemeral":true}';
-  const kIPhoneUuid = '3b3455019e329e007e67239d9b897148244b5053';
-  const kRunningRealIosDeviceJson =
-      '{"id":"$kIPhoneUuid","name":"My iPhone","platform":"ios","emulator":false,"category":"mobile","platformType":"ios","ephemeral":true}';
-  const kRunningRealAndroidDeviceJson =
-      '{"id":"someandroiddeviceid","name":"My Android Phone","platform":"android","emulator":false,"category":"mobile","platformType":"android","ephemeral":true}';
-  const kDevicesJson =
-      '[$kRunningRealAndroidDeviceJson,$kRunningRealIosDeviceJson]';
+  final String kEmulatorsJson = jsonEncode([
+    {
+      "id": "Nexus_6P_API_28",
+      "name": "Nexus 6P",
+      "category": "mobile",
+      "platformType": "android"
+    },
+    {
+      "id": "apple_ios_simulator",
+      "name": "iOS Simulator",
+      "category": "mobile",
+      "platformType": "ios"
+    }
+  ]);
+  final String kRunningAndroidEmulatorJson = jsonEncode({
+    "id": "emulator-5554",
+    "name": "Android SDK built for x86",
+    "platform": "android-x86",
+    "emulator": true,
+    "category": "mobile",
+    "platformType": "android",
+    "ephemeral": true
+  });
+  const String kIPhoneUuid = '3b3455019e329e007e67239d9b897148244b5053';
+  final String kRunningRealIosDeviceJson = jsonEncode({
+    "id": "$kIPhoneUuid",
+    "name": "My iPhone",
+    "platform": "ios",
+    "emulator": false,
+    "category": "mobile",
+    "platformType": "ios",
+    "ephemeral": true
+  });
+  final String kRunningRealAndroidDeviceJson = jsonEncode({
+    "id": "someandroiddeviceid",
+    "name": "My Android Phone",
+    "platform": "android",
+    "emulator": false,
+    "category": "mobile",
+    "platformType": "android",
+    "ephemeral": true
+  });
+  final String kRealDevicesJson = jsonEncode([
+    jsonDecode(kRunningRealAndroidDeviceJson),
+    jsonDecode(kRunningRealIosDeviceJson)
+  ]);
 
   group('daemon client', () {
     const streamPeriod = 150;
@@ -103,12 +137,12 @@ main() {
                 '[{"event":"daemon.connected","params":{"version":"0.0.0","pid":12345}}]\n'),
             utf8.encode('[{"id":0}]\n'),
             utf8.encode('[{"id":1,"result":$kEmulatorsJson}]\n'),
-            utf8.encode('[{"id":2,"result":$kDevicesJson}]\n'),
+            utf8.encode('[{"id":2,"result":$kRealDevicesJson}]\n'),
             utf8.encode('[{"id":3}]\n'),
             utf8.encode(
-                '[{"event":"device.added","params":$kRunningAndroidDeviceJson}]\n'),
+                '[{"event":"device.added","params":$kRunningAndroidEmulatorJson}]\n'),
             utf8.encode(
-                '[{"event":"device.removed","params":$kRunningAndroidDeviceJson}]\n'),
+                '[{"event":"device.removed","params":$kRunningAndroidEmulatorJson}]\n'),
             utf8.encode('[{"id":4}]\n'),
           ];
           return lines[i];
@@ -122,15 +156,15 @@ main() {
         await daemonClient.start;
 
         final emulators = await daemonClient.emulators;
-        expect(emulators.length, 7);
+        expect(emulators.length, jsonDecode(kEmulatorsJson).length);
 
         final devices = await daemonClient.devices;
-        expect(devices.length, 2);
+        expect(devices.length, jsonDecode(kRealDevicesJson).length);
 
         final deviceId = await daemonClient.launchEmulator('emulator id');
         expect(deviceId, 'emulator-5554');
 
-        final expectedDeviceInfo = jsonDecode(kRunningAndroidDeviceJson);
+        final expectedDeviceInfo = jsonDecode(kRunningAndroidEmulatorJson);
         final deviceInfo =
             await daemonClient.waitForEvent(EventType.deviceRemoved);
         expect(deviceInfo, expectedDeviceInfo);
@@ -163,7 +197,7 @@ main() {
             FakeProcessManager(stdinResults: _captureStdin, isPeriodic: true);
       });
 
-      testUsingContext('start simulator and get it\'s daemon device', () async {
+      testUsingContext('real devices (iPhone and Android)', () async {
         final daemonClient = DaemonClient();
 
         fakePlatform.operatingSystem = 'macos';
@@ -175,7 +209,7 @@ main() {
             utf8.encode(
                 '[{"event":"daemon.connected","params":{"version":"0.0.0","pid":12345}}]\n'),
             utf8.encode('[{"id":0}]\n'),
-            utf8.encode('[{"id":1,"result":$kDevicesJson}]\n'),
+            utf8.encode('[{"id":1,"result":$kRealDevicesJson}]\n'),
             utf8.encode('[{"id":2}]\n'),
           ];
           return lines[i];
@@ -205,6 +239,10 @@ main() {
 
         final devices = await daemonClient.devices;
         expect(devices.length, 2);
+        final realAndroidDevice = devices[0];
+        expect(realAndroidDevice.iosModel, isNull);
+        expect(realAndroidDevice.name, equals('My Android Phone'));
+        expect(realAndroidDevice.id, equals('someandroiddeviceid'));
         final iosRealDevice = devices[1];
         expect(iosRealDevice.iosModel, equals(iosModel));
         expect(iosRealDevice.name, equals(iosPhoneName));
@@ -220,25 +258,136 @@ main() {
 //        Logger: () => VerboseLogger(StdoutLogger()),
       });
     });
+
+    group('in CI', () {
+      FakeProcessManager fakeProcessManager;
+      FakePlatform fakePlatform;
+      final List<String> stdinCaptured = <String>[];
+
+      void _captureStdin(String item) {
+        stdinCaptured.add(item);
+      }
+
+      setUp(() async {
+        fakeProcessManager =
+            FakeProcessManager(stdinResults: _captureStdin, isPeriodic: true);
+        fakePlatform = FakePlatform.fromPlatform(const LocalPlatform());
+      });
+
+      testUsingContext('bad android emulator hack', () async {
+        fakePlatform.environment = {
+          'CI': 'true',
+        };
+        fakePlatform.operatingSystem = 'linux';
+        final id = 'device id';
+        final name = 'device name';
+        final emulator = false;
+        final emulatorId = null;
+        final bogusRealAndroidDevice = [
+          {
+            "id": 1,
+            "result": [
+              {
+                "id": id,
+                "name": name,
+                "platform": "android-arm",
+                "emulator": emulator,
+                "category": "mobile",
+                "platformType": "android",
+                "ephemeral": true,
+                "emulatorId": emulatorId,
+              }
+            ]
+          }
+        ];
+        final daemonClient = DaemonClient();
+
+        // responses from daemon (called sequentially)
+        List<int> getLine(int i) {
+          final lines = <List<int>>[
+            utf8.encode('Starting device daemon...\n'),
+            utf8.encode('[${jsonEncode({
+              "event": "daemon.connected",
+              "params": {"version": "0.0.0", "pid": 12345}
+            })}]\n'),
+            utf8.encode('[{"id":0}]\n'),
+            utf8.encode('[${jsonEncode(bogusRealAndroidDevice)}]\n'),
+            utf8.encode('[{"id":2}]\n'),
+          ];
+          return lines[i];
+        }
+
+        fakeProcessManager.calls = [
+          Call(
+              'flutter daemon',
+              ProcessResult(
+                  0,
+                  0,
+                  Stream<List<int>>.periodic(
+                      Duration(milliseconds: streamPeriod), getLine),
+                  '')),
+        ];
+
+        await daemonClient.start;
+
+        final devices = await daemonClient.devices;
+        expect(devices.length, 1);
+        final realAndroidDevice = devices[0];
+        expect(realAndroidDevice.iosModel, isNull);
+        expect(realAndroidDevice.name, equals(name));
+        expect(realAndroidDevice.id, equals(id));
+        expect(realAndroidDevice.emulator, isTrue);
+        expect(realAndroidDevice.emulatorId, isNotNull);
+
+        final exitCode = await daemonClient.stop;
+        expect(exitCode, 0);
+
+        fakeProcessManager.verifyCalls();
+      }, overrides: <Type, Generator>{
+        ProcessManager: () => fakeProcessManager,
+        Platform: () => fakePlatform,
+//        Logger: () => VerboseLogger(StdoutLogger()),
+      });
+    });
   });
 
-  group('marshall', () {
+  group('load', () {
     test('daemon emulators', () {
       final List emulators = jsonDecode(kEmulatorsJson);
       final daemonEmulators = <DaemonEmulator>[];
       emulators.forEach((emulator) {
         daemonEmulators.add(loadDaemonEmulator(emulator));
       });
-      expect(daemonEmulators.length, 7);
+      expect(daemonEmulators.length, emulators.length);
+      expect(daemonEmulators[0].id, emulators[0]['id']);
     });
 
     test('daemon devices', () {
-      final List devices = jsonDecode(kDevicesJson);
-      final daemonDevices = [];
+      final List devices = jsonDecode(kRealDevicesJson);
+      final daemonDevices = <DaemonDevice>[];
       devices.forEach((device) {
         daemonDevices.add(loadDaemonDevice(device));
       });
-      expect(daemonDevices.length, 2);
+      expect(daemonDevices.length, devices.length);
+      expect(daemonDevices[0].id, devices[0]['id']);
+    });
+  });
+
+  group('devices', (){
+    test('equality', (){
+      DaemonEmulator emulator1 = loadDaemonEmulator(jsonDecode(kEmulatorsJson)[0]);
+      DaemonEmulator emulator2 = loadDaemonEmulator(jsonDecode(kEmulatorsJson)[0]);
+      expect(emulator1, equals(emulator2));
+      emulator2 = loadDaemonEmulator(jsonDecode(kEmulatorsJson)[1]);
+      expect(emulator1, isNot(equals(emulator2)));
+
+      DaemonDevice device1 = loadDaemonDevice(jsonDecode(kRealDevicesJson)[0]);
+      DaemonDevice device2 = loadDaemonDevice(jsonDecode(kRealDevicesJson)[0]);
+      expect(device1, equals(device2));
+      device2 = loadDaemonDevice(jsonDecode(kRealDevicesJson)[1]);
+      expect(device1, isNot(equals(device2)));
+
+      expect(emulator1, isNot(equals(device1)));
     });
   });
 }

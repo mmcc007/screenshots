@@ -1,6 +1,4 @@
 import 'package:file/memory.dart';
-import 'package:mockito/mockito.dart';
-import 'package:process/process.dart';
 import 'package:screenshots/src/config.dart';
 import 'package:screenshots/src/fastlane.dart';
 import 'package:screenshots/src/globals.dart';
@@ -11,56 +9,44 @@ import 'package:tool_base/tool_base.dart' hide Config;
 
 import 'src/context.dart';
 
-class PlainMockProcessManager extends Mock implements ProcessManager {}
-
 main() {
   group('fastlane', () {
-    group('in context', () {
-      final dirPath = 'test/$kTestScreenshotsDir';
-      final ProcessManager mockProcessManager = PlainMockProcessManager();
-      MemoryFileSystem fs;
+    final dirPath = 'test/$kTestScreenshotsDir';
+    MemoryFileSystem memoryFileSystem;
 
-      setUp(() {
-        // create test files
-        fs = MemoryFileSystem();
-        fs.directory(dirPath).createSync(recursive: true);
-        final filePaths = [
-          '$dirPath/file1.$kImageExtension',
-          '$dirPath/file2.$kImageExtension'
-        ];
-        for (final filePath in filePaths) {
-          fs.file(filePath).createSync();
-        }
-//  expect(fs.directory(dirPath).listSync().length, filePaths.length);
-
-        // fake process call
-        when(mockProcessManager.runSync(
-          any,
-          environment: anyNamed('environment'),
-          workingDirectory: anyNamed('workingDirectory'),
-          runInShell: anyNamed('runInShell'),
-        )).thenAnswer(
-            (Invocation invocation) => ProcessResult(0, 0, null, null));
-      });
-
-      testUsingContext('prefix files and delete matching files', () async {
-        final prefix = 'my_prefix';
-        await prefixFilesInDir(dirPath, prefix);
-        await for (final file in fs.directory(dirPath).list()) {
-          expect(file.path.contains(prefix), isTrue);
-        }
-        // cleanup
-        deleteMatchingFiles(dirPath, RegExp(prefix));
-        expect(fs.directory(dirPath).listSync().length, 0);
-      }, overrides: {
-        ProcessManager: () => mockProcessManager,
-        FileSystem: () => fs
-      });
+    setUp(() {
+      // create test files
+      memoryFileSystem = MemoryFileSystem();
+      memoryFileSystem.directory(dirPath).createSync(recursive: true);
+      final filePaths = [
+        '$dirPath/file1.$kImageExtension',
+        '$dirPath/file2.$kImageExtension'
+      ];
+      for (final filePath in filePaths) {
+        memoryFileSystem.file(filePath).createSync();
+      }
+      expect(memoryFileSystem.directory(dirPath).listSync().length, filePaths.length);
     });
 
-    group('no context', () {
-      test('clear fastlane dirs', () async {
-        final configStr = '''
+    testUsingContext('prefix files and delete matching files', () async {
+      final prefix = 'my_prefix';
+      expect(memoryFileSystem.directory(dirPath).listSync().length, 2);
+      await for (final file in memoryFileSystem.directory(dirPath).list()) {
+        expect(file.path.contains(prefix), isFalse);
+      }
+      await prefixFilesInDir(dirPath, prefix);
+      await for (final file in memoryFileSystem.directory(dirPath).list()) {
+        expect(file.path.contains(prefix), isTrue);
+      }
+      // cleanup
+      deleteMatchingFiles(dirPath, RegExp(prefix));
+      expect(memoryFileSystem.directory(dirPath).listSync().length, 0);
+    }, overrides: {
+      FileSystem: () => memoryFileSystem
+    });
+
+    testUsingContext('clear fastlane dirs', () async {
+      final configStr = '''
         devices:
           android:
             android device1:
@@ -71,12 +57,32 @@ main() {
           - locale2
         frame: true
         ''';
-        final config = Config(configStr: configStr);
-        final screens = Screens();
-        await screens.init();
-        final runMode = RunMode.normal;
-        await clearFastlaneDirs(config, screens, runMode);
-      }, skip: isCI());
+      final config = Config(configStr: configStr);
+      final screens = Screens();
+      await screens.init();
+
+      for (final locale in config.locales) {
+        for (final device in config.devices) {
+          // create files
+          int i=0;
+          final path = getDirPath(device.deviceType, locale,
+              getAndroidModelType(screens.getScreen(device.name)));
+          expect(memoryFileSystem.directory(path).existsSync(), isFalse);
+          memoryFileSystem.file('$path/${device.name}-$i.$kImageExtension').createSync(recursive: true);
+          expect(memoryFileSystem.directory(path).listSync().length, 1);
+        }
+      }
+      await clearFastlaneDirs(config, screens, RunMode.normal);
+      for (final locale in config.locales) {
+        for (final device in config.devices) {
+          // check files deleted
+          final path = getDirPath(device.deviceType, locale,
+              getAndroidModelType(screens.getScreen(device.name)));
+          expect(memoryFileSystem.directory(path).listSync().length, 0);
+        }
+      }
+    }, overrides: {
+      FileSystem: () => memoryFileSystem,
     });
   });
 }

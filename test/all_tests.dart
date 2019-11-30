@@ -1,5 +1,3 @@
-import 'package:screenshots/src/utils.dart';
-
 import 'screenshots_test.dart' as screenshots_test;
 import 'daemon_test.dart' as daemon_test;
 import 'frame_test.dart' as frame_test;
@@ -20,7 +18,6 @@ import 'utils_test.dart' as utils_test;
 import 'base/all_tests.dart' as base_all_tests;
 
 void main() {
-  isCI() ? print('running in CI') : print('not running in CI');
 
   base_all_tests.main();
   config_test.main();
