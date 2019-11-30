@@ -150,6 +150,7 @@ main() {
     });
 
     testUsingContext('fail', () async {
+      fakePlatform.operatingSystem = 'macos';
       final BufferLogger logger = context.get<Logger>();
       final configStr = '''
           tests:
@@ -160,13 +161,13 @@ main() {
             - fr-CA
           devices:
             android:
-              Bad android phone:
+              Android Device (with no screen):
               Unknown android phone:
                 frame: false
               Nexus 6P:
                 orientation: LandscapeRight
             ios:
-              Bad ios phone:
+              iOS Device (with no screen):
               iPhone X:
                 orientation: LandscapeRight
           frame: true
@@ -174,29 +175,45 @@ main() {
       final config = Config(configStr: configStr);
       final screens = Screens();
       await screens.init();
-      final emulator = {
-        "id": "ANY_EMULATOR_ID",
-        "name": "Nexus 6P",
+      final emulator = loadDaemonEmulator({
+        "id": "NEXUS_6P_API_28",
+        "name": "NEXUS 6P API 28",
         "category": "mobile",
         "platformType": "android"
-      };
-      final allEmulators = <DaemonEmulator>[loadDaemonEmulator(emulator)];
-      final allDevices = <DaemonDevice>[];
+      });
+      final device = loadDaemonDevice({
+        "id": "emulator-5554",
+        "name": "Android SDK built for x86 64",
+        "platform": "android-arm",
+        "emulator": true,
+        "category": "mobile",
+        "platformType": "android",
+        "ephemeral": true,
+        "emulatorId": 'NEXUS_6P_API_28'
+      });
+      final allEmulators = <DaemonEmulator>[emulator];
+      final allDevices = <DaemonDevice>[device];
 
       fakeProcessManager.calls = [callListIosDevices, callListIosDevices];
 
       bool isValid =
           await isValidConfig(config, screens, allDevices, allEmulators);
+//      print(logger.statusText);
+//      print(logger.errorText);
       expect(isValid, isFalse);
-      expect(logger.statusText, contains('Guide'));
-      expect(logger.statusText, contains('Use a device with a supported screen'));
+      expect(logger.statusText, contains('Screen Guide'));
+      expect(logger.statusText, contains('Device Guide'));
+      expect(logger.statusText, contains('Attached devices'));
+      expect(logger.statusText, contains('Installed emulators'));
+      expect(logger.statusText, contains('Installed simulators'));
+
       expect(logger.errorText, contains('File \'example/test_driver/main.dartx\' not found.'));
-      expect(logger.errorText, contains('Invalid config: \'example/test_driver/main.dartx\' in screenshots.yaml'));
-      expect(logger.errorText, contains('Screen not available for device \'Bad android phone\' in screenshots.yaml.'));
-      expect(logger.errorText, isNot(contains('Screen not available for device \'Bad ios phone\' in screenshots.yaml.')));
-      expect(logger.errorText, contains('No device attached or emulator installed for device \'Bad android phone\' in screenshots.yaml.'));
-      expect(logger.errorText, contains('No device attached or emulator installed for device \'Unknown android phone\' in screenshots.yaml.'));
-      expect(logger.errorText, isNot(contains('No device attached or simulator installed for device \'Bad ios phone\' in screenshots.yaml.')));
+      expect(logger.errorText, contains('No device attached or emulator installed for device \'Unknown android phone\''));
+      expect(logger.errorText, contains('Screen not available for device \'Android Device (with no screen)\''));
+      expect(logger.errorText, contains('Screen not available for device \'iOS Device (with no screen)\''));
+      expect(logger.errorText, contains('No device attached or emulator installed for device \'Unknown android phone\''));
+      expect(logger.errorText, isNot(contains('No device attached or simulator installed for device \'Bad ios phone\'')));
+      fakeProcessManager.verifyCalls();
 
 //       fakePlatform.operatingSystem = 'linux';
 //       isValid =
@@ -214,6 +231,7 @@ main() {
     }, skip: false, overrides: <Type, Generator>{
       Logger: () => BufferLogger(),
       Platform: () => fakePlatform,
+      ProcessManager: () => fakeProcessManager,
     });
 
     testUsingContext('pass on android in CI', () async {
@@ -267,8 +285,8 @@ main() {
     });
 
     testUsingContext('show guide', () async {
-      fakePlatform.operatingSystem = 'macos';
-      final BufferLogger logger = context.get<Logger>();
+//      fakePlatform.operatingSystem = 'macos';
+//      final BufferLogger logger = context.get<Logger>();
       final screens = Screens();
       await screens.init();
       final installedEmulator = loadDaemonEmulator({
@@ -313,18 +331,19 @@ main() {
         realAndroidDevice,
       ];
       expect(
-          () async => await generateConfigGuide(
+          () async => await deviceGuide(
               screens, allDevices, allEmulators, 'myScreenshots.yaml'),
           returnsNormally);
-      expect(logger.statusText, contains('Guide'));
-      expect(logger.statusText, contains(realIosDevice.iosModel));
-      expect(logger.statusText, contains(realAndroidDevice.name));
-      expect(logger.statusText, isNot(contains(startedEmulator.id)));
-      expect(logger.statusText, contains(installedEmulator.name));
-      expect(logger.errorText, '');
+//      expect(logger.statusText, contains('Guide'));
+//      expect(logger.statusText, contains(realIosDevice.iosModel));
+//      expect(logger.statusText, contains(realAndroidDevice.name));
+//      expect(logger.statusText, isNot(contains(startedEmulator.id)));
+//      expect(logger.statusText, contains(installedEmulator.name));
+//      expect(logger.errorText, '');
 
     }, skip: false, overrides: <Type, Generator>{
-      Logger: () => BufferLogger(),
+//      Logger: () => BufferLogger(),
+            Logger: () => VerboseLogger(StdoutLogger()),
       Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
     ..operatingSystem = 'macos',
     });
