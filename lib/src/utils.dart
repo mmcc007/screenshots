@@ -108,10 +108,10 @@ String getHighestIosVersion(Map iOSVersions) {
   return iOSVersionName;
 }
 
-/// Create list of avds,
-List<String> getAvdNames() {
-  return cmd([getEmulatorPath(androidSdk), '-list-avds']).split('\n');
-}
+///// Create list of avds,
+//List<String> getAvdNames() {
+//  return cmd([getEmulatorPath(androidSdk), '-list-avds']).split('\n');
+//}
 
 ///// Get the highest available avd version for the android emulator.
 //String getHighestAVD(String deviceName) {
@@ -247,35 +247,35 @@ String getIosSimulatorLocale(String udId) {
   return locale;
 }
 
-/// Get android emulator id from a running emulator with id [deviceId].
-/// Returns emulator id as [String].
-String getAndroidEmulatorId(String deviceId) {
-  // get name of avd of running emulator
-  return cmd([getAdbPath(androidSdk), '-s', deviceId, 'emu', 'avd', 'name'])
-      .split('\r\n')
-      .map((line) => line.trim())
-      .first;
-}
-
-/// Find android device id with matching [emulatorId].
-/// Returns matching android device id as [String].
-String findAndroidDeviceId(String emulatorId) {
-  /// Get the list of running android devices by id.
-  List<String> getAndroidDeviceIds() {
-    return cmd([getAdbPath(androidSdk), 'devices'])
-        .trim()
-        .split('\n')
-        .sublist(1) // remove first line
-        .map((device) => device.split('\t').first)
-        .toList();
-  }
-
-  final devicesIds = getAndroidDeviceIds();
-  if (devicesIds.isEmpty) return null;
-  return devicesIds.firstWhere(
-      (deviceId) => emulatorId == getAndroidEmulatorId(deviceId),
-      orElse: () => null);
-}
+///// Get android emulator id from a running emulator with id [deviceId].
+///// Returns emulator id as [String].
+//String getAndroidEmulatorId(String deviceId) {
+//  // get name of avd of running emulator
+//  return cmd([getAdbPath(androidSdk), '-s', deviceId, 'emu', 'avd', 'name'])
+//      .split('\r\n')
+//      .map((line) => line.trim())
+//      .first;
+//}
+//
+///// Find android device id with matching [emulatorId].
+///// Returns matching android device id as [String].
+//String findAndroidDeviceId(String emulatorId) {
+//  /// Get the list of running android devices by id.
+//  List<String> getAndroidDeviceIds() {
+//    return cmd([getAdbPath(androidSdk), 'devices'])
+//        .trim()
+//        .split('\n')
+//        .sublist(1) // remove first line
+//        .map((device) => device.split('\t').first)
+//        .toList();
+//  }
+//
+//  final devicesIds = getAndroidDeviceIds();
+//  if (devicesIds.isEmpty) return null;
+//  return devicesIds.firstWhere(
+//      (deviceId) => emulatorId == getAndroidEmulatorId(deviceId),
+//      orElse: () => null);
+//}
 
 ///// Stop an android emulator.
 //Future stopAndroidEmulator(String deviceId, String stagingDir) async {

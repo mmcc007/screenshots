@@ -139,38 +139,38 @@ main() {
 //          ? print('device not attached')
 //          : print('model=${device['model']}');
 //    }, skip: utils.    true  );
-
-    test('run test on real device', () async {
-      final deviceName = 'iPhone 5c';
-      final testPath = 'test_driver/main.dart';
-      final daemonClient = DaemonClient();
-      await daemonClient.start;
-      final devices = await daemonClient.devices;
-//      print('devices=$devices');
-      final device = devices.firstWhere(
-          (device) => device.iosModel.contains(deviceName),
-          orElse: () => null);
-      // clear existing screenshots from staging area
-//    clearDirectory('$stagingDir/test');
-      // run the test
-      await utils.streamCmd(['flutter', '-d', device.id, 'drive', testPath],
-          workingDirectory: 'example');
-    }, timeout: Timeout(Duration(minutes: 2)), skip:     true  );
-
-    test('wait for start of android emulator', () async {
-      final id = 'Nexus_6P_API_28';
-      final daemonClient = DaemonClient();
-//    daemonClient.verbose = true;
-      await daemonClient.start;
-//    daemonClient.verbose;
-      final deviceId = await daemonClient.launchEmulator(id);
-
-      expect(utils.findAndroidDeviceId(id), deviceId);
-
-      // shutdown
-      await shutdownAndroidEmulator(daemonClient, deviceId);
-    }, skip:     true  );
-
+//
+//    test('run test on real device', () async {
+//      final deviceName = 'iPhone 5c';
+//      final testPath = 'test_driver/main.dart';
+//      final daemonClient = DaemonClient();
+//      await daemonClient.start;
+//      final devices = await daemonClient.devices;
+////      print('devices=$devices');
+//      final device = devices.firstWhere(
+//          (device) => device.iosModel.contains(deviceName),
+//          orElse: () => null);
+//      // clear existing screenshots from staging area
+////    clearDirectory('$stagingDir/test');
+//      // run the test
+//      await utils.streamCmd(['flutter', '-d', device.id, 'drive', testPath],
+//          workingDirectory: 'example');
+//    }, timeout: Timeout(Duration(minutes: 2)), skip:     true  );
+//
+//    test('wait for start of android emulator', () async {
+//      final id = 'Nexus_6P_API_28';
+//      final daemonClient = DaemonClient();
+////    daemonClient.verbose = true;
+//      await daemonClient.start;
+////    daemonClient.verbose;
+//      final deviceId = await daemonClient.launchEmulator(id);
+//
+//      expect(utils.findAndroidDeviceId(id), deviceId);
+//
+//      // shutdown
+//      await shutdownAndroidEmulator(daemonClient, deviceId);
+//    }, skip:     true  );
+//
 //    test('join devices', () {
 //      final configPath = 'test/screenshots_test.yaml';
 //      final config = Config(configPath: configPath);

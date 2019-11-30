@@ -200,13 +200,13 @@ void main() {
           await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
     }, skip:     true  );
 
-    test('get emulator id from device name', () {
-      final _emulators = utils.getAvdNames();
-//    print(_emulators);
-      final emulator =
-          _emulators.firstWhere((emulator) => emulator.contains('Nexus_5X'));
-      expect(emulator, 'Nexus_5X_API_27');
-    }, skip:     true  );
+//    test('get emulator id from device name', () {
+//      final _emulators = utils.getAvdNames();
+////    print(_emulators);
+//      final emulator =
+//          _emulators.firstWhere((emulator) => emulator.contains('Nexus_5X'));
+//      expect(emulator, 'Nexus_5X_API_27');
+//    }, skip:     true  );
 
     test('move files', () async {
       final fileName = 'filename';
@@ -387,17 +387,17 @@ void main() {
       expect(locale, 'en-US');
     }, skip:     true  );
 
-    test('get avd from a running emulator', () async {
-      final expectedId = 'Nexus_6P_API_28';
-      final daemonClient = DaemonClient();
-      await daemonClient.start;
-      // start emulator
-      final deviceId = await daemonClient.launchEmulator(expectedId);
-      final emulatorId = utils.getAndroidEmulatorId(deviceId);
-      expect(emulatorId, expectedId);
-      expect(
-          await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
-    }, skip:     true  );
+//    test('get avd from a running emulator', () async {
+//      final expectedId = 'Nexus_6P_API_28';
+//      final daemonClient = DaemonClient();
+//      await daemonClient.start;
+//      // start emulator
+//      final deviceId = await daemonClient.launchEmulator(expectedId);
+//      final emulatorId = utils.getAndroidEmulatorId(deviceId);
+//      expect(emulatorId, expectedId);
+//      expect(
+//          await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
+//    }, skip:     true  );
 
     test('get real devices', () async {
       final expected = [
