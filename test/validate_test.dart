@@ -325,7 +325,8 @@ main() {
 
     }, skip: false, overrides: <Type, Generator>{
       Logger: () => BufferLogger(),
-      Platform: () => fakePlatform,
+      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
+    ..operatingSystem = 'macos';,
     });
   });
 }
