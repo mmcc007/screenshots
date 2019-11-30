@@ -127,6 +127,7 @@ android_integration_task:
     - adb shell getprop ro.build.version.release # '9' (emulator)
     - adb shell getprop ro.build.version.sdk # '28' (emulator))
     - adb shell getprop
+  logcat_background_script: adb logcat -e flutter\|Observatory *:I
   doctor_script:
     - flutter doctor -v
   test_script:
