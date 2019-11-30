@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-//import 'dart:io';
 
 import 'package:meta/meta.dart';
 import 'package:screenshots/src/utils.dart';
@@ -332,7 +331,10 @@ DaemonDevice loadDaemonDevice(Map<String, dynamic> device) {
   // flutter daemon is reporting x64 emulator as real device while
   // flutter doctor is reporting correctly.
   // Platform is reporting as 'android-arm' instead of 'android-x64', etc...
-  if (platform.environment['CI'] == 'true' && device['platform'] == 'android-arm') {
+  if (platform.environment['CI'] == 'true' &&
+      device['platform'] == 'android-arm' &&
+      // still running on arm
+      !platform.isWindows) {
     return DaemonDevice(
       device['id'],
       device['name'],
