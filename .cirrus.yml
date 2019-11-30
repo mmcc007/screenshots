@@ -12,6 +12,10 @@ unit_task:
     - pub get # because no pubspec.lock
   test_script:
     - pub run test test/all_tests.dart
+  activate_coverage_script:
+    - pub global activate coverage
+  coverage_test_script:
+    - script/code_coverage.sh
 
 ios_integration_task:
   osx_instance:
