@@ -10,11 +10,15 @@ matrix:
   fast_finish: true
 
 jobs:
-#  allow_failures:
+  allow_failures:
 #    # don't wait for android to finish
 #    - env:
 #        - Run screenshots on Android
 #        - OS=linux
+    # don't wait for ios to finish
+    - env:
+      - Run screenshots on iOS
+      - OS=macos
   include:
 
     - stage: Testing
