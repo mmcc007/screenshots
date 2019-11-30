@@ -43,8 +43,8 @@ ios_integration_task:
 android_integration_task:
   container:
     dockerfile: .ci/Dockerfile.x86
-#    cpu: 4
-#    memory: 10G
+    cpu: 4
+    memory: 10G
     kvm: true
   pub_cache:
     folder: ~/.pub-cache
@@ -56,15 +56,15 @@ android_integration_task:
 #    - EMULATOR_NAME=Nexus_6P_API_28
     - cat $HOME/.android/avd/$EMULATOR_NAME.ini
     - cat $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
-    - rm $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
-    - |
-      cat << EOF >> $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
-      hw.lcd.width=1440
-      hw.lcd.height=2560
-      hw.device.name=Nexus 6P
-      hw.device.manufacturer=Google
-      avd.ini.displayname=Nexus 6P API 28
-      EOF
+#    - rm $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
+#    - |
+#      cat << EOF >> $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
+#      hw.lcd.width=1440
+#      hw.lcd.height=2560
+#      hw.device.name=Nexus 6P
+#      hw.device.manufacturer=Google
+#      avd.ini.displayname=Nexus 6P API 28
+#      EOF
 #    - |
 #      cat << EOF >> $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
 #      AvdId=$EMULATOR_NAME
@@ -117,7 +117,7 @@ android_integration_task:
 #      tag.id=default
 #      vm.heapSize=256
 #      EOF
-    - cat $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
+#    - cat $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
 #  android_licenses_script:
 #    - yes | sdkmanager --licenses >/dev/null
   start_emulator_background_script:
