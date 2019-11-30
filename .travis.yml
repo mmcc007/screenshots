@@ -16,96 +16,96 @@ jobs:
 #        - Run screenshots on Android
 #        - OS=linux
   include:
-#
-#    - stage: Testing
-#      env:
-#        - Unit tests
-#        - OS=linux
-#      os: linux
-#      language: dart
-#      dart: stable
-#
-#      install:
-##        - dart --version
-##        - curl --connect-timeout 15 --retry 5 https://storage.googleapis.com/dart-archive/channels/stable/release/$DART_VERSION/sdk/dartsdk-linux-x64-release.zip > ${TRAVIS_HOME}/dartsdk.zip
-##        - unzip ${TRAVIS_HOME}/dartsdk.zip -d ${TRAVIS_HOME} > /dev/null
-##        - rm ${TRAVIS_HOME}/dartsdk.zip
-##        - export DART_SDK="${TRAVIS_HOME}/dart-sdk"
-##        - export PATH="$DART_SDK/bin:$PATH"
-##        - export PATH="${TRAVIS_HOME}/.pub-cache/bin:$PATH"
-#        - pub --version
+
+    - stage: Testing
+      env:
+        - Unit tests
+        - OS=linux
+      os: linux
+      language: dart
+      dart: stable
+
+      install:
 #        - dart --version
-#        - pub get # because no pubspec.lock
-#        - pub run test test/all_tests.dart
-#        # install image magick (already installed)
-#        # install coverage tool
-#        - pub global activate coverage
+#        - curl --connect-timeout 15 --retry 5 https://storage.googleapis.com/dart-archive/channels/stable/release/$DART_VERSION/sdk/dartsdk-linux-x64-release.zip > ${TRAVIS_HOME}/dartsdk.zip
+#        - unzip ${TRAVIS_HOME}/dartsdk.zip -d ${TRAVIS_HOME} > /dev/null
+#        - rm ${TRAVIS_HOME}/dartsdk.zip
+#        - export DART_SDK="${TRAVIS_HOME}/dart-sdk"
+#        - export PATH="$DART_SDK/bin:$PATH"
+#        - export PATH="${TRAVIS_HOME}/.pub-cache/bin:$PATH"
+        - pub --version
+        - dart --version
+        - pub get # because no pubspec.lock
+        - pub run test test/all_tests.dart
+        # install image magick (already installed)
+        # install coverage tool
+        - pub global activate coverage
+
+      script:
+        - script/code_coverage.sh
+
+      after_success: bash <(curl -s https://codecov.io/bash) -f coverage/lcov.info
+
+    - stage: Testing
+      env:
+        - Run screenshots on iOS
+        - OS=macos
+      os: osx
+      #osx_image: xcode10.2 # macOS 10.14, JDK 12+33
+      #osx_image: xcode10.1 # macOS 10.13, JDK 11.0.1+13
+      # the following osx_image fixes the JDK module problem, has iPhone XS Max
+      # but doesn't have iPad Pro (12.9-inch) (3rd generation). So for now we exclude the
+      # iPad Pro (12.9-inch) (3rd generation) in screenshots.yaml
+#      osx_image: xcode10 # macOS 10.13, JDK 10.0.2+13
+      osx_image: xcode11.2 # macOS 10.14, JDK 13.0.1
+
+      # run on master or PRs (ignore other branches)
+      # if: branch = master
+
+      before_install:
+        - xcrun simctl list devices --json
+        - xcrun simctl list devicetypes
+        - xcrun simctl list runtimes
+
+        # Install flutter on macOS
+        - wget --quiet --output-document=flutter.zip https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/${OS}/flutter_${OS}_v${FLUTTER_VERSION}.zip && unzip -qq flutter.zip > /dev/null && rm flutter.zip
+        - export PATH="$PATH":"$HOME/.pub-cache/bin"
+        - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
+
+      install:
+        # create repository for artifacts
+        - mkdir $HOME/screenshots
+        # setup osx environment for flutter and simulators
+        - export HOMEBREW_NO_AUTO_UPDATE=1
+#        - brew install libimobiledevice
+#        - brew install ideviceinstaller
+#        - brew install ios-deploy
+#        - brew install cocoapods || echo 'ignore exit(1)'
+#        - brew link --overwrite cocoapods
+
 #
-#      script:
-#        - script/code_coverage.sh
+#      # fix timezone warning on osx
+#      - sudo ln -sf /usr/share/zoneinfo/US/Pacific /etc/localtime
 #
-#      after_success: bash <(curl -s https://codecov.io/bash) -f coverage/lcov.info
-#
-#    - stage: Testing
-#      env:
-#        - Run screenshots on iOS
-#        - OS=macos
-#      os: osx
-#      #osx_image: xcode10.2 # macOS 10.14, JDK 12+33
-#      #osx_image: xcode10.1 # macOS 10.13, JDK 11.0.1+13
-#      # the following osx_image fixes the JDK module problem, has iPhone XS Max
-#      # but doesn't have iPad Pro (12.9-inch) (3rd generation). So for now we exclude the
-#      # iPad Pro (12.9-inch) (3rd generation) in screenshots.yaml
-##      osx_image: xcode10 # macOS 10.13, JDK 10.0.2+13
-#      osx_image: xcode11.2 # macOS 10.14, JDK 13.0.1
-#
-#      # run on master or PRs (ignore other branches)
-#      # if: branch = master
-#
-#      before_install:
-#        - xcrun simctl list devices --json
-#        - xcrun simctl list devicetypes
-#        - xcrun simctl list runtimes
-#
-#        # Install flutter on macOS
-#        - wget --quiet --output-document=flutter.zip https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/${OS}/flutter_${OS}_v${FLUTTER_VERSION}.zip && unzip -qq flutter.zip > /dev/null && rm flutter.zip
-#        - export PATH="$PATH":"$HOME/.pub-cache/bin"
-#        - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
-#
-#      install:
-#        # create repository for artifacts
-#        - mkdir $HOME/screenshots
-#        # setup osx environment for flutter and simulators
-#        - export HOMEBREW_NO_AUTO_UPDATE=1
-##        - brew install libimobiledevice
-##        - brew install ideviceinstaller
-##        - brew install ios-deploy
-##        - brew install cocoapods || echo 'ignore exit(1)'
-##        - brew link --overwrite cocoapods
-#
-##
-##      # fix timezone warning on osx
-##      - sudo ln -sf /usr/share/zoneinfo/US/Pacific /etc/localtime
-##
-#
-#
-##      # install pre-compiled flutter
-###      - sdkmanager "platforms;android-28" "build-tools;28.0.3" > /dev/null # required by flutter
-###      - FLUTTER_CHANNEL=stable
-###      - FLUTTER_VERSION=1.7.8+hotfix.4-${FLUTTER_CHANNEL}
-###      - wget --quiet --output-document=flutter.zip https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/macos/flutter_macos_v${FLUTTER_VERSION}.zip && unzip -qq flutter.zip > /dev/null && rm flutter.zip
-###      - export PATH="$PATH":"$HOME/.pub-cache/bin"
-###      - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
-#        - flutter doctor -v
-#
-#        # install ImageMagick
-#        - brew install imagemagick &
-#
-#        # install most current (released or unreleased) Screenshots
-#        - pub global activate --source path .
-#
-#      script:
-#        - cd example; screenshots -c screenshots_ios.yaml -v
+
+
+#      # install pre-compiled flutter
+##      - sdkmanager "platforms;android-28" "build-tools;28.0.3" > /dev/null # required by flutter
+##      - FLUTTER_CHANNEL=stable
+##      - FLUTTER_VERSION=1.7.8+hotfix.4-${FLUTTER_CHANNEL}
+##      - wget --quiet --output-document=flutter.zip https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/macos/flutter_macos_v${FLUTTER_VERSION}.zip && unzip -qq flutter.zip > /dev/null && rm flutter.zip
+##      - export PATH="$PATH":"$HOME/.pub-cache/bin"
+##      - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
+        - flutter doctor -v
+
+        # install ImageMagick
+        - brew install imagemagick &
+
+        # install most current (released or unreleased) Screenshots
+        - pub global activate --source path .
+
+      script:
+        - cd example; screenshots -c screenshots_ios.yaml -v
 #
 #      before_deploy:
 #        # bundle artifacts for later deploy
