@@ -32,6 +32,7 @@ Future<bool> screenshots(
     mode: mode,
     flavor: flavor,
     isBuild: isBuild,
+    verbose: isVerbose
   );
   // run in context
   if (isVerbose) {
@@ -56,6 +57,7 @@ class Screenshots {
     this.mode = 'normal',
     this.flavor = kNoFlavor,
     this.isBuild,
+    this.verbose,
   }) {
     config = Config(configPath: configPath, configStr: configStr);
   }
@@ -65,6 +67,7 @@ class Screenshots {
   final String mode;
   final String flavor;
   final bool isBuild; // defaults to null
+  final bool verbose;
 
   RunMode runMode;
   Screens screens;
@@ -392,6 +395,10 @@ class Screenshots {
   ) async {
     for (final testPath in config.tests) {
       final command = ['flutter', '-d', deviceId, 'drive'];
+      // if verbose on CI
+      if (verbose && platform.environment['CI'] == 'true') {
+        command.add('-v');
+      }
       bool _isBuild() => isBuild != null
           ? isBuild
           : config.getDevice(configDeviceName).isBuild;
