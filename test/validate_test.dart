@@ -17,7 +17,8 @@ main() {
     setUp(() {
       fakeProcessManager = FakeProcessManager();
       fakePlatform = FakePlatform.fromPlatform(const LocalPlatform())
-        ..operatingSystem = 'linux';
+        ..operatingSystem = 'linux'
+        ..environment['CI'] = 'false';
     });
 
     final callListIosDevices = Call(
@@ -234,56 +235,6 @@ main() {
       ProcessManager: () => fakeProcessManager,
     });
 
-    testUsingContext('pass on android in CI', () async {
-      final configStr = '''
-          tests:
-            - example/test_driver/main.dart
-          staging: /tmp/screenshots
-          locales:
-            - en-US
-            - fr-CA
-          devices:
-            android:
-              Nexus 6P:
-                orientation: LandscapeRight
-          frame: true
-      ''';
-      final config = Config(configStr: configStr);
-      final screens = Screens();
-      await screens.init();
-      final emulator = loadDaemonEmulator({
-        "id": "NEXUS_6P_API_28",
-        "name": "NEXUS 6P API 28",
-        "category": "mobile",
-        "platformType": "android"
-      });
-      final device = loadDaemonDevice({
-        "id": "emulator-5554",
-        "name": "Android SDK built for x86 64",
-        "platform": "android-arm",
-        "emulator": false,
-        "category": "mobile",
-        "platformType": "android",
-        "ephemeral": true,
-        "emulatorId": null
-      });
-      final allEmulators = <DaemonEmulator>[emulator];
-      final allDevices = <DaemonDevice>[device];
-
-//      fakeProcessManager.calls = [callListIosDevices, callListIosDevices];
-
-      final BufferLogger logger = context.get<Logger>();
-      bool isValid =
-      await isValidConfig(config, screens, allDevices, allEmulators);
-      expect(logger.errorText, '');
-      expect(isValid, isTrue);
-//      fakeProcessManager.verifyCalls();
-    }, skip: false, overrides: <Type, Generator>{
-//      ProcessManager: () => fakeProcessManager,
-      Platform: () => fakePlatform,
-      Logger: () => BufferLogger(),
-    });
-
     testUsingContext('show device guide', () async {
       fakePlatform.operatingSystem = 'macos';
       final BufferLogger logger = context.get<Logger>();
@@ -317,7 +268,7 @@ main() {
         'model': 'Real iPhone'
       });
       final realAndroidDevice = loadDaemonDevice({
-        "id": "device id",
+        "id": "1080308019003347",
         "name": "Real Android Phone",
         "platform": "android",
         "emulator": false,
@@ -336,6 +287,7 @@ main() {
               screens, allDevices, allEmulators, 'myScreenshots.yaml'),
           returnsNormally);
       expect(logger.statusText, contains('Device Guide'));
+      expect(logger.statusText, isNot(contains('Screen Guide')));
       expect(logger.statusText, contains(realIosDevice.iosModel));
       expect(logger.statusText, contains(realAndroidDevice.name));
       expect(logger.statusText, contains(runningEmulator.id));
@@ -346,9 +298,7 @@ main() {
       fakeProcessManager.verifyCalls();
     }, skip: false, overrides: <Type, Generator>{
       Logger: () => BufferLogger(),
-//            Logger: () => VerboseLogger(StdoutLogger()),
-      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
-    ..operatingSystem = 'macos',
+      Platform: () => fakePlatform,
       ProcessManager: () => fakeProcessManager,
     });
   });
