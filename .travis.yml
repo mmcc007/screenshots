@@ -43,7 +43,7 @@ jobs:
         - pub run test test/all_tests.dart
         # install image magick (already installed)
         # install coverage tool
-        - pub global activate coverage
+        - pub global activate coverage 0.13.3
 
       script:
         - script/code_coverage.sh
