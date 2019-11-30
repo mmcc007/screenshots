@@ -26,13 +26,13 @@ ios_integration_task:
     - xcrun simctl list devices --json
   doctor_script: flutter doctor -v
   activate_script: pub global activate --source path .
-  imagemagick_backgroundscript: brew install imagemagick
+  imagemagick_background_script: brew install imagemagick
   test_script:
     - export PATH="$HOME/.pub-cache/bin:$PATH" # needed to find screenshots
     - cd example
     - screenshots -c screenshots_ios.yaml -v
-#  screenshot_artifacts:
-#    path: example/ios/fastlane/screenshots/*
+  screenshot_artifacts:
+    path: example/ios/fastlane/screenshots/*
 
 android_integration_task:
   container:
