@@ -3,7 +3,7 @@ unit_task:
     image: cirrusci/flutter:stable
   pub_cache:
     folder: ~/.pub-cache
-  imagemagic_script:
+  imagemagic_install_script:
     - sudo apt-get update -y
     - sudo apt-get install -y imagemagick
   pub_get_script:
@@ -15,7 +15,7 @@ unit_task:
   activate_coverage_script:
     - pub global activate coverage
   coverage_test_script:
-    - script/code_coverage.sh
+    - script/code_coverage.sh 0.13.3
 
 ios_integration_task:
   osx_instance:
@@ -28,7 +28,9 @@ ios_integration_task:
     - xcrun simctl list runtimes
   simulators_json_script:
     - xcrun simctl list devices --json
-  imagemagick_background_script: brew install imagemagick
+  imagemagick_install_script:
+    - brew install imagemagick
+    - convert -version || echo -n
   doctor_script: flutter doctor -v
   activate_script: pub global activate --source path .
   test_script:
