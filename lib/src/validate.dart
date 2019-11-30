@@ -240,8 +240,8 @@ void _printAttachedDevices(List<DaemonDevice> devices) {
   for (final device in devices) {
 //    if (device.emulator == false) {
       device.platform == 'ios'
-          ? printStatus('    ${device.iosModel}')
-          : printStatus('    ${device.emulator?'${device.emulatorId} (${device.id})':'${device.name} '}');
+          ? printStatus('    ${device.iosModel} (${device.id})')
+          : printStatus('    ${device.emulator?'${device.emulatorId}':'${device.name}'} (${device.id})');
 //    }
   }
 }

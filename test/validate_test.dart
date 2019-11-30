@@ -284,19 +284,19 @@ main() {
       Logger: () => BufferLogger(),
     });
 
-    testUsingContext('show guide', () async {
-//      fakePlatform.operatingSystem = 'macos';
-//      final BufferLogger logger = context.get<Logger>();
+    testUsingContext('show device guide', () async {
+      fakePlatform.operatingSystem = 'macos';
+      final BufferLogger logger = context.get<Logger>();
       final screens = Screens();
       await screens.init();
       final installedEmulator = loadDaemonEmulator({
         "id": "Nexus_6P_API_28",
-        "name": "Nexus 6P",
+        "name": "Android SDK built for x86",
         "category": "mobile",
         "platformType": "android"
       });
       final allEmulators = <DaemonEmulator>[installedEmulator];
-      final startedEmulator = loadDaemonDevice({
+      final runningEmulator = loadDaemonDevice({
         "id": "emulator-5554",
         "name": "Android SDK built for x86",
         "platform": "android-x86",
@@ -304,7 +304,7 @@ main() {
         "category": "mobile",
         "platformType": "android",
         "ephemeral": true,
-        "emulatorId": "emulator_id",
+        "emulatorId": "NEXUS_6P_API_28",
       });
       final realIosDevice = loadDaemonDevice({
         "id": "3b3455019e329e007e67239d9b897148244b5053",
@@ -314,11 +314,11 @@ main() {
         "category": "mobile",
         "platformType": "ios",
         "ephemeral": true,
-        'model': 'iPhone model'
+        'model': 'Real iPhone'
       });
       final realAndroidDevice = loadDaemonDevice({
         "id": "device id",
-        "name": "Android Phone Name",
+        "name": "Real Android Phone",
         "platform": "android",
         "emulator": false,
         "category": "mobile",
@@ -326,7 +326,7 @@ main() {
         "ephemeral": true
       });
       final allDevices = <DaemonDevice>[
-        startedEmulator,
+        runningEmulator,
         realIosDevice,
         realAndroidDevice,
       ];
@@ -334,16 +334,18 @@ main() {
           () async => await deviceGuide(
               screens, allDevices, allEmulators, 'myScreenshots.yaml'),
           returnsNormally);
-//      expect(logger.statusText, contains('Guide'));
-//      expect(logger.statusText, contains(realIosDevice.iosModel));
-//      expect(logger.statusText, contains(realAndroidDevice.name));
-//      expect(logger.statusText, isNot(contains(startedEmulator.id)));
-//      expect(logger.statusText, contains(installedEmulator.name));
-//      expect(logger.errorText, '');
+      expect(logger.statusText, contains('Device Guide'));
+      expect(logger.statusText, contains(realIosDevice.iosModel));
+      expect(logger.statusText, contains(realAndroidDevice.name));
+      expect(logger.statusText, contains(runningEmulator.id));
+      expect(logger.statusText, contains(installedEmulator.id));
+      expect(logger.errorText, '');
+//      print(logger.statusText);
+//      print(logger.errorText);
 
     }, skip: false, overrides: <Type, Generator>{
-//      Logger: () => BufferLogger(),
-            Logger: () => VerboseLogger(StdoutLogger()),
+      Logger: () => BufferLogger(),
+//            Logger: () => VerboseLogger(StdoutLogger()),
       Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
     ..operatingSystem = 'macos',
     });
