@@ -13,9 +13,9 @@ unit_task:
   test_script:
     - pub run test test/all_tests.dart
   activate_coverage_script:
-    - pub global activate coverage
+    - pub global activate coverage 0.13.3
   coverage_test_script:
-    - script/code_coverage.sh 0.13.3
+    - script/code_coverage.sh
 
 ios_integration_task:
   osx_instance:
