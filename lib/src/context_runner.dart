@@ -6,6 +6,7 @@ import 'dart:async';
 
 import 'package:process/process.dart';
 import 'package:screenshots/src/daemon_client.dart';
+import 'package:screenshots/src/image_magick.dart';
 import 'package:tool_base/tool_base.dart';
 import 'package:tool_mobile/tool_mobile.dart';
 
@@ -22,6 +23,7 @@ Future<T> runInContext<T>(
       BotDetector: () => const BotDetector(),
       Config: () => Config(),
       DaemonClient: () => DaemonClient(),
+      ImageMagick: () => ImageMagick(),
       Logger: () => platform.isWindows ? WindowsStdoutLogger() : StdoutLogger(),
       OperatingSystemUtils: () => OperatingSystemUtils(),
       ProcessManager: () => LocalProcessManager(),

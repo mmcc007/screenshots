@@ -6,6 +6,13 @@ import 'package:tool_base/tool_base.dart';
 
 import 'context_runner.dart';
 
+final ImageMagick _kImageMagick = ImageMagick();
+
+/// Currently active implementation of ImageMagick.
+///
+/// Override this in tests with a fake/mocked daemon client.
+ImageMagick get im => context.get<ImageMagick>() ?? _kImageMagick;
+
 class ImageMagick {
   static const _kThreshold = 0.76;
   static const kDiffSuffix = '-diff';

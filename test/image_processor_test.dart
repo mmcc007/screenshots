@@ -1,18 +1,22 @@
+import 'dart:io' as io;
+
 import 'package:fake_process_manager/fake_process_manager.dart';
 import 'package:file/memory.dart';
+import 'package:mockito/mockito.dart';
 import 'package:process/process.dart';
 import 'package:screenshots/src/config.dart';
 import 'package:screenshots/src/context_runner.dart';
 import 'package:screenshots/src/fastlane.dart';
 import 'package:screenshots/src/globals.dart';
+import 'package:screenshots/src/image_magick.dart';
 import 'package:screenshots/src/image_processor.dart';
 import 'package:screenshots/src/resources.dart' as resources;
 import 'package:screenshots/src/screens.dart';
 import 'package:screenshots/src/utils.dart';
 import 'package:test/test.dart';
-import 'src/context.dart';
 import 'package:tool_base/tool_base.dart' hide Config;
-import 'dart:io' as io;
+
+import 'src/context.dart';
 
 main() {
   test('process screenshots for iPhone X and iPhone XS Max', () async {
@@ -73,18 +77,24 @@ main() {
   group('image processor', () {
     FakeProcessManager fakeProcessManager;
     MemoryFileSystem memoryFileSystem;
+    MockImageMagick mockImageMagick;
 
     setUp(() async {
       memoryFileSystem = MemoryFileSystem();
       fakeProcessManager = FakeProcessManager();
+      mockImageMagick = MockImageMagick();
     });
 
-    testUsingContext('run', () async {
+    testUsingContext('process', () async {
+      final stagingDir = '/tmp/screenshots';
+      // copy a screenshot to memory file system
+      final imagePath = 'test/resources/screenshot_Nexus_6P.png';
+      copyFileToMemory(imagePath, stagingDir);
+
       final screens = Screens();
       await screens.init();
       final deviceName = 'Nexus 6P';
       final locale = 'en-US';
-      final stagingDir = '/tmp/screenshots';
       final configStr = '''
           staging: $stagingDir
           devices:
@@ -109,19 +119,13 @@ main() {
             null),
       ];
 
-      // copy a screenshot to memory file system
-      final fileImage =
-          io.File('test/resources/screenshot_Nexus_6P.png').readAsBytesSync();
-      final screenshotsDir = '$stagingDir/$kTestScreenshotsDir';
-      fs.directory(screenshotsDir).createSync(recursive: true);
-      fs.file('$screenshotsDir/screenshot.png').writeAsBytesSync(fileImage);
-
       final imageProcessor = ImageProcessor(screens, config);
       final result = await imageProcessor.process(
           DeviceType.android, deviceName, locale, null, RunMode.normal, null);
       expect(result, isTrue);
       expect(fs.directory(stagingDir).existsSync(), isTrue);
-      final dstDir = getDirPath(DeviceType.android, locale, getAndroidModelType(screens.getScreen(deviceName)));
+      final dstDir = getDirPath(DeviceType.android, locale,
+          getAndroidModelType(screens.getScreen(deviceName)));
       expect(fs.directory(dstDir).listSync().length, 1);
       fakeProcessManager.verifyCalls();
     }, overrides: <Type, Generator>{
@@ -129,5 +133,49 @@ main() {
 //      Logger: () => VerboseLogger(StdoutLogger()),
       FileSystem: () => memoryFileSystem
     });
+
+    testUsingContext('compare images', () async {
+      final comparisonDir = 'test/resources/comparison';
+      final recordingDir = 'test/resources/recording';
+      final deviceName = 'Nexus 6P';
+      final expected = {
+        'Nexus 6P-0.png': {
+          'recording': 'test/resources/recording/Nexus 6P-0.png',
+          'comparison': 'test/resources/comparison/Nexus 6P-0.png',
+          'diff': 'test/resources/diff file${ImageMagick.kDiffSuffix}.png'
+        },
+        'Nexus 6P-1.png': {
+          'recording': 'test/resources/recording/Nexus 6P-1.png',
+          'comparison': 'test/resources/comparison/Nexus 6P-1.png',
+          'diff': 'test/resources/diff file${ImageMagick.kDiffSuffix}.png'
+        }
+      };
+
+      when(mockImageMagick.compare(any, any)).thenReturn(false);
+      when(mockImageMagick.getDiffImagePath(any)).thenReturn(
+          'test/resources/diff file${ImageMagick.kDiffSuffix}.png');
+
+      final failedCompare = await ImageProcessor.compareImages(
+          deviceName, recordingDir, comparisonDir);
+      expect(failedCompare, expected);
+      // show diffs
+      ImageProcessor.showFailedCompare(failedCompare);
+      final BufferLogger logger = context.get<Logger>();
+      expect(logger.errorText, contains('Comparison failed:'));
+    }, overrides: <Type, Generator>{
+//      ProcessManager: () => fakeProcessManager,
+      Logger: () => BufferLogger(),
+//      FileSystem: () => memoryFileSystem,
+      ImageMagick: () => mockImageMagick,
+    });
   });
 }
+
+void copyFileToMemory(String imagePath, String stagingDir) {
+  final fileImage = io.File(imagePath).readAsBytesSync();
+  final screenshotsDir = '$stagingDir/$kTestScreenshotsDir';
+  fs.directory(screenshotsDir).createSync(recursive: true);
+  fs.file('$screenshotsDir/screenshot.png').writeAsBytesSync(fileImage);
+}
+
+class MockImageMagick extends Mock implements ImageMagick {}

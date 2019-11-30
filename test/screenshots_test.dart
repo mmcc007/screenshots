@@ -569,29 +569,6 @@ void main() {
         });
       });
 
-      test('compare images in directories', () async {
-        final comparisonDir = 'test/resources/comparison';
-        final recordingDir = 'test/resources/recording';
-        final deviceName = 'Nexus 6P';
-        final expected = {
-          'Nexus 6P-1.png': {
-            'recording': 'test/resources/recording/Nexus 6P-1.png',
-            'comparison': 'test/resources/comparison/Nexus 6P-1.png',
-            'diff': 'test/resources/comparison/Nexus 6P-1-diff.png'
-          }
-        };
-
-        await runInContext<void>(() async {
-          final failedCompare = await ImageProcessor.compareImages(
-              deviceName, recordingDir, comparisonDir);
-          expect(failedCompare, expected);
-          // show diffs
-          if (failedCompare.isNotEmpty) {
-            ImageProcessor.showFailedCompare(failedCompare);
-          }
-        });
-      });
-
       test('comparison mode', () async {
         final origDir = Directory.current;
         Directory.current = 'example';
