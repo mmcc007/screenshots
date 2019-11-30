@@ -469,7 +469,7 @@ DaemonDevice findRunningDevice(List<DaemonDevice> devices,
     if (device.emulator) {
       if (device.platformType == 'android') {
         // running emulator
-        return device.emulatorId.replaceAll('_', ' ').contains(deviceName);
+        return device.emulatorId.replaceAll('_', ' ').toUpperCase().contains(deviceName.toUpperCase());
       } else {
         // running simulator
         return device.name.contains(deviceName);
@@ -600,15 +600,3 @@ DeviceType getDeviceType(Config config, String deviceName) {
   return config.getDevice(deviceName).deviceType;
 }
 
-/// Check Image Magick is installed.
-Future<bool> isImageMagicInstalled() async {
-  try {
-    return await runInContext<bool>(() {
-      final cmd =
-          platform.isWindows ? ['magick', '-version'] : ['convert', '-version'];
-      return utils.runCmd(cmd) == 0;
-    });
-  } catch (e) {
-    return false;
-  }
-}

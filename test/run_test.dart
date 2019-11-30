@@ -64,7 +64,7 @@ main() {
   });
 
   group('run', () {
-    group('with one running android emulator only', () {
+    group('with running android emulator', () {
       final daemonDevice = loadDaemonDevice({
         'id': 'emulator-5554',
         'name': 'Android SDK built for x86',
@@ -81,7 +81,7 @@ main() {
             .thenAnswer((_) => Future.value([daemonDevice]));
       });
 
-      testUsingContext(', android only run, no frames, no locales', () async {
+      testUsingContext('no frames, no locales', () async {
         final emulatorName = 'Nexus 6P';
         // screenshots config
         final configStr = '''
@@ -111,6 +111,10 @@ main() {
 
         final result = await screenshots(configStr: configStr);
         expect(result, isTrue);
+        final BufferLogger logger = context.get<Logger>();
+        expect(logger.statusText, isNot(contains('Starting $emulatorName...')));
+        expect(logger.statusText, isNot(contains('Changing locale')));
+        expect(logger.statusText, contains('Warning: framing is not enabled'));
         fakeProcessManager.verifyCalls();
         verify(mockDaemonClient.devices).called(1);
         verify(mockDaemonClient.emulators).called(1);
@@ -120,12 +124,10 @@ main() {
         ProcessManager: () => fakeProcessManager,
         Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
           ..environment = {'CI': 'false'},
-//        Logger: () => VerboseLogger(StdoutLogger()),
+        Logger: () => BufferLogger(),
       });
 
-      testUsingContext(
-          ', android only run, no frames, no locales, change orientation',
-          () async {
+      testUsingContext('change orientation', () async {
         final emulatorName = 'Nexus 6P';
         // screenshots config
         final configStr = '''
@@ -491,14 +493,13 @@ main() {
       fakeProcessManager.calls = calls;
 
       final result = await screenshots(configStr: configStr);
-      final BufferLogger logger = context.get<Logger>();
 
       expect(result, isTrue);
       fakeProcessManager.verifyCalls();
       verify(mockDaemonClient.devices).called(3);
       verify(mockDaemonClient.emulators).called(1);
+      final BufferLogger logger = context.get<Logger>();
       expect(logger.errorText, '');
-//      expect(logger.statusText, '');
       expect(logger.statusText, isNot(contains('Warning: the locale of a real device cannot be changed.')));
       expect(logger.statusText, isNot(contains('Starting $emulatorName...')));
       expect(logger.statusText, contains('Setting orientation to Portrait'));
@@ -509,49 +510,11 @@ main() {
       ProcessManager: () => fakeProcessManager,
       Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
         ..environment = {'CI': 'true'},
-//        Logger: () => VerboseLogger(StdoutLogger()),
       Logger: () => BufferLogger(),
     });
   });
 
-  group('main image magick', () {
-    testUsingContext('is installed on macOS/linux', () async {
-      fakeProcessManager.calls = [Call('convert -version', ProcessResult(0, 0, '', ''))];
-      final isInstalled = await isImageMagicInstalled();
-      expect(isInstalled, isTrue);
-      fakeProcessManager.verifyCalls();
-    }, overrides: <Type, Generator>{
-      ProcessManager: () => fakeProcessManager,
-      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
-        ..operatingSystem = 'macos',
-    });
-
-    testUsingContext('is installed on windows', () async {
-      fakeProcessManager.calls = [Call('magick -version', ProcessResult(0, 0, '', ''))];
-      final isInstalled = await isImageMagicInstalled();
-      expect(isInstalled, isTrue);
-      fakeProcessManager.verifyCalls();
-    }, overrides: <Type, Generator>{
-      ProcessManager: () => fakeProcessManager,
-      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
-        ..operatingSystem = 'windows',
-    });
-
-    testUsingContext('is not installed on windows', () async {
-      fakeProcessManager.calls = [
-        Call('magick -version', null, sideEffects: ()=> throw 'exception')
-      ];
-      final isInstalled = await isImageMagicInstalled();
-      expect(isInstalled, isFalse);
-      fakeProcessManager.verifyCalls();
-    }, overrides: <Type, Generator>{
-      ProcessManager: () => fakeProcessManager,
-      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
-        ..operatingSystem = 'windows',
-    });
-  });
-
-  group('run utils', () {
+  group('utils', () {
     testUsingContext('change android locale', () {
       String adbPath = initAdbPath();
       final deviceId = 'deviceId';
