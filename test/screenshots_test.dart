@@ -738,7 +738,7 @@ void main() {
         await screens.init();
         final daemonClient = DaemonClient();
         await daemonClient.start;
-        validate.generateConfigGuide(screens, await daemonClient.devices,
+        validate.deviceGuide(screens, await daemonClient.devices,
             await daemonClient.emulators, 'screenshots.yaml');
       }, skip:     true  );
 
