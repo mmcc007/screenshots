@@ -331,8 +331,8 @@ DaemonDevice loadDaemonDevice(Map<String, dynamic> device) {
   // flutter daemon is reporting x64 emulator as real device while
   // flutter doctor is reporting correctly.
   // Platform is reporting as 'android-arm' instead of 'android-x64', etc...
-  if (platform.environment['CI'].toLowerCase() == 'true' &&
-      device['platform'] == 'android-arm') {
+  if (platform.environment['CI']?.toLowerCase() == 'true' &&
+      device['emulator'] == false) {
     return DaemonDevice(
       device['id'],
       device['name'],
