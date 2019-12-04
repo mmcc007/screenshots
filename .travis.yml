@@ -28,6 +28,9 @@ jobs:
       os: linux
 #      language: dart
 #      dart: stable
+      cache:
+        directories:
+          - ${HOME}/.pub-cache
 
       install:
         - curl --connect-timeout 15 --retry 5 https://storage.googleapis.com/dart-archive/channels/stable/release/$DART_VERSION/sdk/dartsdk-linux-x64-release.zip > ${TRAVIS_HOME}/dartsdk.zip
@@ -62,6 +65,9 @@ jobs:
       # iPad Pro (12.9-inch) (3rd generation) in screenshots.yaml
 #      osx_image: xcode10 # macOS 10.13, JDK 10.0.2+13
       osx_image: xcode11.2 # macOS 10.14, JDK 13.0.1
+      cache:
+        directories:
+          - ${HOME}/.pub-cache
 
       before_install:
         - xcrun simctl list devices --json
@@ -83,6 +89,7 @@ jobs:
 
       script:
         - cd example; screenshots -c screenshots_ios.yaml -v
+
 #
 #      before_deploy:
 #        # bundle artifacts for later deploy
@@ -114,6 +121,11 @@ jobs:
 #      os: linux
       language: generic
       dist: bionic
+      cache:
+        directories:
+          - ${HOME}/.pub-cache
+          - ${HOME}/.gradle/caches/
+          - ${HOME}/.gradle/wrapper/
 
       before_install:
         # envs
@@ -179,59 +191,59 @@ jobs:
         # config emulator
         - cat ~/.android/avd/$EMULATOR_NAME.ini
         - cat $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
-        - rm $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
-        - |
-          cat << EOF >> $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
-          AvdId=$EMULATOR_NAME
-          PlayStore.enabled=false
-          abi.type=x86_64
-          avd.ini.displayname=Nexus 6P API 28
-          avd.ini.encoding=UTF-8
-          disk.dataPartition.size=800M
-          fastboot.chosenSnapshotFile=
-          fastboot.forceChosenSnapshotBoot=no
-          fastboot.forceColdBoot=no
-          fastboot.forceFastBoot=yes
-          hw.accelerometer=no
-          hw.arc=false
-          hw.audioInput=yes
-          hw.battery=yes
-          hw.camera.back=virtualscene
-          hw.camera.front=emulated
-          hw.cpu.arch=x86_64
-          hw.cpu.ncore=2
-          hw.dPad=no
-          hw.device.hash2=MD5:210d8492b0d8f56499facd30fdda7669
-          hw.device.manufacturer=Google
-          hw.device.name=Nexus 6P
-          hw.gps=no
-          hw.gpu.enabled=yes
-          hw.gpu.mode=auto
-          hw.initialOrientation=Portrait
-          hw.keyboard=yes
-          hw.lcd.density=480
-          hw.lcd.height=2560
-          hw.lcd.width=1440
-          hw.mainKeys=no
-          hw.ramSize=1536
-          hw.sdCard=yes
-          hw.sensors.orientation=no
-          hw.sensors.proximity=no
-          hw.trackBall=no
-          image.sysdir.1=system-images/android-28/default/x86_64/
-          runtime.network.latency=none
-          runtime.network.speed=full
-          sdcard.path=$HOME/.android/avd/$EMULATOR_NAME.avd/sdcard.img
-          sdcard.size=512 MB
-          showDeviceFrame=no
-          skin.dynamic=yes
-          skin.name=1440x2560
-          skin.path=_no_skin
-          skin.path.backup=_no_skin
-          tag.display=Default Android System Image
-          tag.id=default
-          vm.heapSize=256
-        - cat $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
+#        - rm $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
+#        - |
+#          cat << EOF >> $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
+#          AvdId=$EMULATOR_NAME
+#          PlayStore.enabled=false
+#          abi.type=x86_64
+#          avd.ini.displayname=Nexus 6P API 28
+#          avd.ini.encoding=UTF-8
+#          disk.dataPartition.size=800M
+#          fastboot.chosenSnapshotFile=
+#          fastboot.forceChosenSnapshotBoot=no
+#          fastboot.forceColdBoot=no
+#          fastboot.forceFastBoot=yes
+#          hw.accelerometer=no
+#          hw.arc=false
+#          hw.audioInput=yes
+#          hw.battery=yes
+#          hw.camera.back=virtualscene
+#          hw.camera.front=emulated
+#          hw.cpu.arch=x86_64
+#          hw.cpu.ncore=2
+#          hw.dPad=no
+#          hw.device.hash2=MD5:210d8492b0d8f56499facd30fdda7669
+#          hw.device.manufacturer=Google
+#          hw.device.name=Nexus 6P
+#          hw.gps=no
+#          hw.gpu.enabled=yes
+#          hw.gpu.mode=auto
+#          hw.initialOrientation=Portrait
+#          hw.keyboard=yes
+#          hw.lcd.density=480
+#          hw.lcd.height=2560
+#          hw.lcd.width=1440
+#          hw.mainKeys=no
+#          hw.ramSize=1536
+#          hw.sdCard=yes
+#          hw.sensors.orientation=no
+#          hw.sensors.proximity=no
+#          hw.trackBall=no
+#          image.sysdir.1=system-images/android-28/default/x86_64/
+#          runtime.network.latency=none
+#          runtime.network.speed=full
+#          sdcard.path=$HOME/.android/avd/$EMULATOR_NAME.avd/sdcard.img
+#          sdcard.size=512 MB
+#          showDeviceFrame=no
+#          skin.dynamic=yes
+#          skin.name=1440x2560
+#          skin.path=_no_skin
+#          skin.path.backup=_no_skin
+#          tag.display=Default Android System Image
+#          tag.id=default
+#          vm.heapSize=256
+#        - cat $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
 
         # start emulator
         - ${ANDROID_HOME}/emulator/emulator -version
@@ -312,11 +324,6 @@ jobs:
         - rm -rf ${HOME}/.gradle/caches/transforms-1
         - rm -rf ${HOME}/.gradle/caches/journal-1
         - find ${HOME}/.gradle/caches/ -name "*.lock" -type f -delete || echo -n
-      cache:
-        directories:
-          - ${HOME}/.pub-cache
-          - ${HOME}/.gradle/caches/
-          - ${HOME}/.gradle/wrapper/
 
       before_deploy:
         # bundle artifacts for later deploy
