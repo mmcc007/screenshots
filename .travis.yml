@@ -125,13 +125,13 @@ jobs:
       cache:
         directories:
           - ${HOME}/.pub-cache
-          - ${HOME}/.gradle/caches/
-          - ${HOME}/.gradle/wrapper/
+#          - ${HOME}/.gradle/caches/
+#          - ${HOME}/.gradle/wrapper/
 
       before_install:
         # envs
         - API=28
-        - ABI=x86_64
+        - ABI=x86
         - GOO=default
         - ANDROID_TOOLS=4333796 # android-28
         - ANDROID_HOME=${HOME}/android-sdk
@@ -145,7 +145,6 @@ jobs:
         - FLUTTER_HOME=${HOME}/flutter
         - PATH=${HOME}/.pub-cache/bin:${PATH}
         - PATH=${FLUTTER_HOME}/bin:${FLUTTER_HOME}/bin/cache/dart-sdk/bin:${PATH}
-        - EMULATOR_NAME=NEXUS_6P_API_28
 
         - java -version
 
@@ -160,7 +159,6 @@ jobs:
         - export TARGET_JDK="${JDK}"
         - JDK="1.8" # used when running sdkmanager
         - source ~/.install-jdk-travis.sh
-
         - wget -q "https://dl.google.com/android/repository/sdk-tools-linux-$ANDROID_TOOLS.zip" -O android-sdk-tools.zip
         - unzip -q android-sdk-tools.zip -d ${ANDROID_HOME}
         - rm android-sdk-tools.zip
@@ -182,72 +180,14 @@ jobs:
         - sdkmanager "platforms;android-28" >/dev/null # We need the API of the current compileSdkVersion from gradle.properties  -
 
         - sdkmanager "emulator" >/dev/null
+        - ${ANDROID_HOME}/emulator/emulator -version
+
         - sdkmanager "extras;android;m2repository" >/dev/null
         - sdkmanager "system-images;android-$API;$GOO;$ABI" >/dev/null # install system images for emulator
 
         # Create an Android emulator
         #  - echo no | avdmanager --verbose create avd --force -n test -k "system-images;android-$API;$GOO;$ABI" -c 10M
-        - echo no | avdmanager --verbose create avd --force -n $EMULATOR_NAME -k "system-images;android-$API;$GOO;$ABI"
-
-        # config emulator
-        - cat ~/.android/avd/$EMULATOR_NAME.ini
-        - cat $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
-#        - rm $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
-#        - |
-#          cat << EOF >> $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
-#          AvdId=$EMULATOR_NAME
-#          PlayStore.enabled=false
-#          abi.type=x86_64
-#          avd.ini.displayname=Nexus 6P API 28
-#          avd.ini.encoding=UTF-8
-#          disk.dataPartition.size=800M
-#          fastboot.chosenSnapshotFile=
-#          fastboot.forceChosenSnapshotBoot=no
-#          fastboot.forceColdBoot=no
-#          fastboot.forceFastBoot=yes
-#          hw.accelerometer=no
-#          hw.arc=false
-#          hw.audioInput=yes
-#          hw.battery=yes
-#          hw.camera.back=virtualscene
-#          hw.camera.front=emulated
-#          hw.cpu.arch=x86_64
-#          hw.cpu.ncore=2
-#          hw.dPad=no
-#          hw.device.hash2=MD5:210d8492b0d8f56499facd30fdda7669
-#          hw.device.manufacturer=Google
-#          hw.device.name=Nexus 6P
-#          hw.gps=no
-#          hw.gpu.enabled=yes
-#          hw.gpu.mode=auto
-#          hw.initialOrientation=Portrait
-#          hw.keyboard=yes
-#          hw.lcd.density=480
-#          hw.lcd.height=2560
-#          hw.lcd.width=1440
-#          hw.mainKeys=no
-#          hw.ramSize=1536
-#          hw.sdCard=yes
-#          hw.sensors.orientation=no
-#          hw.sensors.proximity=no
-#          hw.trackBall=no
-#          image.sysdir.1=system-images/android-28/default/x86_64/
-#          runtime.network.latency=none
-#          runtime.network.speed=full
-#          sdcard.path=$HOME/.android/avd/$EMULATOR_NAME.avd/sdcard.img
-#          sdcard.size=512 MB
-#          showDeviceFrame=no
-#          skin.dynamic=yes
-#          skin.name=1440x2560
-#          skin.path=_no_skin
-#          skin.path.backup=_no_skin
-#          tag.display=Default Android System Image
-#          tag.id=default
-#          vm.heapSize=256
-#        - cat $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
-
-        # start emulator
-        - ${ANDROID_HOME}/emulator/emulator -version
+        - echo no | avdmanager --verbose create avd --force -n test -k "system-images;android-$API;$GOO;$ABI"
         #  - EMU_PARAMS="
         #      -verbose
         #      -no-snapshot
@@ -259,20 +199,18 @@ jobs:
         #      -selinux permissive
         #      -qemu -m 2048"
         - EMU_PARAMS="
-          -avd $EMULATOR_NAME
+          -avd test
           -no-window
           -no-audio
-          -verbose
           "
-        - EMU_COMMAND="emulator-headless"
 #        - EMU_COMMAND="emulator"
+        - EMU_COMMAND="emulator-headless"
         # This double "sudo" monstrosity is used to have Travis execute the
         # emulator with its new group permissions and help preserve the rule
         # of least privilege.
         - sudo -E sudo -u $USER -E bash -c "${ANDROID_HOME}/emulator/${EMU_COMMAND} ${EMU_PARAMS} &"
 
         # install flutter (while emulator is starting)
-        #  - sudo apt-get install -y --no-install-recommends lib32stdc++6 libstdc++6 > /dev/null
         - wget --quiet --output-document=flutter.tar.xz https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/linux/flutter_linux_v${FLUTTER_VERSION}.tar.xz
         - tar xf flutter.tar.xz -C $(dirname ${FLUTTER_HOME})
         - rm flutter.tar.xz
