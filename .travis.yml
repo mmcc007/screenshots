@@ -30,7 +30,6 @@ jobs:
 #      dart: stable
 
       install:
-        - dart --version
         - curl --connect-timeout 15 --retry 5 https://storage.googleapis.com/dart-archive/channels/stable/release/$DART_VERSION/sdk/dartsdk-linux-x64-release.zip > ${TRAVIS_HOME}/dartsdk.zip
         - unzip ${TRAVIS_HOME}/dartsdk.zip -d ${TRAVIS_HOME} > /dev/null
         - rm ${TRAVIS_HOME}/dartsdk.zip
