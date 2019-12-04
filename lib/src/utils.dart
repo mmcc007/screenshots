@@ -431,13 +431,14 @@ String cmd(List<String> cmd,
 }
 
 /// Run command and return exit code as [int].
+///
+/// Allows failed exit code.
 int runCmd(List<String> cmd) {
   _traceCommand(cmd);
   final result = processManager.runSync(cmd);
   if (result.exitCode != 0) {
-      printError(result.stdout);
-      printError(result.stderr);
-      throw 'command failed: exitcode=${result.exitCode}, cmd=\'${cmd.join(" ")}\'';
+    printTrace(result.stdout);
+    printTrace(result.stderr);
   }
   return result.exitCode;
 }
