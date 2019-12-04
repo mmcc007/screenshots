@@ -15,9 +15,11 @@ locales:
 devices:
   ios:
 #    iPhone XS Max:
-    iPhone 8 Plus:
-    iPad Pro (12.9-inch) (3rd generation):
-      frame: false
+#    iPhone 8 Plus:
+#    iPad Pro (12.9-inch) (3rd generation):
+#      frame: false
+    iPhone 8:
+    iPhone 11:
 
 # Frame screenshots
 frame: true
