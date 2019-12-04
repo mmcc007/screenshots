@@ -414,12 +414,12 @@ Future<bool> isEmulatorPath() async {
   });
 }
 
-/// Run command and return stdout as string.
+/// Run command and return stdout as [string].
 String cmd(List<String> cmd,
-    {String workingDirectory = '.', bool silent = true}) {
+    {String workingDirectory, bool silent = true}) {
   final result = processManager.runSync(cmd,
       workingDirectory: workingDirectory, runInShell: true);
-  traceCommand(cmd, workingDirectory: workingDirectory);
+  _traceCommand(cmd, workingDirectory: workingDirectory);
   if (!silent) printStatus(result.stdout);
   if (result.exitCode != 0) {
     if (silent) printError(result.stdout);
@@ -430,8 +430,20 @@ String cmd(List<String> cmd,
   return result.stdout;
 }
 
+/// Run command and return exit code as [int].
+int runCmd(List<String> cmd) {
+  _traceCommand(cmd);
+  final result = processManager.runSync(cmd);
+  if (result.exitCode != 0) {
+      printError(result.stdout);
+      printError(result.stderr);
+      throw 'command failed: exitcode=${result.exitCode}, cmd=\'${cmd.join(" ")}\'';
+  }
+  return result.exitCode;
+}
+
 /// Trace a command.
-void traceCommand(List<String> args, {String workingDirectory}) {
+void _traceCommand(List<String> args, {String workingDirectory}) {
   final String argsText = args.join(' ');
   if (workingDirectory == null) {
     printTrace('executing: $argsText');
@@ -440,34 +452,18 @@ void traceCommand(List<String> args, {String workingDirectory}) {
   }
 }
 
-/// Run command and return exit code.
-int runCmd(List<String> cmd, {bool verbose = false}) {
-  traceCommand(cmd);
-  final result = processManager.runSync(cmd);
-  if (result.exitCode != 0) {
-    if (verbose) {
-      printError(result.stdout);
-      printError(result.stderr);
-    } else {
-      printTrace(result.stdout);
-      printTrace(result.stderr);
-    }
-  }
-  return result.exitCode;
-}
-
 /// Execute command with arguments [cmd] in a separate process
 /// and stream stdout/stderr.
 Future<void> streamCmd(
   List<String> cmd, {
-  String workingDirectory = '.',
+  String workingDirectory,
   ProcessStartMode mode = ProcessStartMode.normal,
   Map<String, String> environment,
 }) async {
   if (mode == ProcessStartMode.normal) {
     int exitCode = await runCommandAndStreamOutput(cmd,
         workingDirectory: workingDirectory, environment: environment);
-    if (exitCode != 0 && mode == ProcessStartMode.normal) {
+    if (exitCode != 0) {
       throw 'command failed: exitcode=$exitCode, cmd=\'${cmd.join(" ")}\', workingDirectory=$workingDirectory, mode=$mode';
     }
   } else {
