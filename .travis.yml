@@ -41,6 +41,7 @@ jobs:
         - export PATH="${TRAVIS_HOME}/.pub-cache/bin:$PATH"
         - dart --version
         - pub get # because no pubspec.lock
+        - export FLUTTER_ROOT=/ # tests currently require a flutter root
         - pub run test test/all_tests.dart
         # install image magick (already installed)
         # install coverage tool
