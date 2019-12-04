@@ -22,4 +22,5 @@ devices:
     iPhone 11:
 
 # Frame screenshots
-frame: true
+#frame: true
+frame: false
