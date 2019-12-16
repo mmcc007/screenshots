@@ -193,7 +193,7 @@ jobs:
 
         # Create an Android emulator
         #  - echo no | avdmanager --verbose create avd --force -n test -k "system-images;android-$API;$GOO;$ABI" -c 10M
-        - echo no | avdmanager --verbose create avd --force -n test -k "system-images;android-$API;$GOO;$ABI"
+        - echo no | avdmanager --verbose create avd --force -n $EMULATOR_NAME -k "system-images;android-$API;$GOO;$ABI"
         #  - EMU_PARAMS="
         #      -verbose
         #      -no-snapshot
