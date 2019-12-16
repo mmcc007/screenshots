@@ -11,16 +11,20 @@ import 'globals.dart';
 /// clear configured fastlane directories.
 Future clearFastlaneDirs(
     Config config, Screens screens, RunMode runMode) async {
-  for (ConfigDevice device in config.androidDevices) {
-    for (final locale in config.locales) {
-      await _clearFastlaneDir(
-          screens, device.name, locale, DeviceType.android, runMode);
+  if (config.isRunTypeActive(DeviceType.android)) {
+    for (ConfigDevice device in config.androidDevices) {
+      for (final locale in config.locales) {
+        await _clearFastlaneDir(
+            screens, device.name, locale, DeviceType.android, runMode);
+      }
     }
   }
-  for (ConfigDevice device in config.iosDevices) {
-    for (final locale in config.locales) {
-      await _clearFastlaneDir(
-          screens, device.name, locale, DeviceType.ios, runMode);
+  if (config.isRunTypeActive(DeviceType.ios)) {
+    for (ConfigDevice device in config.iosDevices) {
+      for (final locale in config.locales) {
+        await _clearFastlaneDir(
+            screens, device.name, locale, DeviceType.ios, runMode);
+      }
     }
   }
 }
@@ -29,7 +33,7 @@ Future clearFastlaneDirs(
 Future _clearFastlaneDir(Screens screens, String deviceName, String locale,
     DeviceType deviceType, RunMode runMode) async {
   final Map screenProps = screens.getScreen(deviceName);
-  String androidModelType = getAndroidModelType(screenProps);
+  String androidModelType = getAndroidModelType(screenProps, deviceName);
 
   final dirPath = getDirPath(deviceType, locale, androidModelType);
 
@@ -70,11 +74,11 @@ String getDirPath(
 }
 
 /// Get android model type (phone or tablet screen size).
-String getAndroidModelType(Map screenProps) {
+String getAndroidModelType(Map screenProps, String deviceName) {
   String androidDeviceType = kFastlanePhone;
   if (screenProps == null) {
     printStatus(
-        'Warning: using default value \'$kFastlanePhone\' in fastlane directory.');
+        'Warning: using default value \'$kFastlanePhone\' in \'$deviceName\' fastlane directory.');
   } else {
     androidDeviceType = screenProps['destName'];
   }

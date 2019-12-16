@@ -654,14 +654,14 @@ void main() {
         await screens.init();
         for (final androidDeviceName in androidDeviceNames.keys) {
           final screenProps = screens.getScreen(androidDeviceName);
-          expect(getAndroidModelType(screenProps),
+          expect(getAndroidModelType(screenProps, androidDeviceName),
               androidDeviceNames[androidDeviceName]);
         }
 
         // confirm handling of unknown device
         final screenProps = screens.getScreen(unknownDevice);
         expect(screenProps, isNull);
-        expect(getAndroidModelType(screenProps), kFastlanePhone);
+        expect(getAndroidModelType(screenProps, unknownDevice), kFastlanePhone);
       }, skip:     true  );
     });
 

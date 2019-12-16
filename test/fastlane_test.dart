@@ -66,7 +66,7 @@ main() {
           // create files
           int i=0;
           final path = getDirPath(device.deviceType, locale,
-              getAndroidModelType(screens.getScreen(device.name)));
+              getAndroidModelType(screens.getScreen(device.name), device.name));
           expect(memoryFileSystem.directory(path).existsSync(), isFalse);
           memoryFileSystem.file('$path/${device.name}-$i.$kImageExtension').createSync(recursive: true);
           expect(memoryFileSystem.directory(path).listSync().length, 1);
@@ -77,7 +77,7 @@ main() {
         for (final device in config.devices) {
           // check files deleted
           final path = getDirPath(device.deviceType, locale,
-              getAndroidModelType(screens.getScreen(device.name)));
+              getAndroidModelType(screens.getScreen(device.name), device.name));
           expect(memoryFileSystem.directory(path).listSync().length, 0);
         }
       }
