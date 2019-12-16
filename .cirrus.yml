@@ -24,6 +24,7 @@ ios_integration_task:
   pub_cache:
     folder: ~/.pub-cache
   simulators_script:
+    - sh -c "ios-deploy -c" || echo "no attached devices"
     - xcrun simctl list devicetypes
     - xcrun simctl list runtimes
   simulators_json_script:
