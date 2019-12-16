@@ -31,7 +31,7 @@ ios_integration_task:
   imagemagick_install_script:
     # skip homebrew update
     - export HOMEBREW_NO_AUTO_UPDATE=1
-    - brew install imagemagick
+    - brew install imagemagick || echo -n # ignore error in auto-update
     - convert -version || echo -n
   doctor_script: flutter doctor -v
   activate_script: pub global activate --source path .
