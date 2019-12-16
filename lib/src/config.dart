@@ -95,8 +95,9 @@ class Config {
     final device = devices.firstWhere((device) => device.name == deviceName,
         orElse: () => throw 'Error: device \'$deviceName\' not found');
     // orientation over-rides frame if not in Portait (default)
-    return device.orientation != null &&
-            device.orientation != Orientation.Portrait
+    if (orientation == null) return device.isFramed;
+    return (orientation == Orientation.LandscapeLeft ||
+        orientation == Orientation.LandscapeRight)
         ? false
         : device.isFramed;
   }
