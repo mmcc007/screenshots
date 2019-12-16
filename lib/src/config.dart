@@ -94,9 +94,10 @@ class Config {
   bool isFrameRequired(String deviceName, Orientation orientation) {
     final device = devices.firstWhere((device) => device.name == deviceName,
         orElse: () => throw 'Error: device \'$deviceName\' not found');
+    // orientation over-rides frame if not in Portait (default)
     if (orientation == null) return device.isFramed;
     return (orientation == Orientation.LandscapeLeft ||
-            orientation == Orientation.LandscapeRight)
+        orientation == Orientation.LandscapeRight)
         ? false
         : device.isFramed;
   }

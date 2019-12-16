@@ -3,8 +3,8 @@ language: generic
 env:
   global:
     - FLUTTER_CHANNEL=stable
-    - FLUTTER_VERSION=1.12.13+hotfix.5-${FLUTTER_CHANNEL}
-    - DART_VERSION=2.7.0 # for unit tests
+    - FLUTTER_VERSION=1.9.1+hotfix.6-${FLUTTER_CHANNEL}
+    - DART_VERSION=2.5.0 # for unit tests
 
 matrix:
   fast_finish: true
@@ -28,18 +28,20 @@ jobs:
       os: linux
 #      language: dart
 #      dart: stable
+      cache:
+        directories:
+          - ${HOME}/.pub-cache
 
       install:
-#        - dart --version
         - curl --connect-timeout 15 --retry 5 https://storage.googleapis.com/dart-archive/channels/stable/release/$DART_VERSION/sdk/dartsdk-linux-x64-release.zip > ${TRAVIS_HOME}/dartsdk.zip
         - unzip ${TRAVIS_HOME}/dartsdk.zip -d ${TRAVIS_HOME} > /dev/null
         - rm ${TRAVIS_HOME}/dartsdk.zip
         - export DART_SDK="${TRAVIS_HOME}/dart-sdk"
         - export PATH="$DART_SDK/bin:$PATH"
         - export PATH="${TRAVIS_HOME}/.pub-cache/bin:$PATH"
-        - pub --version
         - dart --version
         - pub get # because no pubspec.lock
+        - export FLUTTER_ROOT=/ # tests currently require a flutter root
         - pub run test test/all_tests.dart
         # install image magick (already installed)
         # install coverage tool
@@ -51,6 +53,8 @@ jobs:
       after_success: bash <(curl -s https://codecov.io/bash) -f coverage/lcov.info
 
     - stage: Testing
+#      # run on master or PRs (ignore other branches)
+#      if: branch = master
       env:
         - Run screenshots on iOS
         - OS=macos
@@ -62,9 +66,9 @@ jobs:
       # iPad Pro (12.9-inch) (3rd generation) in screenshots.yaml
 #      osx_image: xcode10 # macOS 10.13, JDK 10.0.2+13
       osx_image: xcode11.2 # macOS 10.14, JDK 13.0.1
-
-      # run on master or PRs (ignore other branches)
-      # if: branch = master
+      cache:
+        directories:
+          - ${HOME}/.pub-cache
 
       before_install:
         - xcrun simctl list devices --json
@@ -77,33 +81,9 @@ jobs:
         - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
 
       install:
-        # create repository for artifacts
-        - mkdir $HOME/screenshots
-        # setup osx environment for flutter and simulators
-        - export HOMEBREW_NO_AUTO_UPDATE=1
-#        - brew install libimobiledevice
-#        - brew install ideviceinstaller
-#        - brew install ios-deploy
-#        - brew install cocoapods || echo 'ignore exit(1)'
-#        - brew link --overwrite cocoapods
-
-#
-#      # fix timezone warning on osx
-#      - sudo ln -sf /usr/share/zoneinfo/US/Pacific /etc/localtime
-#
-
-
-#      # install pre-compiled flutter
-##      - sdkmanager "platforms;android-28" "build-tools;28.0.3" > /dev/null # required by flutter
-##      - FLUTTER_CHANNEL=stable
-##      - FLUTTER_VERSION=1.7.8+hotfix.4-${FLUTTER_CHANNEL}
-##      - wget --quiet --output-document=flutter.zip https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/macos/flutter_macos_v${FLUTTER_VERSION}.zip && unzip -qq flutter.zip > /dev/null && rm flutter.zip
-##      - export PATH="$PATH":"$HOME/.pub-cache/bin"
-##      - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
         - flutter doctor -v
 
         # install ImageMagick
-        # skip homebrew update
         - export HOMEBREW_NO_AUTO_UPDATE=1
         - brew install imagemagick
 
@@ -112,6 +92,7 @@ jobs:
 
       script:
         - cd example; screenshots -c screenshots_ios.yaml -v
+
 #
 #      before_deploy:
 #        # bundle artifacts for later deploy
@@ -134,6 +115,8 @@ jobs:
 #          tags: true
 
     - stage: Testing
+      # run on master or PRs (ignore other branches)
+      # if: branch = master
       env:
         - Run screenshots on Android
         - OS=linux
@@ -141,13 +124,16 @@ jobs:
 #      os: linux
       language: generic
       dist: bionic
-      # run on master or PRs (ignore other branches)
-      # if: branch = master
+      cache:
+        directories:
+          - ${HOME}/.pub-cache
+          - ${HOME}/.gradle/caches/
+          - ${HOME}/.gradle/wrapper/
 
       before_install:
         # envs
         - API=28
-        - ABI=x86_64
+        - ABI=x86
         - GOO=default
         - ANDROID_TOOLS=4333796 # android-28
         - ANDROID_HOME=${HOME}/android-sdk
@@ -176,7 +162,6 @@ jobs:
         - export TARGET_JDK="${JDK}"
         - JDK="1.8" # used when running sdkmanager
         - source ~/.install-jdk-travis.sh
-
         - wget -q "https://dl.google.com/android/repository/sdk-tools-linux-$ANDROID_TOOLS.zip" -O android-sdk-tools.zip
         - unzip -q android-sdk-tools.zip -d ${ANDROID_HOME}
         - rm android-sdk-tools.zip
@@ -198,72 +183,14 @@ jobs:
         - sdkmanager "platforms;android-28" >/dev/null # We need the API of the current compileSdkVersion from gradle.properties  -
 
         - sdkmanager "emulator" >/dev/null
+        - ${ANDROID_HOME}/emulator/emulator -version
+
         - sdkmanager "extras;android;m2repository" >/dev/null
         - sdkmanager "system-images;android-$API;$GOO;$ABI" >/dev/null # install system images for emulator
 
         # Create an Android emulator
         #  - echo no | avdmanager --verbose create avd --force -n test -k "system-images;android-$API;$GOO;$ABI" -c 10M
-        - echo no | avdmanager --verbose create avd --force -n $EMULATOR_NAME -k "system-images;android-$API;$GOO;$ABI"
-
-        # config emulator
-        - cat ~/.android/avd/$EMULATOR_NAME.ini
-        - cat $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
-        - rm $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
-        - |
-          cat << EOF >> $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
-          AvdId=$EMULATOR_NAME
-          PlayStore.enabled=false
-          abi.type=x86_64
-          avd.ini.displayname=Nexus 6P API 28
-          avd.ini.encoding=UTF-8
-          disk.dataPartition.size=800M
-          fastboot.chosenSnapshotFile=
-          fastboot.forceChosenSnapshotBoot=no
-          fastboot.forceColdBoot=no
-          fastboot.forceFastBoot=yes
-          hw.accelerometer=no
-          hw.arc=false
-          hw.audioInput=yes
-          hw.battery=yes
-          hw.camera.back=virtualscene
-          hw.camera.front=emulated
-          hw.cpu.arch=x86_64
-          hw.cpu.ncore=2
-          hw.dPad=no
-          hw.device.hash2=MD5:210d8492b0d8f56499facd30fdda7669
-          hw.device.manufacturer=Google
-          hw.device.name=Nexus 6P
-          hw.gps=no
-          hw.gpu.enabled=yes
-          hw.gpu.mode=auto
-          hw.initialOrientation=Portrait
-          hw.keyboard=yes
-          hw.lcd.density=480
-          hw.lcd.height=2560
-          hw.lcd.width=1440
-          hw.mainKeys=no
-          hw.ramSize=1536
-          hw.sdCard=yes
-          hw.sensors.orientation=no
-          hw.sensors.proximity=no
-          hw.trackBall=no
-          image.sysdir.1=system-images/android-28/default/x86_64/
-          runtime.network.latency=none
-          runtime.network.speed=full
-          sdcard.path=$HOME/.android/avd/$EMULATOR_NAME.avd/sdcard.img
-          sdcard.size=512 MB
-          showDeviceFrame=no
-          skin.dynamic=yes
-          skin.name=1440x2560
-          skin.path=_no_skin
-          skin.path.backup=_no_skin
-          tag.display=Default Android System Image
-          tag.id=default
-          vm.heapSize=256
-        - cat $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
-
-        # start emulator
-        - ${ANDROID_HOME}/emulator/emulator -version
+        - echo no | avdmanager --verbose create avd --force -n test -k "system-images;android-$API;$GOO;$ABI"
         #  - EMU_PARAMS="
         #      -verbose
         #      -no-snapshot
@@ -288,7 +215,6 @@ jobs:
         - sudo -E sudo -u $USER -E bash -c "${ANDROID_HOME}/emulator/${EMU_COMMAND} ${EMU_PARAMS} &"
 
         # install flutter (while emulator is starting)
-        #  - sudo apt-get install -y --no-install-recommends lib32stdc++6 libstdc++6 > /dev/null
         - wget --quiet --output-document=flutter.tar.xz https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/linux/flutter_linux_v${FLUTTER_VERSION}.tar.xz
         - tar xf flutter.tar.xz -C $(dirname ${FLUTTER_HOME})
         - rm flutter.tar.xz
@@ -341,11 +267,6 @@ jobs:
         - rm -rf ${HOME}/.gradle/caches/transforms-1
         - rm -rf ${HOME}/.gradle/caches/journal-1
         - find ${HOME}/.gradle/caches/ -name "*.lock" -type f -delete || echo -n
-      cache:
-        directories:
-          - ${HOME}/.pub-cache
-          - ${HOME}/.gradle/caches/
-          - ${HOME}/.gradle/wrapper/
 
       before_deploy:
         # bundle artifacts for later deploy

@@ -125,7 +125,7 @@ main() {
       expect(result, isTrue);
       expect(fs.directory(stagingDir).existsSync(), isTrue);
       final dstDir = getDirPath(DeviceType.android, locale,
-          getAndroidModelType(screens.getScreen(deviceName)));
+          getAndroidModelType(screens.getScreen(deviceName), deviceName));
       expect(fs.directory(dstDir).listSync().length, 1);
       fakeProcessManager.verifyCalls();
     }, overrides: <Type, Generator>{

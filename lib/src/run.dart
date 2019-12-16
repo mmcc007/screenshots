@@ -395,10 +395,6 @@ class Screenshots {
   ) async {
     for (final testPath in config.tests) {
       final command = ['flutter', '-d', deviceId, 'drive'];
-      // if verbose on CI
-      if (verbose && platform.environment['CI'] == 'true') {
-        command.add('-v');
-      }
       bool _isBuild() => isBuild != null
           ? isBuild
           : config.getDevice(configDeviceName).isBuild;
