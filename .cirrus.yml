@@ -1,0 +1,166 @@
+unit_task:
+  container:
+    image: cirrusci/flutter:stable
+  pub_cache:
+    folder: ~/.pub-cache
+  imagemagic_install_script:
+    - sudo apt-get update -y
+    - sudo apt-get install -y imagemagick
+  pub_get_script:
+    - pub --version
+    - dart --version
+    - pub get # because no pubspec.lock
+  test_script:
+    - pub run test test/all_tests.dart
+  activate_coverage_script:
+    - pub global activate coverage 0.13.3
+  coverage_test_script:
+    - script/code_coverage.sh
+
+ios_integration_task:
+  osx_instance:
+    image: mojave-xcode-11.2.1-flutter
+    #  image: mojave-xcode-10.1-flutter
+  pub_cache:
+    folder: ~/.pub-cache
+  simulators_script:
+    - xcrun simctl list devicetypes
+    - xcrun simctl list runtimes
+  simulators_json_script:
+    - xcrun simctl list devices --json
+  imagemagick_install_script:
+    - brew install imagemagick
+    - convert -version || echo -n
+  doctor_script: flutter doctor -v
+  activate_script: pub global activate --source path .
+  test_script:
+    - export PATH="$HOME/.pub-cache/bin:$PATH" # needed to find screenshots
+    - cd example
+    - screenshots -c screenshots_ios.yaml -v
+  screenshot_artifacts:
+    path: example/ios/fastlane/screenshots/*
+
+android_integration_task:
+  container:
+    dockerfile: .ci/Dockerfile.x86
+    cpu: 4
+    memory: 10G
+    kvm: true
+  pub_cache:
+    folder: ~/.pub-cache
+  gradle_cache:
+    folder: ~/.gradle/caches
+  gradle_wrapper_cache:
+    folder: ~/.gradle/wrapper
+  emulator_config_script:
+#    - EMULATOR_NAME=Nexus_6P_API_28
+    - cat $HOME/.android/avd/$EMULATOR_NAME.ini
+    - cat $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
+#    - rm $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
+#    - |
+#      cat << EOF >> $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
+#      hw.lcd.width=1440
+#      hw.lcd.height=2560
+#      hw.device.name=Nexus 6P
+#      hw.device.manufacturer=Google
+#      avd.ini.displayname=Nexus 6P API 28
+#      EOF
+#    - |
+#      cat << EOF >> $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
+#      AvdId=$EMULATOR_NAME
+#      PlayStore.enabled=false
+#      abi.type=x86_64
+#      avd.ini.displayname=Nexus 6P API 28
+#      avd.ini.encoding=UTF-8
+#      disk.dataPartition.size=800M
+#      fastboot.chosenSnapshotFile=
+#      fastboot.forceChosenSnapshotBoot=no
+#      fastboot.forceColdBoot=no
+#      fastboot.forceFastBoot=yes
+#      hw.accelerometer=no
+#      hw.arc=false
+#      hw.audioInput=yes
+#      hw.battery=yes
+#      hw.camera.back=virtualscene
+#      hw.camera.front=emulated
+#      hw.cpu.arch=x86_64
+#      hw.cpu.ncore=2
+#      hw.dPad=no
+#      hw.device.hash2=MD5:210d8492b0d8f56499facd30fdda7669
+#      hw.device.manufacturer=Google
+#      hw.device.name=Nexus 6P
+#      hw.gps=no
+#      hw.gpu.enabled=yes
+#      hw.gpu.mode=auto
+#      hw.initialOrientation=Portrait
+#      hw.keyboard=yes
+#      hw.lcd.density=480
+#      hw.lcd.height=2560
+#      hw.lcd.width=1440
+#      hw.mainKeys=no
+#      hw.ramSize=1536
+#      hw.sdCard=yes
+#      hw.sensors.orientation=no
+#      hw.sensors.proximity=no
+#      hw.trackBall=no
+#      image.sysdir.1=system-images/android-28/default/x86_64/
+#      runtime.network.latency=none
+#      runtime.network.speed=full
+#      sdcard.path=$HOME/.android/avd/$EMULATOR_NAME.avd/sdcard.img
+#      sdcard.size=100M
+#      showDeviceFrame=no
+#      skin.dynamic=yes
+#      skin.name=1440x2560
+#      skin.path=_no_skin
+#      skin.path.backup=_no_skin
+#      tag.display=Default Android System Image
+#      tag.id=default
+#      vm.heapSize=256
+#      EOF
+#    - cat $HOME/.android/avd/$EMULATOR_NAME.avd/config.ini
+#  android_licenses_script:
+#    - yes | sdkmanager --licenses >/dev/null
+  start_emulator_background_script:
+    - sudo chown cirrus:cirrus /dev/kvm
+    - $ANDROID_HOME/emulator/emulator-headless -version
+    - $ANDROID_HOME/emulator/emulator-headless -avd $EMULATOR_NAME -no-audio -no-window -verbose
+  activate_script:
+    - pub global activate --source path .
+  wait_for_emulator_script:
+    - ./script/android-wait-for-emulator.sh
+    # checks made by daemon to decide if running device is emulator or real
+    - adb shell getprop ro.product.cpu.abi # 'x86_64' (device)
+    - adb shell getprop ro.hardware # 'ranchu' (emulator)
+    - adb shell getprop ro.build.characteristics # 'emulator' (emulator)
+    - adb shell getprop ro.build.version.release # '9' (emulator)
+    - adb shell getprop ro.build.version.sdk # '28' (emulator))
+    - adb shell getprop
+#  logcat_background_script: adb logcat -e flutter\|Observatory *:I
+  logcat_background_script: adb logcat -e flutter\|Observatory
+  doctor_script:
+    - flutter doctor -v
+  test_script:
+    - export PATH="$HOME/.pub-cache/bin:$PATH" # needed to find screenshots
+    - (cd example; screenshots -c screenshots_android.yaml -v)
+  screenshots_artifacts:
+    #    path: example/android/fastlane/screenshots/*
+    path: "example/android/fastlane/metadata/android/*"
+  cleanup_before_cache_script:
+    - env
+    - pwd
+    - echo GRADLE_VERSION = $GRADLE_VERSION
+    - ls -la
+    - find .
+    - GRADLE_VERSION=$(./example/android/gradlew -version | grep Gradle | awk '{print $2}')
+    - echo GRADLE_VERSION = $GRADLE_VERSION
+    - echo $HOME
+    - echo ~
+    - find ${HOME}/.gradle/caches || echo -n
+    - |
+      if [[ ! -z "$GRADLE_VERSION" ]];
+      then
+        rm -rfv ${HOME}/.gradle/caches/$GRADLE_VERSION/
+      fi
+    - rm -rfv ${HOME}/.gradle/caches/transforms-1
+    - rm -rfv ${HOME}/.gradle/caches/journal-1
+    - find ${HOME}/.gradle/caches/ -name "*.lock" -type f -delete || echo -n

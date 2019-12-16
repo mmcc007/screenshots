@@ -5,10 +5,11 @@ import 'package:screenshots/src/daemon_client.dart';
 import 'package:screenshots/src/globals.dart';
 import 'package:screenshots/src/screens.dart';
 import 'package:screenshots/src/validate.dart';
-import 'package:screenshots/src/utils.dart' as utils;
 import 'package:test/test.dart';
 import 'package:screenshots/src/fastlane.dart' as fastlane;
 import 'package:yaml/yaml.dart';
+
+import 'src/common.dart';
 
 final screenshotsYaml = '''
 # Screen capture tests
@@ -78,7 +79,7 @@ void main() {
     expect(isValidTestPaths('--driver=$testPath --target=$mainPath '), isTrue);
     expect(isValidTestPaths('--driver $testPath --target $mainPath '), isTrue);
 
-    if (!utils.isCI()) {
+    if (!    true  ) {
       expect(isValidTestPaths(bogusPath), isFalse);
       expect(isValidTestPaths('--target=$bogusPath'), isFalse);
       expect(
@@ -107,24 +108,24 @@ void main() {
         true);
     // allow other tests to continue
     Directory.current = origDir;
-  }, skip: utils.isCI());
+  }, skip:     true  );
 
   test('clear all destination directories on init', () async {
     final Screens screens = Screens();
     await screens.init();
     final config = Config(configStr: screenshotsYaml);
     await fastlane.clearFastlaneDirs(config, screens, RunMode.normal);
-  }, skip: utils.isCI());
+  }, skip:     true  );
 
   test('check if frame is needed', () {
     final config = Config(configStr: screenshotsYaml);
 
-    expect(config.isFrameRequired('iPhone X'), true);
-    expect(config.isFrameRequired('iPhone 7 Plus'), false);
-    expect(config.isFrameRequired('Nexus 5X'), true);
-    expect(config.isFrameRequired('iPhone 5c'), false);
+    expect(config.isFrameRequired('iPhone X', null), true);
+    expect(config.isFrameRequired('iPhone 7 Plus', null), false);
+    expect(config.isFrameRequired('Nexus 5X', null), true);
+    expect(config.isFrameRequired('iPhone 5c', null), false);
     final unknownDevice = 'unknown';
-    expect(() => config.isFrameRequired('unknown'),
+    expect(() => config.isFrameRequired('unknown', null),
         throwsA('Error: device \'$unknownDevice\' not found'));
   });
 }

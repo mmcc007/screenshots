@@ -5,6 +5,7 @@ import 'globals.dart';
 import 'utils.dart' as utils;
 import 'utils.dart';
 
+const kDefaultOrientation = 'Portrait';
 enum Orientation { Portrait, LandscapeRight, PortraitUpsideDown, LandscapeLeft }
 
 /// Change orientation of a running emulator or simulator.

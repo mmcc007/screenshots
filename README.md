@@ -24,9 +24,9 @@ For introduction to _Screenshots_ see https://medium.com/@nocnoc/automated-scree
 
 _Screenshots_ is a standalone command line utility and package for capturing screenshot images for Flutter.   
 
-_Screenshots_ will start the required android emulators and iOS simulators (or find attached devices), run your screen capture tests on each emulator/simulator (or device), process the images, and drop them off to Fastlane for delivery to both stores.
+_Screenshots_ will start the required android emulators and iOS simulators (or find attached devices), run tests, process the captured screenshots, and drop them off to Fastlane for delivery to both stores.
 
-It is inspired by three tools from Fastlane:  
+_Screenshots_ is inspired by three tools from Fastlane:  
 1. [Snapshots](https://docs.fastlane.tools/getting-started/ios/screenshots/)  
 This is used to capture screenshots on iOS using iOS UI Tests.
 1. [Screengrab](https://docs.fastlane.tools/actions/screengrab/)  
@@ -40,15 +40,15 @@ Since all three of these Fastlane tools do not work with Flutter, _Screenshots_ 
 Since Flutter integration testing is designed to work transparently across iOS and Android, capturing images using _Screenshots_ is easy.
 
 Features include: 
-1. Works with your existing tests  
+1. Works with existing tests  
 Add a single line for each screenshot.
-1. Run your tests on any device  
-Select the devices you want to run on, using a convenient config file. _Screenshots_ will find the devices (real or emulated) and run your tests.
+1. Run tests on any device  
+Select the devices to run on using a convenient config file. _Screenshots_ will find the devices (real or emulated) and run tests.
 1. One run for both platforms  
-_Screenshots_ runs your tests on both iOS and Android in one run.  
+_Screenshots_ runs tests on both iOS and Android in one run.  
 (as opposed to making separate Snapshots and Screengrab runs)
 1. One run for multiple locales  
-If your app supports multiple locales, _Screenshots_ will optionally set the locales listed in the config file before running each test.
+If app supports multiple locales, _Screenshots_ will optionally set the locales listed in the config file before running each test.
 1. One run for frames  
 Optionally places images in device frames in same run.  
 (as opposed to making separate FrameIt runs... which supports iOS only)
@@ -141,17 +141,18 @@ sample usage: screenshots
 -h, --help                                          Display this help information.
 ```
 
-# Modifying your tests for _Screenshots_
-A special function is provided in the _Screenshots_ package that is called by the test each time you want to capture a screenshot. 
+# Modifying tests for _Screenshots_
+A special function is provided in the _Screenshots_ package that is called by the test to capture a screenshot. 
 _Screenshots_ will then process the images appropriately during a _Screenshots_ run.
 
-To capture screenshots in your tests:
-1. Include the _Screenshots_ package in your pubspec.yaml's dev_dependencies section  
+To capture screenshots in tests:
+1. Add _Screenshots_ package in app's pubspec.yaml's dev_dependencies section  
    ````yaml
+   dev_dependencies:
      screenshots: ^<current version>
    ````
-2. In your tests
-    1. Import the dependencies  
+2. In tests
+    1. Import the dependency  
        ````dart
        import 'package:screenshots/screenshots.dart';
        ````
@@ -164,19 +165,12 @@ To capture screenshots in your tests:
            await screenshot(driver, config, 'myscreenshot1');
        ````
        
-Note: make sure your screenshot names are unique across all your tests.
+Note: make sure screenshot names are unique across all tests.
 
-Note: to turn off the debug banner on your screens, in your integration test's main(), call:
+Note: to turn off the debug banner, in the integration test's main(), call:
 ````dart
   WidgetsApp.debugAllowBannerOverride = false; // remove debug banner for screenshots
 ````
-
-## Modifying tests based on screenshots environment
-In some cases it is useful to know what device, device type, screen size, screen orientation and locale you are currently testing with. To obtain this information in your test use:
-```
-final screenshotsEnv = config.screenshotsEnv;
-```
-See https://github.com/flutter/flutter/issues/31609 for related `flutter driver` issue.
 
 # Configuration
 _Screenshots_ uses a configuration file to configure a run.  
@@ -200,11 +194,15 @@ locales:
 devices:
   ios:
     iPhone XS Max:
-      frame: false
+    iPhone 11 Pro:
+      frame: false # no screen avail so frame must be false
     iPad Pro (12.9-inch) (3rd generation):
-      orientation: LandscapeRight
+      orientation:
+        - Portrait # default 
+        - LandscapeRight
   android:
     Nexus 6P:
+    SM G965F: # a real attached device (frame and orientation disabled)
 
 # Frame screenshots
 frame: true
@@ -221,11 +219,19 @@ Individual devices can be configured in `screenshots.yaml` by specifying per dev
 
 _frame_ parameter notes:
 - images generated for devices where framing is disabled may not be suitable for upload.
-- set to true for devices unknown to _screenshots_.
+- set to false for devices unknown to _screenshots_.
 
 _orientation_ parameter notes:
+- multiple orientations can be specified. For example:
+    ```yaml
+        iPhone XS Max:
+          orientation:
+            - Portrait
+            - LandscapeRight
+    ```
+- landscape orientation disables framing  
+  This is because status/navigation bars in landscape mode are currently not implemented.
 - orientation on iOS simulators is implemented using an AppleScript script which requires granting permission on first use.
-
 
 ## Test Options
 In addition to using the default flutter driver mode, tests can also be specified using flutter driver parameters. For example:
@@ -239,11 +245,11 @@ tests:
 _Screenshots_ can be used to monitor any unexpected changes to the UI by comparing the new screenshots to previously recorded screenshots. Any differences will be highlighted in a 'diff' image for review.  
 
 To use this feature:
-1. Add the location of your recording directory to a `screenshots.yaml`
+1. Add a recording directory to `screenshots.yaml`
     ```yaml
     recording: /tmp/screenshots_record
     ```
-1. Run a recording to capture your screenshots:
+1. Run a recording to capture expected screenshots:
     ```
     screenshots -m recording
     ```
@@ -257,7 +263,7 @@ To use this feature:
 To generate screenshots for local use, such as generating reports of changes to UI over time, etc... use 'archive' mode. 
 
 To enable this mode:
-1. Add the location of your archive directory to screenshots.yaml:
+1. Add an archive directory to screenshots.yaml:
     ```yaml
     archive: /tmp/screenshots_archive
     ```
@@ -267,7 +273,7 @@ To enable this mode:
     ````
 
 # Integration with Fastlane
-Since _Screenshots_ is intended to be used with Fastlane, after _Screenshots_ completes, the images can be found in your project at:
+Since _Screenshots_ is intended to be used with Fastlane, after _Screenshots_ completes, the images can be found in the project at:
 ````
 android/fastlane/metadata/android
 ios/fastlane/screenshots
@@ -282,40 +288,39 @@ Tip: One way to use _Screenshots_ with Fastlane is to call _Screenshots_ before 
 ## Fastlane FrameIt
 iOS images generated by _Screenshots_ can also be further processed using FrameIt's [text and background](https://docs.fastlane.tools/actions/frameit/#text-and-background) feature.
 
-# Changing devices
+# Adding a device
 
-To change the devices to run your tests on, just change the list of devices in screenshots.yaml.
-
-Make sure each device you select has a supported screen and a
-corresponding attached device or installed emulator/simulator. To bypass
-the supported screen requirement use `frame: false` for each related device in your
-screenshots.yaml.
-
-For each selected device:
 1. Confirm device is present in [screens.yaml](https://github.com/mmcc007/screenshots/blob/master/lib/resources/screens.yaml).  
 2. Add device to the list of devices in screenshots.yaml.  
 3. Confirm a real device is attached, or install an emulator/simulator for device.   
 
-If your device is not found in screens.yaml but matches a screen size in screens.yaml, please create an issue or PR to add the device to screens.yaml.
+If screen is not available, disable framing by setting `frame: false` for the device.
 
 ## Config validation
-_Screenshots_ will check your configuration before running for any errors and provide a guide on how to resolve.
+_Screenshots_ will check configuration before running for errors and provide a guide on how to resolve.
 
-# Adding new screens
+# Adding a screen
 
-If your device does not have a screen in screens.yaml please create an issue to request a new screen.
+If device does not have a screen in screens.yaml please create an issue to request a new screen.
 
-If you want to submit a new screen please see related [README](https://github.com/mmcc007/screenshots/blob/master/test/resources/README.md).
+To submit a new screen please see related [README](https://github.com/mmcc007/screenshots/blob/master/test/resources/README.md).
+
+## Modifying tests based on screenshots environment
+In some cases it is useful to know what device, device type, screen size, screen orientation and locale the test is currently running with. To obtain this information use:
+```
+final screenshotsEnv = config.screenshotsEnv;
+```
+See https://github.com/flutter/flutter/issues/31609 for related `flutter driver` issue.
 
 # Upgrading
 To upgrade, simply re-issue the install command
 ````bash
 $ pub global activate screenshots
 ````
-Note: the _Screenshots_ version should be the same for both the command line and in your `pubspec.yaml`.   
+Note: the _Screenshots_ version should be the same for both the command line and in the `pubspec.yaml`.   
 1. If upgrading the command line version of _Screenshots_, also upgrade
- the version of _Screenshots_ in your pubspec.yaml.    
-2. If upgrading the version of _Screenshots_ in your pubspec.yaml, also upgrade the command line version.
+ the version of _Screenshots_ in the pubspec.yaml.    
+2. If upgrading the version of _Screenshots_ in pubspec.yaml, also upgrade the command line version.
 
 To check the version of _Screenshots_ currently installed:
 ```
@@ -332,8 +337,8 @@ https://github.com/mmcc007/screenshots/releases/
 To view a similar run on windows see:  
 https://ci.appveyor.com/project/mmcc007/screenshots
 
-* Running _Screenshots_ in the cloud is  useful for automating the generation of your screenshots in a CI/CD environment.  
-* Running _Screenshots_ on macOS in the cloud can be used to generate your screenshots when developing on Linux and/or Windows (if not using locally attached iOS devices).
+* Running _Screenshots_ in the cloud is  useful for automating the generation of screenshots in a CI/CD environment.  
+* Running _Screenshots_ on macOS in the cloud can be used to generate screenshots when developing on Linux and/or Windows.
 
 # Related projects
 To run integration tests on real devices in cloud:  
@@ -345,5 +350,3 @@ https://github.com/mmcc007/fledge
 # Issues and Pull Requests
 [Issues](https://github.com/mmcc007/screenshots/issues) and 
 [pull requests](https://github.com/mmcc007/screenshots/pulls) are welcome.
-
-Your feedback is welcome and is used to guide where development effort is focused. So feel free to create as many issues and pull requests as you want. You should expect a timely and considered response.

@@ -1,3 +1,6 @@
+## 2.1.1
+- Fixed bug with multiple tests #152
+
 ## 2.1.0+1
 - Fixed test of CI env var when no CI env var defined #146
 

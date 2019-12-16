@@ -1,6 +1,6 @@
 name: screenshots
 description: Auto-generation of screenshots for Apple and Play Stores using emulators, simulators and real devices. Includes support for multiple locales and framing. Compatible with fastlane.
-version: 2.1.0+1
+version: 2.1.1
 homepage: https://github.com/mmcc007/screenshots
 author: Maurice McCabe <mmcc007@gmail.com>
 
@@ -19,6 +19,8 @@ dependencies:
   meta: ^1.1.6
   intl: ">=0.15.0 <1.0.0"
   tool_mobile: ^1.9.5
+#  tool_mobile:
+#    path: ../tool_mobile
 
 dev_dependencies:
   test: ^1.5.1+1
@@ -26,6 +28,12 @@ dev_dependencies:
   mockito: ^4.1.0
   pedantic: ^1.8.0+1
   quiver: '>=2.0.0 <3.0.0'
+  fake_process_manager: ^0.1.0
+#    path: ../fake_process_manager
+  tool_base_test:
+    git: https://github.com/mmcc007/tool_base_test.git
+#    path: ../tool_base_test
+  collection: any
 
 executables:
   screenshots: main

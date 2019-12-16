@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-//import 'dart:io';
 
 import 'package:meta/meta.dart';
 import 'package:screenshots/src/utils.dart';
@@ -189,7 +188,7 @@ class DaemonClient {
 
   Future<List> _sendCommandWaitResponse(Map<String, dynamic> command) async {
     _sendCommand(command);
-    printTrace('waiting for response: $command');
+//    printTrace('waiting for response: $command');
     final String response = await _waitForResponse.future;
 //    printTrace('response: $response');
     return _processResponse(response, command);
@@ -254,6 +253,15 @@ abstract class BaseDevice {
   BaseDevice(this.id, this.name, this.category, this.platformType);
 
   @override
+  bool operator ==(other) {
+    return other is BaseDevice &&
+        other.name == name &&
+        other.id == id &&
+        other.category == category &&
+        other.platformType == platformType;
+  }
+
+  @override
   String toString() {
     return 'id: $id, name: $name, category: $category, platformType: $platformType';
   }
@@ -286,7 +294,21 @@ class DaemonDevice extends BaseDevice {
     this.ephemeral,
     this.emulatorId, {
     this.iosModel,
-  }) : super(id, name, category, platformType);
+  }) : super(id, name, category, platformType) {
+    // debug check in CI
+    if (emulator && emulatorId == null) throw 'Emulator id is null';
+  }
+
+  @override
+  bool operator ==(other) {
+    return super == other &&
+        other is DaemonDevice &&
+        other.platform == platform &&
+        other.emulator == emulator &&
+        other.ephemeral == ephemeral &&
+        other.emulatorId == emulatorId &&
+        other.iosModel == iosModel;
+  }
 
   @override
   String toString() {
@@ -295,7 +317,7 @@ class DaemonDevice extends BaseDevice {
   }
 }
 
-DaemonEmulator loadDaemonEmulator(emulator) {
+DaemonEmulator loadDaemonEmulator(Map<String, dynamic> emulator) {
   return DaemonEmulator(
     emulator['id'],
     emulator['name'],
@@ -304,15 +326,34 @@ DaemonEmulator loadDaemonEmulator(emulator) {
   );
 }
 
-DaemonDevice loadDaemonDevice(device) {
-  return DaemonDevice(
+DaemonDevice loadDaemonDevice(Map<String, dynamic> device) {
+  // hack for CI testing.
+  // flutter daemon is reporting x64 emulator as real device while
+  // flutter doctor is reporting correctly.
+  // Platform is reporting as 'android-arm' instead of 'android-x64', etc...
+  if (platform.environment['CI']?.toLowerCase() == 'true' &&
+      device['emulator'] == false) {
+    return DaemonDevice(
       device['id'],
       device['name'],
       device['category'],
       device['platformType'],
       device['platform'],
-      device['emulator'],
+      true,
       device['ephemeral'],
-      device['emulatorId'],
-      iosModel: device['model']);
+      'NEXUS_6P_API_28',
+      iosModel: device['model'],
+    );
+  }
+  return DaemonDevice(
+    device['id'],
+    device['name'],
+    device['category'],
+    device['platformType'],
+    device['platform'],
+    device['emulator'],
+    device['ephemeral'],
+    device['emulatorId'],
+    iosModel: device['model'],
+  );
 }

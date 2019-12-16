@@ -2,17 +2,19 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io' as io;
 
+import 'package:collection/collection.dart';
 import 'package:meta/meta.dart';
 import 'package:screenshots/src/orientation.dart';
 
+import 'globals.dart';
 import 'screens.dart';
 import 'utils.dart' as utils;
-import 'globals.dart';
 
 const kEnvConfigPath = 'SCREENSHOTS_YAML';
 
 /// Config info used to manage screenshots for android and ios.
 // Note: should not have context dependencies as is also used in driver.
+// todo: yaml validation
 class Config {
   Config({this.configPath = kConfigFileName, String configStr}) {
     if (configStr != null) {
@@ -48,20 +50,29 @@ class Config {
 
   Map _configInfo;
   Map _screenshotsEnv; // current screenshots env
+  List<ConfigDevice> _devices;
 
   // Getters
   List<String> get tests => _processList(_configInfo['tests']);
+
   String get stagingDir => _configInfo['staging'];
+
   List<String> get locales => _processList(_configInfo['locales']);
-  List<ConfigDevice> get devices =>
+
+  List<ConfigDevice> get devices => _devices ??=
       _processDevices(_configInfo['devices'], isFrameEnabled);
+
   List<ConfigDevice> get iosDevices =>
       devices.where((device) => device.deviceType == DeviceType.ios).toList();
+
   List<ConfigDevice> get androidDevices => devices
       .where((device) => device.deviceType == DeviceType.android)
       .toList();
+
   bool get isFrameEnabled => _configInfo['frame'];
+
   String get recordingDir => _configInfo['recording'];
+
   String get archiveDir => _configInfo['archive'];
 
   /// Get all android and ios device names.
@@ -80,7 +91,7 @@ class Config {
   }
 
   /// Check if frame is required for [deviceName].
-  bool isFrameRequired(String deviceName) {
+  bool isFrameRequired(String deviceName, Orientation orientation) {
     final device = devices.firstWhere((device) => device.name == deviceName,
         orElse: () => throw 'Error: device \'$deviceName\' not found');
     // orientation over-rides frame if not in Portait (default)
@@ -97,6 +108,7 @@ class Config {
       if (_screenshotsEnv == null) await _retrieveEnv();
       return _screenshotsEnv;
     } else {
+      // output in test (hence no printStatus)
       io.stdout.writeln('Warning: screenshots runtime environment not set.');
       return Future.value({});
     }
@@ -134,11 +146,34 @@ class Config {
     }).toList();
   }
 
-  List<ConfigDevice> _processDevices(Map devices, bool globalFraming) {
+  List<ConfigDevice> _processDevices(
+      Map<String, dynamic> devices, bool globalFraming) {
+    Orientation _getValidOrientation(String orientation, deviceName) {
+      bool _isValidOrientation(String orientation) {
+        return Orientation.values.firstWhere(
+                (o) => utils.getStringFromEnum(o) == orientation,
+                orElse: () => null) !=
+            null;
+      }
+
+      if (!_isValidOrientation(orientation)) {
+        print(
+            'Invalid value for \'orientation\' for device \'$deviceName\': $orientation}');
+        print('Valid values:');
+        for (final _orientation in Orientation.values) {
+          print('  ${utils.getStringFromEnum(_orientation)}');
+        }
+        io.exit(1); // todo: add tool exception and throw
+      }
+      return utils.getEnumFromString(Orientation.values, orientation);
+    }
+
     List<ConfigDevice> configDevices = [];
 
     devices.forEach((deviceType, device) {
       device?.forEach((deviceName, deviceProps) {
+        final orientationVal =
+            deviceProps == null ? null : deviceProps['orientation'];
         configDevices.add(ConfigDevice(
           deviceName,
           utils.getEnumFromString(DeviceType.values, deviceType),
@@ -148,12 +183,13 @@ class Config {
                   globalFraming, // device frame overrides global frame
           deviceProps == null
               ? null
-              : deviceProps['orientation'] == null
+              : orientationVal == null
                   ? null
-                  : utils.getEnumFromString(
-                      Orientation.values, deviceProps['orientation'],
-                      allowNull: true),
-          deviceProps == null ? null : deviceProps['orientation'],
+                  : orientationVal is String
+                      ? [_getValidOrientation(orientationVal, deviceName)]
+                      : List<Orientation>.from(orientationVal.map((o) {
+                          return _getValidOrientation(o, deviceName);
+                        })),
           deviceProps == null ? true : deviceProps['build'] ?? true,
         ));
       });
@@ -163,21 +199,21 @@ class Config {
   }
 }
 
+Function eq = const ListEquality().equals;
+
 /// Describe a config device
 class ConfigDevice {
   final String name;
   final DeviceType deviceType;
   final bool isFramed;
-  final Orientation orientation;
-  final String orientationStr; // for validation
+  final List<Orientation> orientations;
   final bool isBuild;
 
   ConfigDevice(
     this.name,
     this.deviceType,
     this.isFramed,
-    this.orientation,
-    this.orientationStr,
+    this.orientations,
     this.isBuild,
   )   : assert(name != null),
         assert(deviceType != null),
@@ -189,12 +225,12 @@ class ConfigDevice {
     return other is ConfigDevice &&
         other.name == name &&
         other.isFramed == isFramed &&
-        other.orientation == orientation &&
+        eq(other.orientations, orientations) &&
         other.deviceType == deviceType &&
         other.isBuild == isBuild;
   }
 
   @override
   String toString() =>
-      'name: $name, deviceType: ${utils.getStringFromEnum(deviceType)}, isFramed: $isFramed, orientation: ${utils.getStringFromEnum(orientation)}, isBuild: $isBuild';
+      'name: $name, deviceType: ${utils.getStringFromEnum(deviceType)}, isFramed: $isFramed, orientations: $orientations, isBuild: $isBuild';
 }

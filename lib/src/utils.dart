@@ -8,6 +8,7 @@ import 'package:screenshots/src/daemon_client.dart';
 import 'package:tool_base/tool_base.dart';
 import 'package:tool_mobile/tool_mobile.dart';
 import 'package:yaml/yaml.dart';
+
 import 'context_runner.dart';
 import 'globals.dart';
 
@@ -107,10 +108,10 @@ String getHighestIosVersion(Map iOSVersions) {
   return iOSVersionName;
 }
 
-/// Create list of avds,
-List<String> getAvdNames() {
-  return cmd([getEmulatorPath(androidSdk), '-list-avds']).split('\n');
-}
+///// Create list of avds,
+//List<String> getAvdNames() {
+//  return cmd([getEmulatorPath(androidSdk), '-list-avds']).split('\n');
+//}
 
 ///// Get the highest available avd version for the android emulator.
 //String getHighestAVD(String deviceName) {
@@ -172,43 +173,109 @@ String getAndroidDeviceLocale(String deviceId) {
 /// Returns locale of simulator with udid [udId].
 String getIosSimulatorLocale(String udId) {
   final env = platform.environment;
-  final settingsPath =
+  final globalPreferencesPath =
       '${env['HOME']}/Library/Developer/CoreSimulator/Devices/$udId/data/Library/Preferences/.GlobalPreferences.plist';
-  final localeInfo = cnv
-      .jsonDecode(cmd(['plutil', '-convert', 'json', '-o', '-', settingsPath]));
+
+  // create file if missing (iOS 13)
+  final globalPreferences = fs.file(globalPreferencesPath);
+  if (!globalPreferences.existsSync()) {
+    final contents = '''
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>AKLastIDMSEnvironment</key>
+	<integer>0</integer>
+	<key>AddingEmojiKeybordHandled</key>
+	<true/>
+	<key>AppleITunesStoreItemKinds</key>
+	<array>
+		<string>itunes-u</string>
+		<string>movie</string>
+		<string>album</string>
+		<string>ringtone</string>
+		<string>software-update</string>
+		<string>booklet</string>
+		<string>tone</string>
+		<string>music-video</string>
+		<string>tv-episode</string>
+		<string>tv-season</string>
+		<string>song</string>
+		<string>podcast</string>
+		<string>software</string>
+		<string>audiobook</string>
+		<string>podcast-episode</string>
+		<string>wemix</string>
+		<string>eBook</string>
+		<string>mix</string>
+		<string>artist</string>
+		<string>document</string>
+	</array>
+	<key>AppleKeyboards</key>
+	<array>
+		<string>en_US@sw=QWERTY;hw=Automatic</string>
+		<string>emoji@sw=Emoji</string>
+		<string>en_US@sw=QWERTY;hw=Automatic</string>
+	</array>
+	<key>AppleKeyboardsExpanded</key>
+	<integer>1</integer>
+	<key>AppleLanguages</key>
+	<array>
+		<string>en</string>
+	</array>
+	<key>AppleLanguagesDidMigrate</key>
+	<string>15C107</string>
+	<key>AppleLocale</key>
+	<string>en_US</string>
+	<key>ApplePasscodeKeyboards</key>
+	<array>
+		<string>en_US@sw=QWERTY;hw=Automatic</string>
+		<string>emoji@sw=Emoji</string>
+		<string>en_US@sw=QWERTY;hw=Automatic</string>
+	</array>
+	<key>PKKeychainVersionKey</key>
+	<integer>4</integer>
+</dict>
+</plist>
+    ''';
+    globalPreferences.writeAsStringSync(contents);
+    cmd(['plutil', '-convert', 'binary1', globalPreferences.path]);
+  }
+  final localeInfo = cnv.jsonDecode(
+      cmd(['plutil', '-convert', 'json', '-o', '-', globalPreferencesPath]));
   final locale = localeInfo['AppleLocale'];
   return locale;
 }
 
-/// Get android emulator id from a running emulator with id [deviceId].
-/// Returns emulator id as [String].
-String getAndroidEmulatorId(String deviceId) {
-  // get name of avd of running emulator
-  return cmd([getAdbPath(androidSdk), '-s', deviceId, 'emu', 'avd', 'name'])
-      .split('\r\n')
-      .map((line) => line.trim())
-      .first;
-}
-
-/// Find android device id with matching [emulatorId].
-/// Returns matching android device id as [String].
-String findAndroidDeviceId(String emulatorId) {
-  /// Get the list of running android devices by id.
-  List<String> getAndroidDeviceIds() {
-    return cmd([getAdbPath(androidSdk), 'devices'])
-        .trim()
-        .split('\n')
-        .sublist(1) // remove first line
-        .map((device) => device.split('\t').first)
-        .toList();
-  }
-
-  final devicesIds = getAndroidDeviceIds();
-  if (devicesIds.isEmpty) return null;
-  return devicesIds.firstWhere(
-      (deviceId) => emulatorId == getAndroidEmulatorId(deviceId),
-      orElse: () => null);
-}
+///// Get android emulator id from a running emulator with id [deviceId].
+///// Returns emulator id as [String].
+//String getAndroidEmulatorId(String deviceId) {
+//  // get name of avd of running emulator
+//  return cmd([getAdbPath(androidSdk), '-s', deviceId, 'emu', 'avd', 'name'])
+//      .split('\r\n')
+//      .map((line) => line.trim())
+//      .first;
+//}
+//
+///// Find android device id with matching [emulatorId].
+///// Returns matching android device id as [String].
+//String findAndroidDeviceId(String emulatorId) {
+//  /// Get the list of running android devices by id.
+//  List<String> getAndroidDeviceIds() {
+//    return cmd([getAdbPath(androidSdk), 'devices'])
+//        .trim()
+//        .split('\n')
+//        .sublist(1) // remove first line
+//        .map((device) => device.split('\t').first)
+//        .toList();
+//  }
+//
+//  final devicesIds = getAndroidDeviceIds();
+//  if (devicesIds.isEmpty) return null;
+//  return devicesIds.firstWhere(
+//      (deviceId) => emulatorId == getAndroidEmulatorId(deviceId),
+//      orElse: () => null);
+//}
 
 ///// Stop an android emulator.
 //Future stopAndroidEmulator(String deviceId, String stagingDir) async {
@@ -300,8 +367,11 @@ DaemonEmulator findEmulator(
     List<DaemonEmulator> emulators, String emulatorName) {
   // find highest by avd version number
   emulators.sort(emulatorComparison);
+  // todo: fix find for example 'Nexus_6_API_28' and Nexus_6P_API_28'
   return emulators.lastWhere(
-      (emulator) => emulator.id.contains(emulatorName.replaceAll(' ', '_')),
+      (emulator) => emulator.id
+          .toUpperCase()
+          .contains(emulatorName.toUpperCase().replaceAll(' ', '_')),
       orElse: () => null);
 }
 
@@ -316,11 +386,6 @@ RunMode getRunModeEnum(String runMode) {
 /// Test for recordings in [recordDir].
 Future<bool> isRecorded(String recordDir) async =>
     !(await fs.directory(recordDir).list().isEmpty);
-
-/// Test for CI environment.
-bool isCI() {
-  return platform.environment['CI']?.toLowerCase() == 'true';
-}
 
 /// Convert a posix path to platform path (windows/posix).
 String toPlatformPath(String posixPath, {p.Context context}) {
@@ -357,6 +422,7 @@ String cmd(List<String> cmd,
   traceCommand(cmd, workingDirectory: workingDirectory);
   if (!silent) printStatus(result.stdout);
   if (result.exitCode != 0) {
+    if (silent) printError(result.stdout);
     printError(result.stderr);
     throw 'command failed: exitcode=${result.exitCode}, cmd=\'${cmd.join(" ")}\', workingDir=$workingDirectory';
   }
