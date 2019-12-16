@@ -3,8 +3,8 @@ language: generic
 env:
   global:
     - FLUTTER_CHANNEL=stable
-    - FLUTTER_VERSION=1.9.1+hotfix.6-${FLUTTER_CHANNEL}
-    - DART_VERSION=2.5.0 # for unit tests
+    - FLUTTER_VERSION=1.12.13+hotfix.5-${FLUTTER_CHANNEL}
+    - DART_VERSION=2.7.0 # for unit tests
 
 matrix:
   fast_finish: true
@@ -43,7 +43,7 @@ jobs:
         - pub run test test/all_tests.dart
         # install image magick (already installed)
         # install coverage tool
-        - pub global activate coverage 0.13.3
+        - pub global activate coverage
 
       script:
         - script/code_coverage.sh
@@ -103,7 +103,9 @@ jobs:
         - flutter doctor -v
 
         # install ImageMagick
-        - brew install imagemagick &
+        # skip homebrew update
+        - export HOMEBREW_NO_AUTO_UPDATE=1
+        - brew install imagemagick
 
         # install most current (released or unreleased) Screenshots
         - pub global activate --source path .
@@ -154,8 +156,8 @@ jobs:
         - TOOLS=${ANDROID_HOME}/tools
         # PATH order is incredibly important. e.g. the 'emulator' script exists in more than one place!
         - PATH=${ANDROID_HOME}:${ANDROID_HOME}/emulator:${TOOLS}:${TOOLS}/bin:${ANDROID_HOME}/platform-tools:${PATH}
-        - FLUTTER_CHANNEL=stable
-        - FLUTTER_VERSION=1.9.1+hotfix.6-${FLUTTER_CHANNEL}
+#        - FLUTTER_CHANNEL=stable
+#        - FLUTTER_VERSION=1.9.1+hotfix.6-${FLUTTER_CHANNEL}
         - FLUTTER_HOME=${HOME}/flutter
         - PATH=${HOME}/.pub-cache/bin:${PATH}
         - PATH=${FLUTTER_HOME}/bin:${FLUTTER_HOME}/bin/cache/dart-sdk/bin:${PATH}

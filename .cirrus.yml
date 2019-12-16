@@ -13,7 +13,7 @@ unit_task:
   test_script:
     - pub run test test/all_tests.dart
   activate_coverage_script:
-    - pub global activate coverage 0.13.3
+    - pub global activate coverage
   coverage_test_script:
     - script/code_coverage.sh
 
@@ -29,6 +29,8 @@ ios_integration_task:
   simulators_json_script:
     - xcrun simctl list devices --json
   imagemagick_install_script:
+    # skip homebrew update
+    - export HOMEBREW_NO_AUTO_UPDATE=1
     - brew install imagemagick
     - convert -version || echo -n
   doctor_script: flutter doctor -v
