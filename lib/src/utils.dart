@@ -8,6 +8,7 @@ import 'package:screenshots/src/daemon_client.dart';
 import 'package:tool_base/tool_base.dart';
 import 'package:tool_mobile/tool_mobile.dart';
 import 'package:yaml/yaml.dart';
+import 'package:xml/xml.dart' as xml;
 
 import 'context_runner.dart';
 import 'globals.dart';
@@ -179,6 +180,7 @@ String getIosSimulatorLocale(String udId) {
   // create file if missing (iOS 13)
   final globalPreferences = fs.file(globalPreferencesPath);
   if (!globalPreferences.existsSync()) {
+    printStatus('Warning: creating default $globalPreferencesPath with locale en_US (for iOS 13)');
     final contents = '''
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -241,10 +243,11 @@ String getIosSimulatorLocale(String udId) {
     globalPreferences.writeAsStringSync(contents);
     cmd(['plutil', '-convert', 'binary1', globalPreferences.path]);
   }
-  final localeInfo = cnv.jsonDecode(
-      cmd(['plutil', '-convert', 'json', '-o', '-', globalPreferencesPath]));
-  final locale = localeInfo['AppleLocale'];
-  return locale;
+
+  // extract locale using xml (plutil json converter does not support dates #169)
+  final xmlDoc=
+      xml.parse(cmd(['plutil', '-extract', 'AppleLocale', 'xml1', '-o', '-', globalPreferences.path]));
+  return xmlDoc.findAllElements('string').first.text;
 }
 
 ///// Get android emulator id from a running emulator with id [deviceId].
@@ -422,7 +425,7 @@ String cmd(List<String> cmd,
   _traceCommand(cmd, workingDirectory: workingDirectory);
   if (!silent) printStatus(result.stdout);
   if (result.exitCode != 0) {
-    if (silent) printError(result.stdout);
+    printError(result.stdout);
     printError(result.stderr);
     throw 'command failed: exitcode=${result.exitCode}, cmd=\'${cmd.join(" ")}\', workingDir=$workingDirectory';
   }
@@ -433,6 +436,7 @@ String cmd(List<String> cmd,
 /// Run command and return exit code as [int].
 ///
 /// Allows failed exit code.
+/// Run in verbose mode to get stdout/stderr.
 int runCmd(List<String> cmd) {
   _traceCommand(cmd);
   final result = processManager.runSync(cmd);

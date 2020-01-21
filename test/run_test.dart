@@ -295,11 +295,19 @@ main() {
                 ''',
                 ''));
         final callPlutilEnUS = Call(
-            'plutil -convert json -o - //Library/Developer/CoreSimulator/Devices/$simulatorID/data/Library/Preferences/.GlobalPreferences.plist',
-            ProcessResult(0, 0, '{"AppleLocale":"$locale1"}', ''));
+            'plutil -extract AppleLocale xml1 -o - //Library/Developer/CoreSimulator/Devices/$simulatorID/data/Library/Preferences/.GlobalPreferences.plist',
+            ProcessResult(0, 0, '''<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<string>$locale1</string>
+</plist>''', ''));
         final callPlutilFrCA = Call(
-            'plutil -convert json -o - //Library/Developer/CoreSimulator/Devices/$simulatorID/data/Library/Preferences/.GlobalPreferences.plist',
-            ProcessResult(0, 0, '{"AppleLocale":"$locale2"}', ''));
+            'plutil -extract AppleLocale xml1 -o - //Library/Developer/CoreSimulator/Devices/$simulatorID/data/Library/Preferences/.GlobalPreferences.plist',
+            ProcessResult(0, 0, '''<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<string>$locale2</string>
+</plist>''', ''));
         String adbPath = initAdbPath();
         final androidEnUSLocaleCall = Call('$adbPath -s $deviceId shell getprop persist.sys.locale',
             ProcessResult(0, 0, '$locale1', ''));

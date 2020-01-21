@@ -9,8 +9,6 @@ import 'package:tool_base/tool_base.dart';
 import 'package:tool_base_test/tool_base_test.dart';
 import 'package:tool_mobile/tool_mobile.dart';
 
-import 'src/common.dart';
-
 class FakeAndroidSDK extends Fake implements AndroidSdk {
   @override
   String get adbPath => 'path to adb';
@@ -49,24 +47,29 @@ main() {
       });
 
       testUsingContext('getIosSimulatorLocale', () {
+        final xml = '''
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<string>en_US</string>
+</plist>        
+        ''';
         when(fs.file(any)).thenReturn(mockFile);
         when(mockFile.existsSync()).thenReturn(false);
         when(fs.path).thenReturn(Context());
         fakeProcessManager.calls = [
           Call('plutil -convert binary1 null', null),
           Call(
-              'plutil -convert json -o - /Library/Developer/CoreSimulator/Devices/udid/data/Library/Preferences/.GlobalPreferences.plist',
-              ProcessResult(0, 0, '{"AppleLocale":"en_US"}', '')),
+              'plutil -extract AppleLocale xml1 -o - null',
+              ProcessResult(0, 0, xml, '')),
         ];
         final result = getIosSimulatorLocale('udid');
         expect(result, 'en_US');
+        fakeProcessManager.verifyCalls();
       }, overrides: <Type, Generator>{
         FileSystem: () => mockFileSystem,
         ProcessManager: () => fakeProcessManager,
-        Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
-          ..environment = {
-            'HOME': ''
-          },    });
+      });
     });
 
     group('not in context', () {

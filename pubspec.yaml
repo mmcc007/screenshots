@@ -21,6 +21,7 @@ dependencies:
   tool_mobile: ^1.9.5
 #  tool_mobile:
 #    path: ../tool_mobile
+  xml: ^3.5.0
 
 dev_dependencies:
   test: ^1.5.1+1
