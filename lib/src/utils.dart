@@ -425,12 +425,13 @@ String cmd(List<String> cmd,
       final result = processManager.runSync(cmd, workingDirectory: workingDirectory, runInShell: true);
       if(trace) _traceCommand(cmd, workingDirectory: workingDirectory);
       if (result.exitCode != 0) {
-        error = StdoutException(result.stdout, OSError(result.stderr, result.exitCode));
-        throw error;
+        throw StdoutException(result.stdout, OSError(result.stderr, result.exitCode));
       }
       // return stdout
       return result.stdout;
     } on StdoutException catch (e) {
+      error = e;
+      if(!retry) rethrow;
       sleep(Duration(seconds: 5));
     }
   }
