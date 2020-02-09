@@ -131,7 +131,7 @@ Future prefixFilesInDir(String dirPath, String prefix) async {
   await for (final file
       in fs.directory(dirPath).list(recursive: false, followLinks: false)) {
     await file
-        .rename(p.dirname(file.path) + '/' + prefix + p.basename(file.path));
+        .rename(p.dirname(file.path) + '/' + prefix + p.basenameWithoutExtension(p.basenameWithoutExtension(file.path)) + '.$kImageExtension');
   }
 }
 
@@ -416,10 +416,10 @@ Future<bool> isEmulatorPath() async {
 
 /// Run command and return stdout as [string].
 String cmd(List<String> cmd,
-    {String workingDirectory, bool silent = true}) {
+    {String workingDirectory, bool silent = true, bool trace = true}) {
   final result = processManager.runSync(cmd,
       workingDirectory: workingDirectory, runInShell: true);
-  _traceCommand(cmd, workingDirectory: workingDirectory);
+  if(trace) _traceCommand(cmd, workingDirectory: workingDirectory);
   if (!silent) printStatus(result.stdout);
   if (result.exitCode != 0) {
     if (silent) printError(result.stdout);

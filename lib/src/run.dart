@@ -347,7 +347,13 @@ class Screenshots {
               // store env for later use by tests
               // ignore: invalid_use_of_visible_for_testing_member
               await config.storeEnv(
-                  screens, configDeviceName, locale, deviceType, orientation);
+                  screens,
+                  configDeviceName,
+                  locale,
+                  deviceType,
+                  orientation,
+                  getAdbPath(androidSdk),
+                  deviceId);
 
               // run tests and process images
               await runProcessTests(
@@ -359,6 +365,14 @@ class Screenshots {
               );
             }
           } else {
+            await config.storeEnv(
+              screens,
+              configDeviceName,
+              locale,
+              deviceType,
+              null,
+              getAdbPath(androidSdk),
+              deviceId);
             await runProcessTests(
               configDeviceName,
               locale,

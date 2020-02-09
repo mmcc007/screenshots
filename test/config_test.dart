@@ -188,6 +188,8 @@ main() {
       final env = {
         'screen_size': '1440x2560',
         'locale': 'en_US',
+        'adb_path': 'adb',
+        'adb_device_id': 'emulator-000',
         'device_name': 'Nexus 6P',
         'device_type': 'android',
         'orientation': orientation
@@ -199,7 +201,9 @@ main() {
           env['device_name'],
           env['locale'],
           getEnumFromString(DeviceType.values, env['device_type']),
-          getEnumFromString(Orientation.values, orientation));
+          getEnumFromString(Orientation.values, orientation),
+          env['adb_path'], 
+          env['adb_device_id']);
 
       // called by test
       // simulate no screenshots available
