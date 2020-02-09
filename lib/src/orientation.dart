@@ -39,7 +39,7 @@ void changeDeviceOrientation(DeviceType deviceType, Orientation orientation,
         'system',
         'user_rotation',
         androidOrientations[_orientation]
-      ]);
+      ], retry: true);
       break;
     case DeviceType.ios:
       // requires permission when run for first time
