@@ -135,7 +135,6 @@ android_integration_task:
     - adb shell getprop ro.build.version.release # '9' (emulator)
     - adb shell getprop ro.build.version.sdk # '28' (emulator))
     - adb shell getprop
-    - sleep 5 # Wait 5 seconds for android adb services like 'settings' to come up
 #  logcat_background_script: adb logcat -e flutter\|Observatory *:I
   logcat_background_script: adb logcat -e flutter\|Observatory
   doctor_script:
