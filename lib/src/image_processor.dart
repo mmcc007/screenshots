@@ -66,7 +66,7 @@ class ImageProcessor {
           printStatus('Warning: no screenshots found in $screenshotsDir');
         }
         for (final screenshotPath in screenshotPaths) {
-          if(p.basenameWithoutExtension(screenshotPath.path).endsWith('.driver')){
+          if(!p.basenameWithoutExtension(screenshotPath.path).endsWith('.adb')){
             // add status bar for each screenshot
             await overlay(
                 _config.stagingDir, screenResources, screenshotPath.path);
