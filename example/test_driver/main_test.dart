@@ -28,27 +28,29 @@ void main() {
     });
 
     test('tap on the floating action button; verify counter', () async {
-      // Finds the floating action button (fab) to tap on
-      SerializableFinder fab =
-          find.byTooltip(localizations['counterIncrementButtonTooltip']);
+      // Use unsynchronized FlutterDriver.
+      // This prevents timeouts when there is an infinite amount of pending frames.
+      await driver.runUnsynchronized(() async {
+        // Finds the floating action button (fab) to tap on
+        SerializableFinder fab =
+            find.byTooltip(localizations['counterIncrementButtonTooltip']);
+                  // Wait for the floating action button to appear
+        await driver.waitFor(fab);
 
-      // Wait for the floating action button to appear
-      await driver.waitFor(fab);
+        // take screenshot before number is incremented
+        await screenshot(driver, config, '0');
 
-      // take screenshot before number is incremented
-      await screenshot(driver, config, '0');
+        // Tap on the fab
+        await driver.tap(fab);
 
-      // Tap on the fab
-      await driver.tap(fab);
+        // Wait for text to change to the desired value
+        await driver.waitFor(find.text('1'));
 
-      // Wait for text to change to the desired value
-      await driver.waitFor(find.text('1'));
-
-      // take screenshot after number is incremented
-      await screenshot(driver, config, '1');
-
+        // take screenshot after number is incremented
+        await screenshot(driver, config, '1');
+      });
       // increase timeout from 30 seconds for testing
       // on slow running emulators in cloud
-    }, timeout: Timeout(Duration(seconds: 120)));
+      }, timeout: Timeout(Duration(seconds: 120)));
   });
 }
