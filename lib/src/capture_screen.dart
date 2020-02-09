@@ -43,8 +43,12 @@ Future _takeScreenshotUsingAdb(File destination, String adbLocation, String devi
     utils.cmd([adbLocation, '-s', deviceId, 'shell', 'settings', 'put', 'global', 'sysui_demo_allowed', '1'], trace: false);
     utils.cmd([adbLocation, '-s', deviceId, 'shell', 'am', 'broadcast', '-a', 'com.android.systemui.demo', '-e', 'command', 'enter'], trace: false);
     utils.cmd([adbLocation, '-s', deviceId, 'shell', 'am', 'broadcast', '-a', 'com.android.systemui.demo', '-e', 'command', 'clock', '-e', 'hhmm', '1600'], trace: false);
+    utils.cmd([adbLocation, '-s', deviceId, 'shell', 'am', 'broadcast', '-a', 'com.android.systemui.demo', '-e', 'command', 'battery', '-e', 'plugged', 'false'], trace: false);
+    utils.cmd([adbLocation, '-s', deviceId, 'shell', 'am', 'broadcast', '-a', 'com.android.systemui.demo', '-e', 'command', 'battery', '-e', 'level', '100'], trace: false);
+    utils.cmd([adbLocation, '-s', deviceId, 'shell', 'am', 'broadcast', '-a', 'com.android.systemui.demo', '-e', 'command', 'network', '-e', 'wifi', 'show', '-e', 'level', '4'], trace: false);
+    utils.cmd([adbLocation, '-s', deviceId, 'shell', 'am', 'broadcast', '-a', 'com.android.systemui.demo', '-e', 'command', 'network', '-e', 'mobile', 'show', '-e', 'datatype', 'none', '-e', 'level', '4'], trace: false);
     utils.cmd([adbLocation, '-s', deviceId, 'shell', 'am', 'broadcast', '-a', 'com.android.systemui.demo', '-e', 'command', 'notifications', '-e', 'visible', 'false'], trace: false);
-    utils.cmd([adbLocation, '-s', deviceId, 'shell', 'settings', 'put', 'global', 'sysui_demo_allowed', '1'], trace: false);
+    sleep(Duration(milliseconds: 500)); // Wait for statusbar animations to complete
 
     // Take Screenshot
     final screenshotResult = await Process.run(adbLocation, ['-s', deviceId, 'exec-out', 'screencap', '-p'], stdoutEncoding: null);
