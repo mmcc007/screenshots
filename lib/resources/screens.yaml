@@ -57,6 +57,7 @@ ios:
     devices:
       - iPhone XS Max
       - iPhone Xs Max
+      - iPhone 11 Pro Max
 #  7.9inches:
 #    devices:
 #      - iPad Mini
