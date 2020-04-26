@@ -156,7 +156,9 @@ android:
     destName: sevenInch
     devices:
       - default seven inch
+      - Nexus 7
   default tenInch:
     destName: tenInch
     devices:
       - default ten inch
+      - Nexus 10
