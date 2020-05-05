@@ -3,8 +3,8 @@ language: generic
 env:
   global:
     - FLUTTER_CHANNEL=stable
-    - FLUTTER_VERSION=1.9.1+hotfix.6-${FLUTTER_CHANNEL}
-    - DART_VERSION=2.5.0 # for unit tests
+    - FLUTTER_VERSION=1.12.13+hotfix.5-${FLUTTER_CHANNEL}
+    - DART_VERSION=2.7.0 # for unit tests
 
 matrix:
   fast_finish: true
@@ -82,9 +82,14 @@ jobs:
 
       install:
         - flutter doctor -v
+        - flutter precache
+        - sh -c "ios-deploy -c" || echo "no attached devices"
+
+
         # install ImageMagick
         - export HOMEBREW_NO_AUTO_UPDATE=1
         - brew install imagemagick
+
         # install most current (released or unreleased) Screenshots
         - pub global activate --source path .
 
@@ -125,8 +130,8 @@ jobs:
       cache:
         directories:
           - ${HOME}/.pub-cache
-#          - ${HOME}/.gradle/caches/
-#          - ${HOME}/.gradle/wrapper/
+          - ${HOME}/.gradle/caches/
+          - ${HOME}/.gradle/wrapper/
 
       before_install:
         # envs
@@ -140,11 +145,12 @@ jobs:
         - TOOLS=${ANDROID_HOME}/tools
         # PATH order is incredibly important. e.g. the 'emulator' script exists in more than one place!
         - PATH=${ANDROID_HOME}:${ANDROID_HOME}/emulator:${TOOLS}:${TOOLS}/bin:${ANDROID_HOME}/platform-tools:${PATH}
-        - FLUTTER_CHANNEL=stable
-        - FLUTTER_VERSION=1.9.1+hotfix.6-${FLUTTER_CHANNEL}
+#        - FLUTTER_CHANNEL=stable
+#        - FLUTTER_VERSION=1.9.1+hotfix.6-${FLUTTER_CHANNEL}
         - FLUTTER_HOME=${HOME}/flutter
         - PATH=${HOME}/.pub-cache/bin:${PATH}
         - PATH=${FLUTTER_HOME}/bin:${FLUTTER_HOME}/bin/cache/dart-sdk/bin:${PATH}
+        - EMULATOR_NAME=NEXUS_6P_API_28
 
         - java -version
 
@@ -187,7 +193,7 @@ jobs:
 
         # Create an Android emulator
         #  - echo no | avdmanager --verbose create avd --force -n test -k "system-images;android-$API;$GOO;$ABI" -c 10M
-        - echo no | avdmanager --verbose create avd --force -n test -k "system-images;android-$API;$GOO;$ABI"
+        - echo no | avdmanager --verbose create avd --force -n $EMULATOR_NAME -k "system-images;android-$API;$GOO;$ABI"
         #  - EMU_PARAMS="
         #      -verbose
         #      -no-snapshot
@@ -199,12 +205,13 @@ jobs:
         #      -selinux permissive
         #      -qemu -m 2048"
         - EMU_PARAMS="
-          -avd test
+          -avd $EMULATOR_NAME
           -no-window
           -no-audio
+          -verbose
           "
-#        - EMU_COMMAND="emulator"
-        - EMU_COMMAND="emulator-headless"
+#        - EMU_COMMAND="emulator-headless"
+        - EMU_COMMAND="emulator"
         # This double "sudo" monstrosity is used to have Travis execute the
         # emulator with its new group permissions and help preserve the rule
         # of least privilege.

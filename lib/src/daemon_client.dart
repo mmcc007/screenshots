@@ -216,7 +216,7 @@ List getIosDevices() {
           .trim()
           .split('\n')
           .sublist(1);
-  if (iosDeployDevices.isEmpty || iosDeployDevices[0] == noAttachedDevices) {
+  if (iosDeployDevices[0] == noAttachedDevices) {
     return [];
   }
   return iosDeployDevices.map((line) {

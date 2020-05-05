@@ -390,6 +390,56 @@ main() {
       expect(emulator1, isNot(equals(device1)));
     });
   });
+
+  group('getIosDevices', (){
+    FakeProcessManager fakeProcessManager;
+    FakePlatform fakePlatform;
+
+    setUp(() {
+      fakeProcessManager = FakeProcessManager();
+      fakePlatform = FakePlatform.fromPlatform(const LocalPlatform())
+        ..operatingSystem = 'macos';
+    });
+
+    testUsingContext('no real device',(){
+      fakeProcessManager.calls = [
+        Call(
+            'sh -c ios-deploy -c || echo "no attached devices"',
+            ProcessResult(
+                0,
+                0,
+                '[....] Waiting up to 5 seconds for iOS device to be connected\nno attached devices',
+                '')),
+      ];
+      final iosDevices = getIosDevices();
+      expect(iosDevices, isEmpty);
+      fakeProcessManager.verifyCalls();
+    }, overrides: <Type, Generator>{
+      ProcessManager: () => fakeProcessManager,
+      Platform: () => fakePlatform,
+    });
+
+    testUsingContext('real device',(){
+      final uuid='uuid';
+      final model = 'model';
+      final expected = [{'id': uuid, 'model': model}];
+      fakeProcessManager.calls = [
+        Call(
+            'sh -c ios-deploy -c || echo "no attached devices"',
+            ProcessResult(
+                0,
+                0,
+                "[....] Waiting up to 5 seconds for iOS device to be connected\n[....] Found $uuid (N69uAP, $model, iphoneos, arm64) a.k.a. 'My iPhone' connected through USB.",
+                '')),
+      ];
+      final iosDevices = getIosDevices();
+      expect(iosDevices, expected);
+      fakeProcessManager.verifyCalls();
+    }, overrides: <Type, Generator>{
+      ProcessManager: () => fakeProcessManager,
+      Platform: () => fakePlatform,
+    });
+  });
 }
 
 class MockProcess extends Mock implements Process {}

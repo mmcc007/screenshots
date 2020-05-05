@@ -24,12 +24,15 @@ ios_integration_task:
   pub_cache:
     folder: ~/.pub-cache
   simulators_script:
+    - sh -c "ios-deploy -c" || echo "no attached devices"
     - xcrun simctl list devicetypes
     - xcrun simctl list runtimes
   simulators_json_script:
     - xcrun simctl list devices --json
   imagemagick_install_script:
-    - brew install imagemagick
+    # skip homebrew update
+    - export HOMEBREW_NO_AUTO_UPDATE=1
+    - brew install imagemagick || echo -n # ignore error in auto-update
     - convert -version || echo -n
   doctor_script: flutter doctor -v
   activate_script: pub global activate --source path .
