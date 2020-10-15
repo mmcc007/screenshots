@@ -10,8 +10,9 @@ import 'package:screenshots/src/run.dart';
 import 'package:screenshots/src/screens.dart';
 import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart';
-import 'package:tool_base_test/tool_base_test.dart';
 
+import 'src/common_tools.dart';
+import 'src/context.dart';
 import 'src/mocks.dart';
 
 main() {
@@ -50,9 +51,11 @@ main() {
   });
 
   FakeProcessManager fakeProcessManager;
+  LocalPlatform localPlatform;
   MockDaemonClient mockDaemonClient;
 
   setUp(() async {
+    localPlatform = LocalPlatform();
     fakeProcessManager = FakeProcessManager(stdinResults: _captureStdin);
     mockDaemonClient = MockDaemonClient();
     when(mockDaemonClient.emulators)
@@ -449,13 +452,14 @@ main() {
       }, skip: false, overrides: <Type, Generator>{
         DaemonClient: () => mockDaemonClient,
         ProcessManager: () => fakeProcessManager,
-        Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
-          ..environment = {
-//            'CI': 'false',
-//            'HOME': LocalPlatform().environment['HOME']
-            'HOME': memoryFileSystem.currentDirectory.path
-          }
-          ..operatingSystem = 'macos',
+        Platform: () => FakePlatform(
+              operatingSystem: 'macos',
+              environment: {
+//                'CI': 'false',
+//                'HOME': LocalPlatform().environment['HOME']
+                'HOME': memoryFileSystem.currentDirectory.path
+              },
+            ),
         Logger: () => BufferLogger(),
         FileSystem: () => memoryFileSystem,
       });
@@ -534,8 +538,9 @@ main() {
     }, skip: false, overrides: <Type, Generator>{
       DaemonClient: () => mockDaemonClient,
       ProcessManager: () => fakeProcessManager,
-      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
-        ..environment = {'CI': 'true'},
+      Platform: () => FakePlatform(
+          operatingSystem: localPlatform.operatingSystem,
+          environment: {'CI': 'true'}),
       Logger: () => BufferLogger(),
     });
   });
