@@ -60,11 +60,11 @@ main() {
 
   group('daemon client', () {
     const streamPeriod = 150;
-    FakePlatform fakePlatform;
-
-    setUp(() {
-      fakePlatform = FakePlatform.fromPlatform(const LocalPlatform());
+    final linux = FakePlatform(operatingSystem: 'linux', environment: {});
+    final linuxCi = FakePlatform(operatingSystem: 'linux', environment: {
+      'CI': 'true',
     });
+    final macos = FakePlatform(operatingSystem: 'macos', environment: {});
 
     group('mocked process', () {
       MockProcessManager mockProcessManager;
@@ -92,7 +92,6 @@ main() {
       testUsingContext('start/stop', () async {
         DaemonClient daemonClient = DaemonClient();
 
-        fakePlatform.operatingSystem = 'linux';
         List<int> getLine(int i) {
           final lines = <List<int>>[
             utf8.encode('Starting device daemon...\n'),
@@ -119,15 +118,13 @@ main() {
         verify(mockProcess.exitCode).called(1);
       }, skip: false, overrides: <Type, Generator>{
         ProcessManager: () => mockProcessManager,
-        Platform: () => fakePlatform,
+        Platform: () => linux,
 //      Logger: () => VerboseLogger(StdoutLogger()),
       });
 
       testUsingContext('get emulators and devices, and launch emulator',
           () async {
         final daemonClient = DaemonClient();
-
-        fakePlatform.operatingSystem = 'linux';
 
         // responses from daemon (called sequentially)
         List<int> getLine(int i) {
@@ -179,7 +176,7 @@ main() {
         verify(mockProcess.exitCode).called(1);
       }, skip: false, overrides: <Type, Generator>{
         ProcessManager: () => mockProcessManager,
-        Platform: () => fakePlatform,
+        Platform: () => linux,
 //      Logger: () => VerboseLogger(StdoutLogger()),
       });
     });
@@ -199,8 +196,6 @@ main() {
 
       testUsingContext('real devices (iPhone and Android)', () async {
         final daemonClient = DaemonClient();
-
-        fakePlatform.operatingSystem = 'macos';
 
         // responses from daemon (called sequentially)
         List<int> getLine(int i) {
@@ -254,14 +249,13 @@ main() {
         fakeProcessManager.verifyCalls();
       }, skip: false, overrides: <Type, Generator>{
         ProcessManager: () => fakeProcessManager,
-        Platform: () => fakePlatform,
+        Platform: () => macos,
 //        Logger: () => VerboseLogger(StdoutLogger()),
       });
     });
 
     group('in CI', () {
       FakeProcessManager fakeProcessManager;
-      FakePlatform fakePlatform;
       final List<String> stdinCaptured = <String>[];
 
       void _captureStdin(String item) {
@@ -271,14 +265,9 @@ main() {
       setUp(() async {
         fakeProcessManager =
             FakeProcessManager(stdinResults: _captureStdin, isPeriodic: true);
-        fakePlatform = FakePlatform.fromPlatform(const LocalPlatform());
       });
 
       testUsingContext('bad android emulator hack', () async {
-        fakePlatform.environment = {
-          'CI': 'true',
-        };
-        fakePlatform.operatingSystem = 'linux';
         final id = 'device id';
         final name = 'device name';
         final emulator = false;
@@ -345,7 +334,7 @@ main() {
         fakeProcessManager.verifyCalls();
       }, overrides: <Type, Generator>{
         ProcessManager: () => fakeProcessManager,
-        Platform: () => fakePlatform,
+        Platform: () => linuxCi,
 //        Logger: () => VerboseLogger(StdoutLogger()),
       });
     });
