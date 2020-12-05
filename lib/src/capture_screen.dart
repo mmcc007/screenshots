@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'config.dart';
 import 'globals.dart';
+import 'utils.dart' as utils;
 
 /// Called by integration test to capture images.
 Future screenshot(final driver, Config config, String name,
@@ -11,17 +12,58 @@ Future screenshot(final driver, Config config, String name,
     bool waitUntilNoTransientCallbacks = true}) async {
   if (config.isScreenShotsAvailable) {
     // todo: auto-naming scheme
-    if (waitUntilNoTransientCallbacks) {
-      await driver.waitUntilNoTransientCallbacks(timeout: timeout);
+    final testDir = '${config.stagingDir}/$kTestScreenshotsDir';
+    final fileLocationAdb = await File('$testDir/$name.adb.$kImageExtension');
+    final fileLocationDriver = await File('$testDir/$name.driver.$kImageExtension');
+
+    final env = await config.screenshotsEnv;   
+    if(env.containsKey('adb_path') && env.containsKey('adb_device_id') && env.containsKey('device_type') && env['device_type'] == 'android'){
+      try {
+        await _takeScreenshotUsingAdb(fileLocationAdb, env['adb_path'], env['adb_device_id']);
+      } catch (e) {
+        if(!silent) print('Warning: Failed to take screenshot $name using adb. Using FlutterDriver as fallback method.');
+        if(await fileLocationAdb.exists()) await fileLocationAdb.delete();
+        await _takeScreenshotUsingFlutterDriver(fileLocationDriver, driver, timeout, waitUntilNoTransientCallbacks);
+      }
+    }else{
+      await _takeScreenshotUsingFlutterDriver(fileLocationDriver, driver, timeout, waitUntilNoTransientCallbacks);
     }
 
-    final pixels = await driver.screenshot();
-    final testDir = '${config.stagingDir}/$kTestScreenshotsDir';
-    final file =
-        await File('$testDir/$name.$kImageExtension').create(recursive: true);
-    await file.writeAsBytes(pixels);
-    if (!silent) print('Screenshot $name created');
+    if (!silent) print('Screenshot $name created using ${await fileLocationAdb.exists() ? "adb" : "flutter driver"}');
   } else {
     if (!silent) print('Warning: screenshot $name not created');
   }
+}
+
+Future _takeScreenshotUsingAdb(File destination, String adbLocation, String deviceId) async {
+  try {
+    await destination.create(recursive: true);
+    
+    // Activate Demo Mode
+    utils.cmd([adbLocation, '-s', deviceId, 'shell', 'settings', 'put', 'global', 'sysui_demo_allowed', '1'], trace: false);
+    utils.cmd([adbLocation, '-s', deviceId, 'shell', 'am', 'broadcast', '-a', 'com.android.systemui.demo', '-e', 'command', 'enter'], trace: false);
+    utils.cmd([adbLocation, '-s', deviceId, 'shell', 'am', 'broadcast', '-a', 'com.android.systemui.demo', '-e', 'command', 'clock', '-e', 'hhmm', '1600'], trace: false);
+    utils.cmd([adbLocation, '-s', deviceId, 'shell', 'am', 'broadcast', '-a', 'com.android.systemui.demo', '-e', 'command', 'battery', '-e', 'plugged', 'false'], trace: false);
+    utils.cmd([adbLocation, '-s', deviceId, 'shell', 'am', 'broadcast', '-a', 'com.android.systemui.demo', '-e', 'command', 'battery', '-e', 'level', '100'], trace: false);
+    utils.cmd([adbLocation, '-s', deviceId, 'shell', 'am', 'broadcast', '-a', 'com.android.systemui.demo', '-e', 'command', 'network', '-e', 'wifi', 'show', '-e', 'level', '4'], trace: false);
+    utils.cmd([adbLocation, '-s', deviceId, 'shell', 'am', 'broadcast', '-a', 'com.android.systemui.demo', '-e', 'command', 'network', '-e', 'mobile', 'show', '-e', 'datatype', 'none', '-e', 'level', '4'], trace: false);
+    utils.cmd([adbLocation, '-s', deviceId, 'shell', 'am', 'broadcast', '-a', 'com.android.systemui.demo', '-e', 'command', 'notifications', '-e', 'visible', 'false'], trace: false);
+    sleep(Duration(milliseconds: 500)); // Wait for statusbar animations to complete
+
+    // Take Screenshot
+    final screenshotResult = await Process.run(adbLocation, ['-s', deviceId, 'exec-out', 'screencap', '-p'], stdoutEncoding: null);
+    await destination.writeAsBytes(screenshotResult.stdout); 
+  } finally {
+    // Deactivate Demo Mode
+    utils.cmd([adbLocation, '-s', deviceId, 'shell', 'am', 'broadcast', '-a', 'com.android.systemui.demo', '-e', 'command', 'exit'], trace: false);
+  }
+}
+
+Future _takeScreenshotUsingFlutterDriver(File destination, driver, Duration timeout, bool waitUntilNoTransientCallbacks) async {
+  await destination.create(recursive: true);
+  if (waitUntilNoTransientCallbacks) {
+    await driver.waitUntilNoTransientCallbacks(timeout: timeout);
+  }
+  final pixels = await driver.screenshot();
+  await destination.writeAsBytes(pixels);
 }

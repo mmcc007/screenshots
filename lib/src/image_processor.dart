@@ -66,14 +66,16 @@ class ImageProcessor {
           printStatus('Warning: no screenshots found in $screenshotsDir');
         }
         for (final screenshotPath in screenshotPaths) {
-          // add status bar for each screenshot
-          await overlay(
-              _config.stagingDir, screenResources, screenshotPath.path);
-
-          if (deviceType == DeviceType.android) {
-            // add nav bar for each screenshot
-            await append(
+          if(!p.basenameWithoutExtension(screenshotPath.path).endsWith('.adb')){
+            // add status bar for each screenshot
+            await overlay(
                 _config.stagingDir, screenResources, screenshotPath.path);
+
+            if (deviceType == DeviceType.android) {
+              // add nav bar for each screenshot
+              await append(
+                  _config.stagingDir, screenResources, screenshotPath.path);
+            }
           }
 
           await frame(_config.stagingDir, screenProps, screenshotPath.path,

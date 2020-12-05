@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert' as cnv;
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:path/path.dart' as p;
 import 'package:process/process.dart';
@@ -131,7 +132,7 @@ Future prefixFilesInDir(String dirPath, String prefix) async {
   await for (final file
       in fs.directory(dirPath).list(recursive: false, followLinks: false)) {
     await file
-        .rename(p.dirname(file.path) + '/' + prefix + p.basename(file.path));
+        .rename(p.dirname(file.path) + '/' + prefix + p.basenameWithoutExtension(p.basenameWithoutExtension(file.path)) + '.$kImageExtension');
   }
 }
 
@@ -416,18 +417,27 @@ Future<bool> isEmulatorPath() async {
 
 /// Run command and return stdout as [string].
 String cmd(List<String> cmd,
-    {String workingDirectory, bool silent = true}) {
-  final result = processManager.runSync(cmd,
-      workingDirectory: workingDirectory, runInShell: true);
-  _traceCommand(cmd, workingDirectory: workingDirectory);
-  if (!silent) printStatus(result.stdout);
-  if (result.exitCode != 0) {
-    if (silent) printError(result.stdout);
-    printError(result.stderr);
-    throw 'command failed: exitcode=${result.exitCode}, cmd=\'${cmd.join(" ")}\', workingDir=$workingDirectory';
+    {String workingDirectory, bool silent = true, bool trace = true, bool retry = false, int retryAttempts = 5 }) {
+
+  StdoutException error = StdoutException('');
+  for (var i = 0; i < retryAttempts; i++) {
+    try {
+      final result = processManager.runSync(cmd, workingDirectory: workingDirectory, runInShell: true);
+      if(trace) _traceCommand(cmd, workingDirectory: workingDirectory);
+      if (result.exitCode != 0) {
+        throw StdoutException(result.stdout, OSError(result.stderr, result.exitCode));
+      }
+      // return stdout
+      return result.stdout;
+    } on StdoutException catch (e) {
+      error = e;
+      if(!retry) rethrow;
+      sleep(Duration(seconds: 5));
+    }
   }
-  // return stdout
-  return result.stdout;
+  if (silent) printError(error.message);
+  printError(error.osError.message);
+  throw 'command failed: exitcode=${error.osError.errorCode}, cmd=\'${cmd.join(" ")}\', workingDir=$workingDirectory';
 }
 
 /// Run command and return exit code as [int].

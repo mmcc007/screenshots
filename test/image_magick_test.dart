@@ -86,8 +86,7 @@ main() {
       fakeProcessManager.verifyCalls();
     }, overrides: <Type, Generator>{
       ProcessManager: () => fakeProcessManager,
-      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
-        ..operatingSystem = 'macos',
+      Platform: () => FakePlatform(operatingSystem: 'macos'),
     });
 
     testUsingContext('is installed on windows', () async {
@@ -97,8 +96,7 @@ main() {
       fakeProcessManager.verifyCalls();
     }, overrides: <Type, Generator>{
       ProcessManager: () => fakeProcessManager,
-      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
-        ..operatingSystem = 'windows',
+      Platform: () => FakePlatform(operatingSystem: 'windows'),
     });
 
     testUsingContext('is not installed on windows', () async {
@@ -110,8 +108,7 @@ main() {
       fakeProcessManager.verifyCalls();
     }, overrides: <Type, Generator>{
       ProcessManager: () => fakeProcessManager,
-      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
-        ..operatingSystem = 'windows',
+      Platform: () => FakePlatform(operatingSystem: 'windows'),
     });
   });
 

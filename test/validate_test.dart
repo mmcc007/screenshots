@@ -12,13 +12,15 @@ import 'src/context.dart';
 main() {
   group('validate', () {
     FakeProcessManager fakeProcessManager;
-    FakePlatform fakePlatform;
+    FakePlatform macos;
 
     setUp(() {
       fakeProcessManager = FakeProcessManager();
-      fakePlatform = FakePlatform.fromPlatform(const LocalPlatform())
-        ..operatingSystem = 'linux'
-        ..environment['CI'] = 'false';
+      macos = FakePlatform(
+        stdoutSupportsAnsi: false,
+        operatingSystem: 'macos',
+        environment: {'CI': 'false'},
+        );
     });
 
     final callListIosDevices = Call(
@@ -51,7 +53,6 @@ main() {
             ''));
 
     testUsingContext('pass on iOS with \'availability\'', () async {
-      fakePlatform.operatingSystem = 'macos';
       final configStr = '''
           tests:
             - example/test_driver/main.dart
@@ -78,7 +79,7 @@ main() {
     }, skip: false, overrides: <Type, Generator>{
       ProcessManager: () => fakeProcessManager,
 //      Logger: () => VerboseLogger(StdoutLogger()),
-      Platform: () => fakePlatform
+      Platform: () => macos
     });
 
     testUsingContext('pass on iOS with \'isAvailable\'', () async {
@@ -135,8 +136,7 @@ main() {
     }, skip: false, overrides: <Type, Generator>{
       ProcessManager: () => fakeProcessManager,
 //      Logger: () => VerboseLogger(StdoutLogger()),
-      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
-        ..operatingSystem = 'macos',
+      Platform: () => macos,
     });
 
     testUsingContext('getIosSimulators', () async {
@@ -151,7 +151,6 @@ main() {
     });
 
     testUsingContext('fail', () async {
-      fakePlatform.operatingSystem = 'macos';
       final BufferLogger logger = context.get<Logger>();
       final configStr = '''
           tests:
@@ -231,12 +230,11 @@ main() {
 //      expect(logger.errorText, isNot(contains('No device attached or simulator installed for device \'Bad ios phone\' in screenshots.yaml.')));
     }, skip: false, overrides: <Type, Generator>{
       Logger: () => BufferLogger(),
-      Platform: () => fakePlatform,
+      Platform: () => macos,
       ProcessManager: () => fakeProcessManager,
     });
 
     testUsingContext('show device guide', () async {
-      fakePlatform.operatingSystem = 'macos';
       final BufferLogger logger = context.get<Logger>();
       final screens = Screens();
       await screens.init();
@@ -298,7 +296,7 @@ main() {
       fakeProcessManager.verifyCalls();
     }, skip: false, overrides: <Type, Generator>{
       Logger: () => BufferLogger(),
-      Platform: () => fakePlatform,
+      Platform: () => macos,
       ProcessManager: () => fakeProcessManager,
     });
   });
