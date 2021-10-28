@@ -11,7 +11,7 @@ import 'package:tool_base/tool_base.dart';
 import 'package:tool_mobile/tool_mobile.dart';
 
 Future<T> runInContext<T>(
-  FutureOr<T> runner(), {
+  FutureOr<T> Function() runner, {
   Map<Type, Generator>? overrides,
 }) async {
   return await context.run<T>(

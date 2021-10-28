@@ -48,7 +48,7 @@ class Config {
 
   final String? configPath;
 
-  Map _configInfo = {};
+  Map<String, dynamic> _configInfo = {};
   Map<String, dynamic>? _screenshotsEnv;
   List<ConfigDevice>? _devices;
 
@@ -84,7 +84,7 @@ class Config {
 
   /// Check for active run type.
   /// Run types can only be one of [DeviceType].
-  isRunTypeActive(DeviceType runType) {
+  bool isRunTypeActive(DeviceType runType) {
     final deviceType = utils.getStringFromEnum(runType);
     return !(_configInfo['devices'][deviceType] == null ||
         _configInfo['devices'][deviceType].length == 0);
@@ -217,10 +217,7 @@ class ConfigDevice {
     this.isFramed,
     this.orientations,
     this.isBuild,
-  )   : assert(name != null),
-        assert(deviceType != null),
-        assert(isFramed != null),
-        assert(isBuild != null);
+  );
 
   @override
   bool operator ==(other) {

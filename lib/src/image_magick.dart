@@ -16,13 +16,16 @@ ImageMagick get im => context.get<ImageMagick>() ?? _kImageMagick;
 class ImageMagick {
   static const _kThreshold = 0.76;
   static const kDiffSuffix = '-diff';
+
 //const kThreshold = 0.5;
 
   // singleton
   static final ImageMagick _imageMagick = ImageMagick._internal();
+
   factory ImageMagick() {
     return _imageMagick;
   }
+
   ImageMagick._internal();
 
   ///
@@ -163,12 +166,14 @@ class ImageMagick {
   }
 }
 
-
 /// Check Image Magick is installed.
 Future<bool> isImageMagicInstalled() async {
   try {
     return await runInContext<bool>(() {
-      return runCmd(platform.isWindows ? ['magick', '-version'] : ['convert', '-version']) == 0;
+      var cmd =
+          platform.isWindows ? ['magick', '-version'] : ['convert', '-version'];
+
+      return runCmd(cmd) == 0;
     });
   } catch (e) {
     return false;

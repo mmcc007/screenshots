@@ -14,7 +14,7 @@ import 'context_runner.dart';
 import 'globals.dart';
 
 /// Parse a yaml file.
-Map parseYamlFile(String yamlPath) =>
+Map<String, dynamic> parseYamlFile(String yamlPath) =>
     jsonDecode(jsonEncode(loadYaml(fs.file(yamlPath).readAsStringSync())));
 
 /// Parse a yaml string.
@@ -446,7 +446,7 @@ int runCmd(List<String> cmd) {
 
 /// Trace a command.
 void _traceCommand(List<String> args, {String? workingDirectory}) {
-  final String argsText = args.join(' ');
+  final argsText = args.join(' ');
   if (workingDirectory == null) {
     printTrace('executing: $argsText');
   } else {
