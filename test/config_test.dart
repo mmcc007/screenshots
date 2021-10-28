@@ -2,7 +2,7 @@ import 'dart:io' as io;
 
 import 'package:screenshots/screenshots.dart';
 import 'package:screenshots/src/config.dart';
-import 'package:screenshots/src/orientation.dart';
+import 'package:screenshots/src/globals.dart';
 import 'package:screenshots/src/screens.dart';
 import 'package:screenshots/src/utils.dart';
 import 'package:test/test.dart';
@@ -70,7 +70,7 @@ void main() {
       expect(config.archiveDir, expectedArchive);
       expect(config.getDevice(expectedAndroidName), expectedAndroidDevice);
       expect(config.getDevice(expectedAndroidName), isNot(expectedIosDevice));
-      expect(config.deviceNames..sort(),
+      expect(config.devices.map((d) => d.name).toList()..sort(),
           equals([expectedAndroidName, expectedIosName]..sort()));
     });
 
@@ -167,7 +167,7 @@ void main() {
         frame: true
         ''';
       config = Config(configStr: configStr);
-      final device = config.getDevice(deviceName);
+      final device = config.getDevice(deviceName)!;
       expect(
           config.isFrameRequired(deviceName, device.orientations[0]), isTrue);
       expect(
@@ -182,20 +182,22 @@ void main() {
       ''';
       final config = Config(configStr: configStr);
       final screens = Screens();
+      var device = config.getDevice('Nexus 6P')!;
+      var screen = screens.getScreen(device.name)!;
       final orientation = 'Portrait';
 
       final env = {
         'screen_size': '1440x2560',
         'locale': 'en_US',
-        'device_name': 'Nexus 6P',
+        'device_name': device.name,
         'device_type': 'android',
         'orientation': orientation
       };
 
       // called by screenshots before test
       await config.storeEnv(
-          screens,
-          env['device_name']!,
+          screen,
+          device,
           env['locale']!,
           getEnumFromString(DeviceType.values, env['device_type']!),
           getEnumFromString(Orientation.values, orientation));

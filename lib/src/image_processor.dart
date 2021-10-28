@@ -37,21 +37,20 @@ class ImageProcessor {
   ///
   /// After processing, screenshots are handed off for upload via fastlane.
   Future<bool> process(
-    DeviceType deviceType,
-    String deviceName,
+    ConfigDevice device,
     String locale,
     Orientation? orientation,
     RunMode runMode,
     Archive? archive,
   ) async {
-    final screenProps = _screens.getScreen(deviceName);
+    final screenProps = _screens.getScreen(device.name);
     final screenshotsDir = '${_config.stagingDir}/$kTestScreenshotsDir';
     final screenshotPaths = fs.directory(screenshotsDir).listSync();
     if (screenProps == null) {
-      printStatus('Warning: \'$deviceName\' images will not be processed');
+      printStatus("Warning: '${device.name}' images will not be processed");
     } else {
       // add frame if required
-      if (_config.isFrameRequired(deviceName, orientation)) {
+      if (device.isFrameRequired(orientation)) {
         final status = logger.startProgress(
             'Processing screenshots from test...',
             timeout: Duration(minutes: 4));
@@ -67,13 +66,13 @@ class ImageProcessor {
           // add status bar for each screenshot
           await overlay(_config.stagingDir, paths, screenshotPath.path);
 
-          if (deviceType == DeviceType.android) {
+          if (device.deviceType == DeviceType.android) {
             // add nav bar for each screenshot
             await append(_config.stagingDir, paths, screenshotPath.path);
           }
 
           await frame(_config.stagingDir, screenProps, paths,
-              screenshotPath.path, deviceType, runMode);
+              screenshotPath.path, device.deviceType, runMode);
         }
         status.stop();
       } else {
@@ -84,28 +83,28 @@ class ImageProcessor {
     // move to final destination for upload to stores via fastlane
     if (screenshotPaths.isNotEmpty) {
       final androidModelType =
-          fastlane.getAndroidModelType(screenProps, deviceName);
-      var dstDir = fastlane.getDirPath(deviceType, locale, androidModelType);
+          fastlane.getAndroidModelType(screenProps, device.name);
+      var dstDir = fastlane.getDirPath(device.deviceType, locale, androidModelType);
       runMode == RunMode.recording
-          ? dstDir = '${_config.recordingDir}/$dstDir'
+          ? dstDir = '${_config.recordingDir!}/$dstDir'
           : null;
       runMode == RunMode.archive
-          ? dstDir = archive!.dstDir(deviceType, locale)
+          ? dstDir = archive!.dstDir(device.deviceType, locale)
           : null;
       // prefix screenshots with name of device before moving
       // (useful for uploading to apple via fastlane)
       await utils.prefixFilesInDir(screenshotsDir,
-          '$deviceName-${orientation == null ? kDefaultOrientation : utils.getStringFromEnum(orientation)}-');
+          '${device.name}-${orientation == null ? kDefaultOrientation : utils.getStringFromEnum(orientation)}-');
 
       printStatus('Moving screenshots to $dstDir');
       utils.moveFiles(screenshotsDir, dstDir);
 
       if (runMode == RunMode.comparison) {
-        final recordingDir = '${_config.recordingDir}/$dstDir';
+        final recordingDir = '${_config.recordingDir!}/$dstDir';
         printStatus(
             'Running comparison with recorded screenshots in $recordingDir ...');
         final failedCompare =
-            await compareImages(deviceName, recordingDir, dstDir);
+            await compareImages(device.name, recordingDir, dstDir);
         if (failedCompare.isNotEmpty) {
           showFailedCompare(failedCompare);
           throw 'Error: comparison failed.';

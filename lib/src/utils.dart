@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert' as cnv;
 import 'dart:convert';
 
-import 'package:collection/collection.dart' as p;
+import 'package:collection/collection.dart';
 import 'package:path/path.dart' as p;
 import 'package:process/process.dart';
 import 'package:screenshots/src/daemon_client.dart';
@@ -81,16 +81,16 @@ Map transformIosSimulators(Map simsInfo) {
 }
 
 // finds the iOS simulator with the highest available iOS version
-Map getHighestIosSimulator(Map iosSims, String simName) {
-  final Map iOSVersions = iosSims[simName];
+Map getHighestIosSimulator(Map iosSims, String deviceName) {
+  final Map? iOSVersions = iosSims[deviceName];
   if (iOSVersions == null) throw 'Could not find iOS version'; // todo: hack for real device
 
   // get highest iOS version
   var iOSVersionName = getHighestIosVersion(iOSVersions);
 
-  final iosVersionSims = iosSims[simName][iOSVersionName];
+  final iosVersionSims = iOSVersions[iOSVersionName];
   if (iosVersionSims.length == 0) {
-    throw "Error: no simulators found for \'$simName\'";
+    throw "Error: no simulators found for \'$deviceName\'";
   }
   // use the first device found for the iOS version
   return iosVersionSims[0];
@@ -147,10 +147,10 @@ T getEnumFromString<T>(List<T> values, String value) {
 }
 
 /// Returns locale of currently attached android device.
-String getAndroidDeviceLocale(String deviceId) {
+String? getAndroidDeviceLocale(String deviceId) {
 // ro.product.locale is available on first boot but does not update,
 // persist.sys.locale is empty on first boot but updates with locale changes
-  String locale = cmd([
+  var locale = cmd([
     getAdbPath(androidSdk),
     '-s',
     deviceId,
@@ -158,16 +158,20 @@ String getAndroidDeviceLocale(String deviceId) {
     'getprop',
     'persist.sys.locale'
   ]).trim();
-  if (locale.isEmpty) {
-    locale = cmd([
-      getAdbPath(androidSdk),
-      '-s',
-      deviceId,
-      'shell',
-      'getprop ro.product.locale'
-    ]).trim();
+
+  if (locale.isNotEmpty) {
+    return locale;
   }
-  return locale;
+
+  locale = cmd([
+    getAdbPath(androidSdk),
+    '-s',
+    deviceId,
+    'shell',
+    'getprop ro.product.locale'
+  ]).trim();
+
+  return locale.isNotEmpty ? locale : null;
 }
 
 /// Returns locale of simulator with udid [udId].
@@ -317,13 +321,12 @@ List<DaemonDevice> getAndroidDevices(List<DaemonDevice> devices) {
 }
 
 /// Get device for deviceName from list of devices.
-DaemonDevice getDevice(List<DaemonDevice> devices, String deviceName) {
-  return devices.firstWhere(
-      (device) => device.iosModel == null
-          ? device.name == deviceName
-          : device.iosModel?.contains(deviceName) ?? false,
-      orElse: () => throw 'Could not find device');
-}
+DaemonDevice? findDaemonDevice(List<DaemonDevice> devices, String deviceName) =>
+    devices
+        .where((device) => device.iosModel == null
+            ? device.name == deviceName
+            : device.iosModel!.contains(deviceName))
+        .firstOrNull;
 
 /// Get device for deviceId from list of devices.
 DaemonDevice? getDeviceFromId(List<DaemonDevice> devices, String deviceId) {
@@ -361,7 +364,7 @@ Future<String?> waitSysLogMsg(
     }
     printTrace(line);
     return regExp.hasMatch(line);
-  }, orElse: () => null);
+  }, orElse: () => null as String);
 }
 
 /// Find the emulator info of an named emulator available to boot.

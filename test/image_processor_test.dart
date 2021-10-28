@@ -97,6 +97,7 @@ void main() {
           frame: true      
       ''';
       final config = Config(configStr: configStr);
+      final device = config.getDevice(deviceName)!;
 
       fakeProcessManager.calls = [
         Call(
@@ -115,7 +116,7 @@ void main() {
 
       final imageProcessor = ImageProcessor(config);
       final result = await imageProcessor.process(
-          DeviceType.android, deviceName, locale, null, RunMode.normal, null);
+          device, locale, null, RunMode.normal, null);
       expect(result, isTrue);
       expect(fs.directory(stagingDir).existsSync(), isTrue);
       final dstDir = getDirPath(DeviceType.android, locale,
