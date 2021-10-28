@@ -57,7 +57,7 @@ main() {
         return im.convert('frame', options);
       });
       await runInContext<void>(() async {
-        return cmd(['git', 'checkout', screenshotPath]);
+        cmd(['git', 'checkout', screenshotPath]);
       });
     });
   });

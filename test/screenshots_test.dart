@@ -507,9 +507,9 @@ void main() {
         await daemonClient.start;
         final emulatorId = 'Nexus_6P_API_28';
         final deviceId = await daemonClient.launchEmulator(emulatorId);
-        String actual = await utils.waitSysLogMsg(deviceId, expected, toLocale);
+        var actual = await utils.waitSysLogMsg(deviceId, expected, toLocale);
 //      print('actual=$actual');
-        expect(actual.contains(expected), isTrue);
+        expect(actual?.contains(expected), isTrue);
         expect(await run.shutdownAndroidEmulator(daemonClient, deviceId),
             deviceId);
       }, skip:     true  );
@@ -557,9 +557,9 @@ void main() {
         final pairs = {'good': goodPair, 'bad': badPair};
 
         pairs.forEach((behave, pair) async {
-          final recordedImage = pair['recorded'];
-          final comparisonImage = pair['comparison'];
-          bool doCompare = await runInContext<bool>(() async {
+          final recordedImage = pair['recorded']!;
+          final comparisonImage = pair['comparison']!;
+          var doCompare = await runInContext<bool>(() async {
             return im.compare(comparisonImage, recordedImage);
           });
           behave == 'good'
@@ -678,7 +678,7 @@ void main() {
         final env = Platform.environment;
         final preferencesDir =
             '${env['HOME']}/Library/Developer/CoreSimulator/Devices/$udId/data/Library/Preferences';
-        await Directory(preferencesDir).listSync().forEach((fsEntity) {
+        Directory(preferencesDir).listSync().forEach((fsEntity) {
           // print contents
           final filePath = fsEntity.path;
 //        print('filePath=$filePath');
@@ -912,9 +912,9 @@ void main() {
         final posixContext = p.Context(style: p.Style.posix);
         final windowsContext = p.Context(style: p.Style.windows);
         for (var path in paths) {
-          expect(utils.toPlatformPath(path['path'], context: posixContext),
+          expect(utils.toPlatformPath(path['path']!, context: posixContext),
               path['posix']);
-          expect(utils.toPlatformPath(path['path'], context: windowsContext),
+          expect(utils.toPlatformPath(path['path']!, context: windowsContext),
               path['windows']);
         }
       });

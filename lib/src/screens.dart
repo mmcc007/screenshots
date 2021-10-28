@@ -1,19 +1,20 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:resource/resource.dart';
+// import 'package:resource/resource.dart';
 import 'globals.dart';
 import 'utils.dart' as utils;
 
 /// Manage screens file.
 class Screens {
   static const _screensPath = 'resources/screens.yaml';
-  Map _screens;
+  Map _screens = {};
 
   /// Get screens yaml file from resources and parse.
   Future<void> init() async {
-    final resource = Resource("package:screenshots/$_screensPath");
-    String screens = await resource.readAsString(encoding: utf8);
-    _screens = utils.parseYamlStr(screens);
+    // final resource = Resource('package:screenshots/$_screensPath');
+    // String screens = await resource.readAsString(encoding: utf8);
+    // _screens = utils.parseYamlStr(screens);
+    throw 'trygvis';
   }
 
   /// Get screen information
@@ -21,7 +22,7 @@ class Screens {
 
   /// Get screen properties for [deviceName].
   Map getScreen(String deviceName) {
-    Map screenProps;
+    var screenProps = {};
     screens.values.forEach((osScreens) {
       osScreens.values.forEach((_screenProps) {
         if (_screenProps['devices'].contains(deviceName)) {
@@ -35,14 +36,16 @@ class Screens {
   /// Get [DeviceType] for [deviceName].
   DeviceType getDeviceType(String deviceName) {
     DeviceType deviceType;
-    screens.forEach((_deviceType, osScreens) {
-      osScreens.values.forEach((osScreen) {
+    for (var kv in screens.entries) {
+      var osScreen = kv.value;
+      if(osScreen is Map<String, dynamic>) {
         if (osScreen['devices'].contains(deviceName)) {
-          deviceType = utils.getEnumFromString(DeviceType.values, _deviceType);
+          return utils.getEnumFromString(DeviceType.values, kv.key as String);
         }
-      });
-    });
-    return deviceType;
+      }
+    }
+
+    throw Exception("Could not determine device type");
   }
 
   /// Test if screen is used for identifying android model type.

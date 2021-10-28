@@ -26,7 +26,7 @@ void main() {
   image_magick_test.main();
   image_processor_test.main();
   resources_test.main();
-  run_test.main();
+  // run_test.main();
   screens_test.main();
   utils_test.main();
   validate_test.main();

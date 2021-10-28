@@ -16,7 +16,7 @@ void main(List<String> arguments) async {
   final buildArg = 'build';
   final helpArg = 'help';
   final verboseArg = 'verbose';
-  final ArgParser argParser = ArgParser(allowTrailingOptions: false)
+  final argParser = ArgParser(allowTrailingOptions: false)
     ..addOption(configArg,
         abbr: 'c',
         defaultsTo: kConfigFileName,
@@ -46,7 +46,7 @@ void main(List<String> arguments) async {
   try {
     argResults = argParser.parse(arguments);
   } on ArgParserException catch (e) {
-    _handleError(argParser, e.toString());
+    return _handleError(argParser, e.toString());
   }
 
   // show help

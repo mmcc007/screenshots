@@ -7,53 +7,54 @@ import 'package:process/process.dart';
 import 'package:screenshots/src/daemon_client.dart';
 import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart';
+import 'package:tool_base_test/tool_base_test.dart' hide testUsingContext;
 
 import 'src/context.dart';
 
-main() {
-  final String kEmulatorsJson = jsonEncode([
+void main() {
+  final kEmulatorsJson = jsonEncode([
     {
-      "id": "Nexus_6P_API_28",
-      "name": "Nexus 6P",
-      "category": "mobile",
-      "platformType": "android"
+      'id': 'Nexus_6P_API_28',
+      'name': 'Nexus 6P',
+      'category': 'mobile',
+      'platformType': 'android'
     },
     {
-      "id": "apple_ios_simulator",
-      "name": "iOS Simulator",
-      "category": "mobile",
-      "platformType": "ios"
+      'id': 'apple_ios_simulator',
+      'name': 'iOS Simulator',
+      'category': 'mobile',
+      'platformType': 'ios'
     }
   ]);
-  final String kRunningAndroidEmulatorJson = jsonEncode({
-    "id": "emulator-5554",
-    "name": "Android SDK built for x86",
-    "platform": "android-x86",
-    "emulator": true,
-    "category": "mobile",
-    "platformType": "android",
-    "ephemeral": true
+  final kRunningAndroidEmulatorJson = jsonEncode({
+    'id': 'emulator-5554',
+    'name': 'Android SDK built for x86',
+    'platform': 'android-x86',
+    'emulator': true,
+    'category': 'mobile',
+    'platformType': 'android',
+    'ephemeral': true
   });
-  const String kIPhoneUuid = '3b3455019e329e007e67239d9b897148244b5053';
-  final String kRunningRealIosDeviceJson = jsonEncode({
-    "id": "$kIPhoneUuid",
-    "name": "My iPhone",
-    "platform": "ios",
-    "emulator": false,
-    "category": "mobile",
-    "platformType": "ios",
-    "ephemeral": true
+  const kIPhoneUuid = '3b3455019e329e007e67239d9b897148244b5053';
+  final kRunningRealIosDeviceJson = jsonEncode({
+    'id': '$kIPhoneUuid',
+    'name': 'My iPhone',
+    'platform': 'ios',
+    'emulator': false,
+    'category': 'mobile',
+    'platformType': 'ios',
+    'ephemeral': true
   });
-  final String kRunningRealAndroidDeviceJson = jsonEncode({
-    "id": "someandroiddeviceid",
-    "name": "My Android Phone",
-    "platform": "android",
-    "emulator": false,
-    "category": "mobile",
-    "platformType": "android",
-    "ephemeral": true
+  final kRunningRealAndroidDeviceJson = jsonEncode({
+    'id': 'someandroiddeviceid',
+    'name': 'My Android Phone',
+    'platform': 'android',
+    'emulator': false,
+    'category': 'mobile',
+    'platformType': 'android',
+    'ephemeral': true
   });
-  final String kRealDevicesJson = jsonEncode([
+  final kRealDevicesJson = jsonEncode([
     jsonDecode(kRunningRealAndroidDeviceJson),
     jsonDecode(kRunningRealIosDeviceJson)
   ]);
@@ -67,15 +68,15 @@ main() {
     final macos = FakePlatform(operatingSystem: 'macos', environment: {});
 
     group('mocked process', () {
-      MockProcessManager mockProcessManager;
-      Process mockProcess;
+      var mockProcessManager = MockProcessManager();
+      var mockProcess = MockProcess();
 
       setUp(() async {
         mockProcessManager = MockProcessManager();
         mockProcess = MockProcess();
 
         when(mockProcessManager.start(any)).thenAnswer((Invocation invocation) {
-          final MockStdIn mockStdIn = MockStdIn();
+          final mockStdIn = MockStdIn();
           when(mockProcess.stdin).thenReturn(mockStdIn);
 
           when(mockProcess.stderr).thenAnswer(
@@ -90,7 +91,7 @@ main() {
       tearDown(() {});
 
       testUsingContext('start/stop', () async {
-        DaemonClient daemonClient = DaemonClient();
+        var daemonClient = DaemonClient();
 
         List<int> getLine(int i) {
           final lines = <List<int>>[
@@ -182,8 +183,8 @@ main() {
     });
 
     group('faked processes', () {
-      FakeProcessManager fakeProcessManager;
-      final List<String> stdinCaptured = <String>[];
+      var fakeProcessManager = FakeProcessManager();
+      final stdinCaptured = <String>[];
 
       void _captureStdin(String item) {
         stdinCaptured.add(item);
@@ -255,8 +256,8 @@ main() {
     });
 
     group('in CI', () {
-      FakeProcessManager fakeProcessManager;
-      final List<String> stdinCaptured = <String>[];
+      var fakeProcessManager = FakeProcessManager();
+      final stdinCaptured = <String>[];
 
       void _captureStdin(String item) {
         stdinCaptured.add(item);
@@ -274,17 +275,17 @@ main() {
         final emulatorId = null;
         final bogusRealAndroidDevice = [
           {
-            "id": 1,
-            "result": [
+            'id': 1,
+            'result': [
               {
-                "id": id,
-                "name": name,
-                "platform": "android-arm",
-                "emulator": emulator,
-                "category": "mobile",
-                "platformType": "android",
-                "ephemeral": true,
-                "emulatorId": emulatorId,
+                'id': id,
+                'name': name,
+                'platform': 'android-arm',
+                'emulator': emulator,
+                'category': 'mobile',
+                'platformType': 'android',
+                'ephemeral': true,
+                'emulatorId': emulatorId,
               }
             ]
           }
@@ -364,14 +365,14 @@ main() {
 
   group('devices', (){
     test('equality', (){
-      DaemonEmulator emulator1 = loadDaemonEmulator(jsonDecode(kEmulatorsJson)[0]);
-      DaemonEmulator emulator2 = loadDaemonEmulator(jsonDecode(kEmulatorsJson)[0]);
+      var emulator1 = loadDaemonEmulator(jsonDecode(kEmulatorsJson)[0]);
+      var emulator2 = loadDaemonEmulator(jsonDecode(kEmulatorsJson)[0]);
       expect(emulator1, equals(emulator2));
       emulator2 = loadDaemonEmulator(jsonDecode(kEmulatorsJson)[1]);
       expect(emulator1, isNot(equals(emulator2)));
 
-      DaemonDevice device1 = loadDaemonDevice(jsonDecode(kRealDevicesJson)[0]);
-      DaemonDevice device2 = loadDaemonDevice(jsonDecode(kRealDevicesJson)[0]);
+      var device1 = loadDaemonDevice(jsonDecode(kRealDevicesJson)[0]);
+      var device2 = loadDaemonDevice(jsonDecode(kRealDevicesJson)[0]);
       expect(device1, equals(device2));
       device2 = loadDaemonDevice(jsonDecode(kRealDevicesJson)[1]);
       expect(device1, isNot(equals(device2)));
@@ -383,6 +384,6 @@ main() {
 
 class MockProcess extends Mock implements Process {}
 
-class MockProcessManager extends Mock implements ProcessManager {}
+// class MockProcessManager extends Mock implements ProcessManager {}
 
 class MockStdIn extends Mock implements IOSink {}

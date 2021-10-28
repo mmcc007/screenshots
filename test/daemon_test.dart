@@ -65,7 +65,7 @@ main() {
           '[{"id":"Nexus_5X_API_27","name":"Nexus 5X"},{"id":"Nexus_6P_API_28","name":"Nexus 6P"},{"id":"Nexus_9_API_28","name":"Nexus 9"},{"id":"apple_ios_simulator","name":"iOS Simulator"}]';
       final response = '[{"id":0,"result":$expected}]';
       final respExp = RegExp(r'result":(.*)}\]');
-      final match = respExp.firstMatch(response).group(1);
+      final match = respExp.firstMatch(response)?.group(1);
 //      print('match=${jsonDecode(match)}');
       expect(match, expected);
     });
@@ -120,8 +120,8 @@ main() {
       final response =
           "[....] Found $expectedDeviceId (N48AP, $expectedModel, iphoneos, armv7s) a.k.a. 'Maurice’s iPhone' connected through USB.";
 
-      final deviceId = regExp.firstMatch(response).group(1);
-      final model = regExp.firstMatch(response).group(2);
+      final deviceId = regExp.firstMatch(response)?.group(1);
+      final model = regExp.firstMatch(response)?.group(2);
 //      print('deviceId=$deviceId');
 //      print('model=$model');
       expect(deviceId, expectedDeviceId);

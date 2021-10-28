@@ -16,7 +16,7 @@ const kEnvConfigPath = 'SCREENSHOTS_YAML';
 // Note: should not have context dependencies as is also used in driver.
 // todo: yaml validation
 class Config {
-  Config({this.configPath = kConfigFileName, String configStr}) {
+  Config({this.configPath = kConfigFileName, String? configStr}) {
     if (configStr != null) {
       // used by tests
       _configInfo = utils.parseYamlStr(configStr);
@@ -25,7 +25,7 @@ class Config {
         final envConfigPath = io.Platform.environment[kEnvConfigPath];
         if (envConfigPath == null) {
           // used by command line and by driver if using kConfigFileName
-          _configInfo = utils.parseYamlFile(configPath);
+          _configInfo = utils.parseYamlFile(configPath!);
         } else {
           // used by driver
           _configInfo = utils.parseYamlFile(envConfigPath);
@@ -44,13 +44,13 @@ class Config {
   // Note: order of boolean tests is important
   bool get isScreenShotsAvailable =>
       io.Platform.environment[kEnvConfigPath] != null ||
-      io.File(configPath).existsSync();
+      io.File(configPath!).existsSync();
 
-  final String configPath;
+  final String? configPath;
 
-  Map _configInfo;
-  Map _screenshotsEnv; // current screenshots env
-  List<ConfigDevice> _devices;
+  Map _configInfo = {};
+  Map<String, dynamic>? _screenshotsEnv;
+  List<ConfigDevice>? _devices;
 
   // Getters
   List<String> get tests => _processList(_configInfo['tests']);
@@ -91,7 +91,7 @@ class Config {
   }
 
   /// Check if frame is required for [deviceName].
-  bool isFrameRequired(String deviceName, Orientation orientation) {
+  bool isFrameRequired(String deviceName, Orientation? orientation) {
     final device = devices.firstWhere((device) => device.name == deviceName,
         orElse: () => throw 'Error: device \'$deviceName\' not found');
     // orientation over-rides frame if not in Portait (default)
@@ -104,10 +104,10 @@ class Config {
 
   /// Current screenshots runtime environment
   /// (updated before start of each test)
-  Future<Map> get screenshotsEnv async {
+  Future<Map<String, dynamic>> get screenshotsEnv async {
     if (isScreenShotsAvailable) {
-      if (_screenshotsEnv == null) await _retrieveEnv();
-      return _screenshotsEnv;
+      _screenshotsEnv ??= await _retrieveEnv();
+      return _screenshotsEnv!;
     } else {
       // output in test (hence no printStatus)
       io.stdout.writeln('Warning: screenshots runtime environment not set.');
@@ -137,8 +137,8 @@ class Config {
     await _envStore.writeAsString(json.encode(currentEnv));
   }
 
-  Future<void> _retrieveEnv() async {
-    _screenshotsEnv = json.decode(await _envStore.readAsString());
+  Future<Map<String, dynamic>> _retrieveEnv() async {
+    return json.decode(await _envStore.readAsString());
   }
 
   List<String> _processList(List list) {
@@ -151,10 +151,12 @@ class Config {
       Map<String, dynamic> devices, bool globalFraming) {
     Orientation _getValidOrientation(String orientation, deviceName) {
       bool _isValidOrientation(String orientation) {
-        return Orientation.values.firstWhere(
-                (o) => utils.getStringFromEnum(o) == orientation,
-                orElse: () => null) !=
-            null;
+        for (var v in Orientation.values) {
+          if (utils.getStringFromEnum(v) == orientation) {
+            return true;
+          }
+        }
+        return false;
       }
 
       if (!_isValidOrientation(orientation)) {
@@ -183,9 +185,9 @@ class Config {
               : deviceProps['frame'] ??
                   globalFraming, // device frame overrides global frame
           deviceProps == null
-              ? null
+              ? []
               : orientationVal == null
-                  ? null
+                  ? []
                   : orientationVal is String
                       ? [_getValidOrientation(orientationVal, deviceName)]
                       : List<Orientation>.from(orientationVal.map((o) {

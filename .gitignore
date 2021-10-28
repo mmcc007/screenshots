@@ -4,6 +4,7 @@
 
 # Android Studio
 .idea/
+*.iml
 
 # Flutter
 /android

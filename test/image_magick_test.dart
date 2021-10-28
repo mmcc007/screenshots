@@ -2,23 +2,21 @@ import 'package:fake_process_manager/fake_process_manager.dart';
 import 'package:mockito/mockito.dart';
 import 'package:process/process.dart';
 import 'package:screenshots/src/context_runner.dart';
-import 'package:screenshots/src/globals.dart';
 import 'package:screenshots/src/image_magick.dart';
 import 'package:screenshots/src/image_processor.dart';
 import 'package:screenshots/src/utils.dart';
 import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart';
+import 'package:tool_base_test/tool_base_test.dart' hide testUsingContext;
 
 import 'src/context.dart';
 
-class PlainMockProcessManager extends Mock implements ProcessManager {}
-
-main() {
+void main() {
   group('image magick', () {
-    ProcessManager mockProcessManager;
+    var mockProcessManager = MockProcessManager();
 
     setUp(() {
-      mockProcessManager = PlainMockProcessManager();
+      mockProcessManager = MockProcessManager();
       when(mockProcessManager.runSync(
         any,
         environment: anyNamed('environment'),
@@ -73,7 +71,7 @@ main() {
   });
 
   group('main image magick', () {
-    FakeProcessManager fakeProcessManager;
+    var fakeProcessManager = FakeProcessManager();
 
     setUp(() async {
       fakeProcessManager = FakeProcessManager();

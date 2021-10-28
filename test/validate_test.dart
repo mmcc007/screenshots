@@ -9,18 +9,17 @@ import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart' hide Config;
 import 'src/context.dart';
 
-main() {
+void main() {
   group('validate', () {
-    FakeProcessManager fakeProcessManager;
-    FakePlatform macos;
+    var fakeProcessManager = FakeProcessManager();
+    var macos = FakePlatform(
+      stdoutSupportsAnsi: false,
+      operatingSystem: 'macos',
+      environment: {'CI': 'false'},
+    );
 
     setUp(() {
       fakeProcessManager = FakeProcessManager();
-      macos = FakePlatform(
-        stdoutSupportsAnsi: false,
-        operatingSystem: 'macos',
-        environment: {'CI': 'false'},
-        );
     });
 
     final callListIosDevices = Call(
@@ -151,7 +150,7 @@ main() {
     });
 
     testUsingContext('fail', () async {
-      final BufferLogger logger = context.get<Logger>();
+      final logger = context.get<Logger>()! as BufferLogger;
       final configStr = '''
           tests:
             - example/test_driver/main.dartx
@@ -235,7 +234,7 @@ main() {
     });
 
     testUsingContext('show device guide', () async {
-      final BufferLogger logger = context.get<Logger>();
+      final logger = context.get<Logger>()! as BufferLogger;
       final screens = Screens();
       await screens.init();
       final installedEmulator = loadDaemonEmulator({
@@ -281,7 +280,7 @@ main() {
       ];
       fakeProcessManager.calls = [callListIosDevices];
       expect(
-          () async => await deviceGuide(
+          () async => deviceGuide(
               screens, allDevices, allEmulators, 'myScreenshots.yaml'),
           returnsNormally);
       expect(logger.statusText, contains('Device Guide'));

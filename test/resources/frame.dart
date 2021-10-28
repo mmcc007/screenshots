@@ -15,13 +15,13 @@ const sampleUsage = 'sample usage: frame -s screenshot.png -d \'Nexus 6P\'';
 const kFrameTestTmpDir = '/tmp/frame_test';
 const kRunMode = RunMode.normal;
 
-main(List<String> arguments) async {
+void main(List<String> arguments) async {
   ArgResults argResults;
 
   final screenshotArg = 'screenshot';
   final deviceArg = 'device';
   final helpArg = 'help';
-  final ArgParser argParser = ArgParser(allowTrailingOptions: false)
+  final argParser = ArgParser(allowTrailingOptions: false)
     ..addOption(screenshotArg,
         abbr: 's',
         defaultsTo: 'screenshot.png',
@@ -34,7 +34,7 @@ main(List<String> arguments) async {
   try {
     argResults = argParser.parse(arguments);
   } on ArgParserException catch (e) {
-    _handleError(argParser, e.toString());
+    return _handleError(argParser, e.toString());
   }
   // show help
   if (argResults[helpArg] ||

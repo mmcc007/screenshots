@@ -2,6 +2,7 @@ import 'dart:io' as io;
 
 import 'package:fake_process_manager/fake_process_manager.dart';
 import 'package:file/memory.dart';
+import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:process/process.dart';
 import 'package:screenshots/src/config.dart';
@@ -17,8 +18,10 @@ import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart' hide Config;
 
 import 'src/context.dart';
+import 'image_processor_test.mocks.dart';
 
-main() {
+@GenerateMocks([ImageMagick])
+void main() {
   test('process screenshots for iPhone X and iPhone XS Max', () async {
     final imageDir = 'test/resources';
     final Screens screens = Screens();
@@ -69,15 +72,15 @@ main() {
     }
     for (var deviceName in devices.values) {
       await runInContext<void>(() async {
-        return cmd(['git', 'checkout', '$imageDir/$deviceName']);
+        cmd(['git', 'checkout', '$imageDir/$deviceName']);
       });
     }
   });
 
   group('image processor', () {
-    FakeProcessManager fakeProcessManager;
-    MemoryFileSystem memoryFileSystem;
-    MockImageMagick mockImageMagick;
+    var fakeProcessManager = FakeProcessManager();
+    var memoryFileSystem = MemoryFileSystem();
+    var mockImageMagick = MockImageMagick();
 
     setUp(() async {
       memoryFileSystem = MemoryFileSystem();
@@ -160,7 +163,7 @@ main() {
       expect(failedCompare, expected);
       // show diffs
       ImageProcessor.showFailedCompare(failedCompare);
-      final BufferLogger logger = context.get<Logger>();
+      final logger = context.get<Logger>() as BufferLogger;
       expect(logger.errorText, contains('Comparison failed:'));
     }, overrides: <Type, Generator>{
 //      ProcessManager: () => fakeProcessManager,
@@ -178,4 +181,4 @@ void copyFileToMemory(String imagePath, String stagingDir) {
   fs.file('$screenshotsDir/screenshot.png').writeAsBytesSync(fileImage);
 }
 
-class MockImageMagick extends Mock implements ImageMagick {}
+// class MockImageMagick extends Mock implements ImageMagick {}

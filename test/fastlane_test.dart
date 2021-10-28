@@ -12,7 +12,7 @@ import 'src/context.dart';
 main() {
   group('fastlane', () {
     final dirPath = 'test/$kTestScreenshotsDir';
-    MemoryFileSystem memoryFileSystem;
+    var memoryFileSystem = MemoryFileSystem();
 
     setUp(() {
       // create test files

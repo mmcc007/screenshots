@@ -29,7 +29,7 @@ devices:
     final deviceNames = configInfo['devices']['android'];
     print('deviceNames=$deviceNames');
     for (final deviceName in deviceNames.keys) {
-      DaemonEmulator emulator = utils.findEmulator(emulators, deviceName);
+      var emulator = utils.findEmulator(emulators, deviceName);
 //      if (!foundIt(emulator)) {
 //        // find by emulatorId
 //        emulator = findEmulatorById(emulators, deviceName);

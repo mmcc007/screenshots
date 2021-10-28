@@ -9,7 +9,7 @@ import 'package:test/test.dart';
 
 import 'src/common.dart';
 
-main() {
+void main() {
   group('config', () {
     test('getters', () {
       final expectedTest = 'test_driver/main.dart';
@@ -75,7 +75,7 @@ main() {
     });
 
     test('backward compatible orientation', () {
-      String configStr = '''
+      var configStr = '''
         devices:
           android:
             device name:
@@ -83,7 +83,7 @@ main() {
                 - Portrait
         frame: true
         ''';
-      Config config = Config(configStr: configStr);
+      var config = Config(configStr: configStr);
       expect(config.devices[0].orientations[0], Orientation.Portrait);
       configStr = '''
         devices:
@@ -121,7 +121,7 @@ main() {
           android:
       ''';
 //      Map config = utils.parseYamlStr(configIosOnly);
-      Config config = Config(configStr: configIosOnly);
+      var config = Config(configStr: configIosOnly);
       expect(config.isRunTypeActive(DeviceType.ios), isTrue);
       expect(config.isRunTypeActive(DeviceType.android), isFalse);
 
@@ -140,13 +140,13 @@ main() {
 
     test('isFrameRequired', () {
       final deviceName = 'Nexus 6P';
-      String configStr = '''
+      var configStr = '''
         devices:
           android:
             $deviceName:
         frame: true
         ''';
-      Config config = Config(configStr: configStr);
+      var config = Config(configStr: configStr);
       expect(config.isFrameRequired(deviceName, null), isTrue);
       configStr = '''
         devices:
@@ -177,11 +177,11 @@ main() {
     test('store and retrieve environment', () async {
       final tmpDir = '/tmp/screenshots_test_env';
       clearDirectory(tmpDir);
-      String configStr = '''
+      var configStr = '''
         staging: $tmpDir
       ''';
       final config = Config(configStr: configStr);
-      final screens = await Screens();
+      final screens = Screens();
       await screens.init();
       final orientation = 'Portrait';
 
@@ -196,14 +196,14 @@ main() {
       // called by screenshots before test
       await config.storeEnv(
           screens,
-          env['device_name'],
-          env['locale'],
-          getEnumFromString(DeviceType.values, env['device_type']),
+          env['device_name']!,
+          env['locale']!,
+          getEnumFromString(DeviceType.values, env['device_type']!),
           getEnumFromString(Orientation.values, orientation));
 
       // called by test
       // simulate no screenshots available
-      Config testConfig = Config(configStr: configStr);
+      var testConfig = Config(configStr: configStr);
       expect(await testConfig.screenshotsEnv, {});
 
       // simulate screenshots available

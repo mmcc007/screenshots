@@ -10,7 +10,7 @@ import 'utils.dart' as utils;
 /// Check emulators and simulators are installed, devices attached,
 /// matching screen is available and tests exist.
 Future<bool> isValidConfig(
-    Config config, Screens screens, List allDevices, List allEmulators) async {
+    Config config, Screens screens, List<DaemonDevice> allDevices, List<DaemonEmulator> allEmulators) async {
   bool isValid = true;
   bool showDeviceGuide = false;
   final configPath = config.configPath;
@@ -31,7 +31,7 @@ Future<bool> isValidConfig(
     for (ConfigDevice configDevice in config.androidDevices) {
       if (config.isFrameRequired(configDevice.name, null)) {
         // check screen available for this device
-        if (!_isScreenAvailable(screens, configDevice.name, configPath)) {
+        if (!_isScreenAvailable(screens, configDevice.name, configPath!)) {
           isValid = false;
         }
       }
@@ -59,7 +59,7 @@ Future<bool> isValidConfig(
       for (ConfigDevice configDevice in config.iosDevices) {
         if (config.isFrameRequired(configDevice.name, null)) {
           // check screen available for this device
-          if (!_isScreenAvailable(screens, configDevice.name, configPath)) {
+          if (!_isScreenAvailable(screens, configDevice.name, configPath!)) {
             isValid = false;
           }
         }
@@ -102,7 +102,7 @@ Future<bool> isValidConfig(
     }
   }
   if (showDeviceGuide) {
-    deviceGuide(screens, allDevices, allEmulators, configPath);
+    deviceGuide(screens, allDevices, allEmulators, configPath!);
   }
   return isValid;
 }
@@ -129,7 +129,7 @@ bool isValidTestPaths(String driverArgs) {
     final match = regExp.firstMatch(driverArgs);
     if (match != null) {
       matchFound = true;
-      final path = match.group(1);
+      final path = match.group(1)!;
       isInvalidPath = isInvalidPath || !pathExists(path);
     }
   }
@@ -143,19 +143,22 @@ bool isValidTestPaths(String driverArgs) {
 /// Check if an emulator is installed.
 bool isEmulatorInstalled(List<DaemonEmulator> emulators, String deviceName) {
   final emulator = utils.findEmulator(emulators, deviceName);
-  final isEmulatorInstalled = emulator != null;
 
   // check for device installed with multiple avd versions
-  if (isEmulatorInstalled) {
-    final matchingEmulators =
-        emulators.where((emulator) => emulator.name == deviceName);
-    if (matchingEmulators != null && matchingEmulators.length > 1) {
-      printStatus('Warning: \'$deviceName\' has multiple avd versions.');
-      printStatus(
-          '       : Using \'$deviceName\' with avd version ${emulator.id}.');
-    }
+  if (emulator == null) {
+    return false;
   }
-  return isEmulatorInstalled;
+
+  final matchingEmulators =
+      emulators.where((emulator) => emulator.name == deviceName);
+
+  if (matchingEmulators != null && matchingEmulators.length > 1) {
+    printStatus('Warning: \'$deviceName\' has multiple avd versions.');
+    printStatus(
+        '       : Using \'$deviceName\' with avd version ${emulator.id}.');
+  }
+
+  return true;
 }
 
 /// Checks if a simulator is installed, matching the device named in config file.

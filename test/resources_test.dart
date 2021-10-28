@@ -4,21 +4,19 @@ import 'package:screenshots/src/resources.dart';
 import 'package:screenshots/src/screens.dart';
 import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart';
+import 'package:tool_base_test/tool_base_test.dart' hide testUsingContext;
 
-//import 'src/common_tools.dart';
 import 'src/context.dart';
 
-class PlainMockProcessManager extends Mock implements ProcessManager {}
-
-main() {
+void main() {
   group('resources', () {
     final tmpDir = '/tmp/screenshots_test';
 
     group('in context', () {
-      ProcessManager mockProcessManager;
+      var mockProcessManager = MockProcessManager();
 
       setUp(() {
-        mockProcessManager = PlainMockProcessManager();
+        mockProcessManager = MockProcessManager();
         when(mockProcessManager.runSync(
           any,
           environment: anyNamed('environment'),

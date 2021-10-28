@@ -42,9 +42,9 @@ class ImageProcessor {
     DeviceType deviceType,
     String deviceName,
     String locale,
-    Orientation orientation,
+    Orientation? orientation,
     RunMode runMode,
-    Archive archive,
+    Archive? archive,
   ) async {
     final Map screenProps = _screens.getScreen(deviceName);
     final screenshotsDir = '${_config.stagingDir}/$kTestScreenshotsDir';
@@ -93,7 +93,7 @@ class ImageProcessor {
           ? dstDir = '${_config.recordingDir}/$dstDir'
           : null;
       runMode == RunMode.archive
-          ? dstDir = archive.dstDir(deviceType, locale)
+          ? dstDir = archive!.dstDir(deviceType, locale)
           : null;
       // prefix screenshots with name of device before moving
       // (useful for uploading to apple via fastlane)
@@ -132,7 +132,7 @@ class ImageProcessor {
   @visibleForTesting
   static Future<Map> compareImages(
       String deviceName, String recordingDir, String comparisonDir) async {
-    Map failedCompare = {};
+    var failedCompare = {};
     final recordedImages = fs.directory(recordingDir).listSync();
     fs
         .directory(comparisonDir)

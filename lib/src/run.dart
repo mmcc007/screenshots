@@ -20,11 +20,11 @@ import 'validate.dart' as validate;
 
 /// Run screenshots
 Future<bool> screenshots(
-    {String configPath,
-    String configStr,
+    {required String configPath,
+    String? configStr,
     String mode = 'normal',
     String flavor = kNoFlavor,
-    bool isBuild,
+    bool? isBuild,
     bool isVerbose = false}) async {
   final screenshots = Screenshots(
     configPath: configPath,
@@ -54,27 +54,25 @@ class Screenshots {
   Screenshots({
     this.configPath,
     this.configStr,
-    this.mode = 'normal',
+    String mode = 'normal',
     this.flavor = kNoFlavor,
     this.isBuild,
     this.verbose = false,
-  }) {
-    config = Config(configPath: configPath, configStr: configStr);
-  }
+  }) : config = Config(configPath: configPath, configStr: configStr),
+        runMode = utils.getRunModeEnum(mode);
 
-  final String configPath;
-  final String configStr;
-  final String mode;
+  final String? configPath;
+  final String? configStr;
   final String flavor;
-  final bool isBuild; // defaults to null
+  final bool? isBuild;
   final bool verbose;
 
   RunMode runMode;
-  Screens screens;
-  List<DaemonDevice> devices;
-  List<DaemonEmulator> emulators;
+  Screens screens = Screens();
+  List<DaemonDevice> devices = [];
+  List<DaemonEmulator> emulators=[];
   Config config;
-  Archive archive;
+  Archive? archive;
 
   /// Capture screenshots, process, and load into fastlane according to config file.
   ///
@@ -86,9 +84,6 @@ class Screenshots {
   /// 4. Move processed screenshots to fastlane destination for upload to stores.
   /// 5. If not a real device, stop emulator/simulator.
   Future<bool> run() async {
-    runMode = utils.getRunModeEnum(mode);
-
-    screens = Screens();
     await screens.init();
 
     // start flutter daemon
@@ -117,7 +112,7 @@ class Screenshots {
     if (!platform.isWindows) await resources.unpackScripts(config.stagingDir);
     archive = Archive(config.archiveDir);
     if (runMode == RunMode.archive) {
-      printStatus('Archiving screenshots to ${archive.archiveDirPrefix}...');
+      printStatus('Archiving screenshots to ${archive?.archiveDirPrefix}...');
     } else {
       await fastlane.clearFastlaneDirs(config, screens, runMode);
     }
@@ -134,7 +129,7 @@ class Screenshots {
       _printScreenshotDirs(config.recordingDir);
     } else {
       if (runMode == RunMode.archive) {
-        printStatus('  ${archive.archiveDirPrefix}');
+        printStatus('  ${archive?.archiveDirPrefix}');
       } else {
         _printScreenshotDirs(null);
         final isIosActive = config.isRunTypeActive(DeviceType.ios);
@@ -156,8 +151,8 @@ class Screenshots {
     return true;
   }
 
-  void _printScreenshotDirs(String dirPrefix) {
-    final prefix = dirPrefix == null ? '' : '${dirPrefix}/';
+  void _printScreenshotDirs(String? dirPrefix) {
+    final prefix = dirPrefix == null ? '' : '$dirPrefix/';
     if (config.isRunTypeActive(DeviceType.ios)) {
       printStatus('  ${prefix}ios/fastlane/screenshots');
     }
@@ -202,8 +197,8 @@ class Screenshots {
       final device = findRunningDevice(devices, emulators, configDeviceName);
 
       String deviceId;
-      DaemonEmulator emulator;
-      Map simulator;
+      DaemonEmulator? emulator;
+      Map? simulator;
       bool pendingIosLocaleChangeAtStart = false;
       if (device != null) {
         deviceId = device.id;
@@ -267,8 +262,8 @@ class Screenshots {
         }
 
         // save original android locale for reverting later if necessary
-        String origAndroidLocale;
-        if (isRunningAndroidDeviceOrEmulator(device, emulator)) {
+        String? origAndroidLocale;
+        if (isRunningAndroidDeviceOrEmulator(device, emulator!)) {
           origAndroidLocale = utils.getAndroidDeviceLocale(deviceId);
         }
 
@@ -279,7 +274,7 @@ class Screenshots {
         }
 
         // save original ios locale for reverting later if necessary
-        String origIosLocale;
+        String? origIosLocale;
         if (isRunningIosDeviceOrSimulator(device)) {
           origIosLocale = utils.getIosSimulatorLocale(deviceId);
         }
@@ -316,7 +311,7 @@ class Screenshots {
 
           // Change orientation if required
           final configDevice = config.getDevice(configDeviceName);
-          if (configDevice.orientations != null) {
+          if (configDevice.orientations.isNotEmpty) {
             for (final orientation in configDevice.orientations) {
               final currentDevice =
                   utils.getDeviceFromId(await daemonClient.devices, deviceId);
@@ -369,13 +364,13 @@ class Screenshots {
           }
         }
         // if an emulator was started, revert locale if necessary and shut it down
-        if (emulator != null) {
+        if (emulator != null && origAndroidLocale != null) {
           await setEmulatorLocale(
               deviceId, origAndroidLocale, configDeviceName);
           await shutdownAndroidEmulator(daemonClient, deviceId);
         }
         // if a simulator was started, revert locale if necessary and shut it down
-        if (simulator != null) {
+        if (simulator != null && origIosLocale != null) {
           // todo restore backup of GlobalPreferences.plist
           await setSimulatorLocale(deviceId, configDeviceName, origIosLocale,
               config.stagingDir, daemonClient);
@@ -389,15 +384,13 @@ class Screenshots {
   Future runProcessTests(
     configDeviceName,
     String locale,
-    Orientation orientation,
+    Orientation? orientation,
     DeviceType deviceType,
     String deviceId,
   ) async {
     for (final testPath in config.tests) {
       final command = ['flutter', '-d', deviceId, 'drive'];
-      bool _isBuild() => isBuild != null
-          ? isBuild
-          : config.getDevice(configDeviceName).isBuild;
+      bool _isBuild() => isBuild ?? config.getDevice(configDeviceName).isBuild;
       if (!_isBuild()) {
         command.add('--no-build');
       }
@@ -412,11 +405,13 @@ class Screenshots {
         printStatus(
             'Warning: flavor parameter \'$flavor\' is ignored because no build is set for this device');
       }
-      await utils.streamCmd(command, environment: {kEnvConfigPath: configPath});
+      final cp = configPath;
+      await utils.streamCmd(command,
+          environment: cp != null ? {kEnvConfigPath: cp} : {});
       // process screenshots
       final imageProcessor = ImageProcessor(screens, config);
       await imageProcessor.process(
-          deviceType, configDeviceName, locale, orientation, runMode, archive);
+          deviceType, configDeviceName, locale, orientation, runMode, archive!);
     }
   }
 }
@@ -480,13 +475,13 @@ DaemonDevice findRunningDevice(List<DaemonDevice> devices,
     } else {
       if (device.platformType == 'ios') {
         // real ios device
-        return device.iosModel.contains(deviceName);
+        return device.iosModel?.contains(deviceName) ?? false;
       } else {
         // real android device
         return device.name.contains(deviceName);
       }
     }
-  }, orElse: () => null);
+  });
 }
 
 /// Set the simulator locale.
