@@ -183,7 +183,6 @@ main() {
     test('run test on matching devices or emulators', () async {
       final configPath = 'test/screenshots_test.yaml';
       final screens = Screens();
-      await screens.init();
 
       final config = Config(configPath: configPath);
 

@@ -137,6 +137,69 @@ class MockReturningProcessManager implements ProcessManager {
   dynamic noSuchMethod(Invocation invocation) => null;
 }
 
+class MockProcessManager extends Mock implements ProcessManager {
+
+  @override
+  Future<Process> start(
+      List<Object>? command, {
+        String? workingDirectory,
+        Map<String, String>? environment,
+        bool? includeParentEnvironment,
+        bool? runInShell,
+        ProcessStartMode mode = ProcessStartMode.normal,
+      }) =>
+      super.noSuchMethod(Invocation.method(#start, [
+        command
+      ], {
+        #workingDirectory: workingDirectory,
+        #environment: environment,
+        #includeParentEnvironment: includeParentEnvironment,
+        #runInShell: runInShell,
+        #mode: mode,
+      }));
+
+  Future<ProcessResult> run(
+      List<Object>? command, {
+        String? workingDirectory,
+        Map<String, String>? environment,
+        bool? includeParentEnvironment,
+        bool? runInShell,
+        covariant Encoding? stdoutEncoding = systemEncoding,
+        covariant Encoding? stderrEncoding = systemEncoding,
+      }) =>
+      super.noSuchMethod(Invocation.method(#run, [
+        command
+      ], {
+        #workingDirectory: workingDirectory,
+        #environment: environment,
+        #includeParentEnvironment: includeParentEnvironment,
+        #runInShell: runInShell,
+        #stdoutEncoding: stdoutEncoding,
+        #stderrEncoding: stderrEncoding,
+      }));
+
+  @override
+  ProcessResult runSync(
+      List<Object>? command, {
+        String? workingDirectory,
+        Map<String, String>? environment,
+        bool? includeParentEnvironment,
+        bool? runInShell,
+        covariant Encoding? stdoutEncoding = systemEncoding,
+        covariant Encoding? stderrEncoding = systemEncoding,
+      }) =>
+      super.noSuchMethod(Invocation.method(#runSync, [
+        command
+      ], {
+        #workingDirectory: workingDirectory,
+        #environment: environment,
+        #includeParentEnvironment: includeParentEnvironment,
+        #runInShell: runInShell,
+        #stdoutEncoding: stdoutEncoding,
+        #stderrEncoding: stderrEncoding,
+      }));
+}
+
 /// A process that exits successfully with no output and ignores all input.
 class MockProcess extends Mock implements Process {
   MockProcess({
@@ -250,4 +313,28 @@ class MockStdio extends Stdio {
       _stdout.writes.map<String>(_stdout.encoding.decode).toList();
   List<String> get writtenToStderr =>
       _stderr.writes.map<String>(_stderr.encoding.decode).toList();
+}
+
+class FakeProcessResult implements ProcessResult {
+  FakeProcessResult({
+    this.exitCode = 0,
+    this.pid = 1,
+    this.stderr,
+    this.stdout,
+  });
+
+  @override
+  final int exitCode;
+
+  @override
+  final int pid;
+
+  @override
+  final dynamic stderr;
+
+  @override
+  final dynamic stdout;
+
+  @override
+  String toString() => stdout?.toString() ?? stderr?.toString() ?? runtimeType.toString();
 }

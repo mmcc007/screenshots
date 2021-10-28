@@ -41,7 +41,6 @@ void main() {
         'size': '1080x1920'
       };
       final screens = Screens();
-      await screens.init();
       final screen = screens.getScreen('Nexus 5X');
       expect(screen, expected);
     });
@@ -60,20 +59,15 @@ void main() {
         'size': '1125x2436'
       };
       final screens = Screens();
-      await screens.init();
       final screen = screens.getScreen('iPhone X');
       expect(screen, expected);
     });
 
     test('overlay statusbar', () async {
-      final Screens screens = Screens();
-      await screens.init();
-      final screen = screens.getScreen('Nexus 6P');
-      final Config config = Config(configPath: 'test/screenshots_test.yaml');
-      final Map scrnResources = screen['resources'];
-      await resources.unpackImages(scrnResources, '/tmp/screenshots');
-      final statusbarPath =
-          '${config.stagingDir}/${scrnResources['statusbar']}';
+      final screens = Screens();
+      final screen = screens.getScreen('Nexus 6P')!;
+      var paths = await resources.unpackImages(screen, '/tmp/screenshots');
+      final statusbarPath = paths.statusbar;
       final screenshotPath = 'test/resources/0.png';
       final options = {
         'screenshotPath': screenshotPath,
@@ -84,14 +78,10 @@ void main() {
     }, skip: true);
 
     test('append navbar', () async {
-      final Screens screens = Screens();
-      await screens.init();
-      final screen = screens.getScreen('Nexus 9');
-      final Config config = Config(configPath: 'test/screenshots_test.yaml');
-      final Map scrnResources = screen['resources'];
-      await resources.unpackImages(scrnResources, '/tmp/screenshots');
-      final screenshotNavbarPath =
-          '${config.stagingDir}/${scrnResources['navbar']}';
+      final screens = Screens();
+      final screen = screens.getScreen('Nexus 9')!;
+      var paths = await resources.unpackImages(screen, '/tmp/screenshots');
+      final screenshotNavbarPath = paths.navbar;
       final screenshotPath = 'test/resources/nexus_9_0.png';
       final options = {
         'screenshotPath': screenshotPath,
@@ -102,22 +92,15 @@ void main() {
     }, skip: true);
 
     test('frame screenshot', () async {
-      final Screens screens = Screens();
-      await screens.init();
-      final screen = screens.getScreen('Nexus 9');
-      final Config config = Config(configPath: 'test/screenshots_test.yaml');
-      final Map scrnResources = screen['resources'];
-      await resources.unpackImages(scrnResources, '/tmp/screenshots');
-      final framePath = config.stagingDir + '/' + scrnResources['frame'];
-      final size = screen['size'];
-      final resize = screen['resize'];
-      final offset = screen['offset'];
+      final screens = Screens();
+      final screen = screens.getScreen('Nexus 9')!;
+      var paths = await resources.unpackImages(screen, '/tmp/screenshots');
       final screenshotPath = 'test/resources/nexus_9_0.png';
       final options = {
-        'framePath': framePath,
-        'size': size,
-        'resize': resize,
-        'offset': offset,
+        'framePath': paths.frame,
+        'size': screen.size,
+        'resize': screen.resize,
+        'offset': screen.offset,
         'screenshotPath': screenshotPath,
         'backgroundColor': ImageProcessor.kDefaultAndroidBackground,
       };
@@ -164,28 +147,28 @@ void main() {
       expect(highestDevice, expected);
     }, skip:     true  );
 
-    test('read resource and write to path', () async {
-      final scrnResources = [
-        'resources/android/1080/statusbar.png',
-        'resources/android/1080/navbar.png',
-        'resources/android/phones/Nexus_5X.png'
-      ];
-      final dest = '/tmp';
-      for (String resource in scrnResources) {
-        await resources.writeImage(
-            await resources.readResourceImage(resource), '$dest/$resource');
-      }
-    });
+    // test('read resource and write to path', () async {
+    //   final scrnResources = [
+    //     'resources/android/1080/statusbar.png',
+    //     'resources/android/1080/navbar.png',
+    //     'resources/android/phones/Nexus_5X.png'
+    //   ];
+    //   final dest = '/tmp';
+    //   for (var resource in scrnResources) {
+    //     await resources.writeImage(
+    //         await resources.readResourceImage(resource), '$dest/$resource');
+    //   }
+    // });
 
-    test('unpack images', () async {
-      final scrnResources = {
-        'A': 'resources/android/1080/statusbar.png',
-        'B': 'resources/android/1080/navbar.png',
-        'C': 'resources/android/phones/Nexus_5X.png'
-      };
-      final dest = '/tmp';
-      await resources.unpackImages(scrnResources, dest);
-    }, skip: true);
+    // test('unpack images', () async {
+    //   final scrnResources = {
+    //     'A': 'resources/android/1080/statusbar.png',
+    //     'B': 'resources/android/1080/navbar.png',
+    //     'C': 'resources/android/phones/Nexus_5X.png'
+    //   };
+    //   final dest = '/tmp';
+    //   await resources.unpackImages(scrnResources, dest);
+    // }, skip: true);
 
     test('rooted emulator', () async {
       final emulatorId = 'Nexus_5X_API_27';
@@ -429,8 +412,8 @@ void main() {
         'emulator': false,
         'model': 'iPhone 5c (GSM)'
       });
-      String deviceName = 'iPhone 5c';
-      DaemonDevice device = utils.getDevice([expected], deviceName);
+      var deviceName = 'iPhone 5c';
+      var device = utils.getDevice([expected], deviceName);
       expect(device, expected);
       final isDeviceAttached = (device) => device != null;
       expect(isDeviceAttached(device), true);
@@ -453,7 +436,7 @@ void main() {
       ''';
 
       final configInfo = Config(configStr: config);
-      DeviceType deviceType = run.getDeviceType(configInfo, deviceName);
+      var deviceType = run.getDeviceType(configInfo, deviceName);
       expect(deviceType, expected);
     });
 
@@ -473,13 +456,13 @@ void main() {
       // start emulator
       final deviceId = await daemonClient.launchEmulator(emulatorId);
 
-      Map props = getDeviceProps(deviceId);
+      var props = getDeviceProps(deviceId);
       final newProps = Map.from(props);
       newProps['xmpp.auto-presence'] = false; //changed
       newProps['xxx'] = 'yyy'; // added
       newProps.remove('wifi.direct.interface'); // removed
 
-      final Map diffs = diffMaps(props, newProps);
+      final diffs = diffMaps(props, newProps);
       expect(diffs, expected);
       expect(
           await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
@@ -651,7 +634,6 @@ void main() {
           ..addAll(sevenInches)
           ..addAll(tenInches);
         final screens = Screens();
-        await screens.init();
         for (final androidDeviceName in androidDeviceNames.keys) {
           final screenProps = screens.getScreen(androidDeviceName);
           expect(getAndroidModelType(screenProps, androidDeviceName),
@@ -734,8 +716,7 @@ void main() {
 
     group('config validate', () {
       test('config guide', () async {
-        final Screens screens = Screens();
-        await screens.init();
+        final screens = Screens();
         final daemonClient = DaemonClient();
         await daemonClient.start;
         validate.deviceGuide(screens, await daemonClient.devices,

@@ -84,8 +84,6 @@ class Screenshots {
   /// 4. Move processed screenshots to fastlane destination for upload to stores.
   /// 5. If not a real device, stop emulator/simulator.
   Future<bool> run() async {
-    await screens.init();
-
     // start flutter daemon
     final status = logger.startProgress('Starting flutter daemon...',
         timeout: Duration(milliseconds: 10000));
@@ -409,7 +407,7 @@ class Screenshots {
       await utils.streamCmd(command,
           environment: cp != null ? {kEnvConfigPath: cp} : {});
       // process screenshots
-      final imageProcessor = ImageProcessor(screens, config);
+      final imageProcessor = ImageProcessor(config);
       await imageProcessor.process(
           deviceType, configDeviceName, locale, orientation, runMode, archive!);
     }

@@ -4,9 +4,9 @@ import 'package:screenshots/src/resources.dart';
 import 'package:screenshots/src/screens.dart';
 import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart';
-import 'package:tool_base_test/tool_base_test.dart' hide testUsingContext;
 
 import 'src/context.dart';
+import 'src/mocks.dart';
 
 void main() {
   group('resources', () {
@@ -34,11 +34,9 @@ void main() {
 
     group('no context', () {
       test('unpack screen resource images', () async {
-        final Screens screens = Screens();
-        await screens.init();
-        final screen = screens.getScreen('iPhone 7 Plus');
-        final Map screenResources = screen['resources'];
-        await unpackImages(screenResources, tmpDir);
+        final screens = Screens();
+        final screen = screens.getScreen('iPhone 7 Plus')!;
+        await unpackImages(screen, tmpDir);
       });
     });
   });

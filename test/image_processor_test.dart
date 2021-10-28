@@ -24,28 +24,24 @@ import 'image_processor_test.mocks.dart';
 void main() {
   test('process screenshots for iPhone X and iPhone XS Max', () async {
     final imageDir = 'test/resources';
-    final Screens screens = Screens();
-    await screens.init();
-    final Config config = Config(configPath: 'test/screenshots_test.yaml');
+    final screens = Screens();
 
-    final Map devices = {
+    final devices = {
       'iPhone X': 'iphone_x_1.png',
       'iPhone XS Max': 'iphone_xs_max_1.png',
       'iPad Pro (12.9-inch) (3rd generation)':
           'ipad_pro_12.9inch_3rd_generation_1.png',
     };
 
-    for (final String deviceName in devices.keys) {
+    for (final deviceName in devices.keys) {
       final screenshotName = devices[deviceName];
 //      print('deviceName=$deviceName, screenshotName=$screenshotName');
-      Map screen = screens.getScreen(deviceName);
+      final screen = screens.getScreen(deviceName)!;
 
-      final Map screenResources = screen['resources'];
-      await resources.unpackImages(screenResources, '/tmp/screenshots');
+      var paths = await resources.unpackImages(screen, '/tmp/screenshots');
 
       final screenshotPath = '$imageDir/$screenshotName';
-      final statusbarPath =
-          '${config.stagingDir}/${screenResources['statusbar']}';
+      final statusbarPath = screen.statusbar;
 
       var options = {
         'screenshotPath': screenshotPath,
@@ -54,15 +50,11 @@ void main() {
       await runInContext<void>(() async {
         return im.convert('overlay', options);
       });
-      final framePath = config.stagingDir + '/' + screenResources['frame'];
-      final size = screen['size'];
-      final resize = screen['resize'];
-      final offset = screen['offset'];
       options = {
-        'framePath': framePath,
-        'size': size,
-        'resize': resize,
-        'offset': offset,
+        'framePath': paths.frame,
+        'size': screen.size,
+        'resize': screen.resize,
+        'offset': screen.offset,
         'screenshotPath': screenshotPath,
         'backgroundColor': ImageProcessor.kDefaultAndroidBackground,
       };
@@ -95,7 +87,6 @@ void main() {
       copyFileToMemory(imagePath, stagingDir);
 
       final screens = Screens();
-      await screens.init();
       final deviceName = 'Nexus 6P';
       final locale = 'en-US';
       final configStr = '''
@@ -122,7 +113,7 @@ void main() {
             null),
       ];
 
-      final imageProcessor = ImageProcessor(screens, config);
+      final imageProcessor = ImageProcessor(config);
       final result = await imageProcessor.process(
           DeviceType.android, deviceName, locale, null, RunMode.normal, null);
       expect(result, isTrue);

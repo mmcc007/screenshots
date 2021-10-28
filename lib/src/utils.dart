@@ -18,7 +18,7 @@ Map parseYamlFile(String yamlPath) =>
     jsonDecode(jsonEncode(loadYaml(fs.file(yamlPath).readAsStringSync())));
 
 /// Parse a yaml string.
-Map parseYamlStr(String yamlString) =>
+Map<String, dynamic> parseYamlStr(String yamlString) =>
     jsonDecode(jsonEncode(loadYaml(yamlString)));
 
 /// Move files from [srcDir] to [dstDir].

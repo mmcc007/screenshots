@@ -126,9 +126,8 @@ class Config {
       DeviceType deviceType, Orientation orientation) async {
     // store env for later use by tests
     final screenProps = screens.getScreen(emulatorName);
-    final screenSize = screenProps == null ? null : screenProps['size'];
     final currentEnv = {
-      'screen_size': screenSize,
+      'screen_size': screenProps?.size,
       'locale': locale,
       'device_name': emulatorName,
       'device_type': utils.getStringFromEnum(deviceType),
@@ -171,7 +170,7 @@ class Config {
       return utils.getEnumFromString(Orientation.values, orientation);
     }
 
-    List<ConfigDevice> configDevices = [];
+    var configDevices = <ConfigDevice>[];
 
     devices.forEach((deviceType, device) {
       device?.forEach((deviceName, deviceProps) {

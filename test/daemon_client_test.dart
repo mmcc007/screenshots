@@ -7,9 +7,10 @@ import 'package:process/process.dart';
 import 'package:screenshots/src/daemon_client.dart';
 import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart';
-import 'package:tool_base_test/tool_base_test.dart' hide testUsingContext;
+// import 'package:tool_base_test/tool_base_test.dart' hide testUsingContext;
 
 import 'src/context.dart';
+import 'src/mocks.dart';
 
 void main() {
   final kEmulatorsJson = jsonEncode([

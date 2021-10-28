@@ -30,3 +30,4 @@ example/android/fastlane
 
 # code coverage
 coverage/
+bin/*.exe

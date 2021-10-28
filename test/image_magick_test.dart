@@ -7,9 +7,9 @@ import 'package:screenshots/src/image_processor.dart';
 import 'package:screenshots/src/utils.dart';
 import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart';
-import 'package:tool_base_test/tool_base_test.dart' hide testUsingContext;
 
 import 'src/context.dart';
+import 'src/mocks.dart';
 
 void main() {
   group('image magick', () {

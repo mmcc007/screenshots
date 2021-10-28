@@ -1,0 +1,30 @@
+builders:
+  screens:
+    import: "package:screenshots/builder.dart"
+    builder_factories:
+      - screens
+    build_extensions: { ".yaml": [ ".dart" ] }
+    build_to: cache
+    auto_apply: none
+
+  resources:
+    import: "package:screenshots/builder.dart"
+    builder_factories:
+      - resources
+    build_extensions:
+      "^resources/{{}}":
+        - lib/generated/resources/{{}}.dart
+    build_to: cache
+
+targets:
+  $default:
+    builders:
+      screenshots|screens:
+        enabled: true
+        generate_for:
+          - "lib/screens/screens.yaml"
+      screenshots|resources:
+        enabled: true
+        generate_for:
+          - lib/screens/**/*.png
+          - lib/screens/script/**

@@ -230,11 +230,11 @@ bool _isScreenAvailable(Screens screens, String deviceName, String configPath) {
 void screenGuide(Screens screens) {
   printStatus('\nScreen Guide:');
   printStatus('\n  Supported screens:');
-  for (final os in ['android', 'ios']) {
+  for (final os in [DeviceType.android, DeviceType.android]) {
     printStatus('    $os:');
-    for (String deviceName in screens.getSupportedDeviceNamesByOs(os)) {
+    for (var deviceName in screens.getSupportedDeviceNamesByOs(os)) {
       printStatus(
-          '      $deviceName (${screens.getScreen(deviceName)['size']})');
+          '      $deviceName (${screens.getScreen(deviceName)?.size})');
     }
   }
 }

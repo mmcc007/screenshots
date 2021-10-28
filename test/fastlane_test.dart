@@ -59,7 +59,6 @@ main() {
         ''';
       final config = Config(configStr: configStr);
       final screens = Screens();
-      await screens.init();
 
       for (final locale in config.locales) {
         for (final device in config.devices) {

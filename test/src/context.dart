@@ -4,9 +4,8 @@ import 'package:meta/meta.dart';
 import 'package:screenshots/src/context_runner.dart';
 import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart';
-import 'package:tool_base_test/tool_base_test.dart';
 
-import 'common_tools.dart';
+import 'mocks.dart';
 
 /// Return the test logger. This assumes that the current Logger is a BufferLogger.
 BufferLogger get testLogger => context.get<Logger>() as BufferLogger;

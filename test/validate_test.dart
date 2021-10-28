@@ -66,7 +66,6 @@ void main() {
       ''';
       final config = Config(configStr: configStr);
       final screens = Screens();
-      await screens.init();
       final allEmulators = <DaemonEmulator>[];
       final allDevices = <DaemonDevice>[];
 
@@ -122,7 +121,6 @@ void main() {
       ''';
       final config = Config(configStr: configStr);
       final screens = Screens();
-      await screens.init();
       final allEmulators = <DaemonEmulator>[];
       final allDevices = <DaemonDevice>[];
 
@@ -140,7 +138,7 @@ void main() {
 
     testUsingContext('getIosSimulators', () async {
       fakeProcessManager.calls = [callListIosDevices];
-      final Map simulators = getIosSimulators();
+      final simulators = getIosSimulators();
       final isSimulatorFound= isSimulatorInstalled(simulators, 'iPhone X');
       expect(isSimulatorFound, isTrue);
       fakeProcessManager.verifyCalls();
@@ -173,7 +171,6 @@ void main() {
       ''';
       final config = Config(configStr: configStr);
       final screens = Screens();
-      await screens.init();
       final emulator = loadDaemonEmulator({
         "id": "NEXUS_6P_API_28",
         "name": "NEXUS 6P API 28",
@@ -195,7 +192,7 @@ void main() {
 
       fakeProcessManager.calls = [callListIosDevices, callListIosDevices];
 
-      bool isValid =
+      var isValid =
           await isValidConfig(config, screens, allDevices, allEmulators);
 //      print(logger.statusText);
 //      print(logger.errorText);
@@ -236,7 +233,6 @@ void main() {
     testUsingContext('show device guide', () async {
       final logger = context.get<Logger>()! as BufferLogger;
       final screens = Screens();
-      await screens.init();
       final installedEmulator = loadDaemonEmulator({
         "id": "Nexus_6P_API_28",
         "name": "Android SDK built for x86",

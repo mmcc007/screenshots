@@ -182,7 +182,6 @@ void main() {
       ''';
       final config = Config(configStr: configStr);
       final screens = Screens();
-      await screens.init();
       final orientation = 'Portrait';
 
       final env = {

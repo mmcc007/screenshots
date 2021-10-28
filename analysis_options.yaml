@@ -17,4 +17,5 @@ include: package:pedantic/analysis_options.yaml
 #    - curly_braces_in_flow_control_structures # added for package score in https://pub.dev
 linter:
   rules:
-    - prefer_single_quotes: false
+    prefer_single_quotes: false
+    prefer_double_quotes: false
