@@ -347,7 +347,7 @@ void main() {
       final List emulators = jsonDecode(kEmulatorsJson);
       final daemonEmulators = <DaemonEmulator>[];
       emulators.forEach((emulator) {
-        daemonEmulators.add(loadDaemonEmulator(emulator));
+        daemonEmulators.add(loadDaemonEmulator(emulator)!);
       });
       expect(daemonEmulators.length, emulators.length);
       expect(daemonEmulators[0].id, emulators[0]['id']);

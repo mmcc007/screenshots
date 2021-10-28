@@ -307,7 +307,7 @@ Future<String?> waitAndroidLocaleChange(String deviceId, String toLocale) async 
 /// Filters a list of devices to get real ios devices. (only used in test??)
 List<DaemonDevice> getIosDaemonDevices(List<DaemonDevice> devices) {
   final iosDevices = devices
-      .where((device) => device.platform == 'ios' && !device.emulator)
+      .where((device) => device.deviceType == DeviceType.ios && !device.emulator)
       .toList();
   return iosDevices;
 }
@@ -315,7 +315,7 @@ List<DaemonDevice> getIosDaemonDevices(List<DaemonDevice> devices) {
 /// Filters a list of devices to get real android devices.
 List<DaemonDevice> getAndroidDevices(List<DaemonDevice> devices) {
   final iosDevices = devices
-      .where((device) => device.platform != 'ios' && !device.emulator)
+      .where((device) => device.deviceType != DeviceType.ios && !device.emulator)
       .toList();
   return iosDevices;
 }

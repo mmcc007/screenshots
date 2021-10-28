@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:collection/collection.dart';
 import 'package:meta/meta.dart';
+import 'package:screenshots/src/globals.dart';
 import 'package:screenshots/src/utils.dart';
 import 'package:tool_base/tool_base.dart';
 
@@ -51,11 +52,14 @@ class DaemonClient {
 
   /// List installed emulators (not including iOS simulators).
   Future<List<DaemonEmulator>> get emulators async {
-    final List emulators = await _sendCommandWaitResponse(
+    final emulators = await _sendCommandWaitResponse(
         <String, dynamic>{'method': 'emulator.getEmulators'});
     final daemonEmulators = <DaemonEmulator>[];
     for (var emulator in emulators) {
       final daemonEmulator = loadDaemonEmulator(emulator);
+      if (daemonEmulator == null) {
+        continue;
+      }
       printTrace('daemonEmulator=$daemonEmulator');
       daemonEmulators.add(daemonEmulator);
     }
@@ -235,7 +239,7 @@ List<Map<String, String>> getIosDevices() {
 /// Wait for emulator or simulator to start
 Future waitForEmulatorToStart(
     DaemonClient daemonClient, String deviceId) async {
-  bool started = false;
+  var started = false;
   while (!started) {
     printTrace(
         'waiting for emulator/simulator with device id \'$deviceId\' to start...');
@@ -251,9 +255,9 @@ abstract class BaseDevice {
   final String id;
   final String name;
   final String category;
-  final String platformType;
+  final DeviceType deviceType;
 
-  BaseDevice(this.id, this.name, this.category, this.platformType);
+  BaseDevice(this.id, this.name, this.category, this.deviceType);
 
   @override
   bool operator ==(other) {
@@ -261,12 +265,12 @@ abstract class BaseDevice {
         other.name == name &&
         other.id == id &&
         other.category == category &&
-        other.platformType == platformType;
+        other.deviceType == deviceType;
   }
 
   @override
   String toString() {
-    return 'id: $id, name: $name, category: $category, platformType: $platformType';
+    return 'id: $id, name: $name, category: $category, deviceType: $deviceType';
   }
 }
 
@@ -276,13 +280,12 @@ class DaemonEmulator extends BaseDevice {
     String id,
     String name,
     String category,
-    String platformType,
-  ) : super(id, name, category, platformType);
+    DeviceType deviceType,
+  ) : super(id, name, category, deviceType);
 }
 
 /// Describe a device.
 class DaemonDevice extends BaseDevice {
-  final String platform;
   final bool emulator;
   final bool ephemeral;
   final String emulatorId;
@@ -291,13 +294,12 @@ class DaemonDevice extends BaseDevice {
     String id,
     String name,
     String category,
-    String platformType,
-    this.platform,
+    DeviceType deviceType,
     this.emulator,
     this.ephemeral,
     this.emulatorId, {
     this.iosModel,
-  }) : super(id, name, category, platformType) {
+  }) : super(id, name, category, deviceType) {
     // debug check in CI
     if (emulator && emulatorId == null) throw 'Emulator id is null';
   }
@@ -306,7 +308,7 @@ class DaemonDevice extends BaseDevice {
   bool operator ==(other) {
     return super == other &&
         other is DaemonDevice &&
-        other.platform == platform &&
+        other.deviceType == deviceType &&
         other.emulator == emulator &&
         other.ephemeral == ephemeral &&
         other.emulatorId == emulatorId &&
@@ -320,12 +322,18 @@ class DaemonDevice extends BaseDevice {
   }
 }
 
-DaemonEmulator loadDaemonEmulator(Map<String, dynamic> emulator) {
+DaemonEmulator? loadDaemonEmulator(Map<String, dynamic> emulator) {
+  var platformType = emulator['platformType'];
+
+  // TODO(trygvis): check what ios would return there
+  var deviceType = platformType == 'android' ? DeviceType.android
+      : DeviceType.ios;
+
   return DaemonEmulator(
     emulator['id'],
     emulator['name'],
     emulator['category'],
-    emulator['platformType'],
+    deviceType,
   );
 }
 
@@ -344,7 +352,7 @@ DaemonDevice loadDaemonDevice(Map<String, dynamic> device) {
       device['platform'],
       true,
       device['ephemeral'],
-      'NEXUS_6P_API_28',
+      // 'NEXUS_6P_API_28',
       iosModel: device['model'],
     );
   }
@@ -352,11 +360,11 @@ DaemonDevice loadDaemonDevice(Map<String, dynamic> device) {
     device['id'],
     device['name'],
     device['category'],
-    device['platformType'],
+    device['platformType'] == 'android' ? DeviceType.android : DeviceType.ios,
     device['platform'],
     device['emulator'],
     device['ephemeral'],
-    device['emulatorId'],
+    // device['emulatorId'],
     iosModel: device['model'],
   );
 }

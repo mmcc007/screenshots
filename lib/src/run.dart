@@ -197,7 +197,7 @@ class Screenshots {
       String deviceId;
       DaemonEmulator? emulator;
       Map? simulator;
-      bool pendingIosLocaleChangeAtStart = false;
+      var pendingIosLocaleChangeAtStart = false;
       if (device != null) {
         deviceId = device.id;
       } else {
@@ -253,7 +253,7 @@ class Screenshots {
         // Function to check for a running android device or emulator.
         bool isRunningAndroidDeviceOrEmulator(
             DaemonDevice? device, DaemonEmulator? emulator) {
-          return (device != null && device.platform != 'ios') ||
+          return (device != null && device.deviceType != DeviceType.ios) ||
               (device == null && emulator != null);
         }
 
@@ -265,7 +265,7 @@ class Screenshots {
 
         // Function to check for a running ios device or simulator.
         bool isRunningIosDeviceOrSimulator(DaemonDevice? device) {
-          return (device != null && device.platform == 'ios') ||
+          return (device != null && device.deviceType == DeviceType.ios) ||
               (device == null && simulator != null);
         }
 
@@ -281,7 +281,7 @@ class Screenshots {
             await setEmulatorLocale(deviceId, locale, d.name);
           }
           // set locale if ios simulator
-          if ((device != null && device.platform == 'ios' && device.emulator) ||
+          if ((device != null && device.deviceType == DeviceType.ios && device.emulator) ||
               (device == null &&
                   simulator != null &&
                   !pendingIosLocaleChangeAtStart)) {
@@ -457,7 +457,7 @@ DaemonDevice? findRunningDevice(List<DaemonDevice> devices,
 //    }
 
     if (device.emulator) {
-      if (device.platformType == 'android') {
+      if (device.deviceType == DeviceType.android) {
         // running emulator
         return device.emulatorId.replaceAll('_', ' ').toUpperCase().contains(
             deviceName.toUpperCase());
@@ -466,7 +466,7 @@ DaemonDevice? findRunningDevice(List<DaemonDevice> devices,
         return device.name.contains(deviceName);
       }
     } else {
-      if (device.platformType == 'ios') {
+      if (device.deviceType == DeviceType.ios) {
         // real ios device
         return device.iosModel?.contains(deviceName) ?? false;
       } else {
@@ -507,20 +507,19 @@ Future<void> setEmulatorLocale(String deviceId, String testLocale, String device
       Intl.canonicalizedLocale(deviceLocale) !=
           Intl.canonicalizedLocale(testLocale)) {
     //          daemonClient.verbose = true;
-    printStatus(
-        "Changing locale from $deviceLocale to $testLocale on '$deviceName'...");
-    changeAndroidLocale(deviceId, deviceLocale, testLocale);
-    //          daemonClient.verbose = false;
-    await utils.waitAndroidLocaleChange(deviceId, testLocale);
-    // allow additional time before orientation change
+    if (changeAndroidLocale(deviceId, deviceLocale, testLocale)) {
+      //          daemonClient.verbose = false;
+      await utils.waitAndroidLocaleChange(deviceId, testLocale);
+      // allow additional time before orientation change
 //    await Future.delayed(Duration(milliseconds: 5000));
-    await Future.delayed(Duration(milliseconds: 1000));
+      await Future.delayed(Duration(milliseconds: 1000));
+    }
   }
 }
 
 /// Change local of real android device or running emulator.
-void changeAndroidLocale(
-    String deviceId, String deviceLocale, String testLocale) {
+bool changeAndroidLocale(String deviceId, String deviceLocale,
+    String testLocale) {
   if (utils.cmd([getAdbPath(androidSdk), '-s', deviceId, 'root']) ==
       'adbd cannot run as root in production builds\n') {
     printError(
@@ -529,8 +528,11 @@ void changeAndroidLocale(
         'To change locale you must use a non-production emulator (one that does not depend on Play Store). See:\n');
     printError(
         '    https://stackoverflow.com/questions/43923996/adb-root-is-not-working-on-emulator/45668555#45668555 for details.\n');
-    return;
+    return false;
   }
+  printStatus(
+      "Changing locale from $deviceLocale to $testLocale on '$deviceId'...");
+
   // adb shell "setprop persist.sys.locale fr_CA; setprop ctl.restart zygote"
   utils.cmd([
     getAdbPath(androidSdk),
@@ -545,6 +547,8 @@ void changeAndroidLocale(
     'ctl.restart',
     'zygote'
   ]);
+
+  return true;
 }
 
 /// Change locale of non-running simulator.

@@ -2,6 +2,7 @@ import 'package:fake_process_manager/fake_process_manager.dart';
 import 'package:mockito/mockito.dart';
 import 'package:path/path.dart' hide equals;
 import 'package:process/process.dart';
+import 'package:screenshots/screenshots.dart';
 import 'package:screenshots/src/daemon_client.dart';
 import 'package:screenshots/src/utils.dart';
 import 'package:test/test.dart';
@@ -71,7 +72,7 @@ void main() {
         final emulatorName = 'emulator name';
         final emulatorId = '$emulatorName API 123'.replaceAll(' ', '_');
         final expected = DaemonEmulator(
-            emulatorId, '$emulatorName version', 'category', 'platformType');
+            emulatorId, '$emulatorName version', 'category', DeviceType.android);
         expect(
             findEmulator([expected], emulatorName)!.name, equals(expected.name));
       });

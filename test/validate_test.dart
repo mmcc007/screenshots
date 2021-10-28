@@ -176,7 +176,7 @@ void main() {
         "name": "NEXUS 6P API 28",
         "category": "mobile",
         "platformType": "android"
-      });
+      })!;
       final device = loadDaemonDevice({
         "id": "emulator-5554",
         "name": "Android SDK built for x86 64",
@@ -238,7 +238,7 @@ void main() {
         "name": "Android SDK built for x86",
         "category": "mobile",
         "platformType": "android"
-      });
+      })!;
       final allEmulators = <DaemonEmulator>[installedEmulator];
       final runningEmulator = loadDaemonDevice({
         "id": "emulator-5554",

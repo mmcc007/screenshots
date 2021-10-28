@@ -176,7 +176,7 @@ void deviceGuide(Screens screens, List<DaemonDevice> devices,
   }
   if (emulators.isNotEmpty) {
     printStatus('\n  Installed emulators:');
-    _printEmulators(emulators, 'android');
+    _printEmulators(emulators, DeviceType.android);
   }
   if (platform.isMacOS) {
     _printSimulators();
@@ -223,16 +223,16 @@ void screenGuide(Screens screens) {
 void _printAttachedDevices(List<DaemonDevice> devices) {
   for (final device in devices) {
 //    if (device.emulator == false) {
-      device.platform == 'ios'
+      device.deviceType == DeviceType.ios
           ? printStatus('    ${device.iosModel} (${device.id})')
           : printStatus('    ${device.emulator?'${device.emulatorId}':'${device.name}'} (${device.id})');
 //    }
   }
 }
 
-void _printEmulators(List<DaemonEmulator> emulators, String platformType) {
+void _printEmulators(List<DaemonEmulator> emulators, DeviceType deviceType) {
   emulators
-      .where((emulator) => emulator.platformType == platformType)
+      .where((emulator) => emulator.deviceType == deviceType)
       .forEach((emulator) => printStatus('    ${emulator.id}'));
 }
 

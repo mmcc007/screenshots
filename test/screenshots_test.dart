@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:collection/collection.dart';
 import 'package:path/path.dart' as p;
 import 'package:process/process.dart';
 import 'package:screenshots/src/config.dart';
@@ -864,7 +865,7 @@ void main() {
             'category': 'mobile',
             'platformType': 'ios'
           })
-        ];
+        ].whereNotNull().toList();
         var deviceInfo = run.findRunningDevice(
             runningDevices, installedEmulators, androidDeviceName);
         expect(deviceInfo, androidDevice);
