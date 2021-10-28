@@ -22,7 +22,7 @@ import 'l10n/messages_all.dart';
 
 class ExampleLocalizations {
   static Future<ExampleLocalizations> load(Locale locale) {
-    final String name = locale.countryCode == null || locale.countryCode.isEmpty
+    final String name = locale.countryCode?.isEmpty ?? true
         ? locale.languageCode
         : locale.toString();
     final String localeName = Intl.canonicalizedLocale(name);
@@ -35,7 +35,7 @@ class ExampleLocalizations {
 
   static ExampleLocalizations of(BuildContext context) {
     return Localizations.of<ExampleLocalizations>(
-        context, ExampleLocalizations);
+        context, ExampleLocalizations)!;
   }
 
   String get title {
@@ -137,7 +137,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key}) : super(key: key);
+  MyHomePage({Key? key}) : super(key: key);
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -207,7 +207,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             Text(
               '$_counter',
-              style: Theme.of(context).textTheme.display1,
+              style: Theme.of(context).textTheme.bodyText1,
             ),
           ],
         ),
