@@ -552,15 +552,14 @@ bool changeAndroidLocale(String deviceId, String deviceLocale,
 }
 
 /// Change locale of non-running simulator.
-Future _changeSimulatorLocale(
-    String stagingDir, String name, String testLocale) async {
-  await utils.streamCmd([
-    '$stagingDir/resources/script/simulator-controller',
-    name,
-    'locale',
-    testLocale
-  ]);
-}
+Future<void> _changeSimulatorLocale(String stagingDir, String name,
+    String testLocale) async =>
+    await utils.streamCmd([
+      '$stagingDir/resources/script/simulator-controller',
+      name,
+      'locale',
+      testLocale
+    ]);
 
 /// Shutdown an android emulator.
 Future<String> shutdownAndroidEmulator(
