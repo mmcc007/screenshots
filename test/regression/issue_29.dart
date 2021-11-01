@@ -3,8 +3,6 @@ import 'package:screenshots/src/utils.dart' as utils;
 import 'package:test/test.dart';
 import 'package:yaml/yaml.dart';
 
-import '../src/common.dart';
-
 void main() {
   // issue #29
   test('check full matching emulator name', () async {

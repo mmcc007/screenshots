@@ -18,10 +18,10 @@ class MockAndroidSdk extends Mock implements AndroidSdk {
     bool withPlatformTools = true,
     bool withBuildTools = true,
   }) {
-    final Directory dir =
-        fs.systemTempDirectory.createTempSync('flutter_mock_android_sdk.');
-    final String exe = platform.isWindows ? '.exe' : '';
-    final String bat = platform.isWindows ? '.bat' : '';
+    final dir =
+    fs.systemTempDirectory.createTempSync('flutter_mock_android_sdk.');
+    final exe = platform.isWindows ? '.exe' : '';
+    final bat = platform.isWindows ? '.bat' : '';
 
     _createDir(dir, 'licenses');
 
@@ -49,7 +49,7 @@ class MockAndroidSdk extends Mock implements AndroidSdk {
     if (withSdkManager) _createSdkFile(dir, 'tools/bin/sdkmanager$bat');
 
     if (withNdkDir != null) {
-      final String ndkToolchainBin = fs.path.join(
+      final ndkToolchainBin = fs.path.join(
         'ndk-bundle',
         'toolchains',
         'arm-linux-androideabi-4.9',
@@ -57,11 +57,11 @@ class MockAndroidSdk extends Mock implements AndroidSdk {
         withNdkDir,
         'bin',
       );
-      final String ndkCompiler = fs.path.join(
+      final ndkCompiler = fs.path.join(
         ndkToolchainBin,
         'arm-linux-androideabi-gcc',
       );
-      final String ndkLinker = fs.path.join(
+      final ndkLinker = fs.path.join(
         ndkToolchainBin,
         'arm-linux-androideabi-ld',
       );
@@ -75,7 +75,7 @@ Pkg.Revision = $ndkVersion.1.5063045
 ''');
     }
     if (withNdkSysroot) {
-      final String armPlatform = fs.path.join(
+      final armPlatform = fs.path.join(
         'ndk-bundle',
         'platforms',
         'android-9',
@@ -89,7 +89,7 @@ Pkg.Revision = $ndkVersion.1.5063045
 
   static void _createSdkFile(Directory dir, String filePath,
       {String? contents}) {
-    final File file = dir.childFile(filePath);
+    final file = dir.childFile(filePath);
     file.createSync(recursive: true);
     if (contents != null) {
       file.writeAsStringSync(contents, flush: true);
@@ -97,7 +97,7 @@ Pkg.Revision = $ndkVersion.1.5063045
   }
 
   static void _createDir(Directory dir, String path) {
-    final Directory directory = fs.directory(fs.path.join(dir.path, path));
+    final directory = fs.directory(fs.path.join(dir.path, path));
     directory.createSync(recursive: true);
   }
 
@@ -158,6 +158,7 @@ class MockProcessManager extends Mock implements ProcessManager {
         #mode: mode,
       }));
 
+  @override
   Future<ProcessResult> run(
       List<Object>? command, {
         String? workingDirectory,
@@ -241,7 +242,7 @@ class MemoryIOSink implements IOSink {
 
   @override
   Future<void> addStream(Stream<List<int>> stream) {
-    final Completer<void> completer = Completer<void>();
+    final completer = Completer<void>();
     stream.listen((List<int> data) {
       add(data);
     }).onDone(() => completer.complete());

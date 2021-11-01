@@ -93,7 +93,7 @@ class Poller {
 
 /// Show differences between maps
 Map diffMaps(Map orig, Map diff, {bool verbose = false}) {
-  Map diffs = {
+  var diffs = <String, dynamic>{
     'added': {},
     'removed': {},
     'changed': {'orig': {}, 'new': {}}
@@ -125,7 +125,7 @@ Map diffMaps(Map orig, Map diff, {bool verbose = false}) {
 Future<String?> findAndroidHome() async {
   final hits = grep(
     'ANDROID_HOME = ',
-    from: await cmd(<String>['flutter', 'doctor', '-v']),
+    from: cmd(<String>['flutter', 'doctor', '-v']),
   );
   if (hits.isEmpty) return null;
   return hits.first.split('= ').last;

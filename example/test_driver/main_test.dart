@@ -52,3 +52,5 @@ void main() {
     }, timeout: const Timeout(Duration(seconds: 120)));
   });
 }
+
+// ignore_for_file: avoid_print

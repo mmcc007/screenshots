@@ -79,6 +79,8 @@ class ExampleLocalizationsDelegate
 }
 
 class DemoApp extends StatelessWidget {
+  const DemoApp({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -93,10 +95,12 @@ class DemoApp extends StatelessWidget {
 }
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
@@ -114,18 +118,18 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(),
-      localizationsDelegates: [
+      home: const MyHomePage(),
+      localizationsDelegates: const [
         // ... app-specific localization delegate[s] here
-        const ExampleLocalizationsDelegate(),
+        ExampleLocalizationsDelegate(),
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
       ],
-      supportedLocales: [
-        const Locale('en'), // English
-        const Locale('fr'), // French
-//        const Locale('en', 'US'), // American English
-//        const Locale('fr', 'CA'), // Canadian French
+      supportedLocales: const [
+        Locale('en'), // English
+        Locale('fr'), // French
+//        Locale('en', 'US'), // American English
+//        Locale('fr', 'CA'), // Canadian French
         // ... other locales the app supports
       ],
       // some android emulators on some machines may require the following:
@@ -137,7 +141,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key? key}) : super(key: key);
+  const MyHomePage({Key? key}) : super(key: key);
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -215,7 +219,7 @@ class _MyHomePageState extends State<MyHomePage> {
       floatingActionButton: FloatingActionButton(
         onPressed: _incrementCounter,
         tooltip: ExampleLocalizations.of(context).counterIncrementButtonTooltip,
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }

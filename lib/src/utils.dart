@@ -50,12 +50,12 @@ Map transformIosSimulators(Map simsInfo) {
   // ie, Map<String, Map<String, List<Map<String, String>>>>
   // In other words, just pop-out the device name for 'easier' access to
   // the device properties.
-  Map simsInfoTransformed = {};
+  var simsInfoTransformed = {};
 
   simsInfo.forEach((iOSName, sims) {
     // note: 'isAvailable' field does not appear consistently
     //       so using 'availability' as well
-    isSimAvailable(sim) =>
+    bool isSimAvailable(sim) =>
         sim['availability'] == '(available)' || sim['isAvailable'] == true;
     for (final sim in sims) {
       // skip if simulator unavailable
@@ -406,7 +406,7 @@ String toPlatformPath(String posixPath, {p.Context? context}) {
 Future<bool> isAdbPath() async {
   return await runInContext<bool>(() async {
     final adbPath = getAdbPath(androidSdk);
-    return adbPath != null && adbPath.isNotEmpty;
+    return adbPath.isNotEmpty;
   });
 }
 

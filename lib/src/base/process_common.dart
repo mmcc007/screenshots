@@ -57,18 +57,18 @@ String? getExecutablePath(
   assert(_osToPathStyle[platform.operatingSystem] == fs.path.style.name);
 
   workingDirectory ??= fs.currentDirectory.path;
-  Context context = Context(style: fs.path.style, current: workingDirectory);
+  var context = Context(style: fs.path.style, current: workingDirectory);
 
   // TODO(goderbauer): refactor when github.com/google/platform.dart/issues/2
   //     is available.
-  String pathSeparator = platform.isWindows ? ';' : ':';
+  var pathSeparator = platform.isWindows ? ';' : ':';
 
-  List<String> extensions = <String>[];
+  var extensions = <String>[];
   if (platform.isWindows && context.extension(command).isEmpty) {
     extensions = (platform.environment['PATHEXT'] ?? '').split(pathSeparator);
   }
 
-  List<String> candidates = <String>[];
+  var candidates = <String>[];
   if (command.contains(context.separator)) {
     candidates = _getCandidatePaths(
         command, [workingDirectory], extensions, context);

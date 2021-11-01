@@ -229,9 +229,6 @@ class Screenshots {
 
       // a device is now found
       // (and running if not ios simulator pending locale change)
-      deviceId == null
-          ? throw 'Error: device \'${d.name}\' not found'
-          : Null;
 
       // todo: make a backup of GlobalPreferences.plist if changing iOS locale
       // set locale and run tests
@@ -357,7 +354,7 @@ class Screenshots {
           }
         }
         // if an emulator was started, revert locale if necessary and shut it down
-        if (emulator != null && origAndroidLocale != null) {
+        if (origAndroidLocale != null) {
           await setEmulatorLocale(
               deviceId, origAndroidLocale, d.name);
           await shutdownAndroidEmulator(daemonClient, deviceId);

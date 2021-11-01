@@ -1,4 +1,3 @@
-import 'package:screenshots/src/config.dart';
 import 'package:screenshots/src/context_runner.dart';
 import 'package:screenshots/src/image_magick.dart';
 import 'package:screenshots/src/image_processor.dart';
@@ -7,12 +6,11 @@ import 'package:screenshots/src/screens.dart';
 import 'package:screenshots/src/utils.dart';
 import 'package:test/test.dart';
 
-main() {
+void main() {
   group('frame test', () {
     test('frame Nexus 9', () async {
       final screens = Screens();
       final screen = screens.getScreen('Nexus 9')!;
-      final config = Config(configPath: 'test/screenshots_test.yaml');
 
       var paths = await resources.unpackImages(screen, '/tmp/screenshots');
 

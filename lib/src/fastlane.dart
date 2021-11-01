@@ -13,7 +13,7 @@ import 'globals.dart';
 Future clearFastlaneDirs(
     Config config, Screens screens, RunMode runMode) async {
   if (config.isRunTypeActive(DeviceType.android)) {
-    for (ConfigDevice device in config.androidDevices) {
+    for (var device in config.androidDevices) {
       for (final locale in config.locales) {
         await _clearFastlaneDir(
             screens, device.name, locale, DeviceType.android, runMode);
@@ -21,7 +21,7 @@ Future clearFastlaneDirs(
     }
   }
   if (config.isRunTypeActive(DeviceType.ios)) {
-    for (ConfigDevice device in config.iosDevices) {
+    for (var device in config.iosDevices) {
       for (final locale in config.locales) {
         await _clearFastlaneDir(
             screens, device.name, locale, DeviceType.ios, runMode);

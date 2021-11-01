@@ -299,10 +299,7 @@ class DaemonDevice extends BaseDevice {
     this.ephemeral,
     this.emulatorId, {
     this.iosModel,
-  }) : super(id, name, category, deviceType) {
-    // debug check in CI
-    if (emulator && emulatorId == null) throw 'Emulator id is null';
-  }
+  }) : super(id, name, category, deviceType);
 
   @override
   bool operator ==(other) {

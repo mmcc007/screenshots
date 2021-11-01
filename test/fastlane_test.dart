@@ -9,7 +9,7 @@ import 'package:tool_base/tool_base.dart' hide Config;
 
 import 'src/context.dart';
 
-main() {
+void main() {
   group('fastlane', () {
     final dirPath = 'test/$kTestScreenshotsDir';
     var memoryFileSystem = MemoryFileSystem();
@@ -63,7 +63,7 @@ main() {
       for (final locale in config.locales) {
         for (final device in config.devices) {
           // create files
-          int i=0;
+          var i = 0;
           final path = getDirPath(device.deviceType, locale,
               getAndroidModelType(screens.getScreen(device.name), device.name));
           expect(memoryFileSystem.directory(path).existsSync(), isFalse);

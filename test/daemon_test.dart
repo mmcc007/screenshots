@@ -12,9 +12,7 @@ import 'package:screenshots/src/config.dart';
 import 'package:screenshots/src/utils.dart' as utils;
 import 'package:test/test.dart';
 
-import 'src/common.dart';
-
-main() {
+void main() {
   group('daemon test', () {
     test('start shipped daemon client', () async {
       final flutterHome = dirname(dirname((utils.cmd(['which', 'flutter']))));
@@ -25,8 +23,8 @@ main() {
           workingDirectory: flutterToolsHome);
 //      print('shipped daemon client process started, pid: ${daemonClient.pid}');
 
-      bool connected = false;
-      bool waitingForResponse = false;
+      var connected = false;
+      var waitingForResponse = false;
       daemonClient.stdout
           .transform<String>(utf8.decoder)
           .transform<String>(const LineSplitter())

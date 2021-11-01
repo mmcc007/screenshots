@@ -744,18 +744,13 @@ void main() {
         for (final deviceInfo in configInfo.devices) {
 //        print('devName=$devName');
 //        print('deviceInfo=$deviceInfo');
-          if (deviceInfo != null) {
-            if (deviceInfo.name == deviceName) {
-              expect(utils.getEnumFromString(Orientation.values, orientation),
-                  deviceInfo.orientations[0]);
-//              expect(validate.isValidOrientation(orientation), isTrue);
-//              expect(validate.isValidOrientation('bad orientation'), isFalse);
-            }
-            expect(deviceInfo.isFramed, frame);
-            // TODO: Config will call io.exit(-1) when validating the frame.
-            // expect(validate.isValidFrame(frame), isTrue);
-            // expect(validate.isValidFrame('bad frame'), isFalse);
+          if (deviceInfo.name == deviceName) {
+            expect(utils.getEnumFromString(Orientation.values, orientation),
+                deviceInfo.orientations[0]);
+//            expect(validate.isValidOrientation(orientation), isTrue);
+//            expect(validate.isValidOrientation('bad orientation'), isFalse);
           }
+          expect(deviceInfo.isFramed, frame);
         }
       });
 

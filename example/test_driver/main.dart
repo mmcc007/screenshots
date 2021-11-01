@@ -8,7 +8,7 @@ import 'package:flutter_driver/driver_extension.dart';
 import 'package:intl/intl.dart';
 
 void main() {
-  final DataHandler handler = (_) async {
+  Future<String> handler(String? _) async {
     final localizations =
         await ExampleLocalizations.load(Locale(ui.window.locale.languageCode));
     final response = {
@@ -19,10 +19,10 @@ void main() {
       'locale': Intl.defaultLocale
     };
     return Future.value(c.jsonEncode(response));
-  };
+  }
   // Enable integration testing with the Flutter Driver extension.
   // See https://flutter.io/testing/ for more info.
   enableFlutterDriverExtension(handler: handler);
   WidgetsApp.debugAllowBannerOverride = false; // remove debug banner
-  runApp(MyApp());
+  runApp(const MyApp());
 }

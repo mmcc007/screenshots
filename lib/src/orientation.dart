@@ -51,11 +51,5 @@ void changeDeviceOrientation(DeviceType deviceType, Orientation orientation,
   }
 }
 
-Orientation getOrientationEnum(String orientation) {
-  final _orientation =
-      utils.getEnumFromString<Orientation>(Orientation.values, orientation);
-  _orientation == null
-      ? throw 'Error: orientation \'$orientation\' not found'
-      : null;
-  return _orientation;
-}
+Orientation getOrientationEnum(String orientation) =>
+    utils.getEnumFromString<Orientation>(Orientation.values, orientation);

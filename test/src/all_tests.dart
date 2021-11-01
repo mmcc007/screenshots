@@ -1,5 +1,5 @@
 import 'context_test.dart' as context_test;
 
-main() {
+void main() {
   context_test.main();
 }

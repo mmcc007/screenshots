@@ -14,7 +14,7 @@ Matcher isInstanceOf<T>() => test_package.TypeMatcher<T>();
 
 /// Matcher for functions that throw [ToolExit].
 Matcher throwsToolExit({int? exitCode, Pattern? message}) {
-  Matcher matcher = isToolExit;
+  var matcher = isToolExit;
   if (exitCode != null) {
     matcher = allOf(matcher, (ToolExit e) => e.exitCode == exitCode);
   }

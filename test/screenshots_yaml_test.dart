@@ -2,11 +2,11 @@ import 'dart:io';
 
 import 'package:screenshots/src/config.dart';
 import 'package:screenshots/src/daemon_client.dart';
+import 'package:screenshots/src/fastlane.dart' as fastlane;
 import 'package:screenshots/src/globals.dart';
 import 'package:screenshots/src/screens.dart';
 import 'package:screenshots/src/validate.dart';
 import 'package:test/test.dart';
-import 'package:screenshots/src/fastlane.dart' as fastlane;
 import 'package:yaml/yaml.dart';
 
 final screenshotsYaml = '''
@@ -69,22 +69,12 @@ void main() {
   test('validate test paths', () async {
     final mainPath = 'example/test_driver/main.dart';
     final testPath = 'example/test_driver/main_test.dart';
-    final bogusPath = 'example/test_driver/non_existant.dart';
 
     expect(isValidTestPaths(mainPath), isTrue);
     expect(isValidTestPaths('--target=$mainPath'), isTrue);
     expect(isValidTestPaths('--target=$mainPath --driver=$testPath'), isTrue);
     expect(isValidTestPaths('--driver=$testPath --target=$mainPath '), isTrue);
     expect(isValidTestPaths('--driver $testPath --target $mainPath '), isTrue);
-
-    if (!    true  ) {
-      expect(isValidTestPaths(bogusPath), isFalse);
-      expect(isValidTestPaths('--target=$bogusPath'), isFalse);
-      expect(
-          isValidTestPaths('--target=$bogusPath --driver=$mainPath'), isFalse);
-      expect(
-          isValidTestPaths('--target=$mainPath --driver=$bogusPath'), isFalse);
-    }
   });
 
   test('validate config file', () async {

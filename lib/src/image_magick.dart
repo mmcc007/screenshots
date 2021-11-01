@@ -113,7 +113,7 @@ class ImageMagick {
   bool compare(String comparisonImage, String recordedImage) {
     final diffImage = getDiffImagePath(comparisonImage);
 
-    int returnCode = _imageMagickCmd('compare',
+    var returnCode = _imageMagickCmd('compare',
         <String>['-metric', 'mae', recordedImage, comparisonImage, diffImage]);
 
     if (returnCode == 0) {
