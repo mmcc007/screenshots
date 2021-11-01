@@ -23,7 +23,8 @@ dependencies:
 dev_dependencies:
   build_runner: ^2.1.4
   test: ^1.19.2
-#  tool_base_test:
+  tool_base: ^2.0.0
+  tool_mobile: ^3.0.0
 #  test_api: ^0.2.5
   mockito: ^5.0.16
   pedantic: ^1.8.0+1
