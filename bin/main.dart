@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:args/args.dart';
 import 'package:screenshots/screenshots.dart';
 import 'package:screenshots/src/globals.dart';
+import 'package:screenshots/src/utils.dart';
 
 const usage =
     'usage: screenshots [-h] [-c <config file>] [-m <normal|recording|comparison|archive>] [-f <flavor>] [-b <true|false>] [-v]';
@@ -122,10 +123,14 @@ void main(List<String> arguments) async {
 
   final success = await screenshots(
     configPath: argResults[configArg],
-    mode: argResults[modeArg],
-    flavor: argResults[flavorArg] as String? ?? kNoFlavor,
+    runMode: argResults.wasParsed(modeArg)
+        ? getRunModeEnum(argResults[modeArg])
+        : RunMode.normal,
+    flavor: argResults[flavorArg] as String?,
     isBuild: argResults.wasParsed(buildArg)
-        ? argResults[buildArg] == 'true' ? true : false
+        ? argResults[buildArg] == 'true'
+            ? true
+            : false
         : null,
     isVerbose: argResults.wasParsed(verboseArg) ? true : false,
   );

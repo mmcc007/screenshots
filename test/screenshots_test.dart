@@ -518,7 +518,7 @@ void main() {
         final configPath = 'screenshots.yaml';
         await run.screenshots(
             configPath: configPath,
-            mode: utils.getStringFromEnum(RunMode.recording));
+            runMode: RunMode.recording);
         final config = Config(configPath: configPath);
         final recordingDir = config.recordingDir!;
         expect(await utils.isRecorded(recordingDir), isTrue);
@@ -561,7 +561,7 @@ void main() {
         expect(await utils.isRecorded(recordingDir), isTrue);
         await run.screenshots(
             configPath: configPath,
-            mode: utils.getStringFromEnum(RunMode.comparison));
+            runMode: RunMode.comparison);
         Directory.current = origDir;
       }, timeout: Timeout(Duration(seconds: 180)), skip:     true  );
 
@@ -590,7 +590,7 @@ void main() {
         final configPath = 'screenshots.yaml';
         await run.screenshots(
             configPath: configPath,
-            mode: utils.getStringFromEnum(RunMode.archive));
+            runMode: RunMode.archive);
         Directory.current = origDir;
       }, timeout: Timeout(Duration(seconds: 180)), skip:     true  );
     });
@@ -720,7 +720,7 @@ void main() {
         final daemonClient = DaemonClient();
         await daemonClient.start;
         validate.deviceGuide(screens, await daemonClient.devices,
-            await daemonClient.emulators, 'screenshots.yaml');
+            await daemonClient.emulators);
       }, skip:     true  );
 
       test('validate device params', () {
@@ -770,7 +770,7 @@ void main() {
         final configPath = 'screenshots.yaml';
         await run.screenshots(
             configPath: configPath,
-            mode: utils.getStringFromEnum(RunMode.normal),
+            runMode: RunMode.normal,
             flavor: flavor);
         Directory.current = origDir;
       }, timeout: Timeout(Duration(seconds: 240)), skip:     true  );
@@ -792,7 +792,7 @@ void main() {
         // for this test change directory
         final origDir = Directory.current;
         Directory.current = 'example';
-        final screenshots = Screenshots(configStr: configIosOnly);
+        final screenshots = Screenshots(config: Config(configStr: configIosOnly));
         expect(await screenshots.run(), isTrue);
         // allow other tests to continue
         Directory.current = origDir;

@@ -189,18 +189,16 @@ void main() {
       final env = {
         'screen_size': '1440x2560',
         'locale': 'en_US',
-        'device_name': device.name,
-        'device_type': 'android',
+        'deviceName': device.name,
         'orientation': orientation
       };
 
       // called by screenshots before test
-      await config.storeEnv(
-          screen,
-          device,
-          env['locale']!,
-          getEnumFromString(DeviceType.values, env['device_type']!),
-          getEnumFromString(Orientation.values, orientation));
+      await config.storeEnv(ScreenshotsEnv(
+          screen: screen,
+          device: device,
+          locale: env['locale']!,
+          orientation: getEnumFromString(Orientation.values, orientation)));
 
       // called by test
       // simulate no screenshots available

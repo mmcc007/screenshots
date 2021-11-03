@@ -23,18 +23,16 @@ import 'validate.dart' as validate;
 Future<bool> screenshots(
     {required String configPath,
     String? configStr,
-    String mode = 'normal',
-    String flavor = kNoFlavor,
+    required RunMode runMode,
+    String? flavor,
     bool? isBuild,
     bool isVerbose = false}) async {
   final screenshots = Screenshots(
-    configPath: configPath,
-    configStr: configStr,
-    mode: mode,
-    flavor: flavor,
-    isBuild: isBuild,
-    verbose: isVerbose
-  );
+      config: Config(configPath: configPath, configStr: configStr),
+      runMode: runMode,
+      flavor: flavor,
+      isBuild: isBuild,
+      verbose: isVerbose);
   // run in context
   if (isVerbose) {
     Logger verboseLogger = VerboseLogger(
@@ -53,26 +51,22 @@ Future<bool> screenshots(
 
 class Screenshots {
   Screenshots({
-    this.configPath,
-    this.configStr,
-    String mode = 'normal',
-    this.flavor = kNoFlavor,
+    required this.config,
+    this.runMode = RunMode.normal,
+    this.flavor,
     this.isBuild,
     this.verbose = false,
-  }) : config = Config(configPath: configPath, configStr: configStr),
-        runMode = utils.getRunModeEnum(mode);
+  });
 
-  final String? configPath;
-  final String? configStr;
-  final String flavor;
+  final String? flavor;
   final bool? isBuild;
   final bool verbose;
 
-  RunMode runMode;
-  Screens screens = Screens();
+  final RunMode runMode;
+  final Screens screens = Screens();
+  final Config config;
   List<DaemonDevice> devices = [];
   List<DaemonEmulator> emulators=[];
-  Config config;
   Archive? archive;
 
   /// Capture screenshots, process, and load into fastlane according to config file.
@@ -206,8 +200,7 @@ class Screenshots {
         emulator = utils.findEmulator(emulators, d.name);
         if (emulator != null) {
           printStatus('Starting ${d.name}...');
-          deviceId =
-              await startEmulator(daemonClient, emulator.id, config.stagingDir);
+          deviceId = await startEmulator(daemonClient, emulator.id, config.stagingDir);
         } else {
           // if no matching android emulator, look for matching ios simulator
           // and start it
@@ -333,8 +326,12 @@ class Screenshots {
 
               // store env for later use by tests
               // ignore: invalid_use_of_visible_for_testing_member
-              await config.storeEnv(screens.getScreen(d.name)!, d, locale,
-                  d.deviceType, orientation);
+              await config.storeEnv(ScreenshotsEnv(
+                screen: screens.getScreen(d.name)!,
+                device: d,
+                locale: locale,
+                orientation: orientation,
+              ));
 
               // run tests and process images
               await runProcessTests(
@@ -383,24 +380,23 @@ class Screenshots {
       if (!_isBuild()) {
         command.add('--no-build');
       }
-      bool isFlavor() => flavor != kNoFlavor;
-      if (isFlavor()) {
-        command.addAll(['--flavor', flavor]);
+      bool isFlavor() => flavor != null;
+      if (flavor != null) {
+        command.addAll(['--flavor', flavor!]);
       }
       command.addAll(testPath.split(" ")); // add test path or custom command
-      printStatus(
-          'Running $testPath on \'${device.name}\' in locale $locale${isFlavor() ? ' with flavor $flavor' : ''}${!_isBuild() ? ' with no build' : ''}...');
+      printStatus('Running: ${command.join(" ")}');
       if (!_isBuild() && isFlavor()) {
         printStatus(
             'Warning: flavor parameter \'$flavor\' is ignored because no build is set for this device');
       }
-      final cp = configPath;
+      // final cp = configPath;
       await utils.streamCmd(command,
-          environment: cp != null ? {kEnvConfigPath: cp} : {});
+          environment: /*cp != null ? {kEnvConfigPath: cp} : */{});
       // process screenshots
       final imageProcessor = ImageProcessor(config);
       await imageProcessor.process(
-          device, locale, orientation, runMode, archive!);
+          device, locale, orientation, runMode, archive);
     }
   }
 }

@@ -276,8 +276,7 @@ void main() {
       ];
       fakeProcessManager.calls = [callListIosDevices];
       expect(
-          () async => deviceGuide(
-              screens, allDevices, allEmulators, 'myScreenshots.yaml'),
+          () async => deviceGuide(screens, allDevices, allEmulators),
           returnsNormally);
       expect(logger.statusText, contains('Device Guide'));
       expect(logger.statusText, isNot(contains('Screen Guide')));

@@ -13,12 +13,12 @@ Future<bool> isValidConfig(
     Config config, Screens screens, List<DaemonDevice> allDevices, List<DaemonEmulator> allEmulators) async {
   var isValid = true;
   var showDeviceGuide = false;
-  final configPath = config.configPath;
+  // final configPath = config.configPath;
 
   // validate tests
   for (var test in config.tests) {
     if (!isValidTestPaths(test)) {
-      printError('Invalid config: \'$test\' in $configPath');
+      printError('Invalid config: \'$test\'');
       isValid = false;
     }
   }
@@ -29,7 +29,7 @@ Future<bool> isValidConfig(
     for (var configDevice in config.androidDevices) {
       if (config.isFrameRequired(configDevice.name, null)) {
         // check screen available for this device
-        if (!_isScreenAvailable(screens, configDevice.name, configPath!)) {
+        if (!_isScreenAvailable(screens, configDevice.name)) {
           isValid = false;
         }
       }
@@ -38,8 +38,8 @@ Future<bool> isValidConfig(
       if (utils.findDaemonDevice(androidDevices, configDevice.name) == null &&
           !isEmulatorInstalled(allEmulators, configDevice)) {
         printError('No device attached or emulator installed for '
-            'device \'${configDevice.name}\' in $configPath.');
-        printError('  Either remove \'${configDevice.name}\' from $configPath or '
+            'device \'${configDevice.name}\'.');
+        printError('  Either remove \'${configDevice.name}\' from config file or '
             'attach/install the matching device/emulator');
         isValid = false;
         showDeviceGuide = true;
@@ -56,7 +56,7 @@ Future<bool> isValidConfig(
       for (var configDevice in config.iosDevices) {
         if (config.isFrameRequired(configDevice.name, null)) {
           // check screen available for this device
-          if (!_isScreenAvailable(screens, configDevice.name, configPath!)) {
+          if (!_isScreenAvailable(screens, configDevice.name)) {
             isValid = false;
           }
         }
@@ -65,9 +65,9 @@ Future<bool> isValidConfig(
         if (utils.findDaemonDevice(iosDevices, configDevice.name) == null &&
             !isSimulatorInstalled(simulators, configDevice.name)) {
           printError('No device attached or simulator installed for '
-              'device \'${configDevice.name}\' in $configPath.');
-          printError('  Either remove \'${configDevice.name}\' from $configPath or '
-              'attach/install the matching device/simulator');
+              'device \'${configDevice.name}\' in configuration.');
+          printError('  Either remove \'${configDevice.name}\' from'
+              ' configuration or attach/install the matching device/simulator');
           showDeviceGuide = true;
           isValid = false;
         }
@@ -76,14 +76,13 @@ Future<bool> isValidConfig(
   } else {
     // if not macOS
     if (config.isRunTypeActive(DeviceType.ios)) {
-      printError(
-          'An iOS run cannot be configured on a non-macOS platform. Please modify $configPath');
+      printError('An iOS run cannot be configured on a non-macOS platform.');
       isValid = false;
     }
   }
 
   if (showDeviceGuide) {
-    deviceGuide(screens, allDevices, allEmulators, configPath!);
+    deviceGuide(screens, allDevices, allEmulators);
   }
   return isValid;
 }
@@ -168,7 +167,7 @@ bool isSimulatorInstalled(Map simulators, String deviceName) {
 
 /// Generate a guide for matching configured devices to current environment.
 void deviceGuide(Screens screens, List<DaemonDevice> devices,
-    List<DaemonEmulator> emulators, String configPath) {
+    List<DaemonEmulator> emulators) {
   printStatus('\nDevice Guide:');
   if (devices.isNotEmpty) {
     printStatus('\n  Attached devices/running emulators:');
@@ -189,14 +188,13 @@ void deviceGuide(Screens screens, List<DaemonDevice> devices,
 }
 
 // check screen is available for device
-bool _isScreenAvailable(Screens screens, String deviceName, String configPath) {
+bool _isScreenAvailable(Screens screens, String deviceName) {
   final screenProps = screens.getScreen(deviceName);
   if (screenProps == null || Screens.isAndroidModelTypeScreen(screenProps)) {
     printError(
-        'Screen not available for device \'$deviceName\' in $configPath.');
+        'Screen not available for device \'$deviceName\'.');
     printError(
-        '\n  Use a device with a supported screen or set \'frame: false\' for'
-        '\n  device in $configPath.');
+        '\n  Use a device with a supported screen or set \'frame: false\'');
     screenGuide(screens);
     printStatus(
         '\n  If framing for device is required, request screen support by'

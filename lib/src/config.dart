@@ -4,84 +4,132 @@ import 'dart:io' as io;
 
 import 'package:collection/collection.dart';
 import 'package:meta/meta.dart';
+import 'package:screenshots/src/screens.dart';
 
 import 'globals.dart';
-import 'utils.dart' as utils;
 import 'resources.dart';
+import 'utils.dart' as utils;
 
 const kEnvConfigPath = 'SCREENSHOTS_YAML';
+
+class ConfigException implements Exception {
+  const ConfigException(this.message);
+
+  final String message;
+}
+
+class ScreenshotsEnv {
+  final ScreenInfo screen;
+  final ConfigDevice device;
+  final String locale;
+  final Orientation orientation;
+
+  ScreenshotsEnv({
+    required this.screen,
+    required this.device,
+    required this.locale,
+    required this.orientation,
+  });
+
+  static ScreenshotsEnv fromJson(Screens screens, Map<String, dynamic> map) =>
+      ScreenshotsEnv(
+          screen: screens.getScreen(map['screen'])!,
+          device: map['device'],
+          locale: map['locale'],
+          orientation: utils.getEnumFromString(Orientation.values, map['orientation']),
+      );
+
+  Map<String, String?> toJson() => {
+        'screen': screen.name,
+        'locale': locale,
+        'device': device.name,
+        'orientation': utils.getStringFromEnum(orientation),
+      };
+}
 
 /// Config info used to manage screenshots for android and ios.
 // Note: should not have context dependencies as is also used in driver.
 // todo: yaml validation
 class Config {
-  Config({this.configPath = kConfigFileName, String? configStr}) {
+  factory Config({String configPath = kConfigFileName, String? configStr}) {
+    Map<String, dynamic> _configInfo = {};
+
     if (configStr != null) {
       // used by tests
       _configInfo = utils.parseYamlStr(configStr);
     } else {
-      if (isScreenShotsAvailable) {
-        final envConfigPath = io.Platform.environment[kEnvConfigPath];
-        if (envConfigPath == null) {
-          // used by command line and by driver if using kConfigFileName
-          _configInfo = utils.parseYamlFile(configPath!);
-        } else {
-          // used by driver
-          _configInfo = utils.parseYamlFile(envConfigPath);
-        }
+      final envConfigPath = io.Platform.environment[kEnvConfigPath];
+      if (envConfigPath == null) {
+        // used by command line and by driver if using kConfigFileName
+        _configInfo = utils.parseYamlFile(configPath);
       } else {
-        io.stdout.writeln('Warning: screenshots not available.\n'
-            '\tTo enable set $kEnvConfigPath environment variable\n'
-            '\tor create $kConfigFileName.');
+        // used by driver
+        _configInfo = utils.parseYamlFile(envConfigPath);
       }
     }
+
+    var isFrameEnabled = _configInfo['frame'] as bool? ?? false;
+
+    var devices = _processDevices(_configInfo['devices'], isFrameEnabled);
+    var tests = _processList(_configInfo['tests']);
+    var recording = _configInfo['recording'];
+    var locales = _processList(_configInfo['locales']);
+    var staging = _configInfo['staging'];
+    var archive = _configInfo['archive'];
+
+    return Config._(
+        devices: devices,
+        isFrameEnabled: isFrameEnabled,
+        tests: tests,
+        recordingDir: recording,
+        locales: locales,
+        stagingDir: staging,
+        archiveDir: archive);
   }
 
-  /// Checks if screenshots is available.
-  ///
-  /// Created for use in driver.
-  // Note: order of boolean tests is important
-  bool get isScreenShotsAvailable =>
-      io.Platform.environment[kEnvConfigPath] != null ||
-      io.File(configPath!).existsSync();
+  Config._({required this.devices,
+    required this.isFrameEnabled,
+    required this.tests,
+    required this.stagingDir,
+    required this.locales,
+    required this.archiveDir,
+    required this.recordingDir,});
 
-  final String? configPath;
-
-  Map<String, dynamic> _configInfo = {};
-  Map<String, dynamic>? _screenshotsEnv;
-  late final List<ConfigDevice> devices =
-      _processDevices(_configInfo['devices'], isFrameEnabled);
+  ScreenshotsEnv? _screenshotsEnv;
+  final List<ConfigDevice> devices;
 
   // Getters
-  List<String> get tests => _processList(_configInfo['tests']);
+  List<String> tests;
 
-  String get stagingDir => _configInfo['staging'];
+  String stagingDir;
 
-  List<String> get locales => _processList(_configInfo['locales']);
+  List<String> locales;
 
   List<ConfigDevice> get iosDevices =>
       devices.where((device) => device.deviceType == DeviceType.ios).toList();
 
-  List<ConfigDevice> get androidDevices => devices
-      .where((device) => device.deviceType == DeviceType.android)
-      .toList();
+  List<ConfigDevice> get androidDevices =>
+      devices
+          .where((device) => device.deviceType == DeviceType.android)
+          .toList();
 
-  bool get isFrameEnabled => _configInfo['frame'];
+  bool isFrameEnabled;
 
-  String? get recordingDir => _configInfo['recording'];
+  String? recordingDir;
 
-  String? get archiveDir => _configInfo['archive'];
+  String? archiveDir;
 
   ConfigDevice? getDevice(String deviceName) =>
-      devices.where((device) => device.name == deviceName).firstOrNull;
+      devices
+          .where((device) => device.name == deviceName)
+          .firstOrNull;
 
   /// Check for active run type.
   /// Run types can only be one of [DeviceType].
-  bool isRunTypeActive(DeviceType runType) {
-    final deviceType = utils.getStringFromEnum(runType);
-    return !(_configInfo['devices'][deviceType] == null ||
-        _configInfo['devices'][deviceType].length == 0);
-  }
+  bool isRunTypeActive(DeviceType deviceType) =>
+      devices
+          .where((element) => element.deviceType == deviceType)
+          .isNotEmpty;
 
   /// Check if frame is required for [deviceName].
   bool isFrameRequired(String deviceName, Orientation? orientation) {
@@ -93,54 +141,36 @@ class Config {
 
   /// Current screenshots runtime environment
   /// (updated before start of each test)
-  Future<Map<String, dynamic>> get screenshotsEnv async {
-    if (isScreenShotsAvailable) {
-      _screenshotsEnv ??= await _retrieveEnv();
-      return _screenshotsEnv!;
-    } else {
-      // output in test (hence no printStatus)
-      io.stdout.writeln('Warning: screenshots runtime environment not set.');
-      return Future.value({});
-    }
+  Future<ScreenshotsEnv> get screenshotsEnv async {
+    return _screenshotsEnv ??= await _retrieveEnv();
   }
 
-  io.File get _envStore {
-    return io.File(_configInfo['staging'] + '/' + kEnvFileName);
-  }
+  io.File get _envStore => io.File(stagingDir + '/' + kEnvFileName);
 
   /// Records screenshots environment before start of each test
   /// (called by screenshots)
   @visibleForTesting
-  Future<void> storeEnv(ScreenInfo screen, ConfigDevice device, String locale,
-      DeviceType deviceType, Orientation orientation) async {
+  Future<void> storeEnv(ScreenshotsEnv env) async {
     // store env for later use by tests
-    final currentEnv = {
-      'screen_size': screen.size,
-      'locale': locale,
-      'device_name': device.name,
-      'device_type': utils.getStringFromEnum(deviceType),
-      'orientation': utils.getStringFromEnum(orientation)
-    };
-    await _envStore.writeAsString(json.encode(currentEnv));
+    await _envStore.writeAsString(json.encode(env.toJson()));
   }
 
-  Future<Map<String, dynamic>> _retrieveEnv() async {
-    return json.decode(await _envStore.readAsString());
-  }
+  Future<ScreenshotsEnv> _retrieveEnv() async => ScreenshotsEnv.fromJson(
+      Screens(), json.decode(await _envStore.readAsString()));
 
-  List<String> _processList(List list) {
+  static List<String> _processList(List list) {
     return list.map((item) {
       return item.toString();
     }).toList();
   }
 
-  String? _getString(Map<String, dynamic> map, String key) {
+  static String? _getString(Map<String, dynamic> map, String key) {
     var val = map[key];
     if (val == null || val is String) {
       return val;
     }
 
-    if(val is bool) {
+    if (val is bool) {
       return val.toString();
     }
 
@@ -148,8 +178,8 @@ class Config {
     io.exit(1);
   }
 
-  List<ConfigDevice> _processDevices(
-      Map<String, dynamic> devices, bool globalFraming) {
+  static List<ConfigDevice> _processDevices(Map<String, dynamic> devices,
+      bool globalFraming) {
     Orientation _getValidOrientation(String orientation, String deviceName) {
       for (var v in Orientation.values) {
         if (utils.getStringFromEnum(v) == orientation) {
@@ -157,7 +187,8 @@ class Config {
         }
       }
 
-      print('Invalid value for \'orientation\' for device \'$deviceName\': $orientation}');
+      print(
+          'Invalid value for \'orientation\' for device \'$deviceName\': $orientation}');
       print('Valid values:');
       for (final _orientation in Orientation.values) {
         print('  ${utils.getStringFromEnum(_orientation)}');
@@ -170,9 +201,7 @@ class Config {
     devices.forEach((deviceType, device) {
       device?.forEach((deviceName, deviceProps) {
         if (deviceProps == null || deviceProps is! Map<String, dynamic>) {
-          print(
-              "Invalid value for device '$deviceName', must be a YAML dictionary");
-          io.exit(1);
+          throw ConfigException("Invalid value for device '$deviceName'");
         }
 
         final orientationVal = deviceProps['orientation'];
@@ -185,12 +214,12 @@ class Config {
           orientationVal == null
               ? []
               : orientationVal is String
-                  ? [_getValidOrientation(orientationVal, deviceName)]
-                  : orientationVal is List
-                      ? orientationVal
-                          .map((o) => _getValidOrientation(o, deviceName))
-                          .toList()
-                      : [],
+              ? [_getValidOrientation(orientationVal, deviceName)]
+              : orientationVal is List
+              ? orientationVal
+              .map((o) => _getValidOrientation(o, deviceName))
+              .toList()
+              : [],
           _getString(deviceProps, 'build') == "true",
         ));
       });
@@ -210,13 +239,11 @@ class ConfigDevice {
   final List<Orientation> orientations;
   final bool isBuild;
 
-  ConfigDevice(
-    this.name,
-    this.deviceType,
-    this.isFramed,
-    this.orientations,
-    this.isBuild,
-  );
+  ConfigDevice(this.name,
+      this.deviceType,
+      this.isFramed,
+      this.orientations,
+      this.isBuild,);
 
   @override
   bool operator ==(other) {
@@ -230,7 +257,8 @@ class ConfigDevice {
 
   @override
   String toString() =>
-      'name: $name, deviceType: ${utils.getStringFromEnum(deviceType)}, isFramed: $isFramed, orientations: $orientations, isBuild: $isBuild';
+      'name: $name, deviceType: ${utils.getStringFromEnum(
+          deviceType)}, isFramed: $isFramed, orientations: $orientations, isBuild: $isBuild';
 
   bool isFrameRequired(Orientation? orientation) {
     if (orientation == null) {
