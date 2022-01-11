@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io' as io show IOSink;
 
 import 'package:mockito/mockito.dart';

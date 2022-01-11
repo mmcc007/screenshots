@@ -1,7 +1,6 @@
 import 'dart:io' as io;
 
 import 'package:screenshots/screenshots.dart';
-import 'package:screenshots/src/config.dart';
 import 'package:screenshots/src/globals.dart';
 import 'package:screenshots/src/screens.dart';
 import 'package:screenshots/src/utils.dart';

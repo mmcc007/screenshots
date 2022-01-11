@@ -4,7 +4,7 @@ builders:
     builder_factories:
       - screens
     build_extensions: { ".yaml": [ ".dart" ] }
-    build_to: cache
+    build_to: source
     auto_apply: none
 
   resources:
@@ -14,7 +14,7 @@ builders:
     build_extensions:
       "^resources/{{}}":
         - lib/generated/resources/{{}}.dart
-    build_to: cache
+    build_to: source
 
 targets:
   $default:

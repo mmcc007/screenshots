@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'dart:convert' as cnv;
-import 'dart:convert';
 
 import 'package:collection/collection.dart';
 import 'package:path/path.dart' as p;
@@ -37,7 +35,7 @@ void moveFiles(String srcDir, String dstDir) {
 /// Provides access to their IDs and status'.
 Map getIosSimulators() {
   final simulators = cmd(['xcrun', 'simctl', 'list', 'devices', '--json']);
-  final simulatorsInfo = cnv.jsonDecode(simulators)['devices'];
+  final simulatorsInfo = jsonDecode(simulators)['devices'];
   return transformIosSimulators(simulatorsInfo);
 }
 
@@ -245,7 +243,7 @@ String getIosSimulatorLocale(String udId) {
     globalPreferences.writeAsStringSync(contents);
     cmd(['plutil', '-convert', 'binary1', globalPreferences.path]);
   }
-  final localeInfo = cnv.jsonDecode(
+  final localeInfo = jsonDecode(
       cmd(['plutil', '-convert', 'json', '-o', '-', globalPreferencesPath]));
   final locale = localeInfo['AppleLocale'];
   return locale;
@@ -356,8 +354,8 @@ Future<String?> waitSysLogMsg(
   final process = ProcessWrapper(delegate);
   return await process.stdout
 //      .transform<String>(cnv.Utf8Decoder(reportErrors: false)) // from flutter tools
-      .transform<String?>(cnv.Utf8Decoder(allowMalformed: true))
-      .transform<String?>(const cnv.LineSplitter())
+      .transform<String?>(Utf8Decoder())
+      .transform<String?>(const LineSplitter())
       .firstWhere((line) {
     if (line == null) {
       return false;

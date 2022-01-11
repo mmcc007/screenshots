@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:fake_process_manager/fake_process_manager.dart';
 import 'package:mockito/mockito.dart';
 import 'package:platform/platform.dart';
