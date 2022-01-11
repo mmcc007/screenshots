@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:collection/collection.dart';
 import 'package:path/path.dart' as p;
 import 'package:process/process.dart';
 import 'package:screenshots/src/config.dart';
@@ -10,7 +11,6 @@ import 'package:screenshots/src/fastlane.dart';
 import 'package:screenshots/src/globals.dart';
 import 'package:screenshots/src/image_magick.dart';
 import 'package:screenshots/src/image_processor.dart';
-import 'package:screenshots/src/orientation.dart' as orient;
 import 'package:screenshots/src/orientation.dart';
 import 'package:screenshots/src/resources.dart' as resources;
 import 'package:screenshots/src/run.dart';
@@ -41,7 +41,6 @@ void main() {
         'size': '1080x1920'
       };
       final screens = Screens();
-      await screens.init();
       final screen = screens.getScreen('Nexus 5X');
       expect(screen, expected);
     });
@@ -60,20 +59,15 @@ void main() {
         'size': '1125x2436'
       };
       final screens = Screens();
-      await screens.init();
       final screen = screens.getScreen('iPhone X');
       expect(screen, expected);
     });
 
     test('overlay statusbar', () async {
-      final Screens screens = Screens();
-      await screens.init();
-      final screen = screens.getScreen('Nexus 6P');
-      final Config config = Config(configPath: 'test/screenshots_test.yaml');
-      final Map scrnResources = screen['resources'];
-      await resources.unpackImages(scrnResources, '/tmp/screenshots');
-      final statusbarPath =
-          '${config.stagingDir}/${scrnResources['statusbar']}';
+      final screens = Screens();
+      final screen = screens.getScreen('Nexus 6P')!;
+      var paths = await resources.unpackImages(screen, '/tmp/screenshots');
+      final statusbarPath = paths.statusbar;
       final screenshotPath = 'test/resources/0.png';
       final options = {
         'screenshotPath': screenshotPath,
@@ -84,14 +78,10 @@ void main() {
     }, skip: true);
 
     test('append navbar', () async {
-      final Screens screens = Screens();
-      await screens.init();
-      final screen = screens.getScreen('Nexus 9');
-      final Config config = Config(configPath: 'test/screenshots_test.yaml');
-      final Map scrnResources = screen['resources'];
-      await resources.unpackImages(scrnResources, '/tmp/screenshots');
-      final screenshotNavbarPath =
-          '${config.stagingDir}/${scrnResources['navbar']}';
+      final screens = Screens();
+      final screen = screens.getScreen('Nexus 9')!;
+      var paths = await resources.unpackImages(screen, '/tmp/screenshots');
+      final screenshotNavbarPath = paths.navbar;
       final screenshotPath = 'test/resources/nexus_9_0.png';
       final options = {
         'screenshotPath': screenshotPath,
@@ -102,22 +92,15 @@ void main() {
     }, skip: true);
 
     test('frame screenshot', () async {
-      final Screens screens = Screens();
-      await screens.init();
-      final screen = screens.getScreen('Nexus 9');
-      final Config config = Config(configPath: 'test/screenshots_test.yaml');
-      final Map scrnResources = screen['resources'];
-      await resources.unpackImages(scrnResources, '/tmp/screenshots');
-      final framePath = config.stagingDir + '/' + scrnResources['frame'];
-      final size = screen['size'];
-      final resize = screen['resize'];
-      final offset = screen['offset'];
+      final screens = Screens();
+      final screen = screens.getScreen('Nexus 9')!;
+      var paths = await resources.unpackImages(screen, '/tmp/screenshots');
       final screenshotPath = 'test/resources/nexus_9_0.png';
       final options = {
-        'framePath': framePath,
-        'size': size,
-        'resize': resize,
-        'offset': offset,
+        'framePath': paths.frame,
+        'size': screen.size,
+        'resize': screen.resize,
+        'offset': screen.offset,
         'screenshotPath': screenshotPath,
         'backgroundColor': ImageProcessor.kDefaultAndroidBackground,
       };
@@ -164,28 +147,28 @@ void main() {
       expect(highestDevice, expected);
     }, skip:     true  );
 
-    test('read resource and write to path', () async {
-      final scrnResources = [
-        'resources/android/1080/statusbar.png',
-        'resources/android/1080/navbar.png',
-        'resources/android/phones/Nexus_5X.png'
-      ];
-      final dest = '/tmp';
-      for (String resource in scrnResources) {
-        await resources.writeImage(
-            await resources.readResourceImage(resource), '$dest/$resource');
-      }
-    });
+    // test('read resource and write to path', () async {
+    //   final scrnResources = [
+    //     'resources/android/1080/statusbar.png',
+    //     'resources/android/1080/navbar.png',
+    //     'resources/android/phones/Nexus_5X.png'
+    //   ];
+    //   final dest = '/tmp';
+    //   for (var resource in scrnResources) {
+    //     await resources.writeImage(
+    //         await resources.readResourceImage(resource), '$dest/$resource');
+    //   }
+    // });
 
-    test('unpack images', () async {
-      final scrnResources = {
-        'A': 'resources/android/1080/statusbar.png',
-        'B': 'resources/android/1080/navbar.png',
-        'C': 'resources/android/phones/Nexus_5X.png'
-      };
-      final dest = '/tmp';
-      await resources.unpackImages(scrnResources, dest);
-    }, skip: true);
+    // test('unpack images', () async {
+    //   final scrnResources = {
+    //     'A': 'resources/android/1080/statusbar.png',
+    //     'B': 'resources/android/1080/navbar.png',
+    //     'C': 'resources/android/phones/Nexus_5X.png'
+    //   };
+    //   final dest = '/tmp';
+    //   await resources.unpackImages(scrnResources, dest);
+    // }, skip: true);
 
     test('rooted emulator', () async {
       final emulatorId = 'Nexus_5X_API_27';
@@ -429,13 +412,13 @@ void main() {
         'emulator': false,
         'model': 'iPhone 5c (GSM)'
       });
-      String deviceName = 'iPhone 5c';
-      DaemonDevice device = utils.getDevice([expected], deviceName);
+      var deviceName = 'iPhone 5c';
+      var device = utils.findDaemonDevice([expected], deviceName);
       expect(device, expected);
       final isDeviceAttached = (device) => device != null;
       expect(isDeviceAttached(device), true);
       deviceName = 'iPhone X';
-      device = utils.getDevice([expected], deviceName);
+      device = utils.findDaemonDevice([expected], deviceName);
       expect(device, null);
       expect(isDeviceAttached(device), false);
     });
@@ -453,7 +436,7 @@ void main() {
       ''';
 
       final configInfo = Config(configStr: config);
-      DeviceType deviceType = run.getDeviceType(configInfo, deviceName);
+      var deviceType = run.getDeviceType(configInfo, deviceName);
       expect(deviceType, expected);
     });
 
@@ -473,13 +456,13 @@ void main() {
       // start emulator
       final deviceId = await daemonClient.launchEmulator(emulatorId);
 
-      Map props = getDeviceProps(deviceId);
+      var props = getDeviceProps(deviceId);
       final newProps = Map.from(props);
       newProps['xmpp.auto-presence'] = false; //changed
       newProps['xxx'] = 'yyy'; // added
       newProps.remove('wifi.direct.interface'); // removed
 
-      final Map diffs = diffMaps(props, newProps);
+      final diffs = diffMaps(props, newProps);
       expect(diffs, expected);
       expect(
           await run.shutdownAndroidEmulator(daemonClient, deviceId), deviceId);
@@ -507,9 +490,9 @@ void main() {
         await daemonClient.start;
         final emulatorId = 'Nexus_6P_API_28';
         final deviceId = await daemonClient.launchEmulator(emulatorId);
-        String actual = await utils.waitSysLogMsg(deviceId, expected, toLocale);
+        var actual = await utils.waitSysLogMsg(deviceId, expected, toLocale);
 //      print('actual=$actual');
-        expect(actual.contains(expected), isTrue);
+        expect(actual?.contains(expected), isTrue);
         expect(await run.shutdownAndroidEmulator(daemonClient, deviceId),
             deviceId);
       }, skip:     true  );
@@ -535,9 +518,9 @@ void main() {
         final configPath = 'screenshots.yaml';
         await run.screenshots(
             configPath: configPath,
-            mode: utils.getStringFromEnum(RunMode.recording));
+            runMode: RunMode.recording);
         final config = Config(configPath: configPath);
-        final recordingDir = config.recordingDir;
+        final recordingDir = config.recordingDir!;
         expect(await utils.isRecorded(recordingDir), isTrue);
         Directory.current = origDir;
       }, timeout: Timeout(Duration(seconds: 180)), skip:     true  );
@@ -557,9 +540,9 @@ void main() {
         final pairs = {'good': goodPair, 'bad': badPair};
 
         pairs.forEach((behave, pair) async {
-          final recordedImage = pair['recorded'];
-          final comparisonImage = pair['comparison'];
-          bool doCompare = await runInContext<bool>(() async {
+          final recordedImage = pair['recorded']!;
+          final comparisonImage = pair['comparison']!;
+          var doCompare = await runInContext<bool>(() async {
             return im.compare(comparisonImage, recordedImage);
           });
           behave == 'good'
@@ -574,11 +557,11 @@ void main() {
         Directory.current = 'example';
         final configPath = 'screenshots.yaml';
         final config = Config(configPath: configPath);
-        final recordingDir = config.recordingDir;
+        final recordingDir = config.recordingDir!;
         expect(await utils.isRecorded(recordingDir), isTrue);
         await run.screenshots(
             configPath: configPath,
-            mode: utils.getStringFromEnum(RunMode.comparison));
+            runMode: RunMode.comparison);
         Directory.current = origDir;
       }, timeout: Timeout(Duration(seconds: 180)), skip:     true  );
 
@@ -607,7 +590,7 @@ void main() {
         final configPath = 'screenshots.yaml';
         await run.screenshots(
             configPath: configPath,
-            mode: utils.getStringFromEnum(RunMode.archive));
+            runMode: RunMode.archive);
         Directory.current = origDir;
       }, timeout: Timeout(Duration(seconds: 180)), skip:     true  );
     });
@@ -651,7 +634,6 @@ void main() {
           ..addAll(sevenInches)
           ..addAll(tenInches);
         final screens = Screens();
-        await screens.init();
         for (final androidDeviceName in androidDeviceNames.keys) {
           final screenProps = screens.getScreen(androidDeviceName);
           expect(getAndroidModelType(screenProps, androidDeviceName),
@@ -678,7 +660,7 @@ void main() {
         final env = Platform.environment;
         final preferencesDir =
             '${env['HOME']}/Library/Developer/CoreSimulator/Devices/$udId/data/Library/Preferences';
-        await Directory(preferencesDir).listSync().forEach((fsEntity) {
+        Directory(preferencesDir).listSync().forEach((fsEntity) {
           // print contents
           final filePath = fsEntity.path;
 //        print('filePath=$filePath');
@@ -702,12 +684,12 @@ void main() {
         await daemonClient.start;
         await run.startSimulator(daemonClient, deviceId);
         await Future.delayed(Duration(milliseconds: 5000)); // finish booting
-        orient.changeDeviceOrientation(
-            DeviceType.ios, orient.Orientation.LandscapeRight,
+        changeDeviceOrientation(
+            DeviceType.ios, Orientation.LandscapeRight,
             scriptDir: scriptDir);
         await Future.delayed(Duration(milliseconds: 3000));
-        orient.changeDeviceOrientation(
-            DeviceType.ios, orient.Orientation.Portrait,
+        changeDeviceOrientation(
+            DeviceType.ios, Orientation.Portrait,
             scriptDir: scriptDir);
         await Future.delayed(Duration(milliseconds: 1000));
         await run.shutdownSimulator(deviceId);
@@ -719,12 +701,12 @@ void main() {
         final daemonClient = DaemonClient();
         await daemonClient.start;
         final deviceId = await daemonClient.launchEmulator(emulatorId);
-        orient.changeDeviceOrientation(
-            DeviceType.android, orient.Orientation.LandscapeRight,
+        changeDeviceOrientation(
+            DeviceType.android, Orientation.LandscapeRight,
             deviceId: deviceId);
         await Future.delayed(Duration(milliseconds: 3000));
-        orient.changeDeviceOrientation(
-            DeviceType.android, orient.Orientation.Portrait,
+        changeDeviceOrientation(
+            DeviceType.android, Orientation.Portrait,
             deviceId: deviceId);
         await Future.delayed(Duration(milliseconds: 3000));
         expect(await run.shutdownAndroidEmulator(daemonClient, deviceId),
@@ -734,12 +716,11 @@ void main() {
 
     group('config validate', () {
       test('config guide', () async {
-        final Screens screens = Screens();
-        await screens.init();
+        final screens = Screens();
         final daemonClient = DaemonClient();
         await daemonClient.start;
         validate.deviceGuide(screens, await daemonClient.devices,
-            await daemonClient.emulators, 'screenshots.yaml');
+            await daemonClient.emulators);
       }, skip:     true  );
 
       test('validate device params', () {
@@ -760,22 +741,16 @@ void main() {
       frame: true
       ''';
         final configInfo = Config(configStr: params);
-        final deviceNames = configInfo.deviceNames;
-        for (final devName in deviceNames) {
-          final deviceInfo = configInfo.getDevice(devName);
+        for (final deviceInfo in configInfo.devices) {
 //        print('devName=$devName');
 //        print('deviceInfo=$deviceInfo');
-          if (deviceInfo != null) {
-            if (deviceInfo.name == deviceName) {
-              expect(utils.getEnumFromString(Orientation.values, orientation),
-                  deviceInfo.orientations[0]);
-//              expect(validate.isValidOrientation(orientation), isTrue);
-//              expect(validate.isValidOrientation('bad orientation'), isFalse);
-            }
-            expect(deviceInfo.isFramed, frame);
-            expect(validate.isValidFrame(frame), isTrue);
-            expect(validate.isValidFrame('bad frame'), isFalse);
+          if (deviceInfo.name == deviceName) {
+            expect(utils.getEnumFromString(Orientation.values, orientation),
+                deviceInfo.orientations[0]);
+//            expect(validate.isValidOrientation(orientation), isTrue);
+//            expect(validate.isValidOrientation('bad orientation'), isFalse);
           }
+          expect(deviceInfo.isFramed, frame);
         }
       });
 
@@ -795,7 +770,7 @@ void main() {
         final configPath = 'screenshots.yaml';
         await run.screenshots(
             configPath: configPath,
-            mode: utils.getStringFromEnum(RunMode.normal),
+            runMode: RunMode.normal,
             flavor: flavor);
         Directory.current = origDir;
       }, timeout: Timeout(Duration(seconds: 240)), skip:     true  );
@@ -817,7 +792,7 @@ void main() {
         // for this test change directory
         final origDir = Directory.current;
         Directory.current = 'example';
-        final screenshots = Screenshots(configStr: configIosOnly);
+        final screenshots = Screenshots(config: Config(configStr: configIosOnly));
         expect(await screenshots.run(), isTrue);
         // allow other tests to continue
         Directory.current = origDir;
@@ -885,8 +860,8 @@ void main() {
             'category': 'mobile',
             'platformType': 'ios'
           })
-        ];
-        DaemonDevice deviceInfo = run.findRunningDevice(
+        ].whereNotNull().toList();
+        var deviceInfo = run.findRunningDevice(
             runningDevices, installedEmulators, androidDeviceName);
         expect(deviceInfo, androidDevice);
         deviceInfo = run.findRunningDevice(
@@ -912,9 +887,9 @@ void main() {
         final posixContext = p.Context(style: p.Style.posix);
         final windowsContext = p.Context(style: p.Style.windows);
         for (var path in paths) {
-          expect(utils.toPlatformPath(path['path'], context: posixContext),
+          expect(utils.toPlatformPath(path['path']!, context: posixContext),
               path['posix']);
-          expect(utils.toPlatformPath(path['path'], context: windowsContext),
+          expect(utils.toPlatformPath(path['path']!, context: windowsContext),
               path['windows']);
         }
       });

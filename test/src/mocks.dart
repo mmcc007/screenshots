@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io' as io show IOSink;
 
 import 'package:mockito/mockito.dart';
@@ -11,17 +10,17 @@ import 'package:tool_mobile/tool_mobile.dart';
 class MockAndroidSdk extends Mock implements AndroidSdk {
   static Directory createSdkDirectory({
     bool withAndroidN = false,
-    String withNdkDir,
+    String? withNdkDir,
     int ndkVersion = 16,
     bool withNdkSysroot = false,
     bool withSdkManager = true,
     bool withPlatformTools = true,
     bool withBuildTools = true,
   }) {
-    final Directory dir =
-        fs.systemTempDirectory.createTempSync('flutter_mock_android_sdk.');
-    final String exe = platform.isWindows ? '.exe' : '';
-    final String bat = platform.isWindows ? '.bat' : '';
+    final dir =
+    fs.systemTempDirectory.createTempSync('flutter_mock_android_sdk.');
+    final exe = platform.isWindows ? '.exe' : '';
+    final bat = platform.isWindows ? '.bat' : '';
 
     _createDir(dir, 'licenses');
 
@@ -49,7 +48,7 @@ class MockAndroidSdk extends Mock implements AndroidSdk {
     if (withSdkManager) _createSdkFile(dir, 'tools/bin/sdkmanager$bat');
 
     if (withNdkDir != null) {
-      final String ndkToolchainBin = fs.path.join(
+      final ndkToolchainBin = fs.path.join(
         'ndk-bundle',
         'toolchains',
         'arm-linux-androideabi-4.9',
@@ -57,11 +56,11 @@ class MockAndroidSdk extends Mock implements AndroidSdk {
         withNdkDir,
         'bin',
       );
-      final String ndkCompiler = fs.path.join(
+      final ndkCompiler = fs.path.join(
         ndkToolchainBin,
         'arm-linux-androideabi-gcc',
       );
-      final String ndkLinker = fs.path.join(
+      final ndkLinker = fs.path.join(
         ndkToolchainBin,
         'arm-linux-androideabi-ld',
       );
@@ -75,7 +74,7 @@ Pkg.Revision = $ndkVersion.1.5063045
 ''');
     }
     if (withNdkSysroot) {
-      final String armPlatform = fs.path.join(
+      final armPlatform = fs.path.join(
         'ndk-bundle',
         'platforms',
         'android-9',
@@ -88,8 +87,8 @@ Pkg.Revision = $ndkVersion.1.5063045
   }
 
   static void _createSdkFile(Directory dir, String filePath,
-      {String contents}) {
-    final File file = dir.childFile(filePath);
+      {String? contents}) {
+    final file = dir.childFile(filePath);
     file.createSync(recursive: true);
     if (contents != null) {
       file.writeAsStringSync(contents, flush: true);
@@ -97,7 +96,7 @@ Pkg.Revision = $ndkVersion.1.5063045
   }
 
   static void _createDir(Directory dir, String path) {
-    final Directory directory = fs.directory(fs.path.join(dir.path, path));
+    final directory = fs.directory(fs.path.join(dir.path, path));
     directory.createSync(recursive: true);
   }
 
@@ -112,44 +111,101 @@ ro.build.version.codename=REL
 typedef ProcessFactory = Process Function(List<String> command);
 
 /// A ProcessManager that starts Processes by delegating to a ProcessFactory.
-class MockProcessManager implements ProcessManager {
-  ProcessFactory processFactory = (List<String> commands) => MockProcess();
-  bool succeed = true;
-  List<String> commands;
+class MockReturningProcessManager implements ProcessManager {
+  final ProcessFactory processFactory = (List<String> commands) => MockProcess();
 
   @override
-  bool canRun(dynamic command, {String workingDirectory}) => succeed;
+  bool canRun(dynamic command, {String? workingDirectory}) => true;
 
   @override
   Future<Process> start(
-    List<dynamic> command, {
-    String workingDirectory,
-    Map<String, String> environment,
+    List<Object>? command, {
+    String? workingDirectory,
+    Map<String, String>? environment,
     bool includeParentEnvironment = true,
     bool runInShell = false,
     ProcessStartMode mode = ProcessStartMode.normal,
   }) {
-    if (!succeed) {
-      final String executable = command[0];
-      final List<String> arguments =
-          command.length > 1 ? command.sublist(1) : <String>[];
-      throw ProcessException(executable, arguments);
-    }
+    command ??= [];
+    var args = command.map((e) => e.toString()).toList();
 
-    commands = command;
-    return Future<Process>.value(processFactory(command));
+    return Future<Process>.value(processFactory(args));
   }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => null;
 }
 
+class MockProcessManager extends Mock implements ProcessManager {
+
+  @override
+  Future<Process> start(
+      List<Object>? command, {
+        String? workingDirectory,
+        Map<String, String>? environment,
+        bool? includeParentEnvironment,
+        bool? runInShell,
+        ProcessStartMode mode = ProcessStartMode.normal,
+      }) =>
+      super.noSuchMethod(Invocation.method(#start, [
+        command
+      ], {
+        #workingDirectory: workingDirectory,
+        #environment: environment,
+        #includeParentEnvironment: includeParentEnvironment,
+        #runInShell: runInShell,
+        #mode: mode,
+      }));
+
+  @override
+  Future<ProcessResult> run(
+      List<Object>? command, {
+        String? workingDirectory,
+        Map<String, String>? environment,
+        bool? includeParentEnvironment,
+        bool? runInShell,
+        covariant Encoding? stdoutEncoding = systemEncoding,
+        covariant Encoding? stderrEncoding = systemEncoding,
+      }) =>
+      super.noSuchMethod(Invocation.method(#run, [
+        command
+      ], {
+        #workingDirectory: workingDirectory,
+        #environment: environment,
+        #includeParentEnvironment: includeParentEnvironment,
+        #runInShell: runInShell,
+        #stdoutEncoding: stdoutEncoding,
+        #stderrEncoding: stderrEncoding,
+      }));
+
+  @override
+  ProcessResult runSync(
+      List<Object>? command, {
+        String? workingDirectory,
+        Map<String, String>? environment,
+        bool? includeParentEnvironment,
+        bool? runInShell,
+        covariant Encoding? stdoutEncoding = systemEncoding,
+        covariant Encoding? stderrEncoding = systemEncoding,
+      }) =>
+      super.noSuchMethod(Invocation.method(#runSync, [
+        command
+      ], {
+        #workingDirectory: workingDirectory,
+        #environment: environment,
+        #includeParentEnvironment: includeParentEnvironment,
+        #runInShell: runInShell,
+        #stdoutEncoding: stdoutEncoding,
+        #stderrEncoding: stderrEncoding,
+      }));
+}
+
 /// A process that exits successfully with no output and ignores all input.
 class MockProcess extends Mock implements Process {
   MockProcess({
     this.pid = 1,
-    Future<int> exitCode,
-    Stream<List<int>> stdin,
+    Future<int>? exitCode,
+    io.IOSink? stdin,
     this.stdout = const Stream<List<int>>.empty(),
     this.stderr = const Stream<List<int>>.empty(),
   })  : exitCode = exitCode ?? Future<int>.value(0),
@@ -185,7 +241,7 @@ class MemoryIOSink implements IOSink {
 
   @override
   Future<void> addStream(Stream<List<int>> stream) {
-    final Completer<void> completer = Completer<void>();
+    final completer = Completer<void>();
     stream.listen((List<int> data) {
       add(data);
     }).onDone(() => completer.complete());
@@ -198,18 +254,18 @@ class MemoryIOSink implements IOSink {
   }
 
   @override
-  void write(Object obj) {
+  void write(Object? obj) {
     add(encoding.encode('$obj'));
   }
 
   @override
-  void writeln([Object obj = '']) {
+  void writeln([Object? obj = '']) {
     add(encoding.encode('$obj\n'));
   }
 
   @override
   void writeAll(Iterable<dynamic> objects, [String separator = '']) {
-    bool addSeparator = false;
+    var addSeparator = false;
     for (dynamic object in objects) {
       if (addSeparator) {
         write(separator);
@@ -220,7 +276,7 @@ class MemoryIOSink implements IOSink {
   }
 
   @override
-  void addError(dynamic error, [StackTrace stackTrace]) {
+  void addError(dynamic error, [StackTrace? stackTrace]) {
     throw UnimplementedError();
   }
 
@@ -257,4 +313,28 @@ class MockStdio extends Stdio {
       _stdout.writes.map<String>(_stdout.encoding.decode).toList();
   List<String> get writtenToStderr =>
       _stderr.writes.map<String>(_stderr.encoding.decode).toList();
+}
+
+class FakeProcessResult implements ProcessResult {
+  FakeProcessResult({
+    this.exitCode = 0,
+    this.pid = 1,
+    this.stderr,
+    this.stdout,
+  });
+
+  @override
+  final int exitCode;
+
+  @override
+  final int pid;
+
+  @override
+  final dynamic stderr;
+
+  @override
+  final dynamic stdout;
+
+  @override
+  String toString() => stdout?.toString() ?? stderr?.toString() ?? runtimeType.toString();
 }

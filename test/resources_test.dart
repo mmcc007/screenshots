@@ -5,20 +5,18 @@ import 'package:screenshots/src/screens.dart';
 import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart';
 
-//import 'src/common_tools.dart';
 import 'src/context.dart';
+import 'src/mocks.dart';
 
-class PlainMockProcessManager extends Mock implements ProcessManager {}
-
-main() {
+void main() {
   group('resources', () {
     final tmpDir = '/tmp/screenshots_test';
 
     group('in context', () {
-      ProcessManager mockProcessManager;
+      var mockProcessManager = MockProcessManager();
 
       setUp(() {
-        mockProcessManager = PlainMockProcessManager();
+        mockProcessManager = MockProcessManager();
         when(mockProcessManager.runSync(
           any,
           environment: anyNamed('environment'),
@@ -36,11 +34,9 @@ main() {
 
     group('no context', () {
       test('unpack screen resource images', () async {
-        final Screens screens = Screens();
-        await screens.init();
-        final screen = screens.getScreen('iPhone 7 Plus');
-        final Map screenResources = screen['resources'];
-        await unpackImages(screenResources, tmpDir);
+        final screens = Screens();
+        final screen = screens.getScreen('iPhone 7 Plus')!;
+        await unpackImages(screen, tmpDir);
       });
     });
   });

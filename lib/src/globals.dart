@@ -16,5 +16,4 @@ enum DeviceType { android, ios }
 /// Run mode
 enum RunMode { normal, recording, comparison, archive }
 
-/// No flavor
-const String kNoFlavor = 'no flavor';
+enum Orientation { Portrait, LandscapeRight, PortraitUpsideDown, LandscapeLeft }

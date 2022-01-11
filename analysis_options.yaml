@@ -15,3 +15,7 @@ include: package:pedantic/analysis_options.yaml
 #    - valid_regexps
 #    - unawaited_futures
 #    - curly_braces_in_flow_control_structures # added for package score in https://pub.dev
+linter:
+  rules:
+    prefer_single_quotes: false
+    prefer_double_quotes: false

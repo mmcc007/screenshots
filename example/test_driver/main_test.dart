@@ -11,20 +11,20 @@ import 'dart:convert' as c;
 
 void main() {
   group('end-to-end test', () {
-    FlutterDriver driver;
-    Map localizations;
+    FlutterDriver? driver;
+    Map localizations = {};
     final config = Config();
 
     setUpAll(() async {
       // Connect to a running Flutter application instance.
       driver = await FlutterDriver.connect();
       // get the localizations for the current locale
-      localizations = c.jsonDecode(await driver.requestData(null));
+      localizations = c.jsonDecode(await driver!.requestData(null));
       print('localizations=$localizations');
     });
 
     tearDownAll(() async {
-      if (driver != null) await driver.close();
+      if (driver != null) await driver!.close();
     });
 
     test('tap on the floating action button; verify counter', () async {
@@ -33,22 +33,24 @@ void main() {
           find.byTooltip(localizations['counterIncrementButtonTooltip']);
 
       // Wait for the floating action button to appear
-      await driver.waitFor(fab);
+      await driver!.waitFor(fab);
 
       // take screenshot before number is incremented
       await screenshot(driver, config, '0');
 
       // Tap on the fab
-      await driver.tap(fab);
+      await driver!.tap(fab);
 
       // Wait for text to change to the desired value
-      await driver.waitFor(find.text('1'));
+      await driver!.waitFor(find.text('1'));
 
       // take screenshot after number is incremented
       await screenshot(driver, config, '1');
 
       // increase timeout from 30 seconds for testing
       // on slow running emulators in cloud
-    }, timeout: Timeout(Duration(seconds: 120)));
+    }, timeout: const Timeout(Duration(seconds: 120)));
   });
 }
+
+// ignore_for_file: avoid_print

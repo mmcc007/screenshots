@@ -2,14 +2,14 @@ import 'package:fake_process_manager/fake_process_manager.dart';
 import 'package:mockito/mockito.dart';
 import 'package:path/path.dart' hide equals;
 import 'package:process/process.dart';
+import 'package:screenshots/screenshots.dart';
 import 'package:screenshots/src/daemon_client.dart';
 import 'package:screenshots/src/utils.dart';
 import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart';
-import 'package:tool_base_test/tool_base_test.dart';
 import 'package:tool_mobile/tool_mobile.dart';
 
-import 'src/common.dart';
+import 'src/context.dart';
 
 class FakeAndroidSDK extends Fake implements AndroidSdk {
   @override
@@ -19,13 +19,13 @@ class FakeAndroidSDK extends Fake implements AndroidSdk {
   String get emulatorPath => 'path to emulator';
 }
 
-main() {
+void main() {
   group('utils', () {
     group('in context', () {
-      FakeAndroidSDK fakeAndroidSdk;
-      FileSystem mockFileSystem;
-      File mockFile;
-      FakeProcessManager fakeProcessManager;
+      var fakeAndroidSdk = FakeAndroidSDK();
+      var mockFileSystem = MockFileSystem();
+      var mockFile = MockFile();
+      var fakeProcessManager = FakeProcessManager();
 
       setUp(() {
         fakeAndroidSdk = FakeAndroidSDK();
@@ -63,10 +63,8 @@ main() {
       }, overrides: <Type, Generator>{
         FileSystem: () => mockFileSystem,
         ProcessManager: () => fakeProcessManager,
-        Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
-          ..environment = {
-            'HOME': ''
-          },    });
+        Platform: () => FakePlatform(environment: {'HOME': ''})
+      });
     });
 
     group('not in context', () {
@@ -74,9 +72,9 @@ main() {
         final emulatorName = 'emulator name';
         final emulatorId = '$emulatorName API 123'.replaceAll(' ', '_');
         final expected = DaemonEmulator(
-            emulatorId, '$emulatorName version', 'category', 'platformType');
+            emulatorId, '$emulatorName version', 'category', DeviceType.android);
         expect(
-            findEmulator([expected], emulatorName).name, equals(expected.name));
+            findEmulator([expected], emulatorName)!.name, equals(expected.name));
       });
     });
   });

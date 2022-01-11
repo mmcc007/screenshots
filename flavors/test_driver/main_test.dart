@@ -7,15 +7,15 @@ import 'package:test/test.dart' hide TypeMatcher, isInstanceOf;
 
 void main() {
   group('flavors suite', () {
-    FlutterDriver driver;
+    FlutterDriver? driver;
 
     setUpAll(() async {
       driver = await FlutterDriver.connect();
     });
 
     test('check flavor', () async {
-      final SerializableFinder flavorField = find.byValueKey('flavor');
-      final String flavor = await driver.getText(flavorField);
+      final flavorField = find.byValueKey('flavor');
+      final flavor = await driver?.getText(flavorField);
       expect(flavor, 'paid');
     });
 

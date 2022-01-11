@@ -2,7 +2,6 @@ import 'package:fake_process_manager/fake_process_manager.dart';
 import 'package:mockito/mockito.dart';
 import 'package:process/process.dart';
 import 'package:screenshots/src/context_runner.dart';
-import 'package:screenshots/src/globals.dart';
 import 'package:screenshots/src/image_magick.dart';
 import 'package:screenshots/src/image_processor.dart';
 import 'package:screenshots/src/utils.dart';
@@ -10,15 +9,14 @@ import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart';
 
 import 'src/context.dart';
+import 'src/mocks.dart';
 
-class PlainMockProcessManager extends Mock implements ProcessManager {}
-
-main() {
+void main() {
   group('image magick', () {
-    ProcessManager mockProcessManager;
+    var mockProcessManager = MockProcessManager();
 
     setUp(() {
-      mockProcessManager = PlainMockProcessManager();
+      mockProcessManager = MockProcessManager();
       when(mockProcessManager.runSync(
         any,
         environment: anyNamed('environment'),
@@ -61,7 +59,7 @@ main() {
     test('threshold exceeded', () async {
       final imagePath = toPlatformPath('./test/resources/0.png');
       final cropSizeOffset = '1242x42+0+0';
-      bool isThresholdExceeded = await runInContext<bool>(() async {
+      var isThresholdExceeded = await runInContext<bool>(() async {
         return im.isThresholdExceeded(imagePath, cropSizeOffset, 0.5);
       });
       expect(isThresholdExceeded, isTrue);
@@ -73,7 +71,7 @@ main() {
   });
 
   group('main image magick', () {
-    FakeProcessManager fakeProcessManager;
+    var fakeProcessManager = FakeProcessManager();
 
     setUp(() async {
       fakeProcessManager = FakeProcessManager();
@@ -86,8 +84,7 @@ main() {
       fakeProcessManager.verifyCalls();
     }, overrides: <Type, Generator>{
       ProcessManager: () => fakeProcessManager,
-      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
-        ..operatingSystem = 'macos',
+      Platform: () => FakePlatform(operatingSystem: 'macos'),
     });
 
     testUsingContext('is installed on windows', () async {
@@ -97,8 +94,7 @@ main() {
       fakeProcessManager.verifyCalls();
     }, overrides: <Type, Generator>{
       ProcessManager: () => fakeProcessManager,
-      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
-        ..operatingSystem = 'windows',
+      Platform: () => FakePlatform(operatingSystem: 'windows'),
     });
 
     testUsingContext('is not installed on windows', () async {
@@ -110,8 +106,7 @@ main() {
       fakeProcessManager.verifyCalls();
     }, overrides: <Type, Generator>{
       ProcessManager: () => fakeProcessManager,
-      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
-        ..operatingSystem = 'windows',
+      Platform: () => FakePlatform(operatingSystem: 'windows'),
     });
   });
 

@@ -9,16 +9,17 @@ import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart' hide Config;
 import 'src/context.dart';
 
-main() {
+void main() {
   group('validate', () {
-    FakeProcessManager fakeProcessManager;
-    FakePlatform fakePlatform;
+    var fakeProcessManager = FakeProcessManager();
+    var macos = FakePlatform(
+      stdoutSupportsAnsi: false,
+      operatingSystem: 'macos',
+      environment: {'CI': 'false'},
+    );
 
     setUp(() {
       fakeProcessManager = FakeProcessManager();
-      fakePlatform = FakePlatform.fromPlatform(const LocalPlatform())
-        ..operatingSystem = 'linux'
-        ..environment['CI'] = 'false';
     });
 
     final callListIosDevices = Call(
@@ -51,7 +52,6 @@ main() {
             ''));
 
     testUsingContext('pass on iOS with \'availability\'', () async {
-      fakePlatform.operatingSystem = 'macos';
       final configStr = '''
           tests:
             - example/test_driver/main.dart
@@ -66,7 +66,6 @@ main() {
       ''';
       final config = Config(configStr: configStr);
       final screens = Screens();
-      await screens.init();
       final allEmulators = <DaemonEmulator>[];
       final allDevices = <DaemonDevice>[];
 
@@ -78,7 +77,7 @@ main() {
     }, skip: false, overrides: <Type, Generator>{
       ProcessManager: () => fakeProcessManager,
 //      Logger: () => VerboseLogger(StdoutLogger()),
-      Platform: () => fakePlatform
+      Platform: () => macos
     });
 
     testUsingContext('pass on iOS with \'isAvailable\'', () async {
@@ -122,7 +121,6 @@ main() {
       ''';
       final config = Config(configStr: configStr);
       final screens = Screens();
-      await screens.init();
       final allEmulators = <DaemonEmulator>[];
       final allDevices = <DaemonDevice>[];
 
@@ -135,13 +133,12 @@ main() {
     }, skip: false, overrides: <Type, Generator>{
       ProcessManager: () => fakeProcessManager,
 //      Logger: () => VerboseLogger(StdoutLogger()),
-      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
-        ..operatingSystem = 'macos',
+      Platform: () => macos,
     });
 
     testUsingContext('getIosSimulators', () async {
       fakeProcessManager.calls = [callListIosDevices];
-      final Map simulators = getIosSimulators();
+      final simulators = getIosSimulators();
       final isSimulatorFound= isSimulatorInstalled(simulators, 'iPhone X');
       expect(isSimulatorFound, isTrue);
       fakeProcessManager.verifyCalls();
@@ -151,8 +148,7 @@ main() {
     });
 
     testUsingContext('fail', () async {
-      fakePlatform.operatingSystem = 'macos';
-      final BufferLogger logger = context.get<Logger>();
+      final logger = context.get<Logger>()! as BufferLogger;
       final configStr = '''
           tests:
             - example/test_driver/main.dartx
@@ -175,13 +171,12 @@ main() {
       ''';
       final config = Config(configStr: configStr);
       final screens = Screens();
-      await screens.init();
       final emulator = loadDaemonEmulator({
         "id": "NEXUS_6P_API_28",
         "name": "NEXUS 6P API 28",
         "category": "mobile",
         "platformType": "android"
-      });
+      })!;
       final device = loadDaemonDevice({
         "id": "emulator-5554",
         "name": "Android SDK built for x86 64",
@@ -197,7 +192,7 @@ main() {
 
       fakeProcessManager.calls = [callListIosDevices, callListIosDevices];
 
-      bool isValid =
+      var isValid =
           await isValidConfig(config, screens, allDevices, allEmulators);
 //      print(logger.statusText);
 //      print(logger.errorText);
@@ -231,21 +226,19 @@ main() {
 //      expect(logger.errorText, isNot(contains('No device attached or simulator installed for device \'Bad ios phone\' in screenshots.yaml.')));
     }, skip: false, overrides: <Type, Generator>{
       Logger: () => BufferLogger(),
-      Platform: () => fakePlatform,
+      Platform: () => macos,
       ProcessManager: () => fakeProcessManager,
     });
 
     testUsingContext('show device guide', () async {
-      fakePlatform.operatingSystem = 'macos';
-      final BufferLogger logger = context.get<Logger>();
+      final logger = context.get<Logger>()! as BufferLogger;
       final screens = Screens();
-      await screens.init();
       final installedEmulator = loadDaemonEmulator({
         "id": "Nexus_6P_API_28",
         "name": "Android SDK built for x86",
         "category": "mobile",
         "platformType": "android"
-      });
+      })!;
       final allEmulators = <DaemonEmulator>[installedEmulator];
       final runningEmulator = loadDaemonDevice({
         "id": "emulator-5554",
@@ -283,8 +276,7 @@ main() {
       ];
       fakeProcessManager.calls = [callListIosDevices];
       expect(
-          () async => await deviceGuide(
-              screens, allDevices, allEmulators, 'myScreenshots.yaml'),
+          () async => deviceGuide(screens, allDevices, allEmulators),
           returnsNormally);
       expect(logger.statusText, contains('Device Guide'));
       expect(logger.statusText, isNot(contains('Screen Guide')));
@@ -298,7 +290,7 @@ main() {
       fakeProcessManager.verifyCalls();
     }, skip: false, overrides: <Type, Generator>{
       Logger: () => BufferLogger(),
-      Platform: () => fakePlatform,
+      Platform: () => macos,
       ProcessManager: () => fakeProcessManager,
     });
   });

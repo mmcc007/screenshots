@@ -2,6 +2,7 @@ import 'dart:io' as io;
 
 import 'package:fake_process_manager/fake_process_manager.dart';
 import 'package:file/memory.dart';
+import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:process/process.dart';
 import 'package:screenshots/src/config.dart';
@@ -17,32 +18,30 @@ import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart' hide Config;
 
 import 'src/context.dart';
+import 'image_processor_test.mocks.dart';
 
-main() {
+@GenerateMocks([ImageMagick])
+void main() {
   test('process screenshots for iPhone X and iPhone XS Max', () async {
     final imageDir = 'test/resources';
-    final Screens screens = Screens();
-    await screens.init();
-    final Config config = Config(configPath: 'test/screenshots_test.yaml');
+    final screens = Screens();
 
-    final Map devices = {
+    final devices = {
       'iPhone X': 'iphone_x_1.png',
       'iPhone XS Max': 'iphone_xs_max_1.png',
       'iPad Pro (12.9-inch) (3rd generation)':
           'ipad_pro_12.9inch_3rd_generation_1.png',
     };
 
-    for (final String deviceName in devices.keys) {
+    for (final deviceName in devices.keys) {
       final screenshotName = devices[deviceName];
 //      print('deviceName=$deviceName, screenshotName=$screenshotName');
-      Map screen = screens.getScreen(deviceName);
+      final screen = screens.getScreen(deviceName)!;
 
-      final Map screenResources = screen['resources'];
-      await resources.unpackImages(screenResources, '/tmp/screenshots');
+      var paths = await resources.unpackImages(screen, '/tmp/screenshots');
 
       final screenshotPath = '$imageDir/$screenshotName';
-      final statusbarPath =
-          '${config.stagingDir}/${screenResources['statusbar']}';
+      final statusbarPath = screen.statusbar;
 
       var options = {
         'screenshotPath': screenshotPath,
@@ -51,15 +50,11 @@ main() {
       await runInContext<void>(() async {
         return im.convert('overlay', options);
       });
-      final framePath = config.stagingDir + '/' + screenResources['frame'];
-      final size = screen['size'];
-      final resize = screen['resize'];
-      final offset = screen['offset'];
       options = {
-        'framePath': framePath,
-        'size': size,
-        'resize': resize,
-        'offset': offset,
+        'framePath': paths.frame,
+        'size': screen.size,
+        'resize': screen.resize,
+        'offset': screen.offset,
         'screenshotPath': screenshotPath,
         'backgroundColor': ImageProcessor.kDefaultAndroidBackground,
       };
@@ -69,15 +64,15 @@ main() {
     }
     for (var deviceName in devices.values) {
       await runInContext<void>(() async {
-        return cmd(['git', 'checkout', '$imageDir/$deviceName']);
+        cmd(['git', 'checkout', '$imageDir/$deviceName']);
       });
     }
   });
 
   group('image processor', () {
-    FakeProcessManager fakeProcessManager;
-    MemoryFileSystem memoryFileSystem;
-    MockImageMagick mockImageMagick;
+    var fakeProcessManager = FakeProcessManager();
+    var memoryFileSystem = MemoryFileSystem();
+    var mockImageMagick = MockImageMagick();
 
     setUp(() async {
       memoryFileSystem = MemoryFileSystem();
@@ -92,7 +87,6 @@ main() {
       copyFileToMemory(imagePath, stagingDir);
 
       final screens = Screens();
-      await screens.init();
       final deviceName = 'Nexus 6P';
       final locale = 'en-US';
       final configStr = '''
@@ -103,6 +97,7 @@ main() {
           frame: true      
       ''';
       final config = Config(configStr: configStr);
+      final device = config.getDevice(deviceName)!;
 
       fakeProcessManager.calls = [
         Call(
@@ -119,9 +114,9 @@ main() {
             null),
       ];
 
-      final imageProcessor = ImageProcessor(screens, config);
+      final imageProcessor = ImageProcessor(config);
       final result = await imageProcessor.process(
-          DeviceType.android, deviceName, locale, null, RunMode.normal, null);
+          device, locale, null, RunMode.normal, null);
       expect(result, isTrue);
       expect(fs.directory(stagingDir).existsSync(), isTrue);
       final dstDir = getDirPath(DeviceType.android, locale,
@@ -160,7 +155,7 @@ main() {
       expect(failedCompare, expected);
       // show diffs
       ImageProcessor.showFailedCompare(failedCompare);
-      final BufferLogger logger = context.get<Logger>();
+      final logger = context.get<Logger>() as BufferLogger;
       expect(logger.errorText, contains('Comparison failed:'));
     }, overrides: <Type, Generator>{
 //      ProcessManager: () => fakeProcessManager,
@@ -178,4 +173,4 @@ void copyFileToMemory(String imagePath, String stagingDir) {
   fs.file('$screenshotsDir/screenshot.png').writeAsBytesSync(fileImage);
 }
 
-class MockImageMagick extends Mock implements ImageMagick {}
+// class MockImageMagick extends Mock implements ImageMagick {}

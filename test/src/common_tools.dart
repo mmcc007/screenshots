@@ -12,20 +12,9 @@ import 'package:tool_base/tool_base.dart';
 // TODO(ianh): Remove this once https://github.com/dart-lang/matcher/issues/98 is fixed
 Matcher isInstanceOf<T>() => test_package.TypeMatcher<T>();
 
-void tryToDelete(Directory directory) {
-  // This should not be necessary, but it turns out that
-  // on Windows it's common for deletions to fail due to
-  // bogus (we think) "access denied" errors.
-  try {
-    directory.deleteSync(recursive: true);
-  } on FileSystemException catch (error) {
-    print('Failed to delete ${directory.path}: $error');
-  }
-}
-
 /// Matcher for functions that throw [ToolExit].
-Matcher throwsToolExit({int exitCode, Pattern message}) {
-  Matcher matcher = isToolExit;
+Matcher throwsToolExit({int? exitCode, Pattern? message}) {
+  var matcher = isToolExit;
   if (exitCode != null) {
     matcher = allOf(matcher, (ToolExit e) => e.exitCode == exitCode);
   }

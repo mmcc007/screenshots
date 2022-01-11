@@ -5,27 +5,26 @@ import 'package:screenshots/src/context_runner.dart';
 import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart';
 
-import 'common_tools.dart';
+import 'mocks.dart';
 
 /// Return the test logger. This assumes that the current Logger is a BufferLogger.
-BufferLogger get testLogger => context.get<Logger>();
+BufferLogger get testLogger => context.get<Logger>() as BufferLogger;
 
 typedef ContextInitializer = void Function(AppContext testContext);
 
 @isTest
 void testUsingContext(
   String description,
-  dynamic testMethod(), {
-  Timeout timeout,
+    dynamic Function() testMethod, {
+  Timeout? timeout,
   Map<Type, Generator> overrides = const <Type, Generator>{},
   bool initializeFlutterRoot = true,
-  String testOn,
-  bool
-      skip, // should default to `false`, but https://github.com/dart-lang/test/issues/545 doesn't allow this
+  String? testOn,
+  bool? skip, // should default to `false`, but https://github.com/dart-lang/test/issues/545 doesn't allow this
 }) {
   // Ensure we don't rely on the default [Config] constructor which will
   // leak a sticky $HOME/.flutter_settings behind!
-  Directory configDir;
+  Directory? configDir;
   tearDown(() {
     if (configDir != null) {
       tryToDelete(configDir);
@@ -35,8 +34,8 @@ void testUsingContext(
   Config buildConfig(FileSystem fs) {
     configDir =
         fs.systemTempDirectory.createTempSync('flutter_config_dir_test.');
-    final File settingsFile =
-        fs.file(fs.path.join(configDir.path, '.flutter_settings'));
+    final settingsFile =
+        fs.file(fs.path.join(configDir!.path, '.flutter_settings'));
     return Config(settingsFile);
   }
 
@@ -94,16 +93,19 @@ void testUsingContext(
 
 class MockOperatingSystemUtils implements OperatingSystemUtils {
   @override
-  ProcessResult makeExecutable(File file) => null;
+  ProcessResult makeExecutable(File file) => FakeProcessResult();
 
   @override
-  File which(String execName) => null;
+  void chmod(FileSystemEntity entity, String mode) {}
+
+  @override
+  File which(String execName) => throw 'Not implemented';
 
   @override
   List<File> whichAll(String execName) => <File>[];
 
   @override
-  File makePipe(String path) => null;
+  File makePipe(String path) => throw 'Not implemented';
 
   @override
   void zip(Directory data, File zipFile) {}
@@ -128,12 +130,11 @@ class MockOperatingSystemUtils implements OperatingSystemUtils {
 
   @override
   Future<int> findFreePort({bool ipv6 = false}) async => 12345;
-
-  @override
-  void chmod(FileSystemEntity entity, String mode) {}
 }
 
 class LocalFileSystemBlockingSetCurrentDirectory extends LocalFileSystem {
+  const LocalFileSystemBlockingSetCurrentDirectory();
+
   @override
   set currentDirectory(dynamic value) {
     throw 'fs.currentDirectory should not be set on the local file system during '

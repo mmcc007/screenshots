@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:screenshots/src/image_magick.dart';
+import 'package:screenshots/src/resources.dart';
 import 'package:tool_base/tool_base.dart' hide Config;
 
 import 'config.dart';
@@ -12,7 +13,7 @@ import 'globals.dart';
 Future clearFastlaneDirs(
     Config config, Screens screens, RunMode runMode) async {
   if (config.isRunTypeActive(DeviceType.android)) {
-    for (ConfigDevice device in config.androidDevices) {
+    for (var device in config.androidDevices) {
       for (final locale in config.locales) {
         await _clearFastlaneDir(
             screens, device.name, locale, DeviceType.android, runMode);
@@ -20,7 +21,7 @@ Future clearFastlaneDirs(
     }
   }
   if (config.isRunTypeActive(DeviceType.ios)) {
-    for (ConfigDevice device in config.iosDevices) {
+    for (var device in config.iosDevices) {
       for (final locale in config.locales) {
         await _clearFastlaneDir(
             screens, device.name, locale, DeviceType.ios, runMode);
@@ -32,8 +33,8 @@ Future clearFastlaneDirs(
 /// Clear images destination.
 Future _clearFastlaneDir(Screens screens, String deviceName, String locale,
     DeviceType deviceType, RunMode runMode) async {
-  final Map screenProps = screens.getScreen(deviceName);
-  String androidModelType = getAndroidModelType(screenProps, deviceName);
+  final screenProps = screens.getScreen(deviceName);
+  var androidModelType = getAndroidModelType(screenProps, deviceName);
 
   final dirPath = getDirPath(deviceType, locale, androidModelType);
 
@@ -74,13 +75,13 @@ String getDirPath(
 }
 
 /// Get android model type (phone or tablet screen size).
-String getAndroidModelType(Map screenProps, String deviceName) {
-  String androidDeviceType = kFastlanePhone;
-  if (screenProps == null) {
+String getAndroidModelType(ScreenInfo? screen, String deviceName) {
+  var androidDeviceType = kFastlanePhone;
+  if (screen == null) {
     printStatus(
         'Warning: using default value \'$kFastlanePhone\' in \'$deviceName\' fastlane directory.');
   } else {
-    androidDeviceType = screenProps['destName'];
+    androidDeviceType = screen.destName!;
   }
   return androidDeviceType;
 }

@@ -48,36 +48,40 @@ const Map<String, String> _osToPathStyle = <String, String>{
 /// could not be found.
 ///
 /// If [platform] is not specified, it will default to the current platform.
-String getExecutablePath(
+String? getExecutablePath(
   String command,
-  String workingDirectory, {
+  String? workingDirectory, {
   Platform platform = const LocalPlatform(),
   FileSystem fs = const LocalFileSystem(),
 }) {
   assert(_osToPathStyle[platform.operatingSystem] == fs.path.style.name);
 
   workingDirectory ??= fs.currentDirectory.path;
-  Context context = Context(style: fs.path.style, current: workingDirectory);
+  var context = Context(style: fs.path.style, current: workingDirectory);
 
   // TODO(goderbauer): refactor when github.com/google/platform.dart/issues/2
   //     is available.
-  String pathSeparator = platform.isWindows ? ';' : ':';
+  var pathSeparator = platform.isWindows ? ';' : ':';
 
-  List<String> extensions = <String>[];
+  var extensions = <String>[];
   if (platform.isWindows && context.extension(command).isEmpty) {
-    extensions = platform.environment['PATHEXT'].split(pathSeparator);
+    extensions = (platform.environment['PATHEXT'] ?? '').split(pathSeparator);
   }
 
-  List<String> candidates = <String>[];
+  var candidates = <String>[];
   if (command.contains(context.separator)) {
     candidates = _getCandidatePaths(
-        command, <String>[workingDirectory], extensions, context);
+        command, [workingDirectory], extensions, context);
   } else {
-    List<String> searchPath = platform.environment['PATH'].split(pathSeparator);
+    var searchPath = (platform.environment['PATH'] ?? '').split(pathSeparator);
     candidates = _getCandidatePaths(command, searchPath, extensions, context);
   }
-  return candidates.firstWhere((String path) => fs.file(path).existsSync(),
-      orElse: () => null);
+  for (var path in candidates) {
+    if(fs.file(path).existsSync()) {
+      return path;
+    }
+  }
+  return null;
 }
 
 /// Returns all possible combinations of `$searchPath\$command.$ext` for
@@ -87,13 +91,13 @@ String getExecutablePath(
 /// `$searchPath\$command`.
 /// If [command] is an absolute path, it will just enumerate
 /// `$command.$ext`.
-Iterable<String> _getCandidatePaths(
+List<String> _getCandidatePaths(
   String command,
   List<String> searchPaths,
   List<String> extensions,
   Context context,
 ) {
-  List<String> withExtensions = extensions.isNotEmpty
+  var withExtensions = extensions.isNotEmpty
       ? extensions.map((String ext) => '$command$ext').toList()
       : <String>[command];
   if (context.isAbsolute(command)) {
@@ -103,6 +107,5 @@ Iterable<String> _getCandidatePaths(
       .map((String path) =>
           withExtensions.map((String command) => context.join(path, command)))
       .expand((Iterable<String> e) => e)
-      .toList()
-      .cast<String>();
+      .toList();
 }

@@ -1,9 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:meta/meta.dart';
 import 'package:path/path.dart' as p;
-import 'package:platform/platform.dart';
 import 'package:screenshots/src/utils.dart';
 
 ///// Test for CI environment.
@@ -46,8 +44,9 @@ Map getDeviceProps(String deviceId) {
       .split('\n')
       .forEach((line) {
     final regExp = RegExp(r'\[(.*)\]: \[(.*)\]');
-    final key = regExp.firstMatch(line).group(1);
-    final val = regExp.firstMatch(line).group(2);
+    var match = regExp.firstMatch(line)!;
+    final key = match.group(1);
+    final val = match.group(2);
     props[key] = val;
   });
   return props;
@@ -70,7 +69,7 @@ class Poller {
   final Duration pollingInterval;
 
   bool _canceled = false;
-  Timer _timer;
+  Timer? _timer;
 
   Future<void> _handleCallback() async {
     if (_canceled) return;
@@ -94,7 +93,7 @@ class Poller {
 
 /// Show differences between maps
 Map diffMaps(Map orig, Map diff, {bool verbose = false}) {
-  Map diffs = {
+  var diffs = <String, dynamic>{
     'added': {},
     'removed': {},
     'changed': {'orig': {}, 'new': {}}
@@ -123,17 +122,17 @@ Map diffMaps(Map orig, Map diff, {bool verbose = false}) {
 
 /// Returns a future that completes with a path suitable for ANDROID_HOME
 /// or with null, if ANDROID_HOME cannot be found.
-Future<String> findAndroidHome() async {
-  final Iterable<String> hits = grep(
+Future<String?> findAndroidHome() async {
+  final hits = grep(
     'ANDROID_HOME = ',
-    from: await cmd(<String>['flutter', 'doctor', '-v']),
+    from: cmd(<String>['flutter', 'doctor', '-v']),
   );
   if (hits.isEmpty) return null;
   return hits.first.split('= ').last;
 }
 
 /// Splits [from] into lines and selects those that contain [pattern].
-Iterable<String> grep(Pattern pattern, {@required String from}) {
+Iterable<String> grep(Pattern pattern, {required String from}) {
   return from.split('\n').where((String line) {
     return line.contains(pattern);
   });

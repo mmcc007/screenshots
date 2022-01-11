@@ -5,7 +5,6 @@ import 'image_processor_test.dart' as image_processor_test;
 import 'screenshots_yaml_test.dart' as screenshots_yaml_test;
 import 'regression/issue_29.dart' as regression_issue_29_test;
 import 'regression/regression_test.dart' as regression_regression_test;
-import 'run_test.dart' as run_test;
 import 'src/all_tests.dart' as src_all_tests;
 import 'image_magick_test.dart' as image_magick_test;
 import 'resources_test.dart' as resources_test;
@@ -26,7 +25,7 @@ void main() {
   image_magick_test.main();
   image_processor_test.main();
   resources_test.main();
-  run_test.main();
+  // run_test.main();
   screens_test.main();
   utils_test.main();
   validate_test.main();

@@ -3,8 +3,6 @@ import 'package:screenshots/src/utils.dart' as utils;
 import 'package:test/test.dart';
 import 'package:yaml/yaml.dart';
 
-import '../src/common.dart';
-
 void main() {
   // issue #29
   test('check full matching emulator name', () async {
@@ -29,7 +27,7 @@ devices:
     final deviceNames = configInfo['devices']['android'];
     print('deviceNames=$deviceNames');
     for (final deviceName in deviceNames.keys) {
-      DaemonEmulator emulator = utils.findEmulator(emulators, deviceName);
+      var emulator = utils.findEmulator(emulators, deviceName);
 //      if (!foundIt(emulator)) {
 //        // find by emulatorId
 //        emulator = findEmulatorById(emulators, deviceName);

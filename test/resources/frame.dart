@@ -15,13 +15,13 @@ const sampleUsage = 'sample usage: frame -s screenshot.png -d \'Nexus 6P\'';
 const kFrameTestTmpDir = '/tmp/frame_test';
 const kRunMode = RunMode.normal;
 
-main(List<String> arguments) async {
+void main(List<String> arguments) async {
   ArgResults argResults;
 
   final screenshotArg = 'screenshot';
   final deviceArg = 'device';
   final helpArg = 'help';
-  final ArgParser argParser = ArgParser(allowTrailingOptions: false)
+  final argParser = ArgParser(allowTrailingOptions: false)
     ..addOption(screenshotArg,
         abbr: 's',
         defaultsTo: 'screenshot.png',
@@ -34,7 +34,7 @@ main(List<String> arguments) async {
   try {
     argResults = argParser.parse(arguments);
   } on ArgParserException catch (e) {
-    _handleError(argParser, e.toString());
+    return _handleError(argParser, e.toString());
   }
   // show help
   if (argResults[helpArg] ||
@@ -57,36 +57,32 @@ main(List<String> arguments) async {
 
 Future runFrame(String screenshotPath, String deviceName) async {
   final screens = Screens();
-  await screens.init();
   final screen = screens.getScreen(deviceName);
   if (screen == null) {
     print('Error: screen not found for \'$deviceName\'');
     exit(1);
   }
-  final deviceType = screens.getDeviceType(deviceName);
-
   clearDirectory(kFrameTestTmpDir);
 
   final framedScreenshotPath = '$kFrameTestTmpDir/framed_screenshot.png';
   await File(screenshotPath).copy(framedScreenshotPath);
 
-  final screenResources = screen['resources'];
-  await unpackImages(screenResources, kFrameTestTmpDir);
+ var paths = await unpackImages(screen, kFrameTestTmpDir);
 
   await runInContext<void>(() async {
     // overlay status bar
     await ImageProcessor.overlay(
-        kFrameTestTmpDir, screenResources, framedScreenshotPath);
+        kFrameTestTmpDir, paths, framedScreenshotPath);
 
     // append navigation bar (if android)
-    if (deviceType == DeviceType.android) {
+    if (screen.deviceType == DeviceType.android) {
       await ImageProcessor.append(
-          kFrameTestTmpDir, screenResources, framedScreenshotPath);
+          kFrameTestTmpDir, paths, framedScreenshotPath);
     }
 
     // frame
-    await ImageProcessor.frame(
-        kFrameTestTmpDir, screen, framedScreenshotPath, deviceType, kRunMode);
+    await ImageProcessor.frame(kFrameTestTmpDir, screen, paths,
+        framedScreenshotPath, screen.deviceType, kRunMode);
   });
   print('Framed screenshot created: $framedScreenshotPath');
 }

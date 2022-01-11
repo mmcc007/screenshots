@@ -12,9 +12,7 @@ import 'package:screenshots/src/config.dart';
 import 'package:screenshots/src/utils.dart' as utils;
 import 'package:test/test.dart';
 
-import 'src/common.dart';
-
-main() {
+void main() {
   group('daemon test', () {
     test('start shipped daemon client', () async {
       final flutterHome = dirname(dirname((utils.cmd(['which', 'flutter']))));
@@ -25,8 +23,8 @@ main() {
           workingDirectory: flutterToolsHome);
 //      print('shipped daemon client process started, pid: ${daemonClient.pid}');
 
-      bool connected = false;
-      bool waitingForResponse = false;
+      var connected = false;
+      var waitingForResponse = false;
       daemonClient.stdout
           .transform<String>(utf8.decoder)
           .transform<String>(const LineSplitter())
@@ -58,14 +56,14 @@ main() {
 
       // wait for exit code
 //      print('exit code:${await daemonClient.exitCode}');
-    }, skip:     true  );
+    }, skip: true);
 
     test('parse daemon result response', () {
       final expected =
           '[{"id":"Nexus_5X_API_27","name":"Nexus 5X"},{"id":"Nexus_6P_API_28","name":"Nexus 6P"},{"id":"Nexus_9_API_28","name":"Nexus 9"},{"id":"apple_ios_simulator","name":"iOS Simulator"}]';
       final response = '[{"id":0,"result":$expected}]';
       final respExp = RegExp(r'result":(.*)}\]');
-      final match = respExp.firstMatch(response).group(1);
+      final match = respExp.firstMatch(response)?.group(1);
 //      print('match=${jsonDecode(match)}');
       expect(match, expected);
     });
@@ -101,7 +99,7 @@ main() {
       final exitCode = await daemonClient.stop;
 //      print('exit code: $exitCode');
       expect(exitCode, 0);
-    }, skip:     true  );
+    }, skip: true);
 
     test('launch android emulator via daemon and shutdown', () async {
       final expected = 'emulator-5554';
@@ -111,7 +109,7 @@ main() {
       final deviceId = await daemonClient.launchEmulator(emulatorId);
       expect(deviceId, expected);
       await shutdownAndroidEmulator(daemonClient, deviceId);
-    }, skip:     true  );
+    }, skip: true);
 
     test('parse ios-deploy response', () {
       final expectedDeviceId = '3b3455019e329e007e67239d9b897148244b5053';
@@ -120,8 +118,8 @@ main() {
       final response =
           "[....] Found $expectedDeviceId (N48AP, $expectedModel, iphoneos, armv7s) a.k.a. 'Maurice’s iPhone' connected through USB.";
 
-      final deviceId = regExp.firstMatch(response).group(1);
-      final model = regExp.firstMatch(response).group(2);
+      final deviceId = regExp.firstMatch(response)?.group(1);
+      final model = regExp.firstMatch(response)?.group(2);
 //      print('deviceId=$deviceId');
 //      print('model=$model');
       expect(deviceId, expectedDeviceId);
@@ -183,7 +181,6 @@ main() {
     test('run test on matching devices or emulators', () async {
       final configPath = 'test/screenshots_test.yaml';
       final screens = Screens();
-      await screens.init();
 
       final config = Config(configPath: configPath);
 
@@ -203,15 +200,12 @@ main() {
       final origDir = Directory.current;
       Directory.current = 'example';
 
-      final screenshots = Screenshots(flavor: kNoFlavor);
+      final screenshots = Screenshots(config: config, runMode: RunMode.normal,);
       screenshots.devices = devices;
       screenshots.emulators = emulators;
-      screenshots.config = config;
-      screenshots.screens = screens;
-      screenshots.runMode = RunMode.normal;
       await screenshots.runTestsOnAll();
       // allow other tests to continue
       Directory.current = origDir;
-    }, timeout: Timeout(Duration(minutes: 4)), skip:     true  );
+    }, timeout: Timeout(Duration(minutes: 4)), skip: true);
   });
 }

@@ -1,15 +1,14 @@
 import 'dart:io' as io;
 
 import 'package:screenshots/screenshots.dart';
-import 'package:screenshots/src/config.dart';
-import 'package:screenshots/src/orientation.dart';
+import 'package:screenshots/src/globals.dart';
 import 'package:screenshots/src/screens.dart';
 import 'package:screenshots/src/utils.dart';
 import 'package:test/test.dart';
 
 import 'src/common.dart';
 
-main() {
+void main() {
   group('config', () {
     test('getters', () {
       final expectedTest = 'test_driver/main.dart';
@@ -70,12 +69,12 @@ main() {
       expect(config.archiveDir, expectedArchive);
       expect(config.getDevice(expectedAndroidName), expectedAndroidDevice);
       expect(config.getDevice(expectedAndroidName), isNot(expectedIosDevice));
-      expect(config.deviceNames..sort(),
+      expect(config.devices.map((d) => d.name).toList()..sort(),
           equals([expectedAndroidName, expectedIosName]..sort()));
     });
 
     test('backward compatible orientation', () {
-      String configStr = '''
+      var configStr = '''
         devices:
           android:
             device name:
@@ -83,7 +82,7 @@ main() {
                 - Portrait
         frame: true
         ''';
-      Config config = Config(configStr: configStr);
+      var config = Config(configStr: configStr);
       expect(config.devices[0].orientations[0], Orientation.Portrait);
       configStr = '''
         devices:
@@ -121,7 +120,7 @@ main() {
           android:
       ''';
 //      Map config = utils.parseYamlStr(configIosOnly);
-      Config config = Config(configStr: configIosOnly);
+      var config = Config(configStr: configIosOnly);
       expect(config.isRunTypeActive(DeviceType.ios), isTrue);
       expect(config.isRunTypeActive(DeviceType.android), isFalse);
 
@@ -140,13 +139,13 @@ main() {
 
     test('isFrameRequired', () {
       final deviceName = 'Nexus 6P';
-      String configStr = '''
+      var configStr = '''
         devices:
           android:
             $deviceName:
         frame: true
         ''';
-      Config config = Config(configStr: configStr);
+      var config = Config(configStr: configStr);
       expect(config.isFrameRequired(deviceName, null), isTrue);
       configStr = '''
         devices:
@@ -167,7 +166,7 @@ main() {
         frame: true
         ''';
       config = Config(configStr: configStr);
-      final device = config.getDevice(deviceName);
+      final device = config.getDevice(deviceName)!;
       expect(
           config.isFrameRequired(deviceName, device.orientations[0]), isTrue);
       expect(
@@ -177,33 +176,32 @@ main() {
     test('store and retrieve environment', () async {
       final tmpDir = '/tmp/screenshots_test_env';
       clearDirectory(tmpDir);
-      String configStr = '''
+      var configStr = '''
         staging: $tmpDir
       ''';
       final config = Config(configStr: configStr);
-      final screens = await Screens();
-      await screens.init();
+      final screens = Screens();
+      var device = config.getDevice('Nexus 6P')!;
+      var screen = screens.getScreen(device.name)!;
       final orientation = 'Portrait';
 
       final env = {
         'screen_size': '1440x2560',
         'locale': 'en_US',
-        'device_name': 'Nexus 6P',
-        'device_type': 'android',
+        'deviceName': device.name,
         'orientation': orientation
       };
 
       // called by screenshots before test
-      await config.storeEnv(
-          screens,
-          env['device_name'],
-          env['locale'],
-          getEnumFromString(DeviceType.values, env['device_type']),
-          getEnumFromString(Orientation.values, orientation));
+      await config.storeEnv(ScreenshotsEnv(
+          screen: screen,
+          device: device,
+          locale: env['locale']!,
+          orientation: getEnumFromString(Orientation.values, orientation)));
 
       // called by test
       // simulate no screenshots available
-      Config testConfig = Config(configStr: configStr);
+      var testConfig = Config(configStr: configStr);
       expect(await testConfig.screenshotsEnv, {});
 
       // simulate screenshots available

@@ -13,11 +13,13 @@ final messages = new MessageLookup();
 final _keepAnalysisHappy = Intl.defaultLocale;
 
 // ignore: non_constant_identifier_names
-typedef MessageIfAbsent(String message_str, List args);
+typedef MessageIfAbsent = Function(String message_str, List args);
 
 class MessageLookup extends MessageLookupByLibrary {
-  get localeName => 'messages';
+  @override
+  get localeName async => 'messages';
 
+  @override
   final messages = _notInlinedMessages(_notInlinedMessages);
   static _notInlinedMessages(_) => <String, Function> {
     "counterIncrementButtonTooltip" : MessageLookupByLibrary.simpleMessage("Increment"),

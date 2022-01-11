@@ -1,39 +1,46 @@
 name: screenshots
 description: Auto-generation of screenshots for Apple and Play Stores using emulators, simulators and real devices. Includes support for multiple locales and framing. Compatible with fastlane.
-version: 2.1.1
+version: 3.0.0
 homepage: https://github.com/mmcc007/screenshots
-author: Maurice McCabe <mmcc007@gmail.com>
 
 environment:
-  sdk: '>=2.2.2 <3.0.0'
+  sdk: '>=2.12.0 <3.0.0'
 
 dependencies:
-  args: ^1.5.1
-  yaml: ^2.1.15
-  resource: ^2.1.5
-  path: ^1.6.2
-  file: ^5.0.7
-  archive: ^2.0.9
-  platform: ^2.2.0
-  process: ^3.0.9
-  meta: ^1.1.6
-  intl: ">=0.15.0 <1.0.0"
-  tool_mobile: ^1.9.5
-#  tool_mobile:
-#    path: ../tool_mobile
+  args: ^2.3.0
+  yaml: ^3.1.0
+#  resource: ^2.1.7
+  path: ^1.8.0
+  file: ^6.1.2
+  archive: ^3.1.2
+  platform: ^3.0.0
+  process: ^4.2.3
+  meta: ^1.7.0
+#  intl: any # ">=0.15.0 <1.0.0"
+#  tool_mobile: ^2.0.0
+  build: ^2.1.1
+  tool_base: ^2.0.0
+  tool_mobile: ^3.0.0
 
 dev_dependencies:
-  test: ^1.5.1+1
-  test_api: ^0.2.5
-  mockito: ^4.1.0
+  build_runner: ^2.1.4
+  test: ^1.19.2
+#  test_api: ^0.2.5
+  mockito: ^5.0.16
   pedantic: ^1.8.0+1
   quiver: '>=2.0.0 <3.0.0'
-  fake_process_manager: ^0.1.0
-#    path: ../fake_process_manager
-  tool_base_test:
-    git: https://github.com/mmcc007/tool_base_test.git
-#    path: ../tool_base_test
+  fake_process_manager: ^0.2.0
   collection: any
+
+dependency_overrides:
+  fake_process_manager:
+    path: ../fake_process_manager
+  tool_mobile:
+    path: ../tool_mobile
+  tool_base:
+    path: ../tool_base
+#  tool_base_test:
+#    path: ../tool_base_test
 
 executables:
   screenshots: main
